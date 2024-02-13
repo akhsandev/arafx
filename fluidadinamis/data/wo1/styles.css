@@ -6,7 +6,7 @@ body {
    .simulation-container {
     position: relative;
     width: 100%;
-    padding-bottom: 84%; /* Aspect ratio of your iframe (height / width * 100) */
+    padding-bottom: 55%; /* Aspect ratio of your iframe (height / width * 100) */
     overflow: hidden;
    }
    
