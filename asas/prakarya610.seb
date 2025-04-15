@@ -5,7 +5,7 @@
     <key>originatorVersion</key>
     <string>SEB_Win_2.1.1</string>
     <key>startURL</key>
-    <string>https://forms.gle/AUUAiHxPt77FVZ5a6</string>
+    <string>https://forms.gle/wDwQKKLQ1YthSJN48</string>
     <key>startResource</key>
     <string />
     <key>sebServerURL</key>
@@ -17,7 +17,7 @@
     <key>ignoreExitKeys</key>
     <true />
     <key>hashedQuitPassword</key>
-    <string>9C29D41E3EB5D202898C3638363C23A49292123565AF40039176F93729365A41</string>
+    <string>6AFFDAE3B3C1AA6AA7689E9B6A7B3225A636AA1AC0025F490CCA1285CEAF1487</string>
     <key>exitKey1</key>
     <integer>2</integer>
     <key>exitKey2</key>
@@ -203,7 +203,7 @@
     <key>allowUploads</key>
     <true />
     <key>examKeySalt</key>
-    <data>ca9V7f0R1OiEIBKzyAuwxtljqhc/9o78M44mEF6IKEM=</data>
+    <data>j85osAIpEm3ZJxkolZ66J8nVB54cTcM3RQTdRWSOdDI=</data>
     <key>examSessionClearCookiesOnEnd</key>
     <true />
     <key>examSessionClearCookiesOnStart</key>
