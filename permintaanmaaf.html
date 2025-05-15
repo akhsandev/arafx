@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Permintaan Maaf Tulus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    .container {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 0 30px rgba(255,255,255,0.3);
+      color: white;
+      text-align: center;
+      width: 90%;
+      max-width: 700px;
+    }
+    .message {
+      font-size: 1.4rem;
+      opacity: 0;
+      animation: fadeInOut 4s ease-in-out forwards;
+    }
+    .message:nth-child(1) { animation-delay: 0s; }
+    .message:nth-child(2) { animation-delay: 4s; }
+    .message:nth-child(3) { animation-delay: 8s; }
+    .message:nth-child(4) { animation-delay: 12s; }
+    .message:nth-child(5) { animation-delay: 16s; }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(20px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .glow {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2rem;
+      text-shadow: 0 0 15px #ff99cc, 0 0 25px #ff66cc;
+    }
+
+    .choice-box {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    footer {
+      font-size: 0.7rem;
+      color: white;
+      margin-top: 2rem;
+    }
+    a {
+      color: #ffdede;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body onclick="startAudioOnce()">
+  <canvas id="particles"></canvas>
+  <div class="container">
+    <div class="message glow">Untuk Andi Tenri, Andi Fiona, dan kalian semua yang sangat berarti...</div>
+    <div class="message">Maafkan aku jika selama ini ada luka yang tanpa sadar kutorehkan...</div>
+    <div class="message">Kadang aku terlalu sibuk menjadi aku, dan lupa menjadi guru yang baik...</div>
+    <div class="message">Mungkin ucapanku menusuk, atau tindakanku mengecewakan...</div>
+    <div class="message glow">Maafkan pak akhsan, dan mari kembali memulai dari awal..</div>
+  </div>
+
+  <div class="choice-box">
+    <button class="btn" onclick="alert('Terima kasih... 🥹❤️')">Saya Memaafkan Kamu</button>
+    <button class="btn" id="noBtn">Saya Belum Bisa Maafkan</button>
+  </div>
+
+  <footer>
+    Maafkanma kodong nak. <a href="#" >Effort bangetma ksi na</a>
+  </footer>
+
+  <script>
+    // Background Particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 120; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2 + 1,
+        speedX: Math.random() - 0.5,
+        speedY: Math.random() - 0.5,
+      });
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fill();
+        p.x += p.speedX;
+        p.y += p.speedY;
+        if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+      });
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+
+    // Tombol 'tidak' menghindar
+    const noBtn = document.getElementById('noBtn');
+    noBtn.addEventListener('mouseover', () => {
+      const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+      const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+      noBtn.style.position = 'absolute';
+      noBtn.style.left = `${x}px`;
+      noBtn.style.top = `${y}px`;
+    });
+
+    // Audio setelah klik
+    const audio = new Audio('https://www.bensound.com/bensound-music/bensound-tenderness.mp3');
+    audio.loop = true;
+    let started = false;
+    function startAudioOnce() {
+      if (!started) {
+        audio.play().catch(e => console.log('Autoplay error:', e));
+        started = true;
+      }
+    }
+  </script>
+</body>
+</html>
