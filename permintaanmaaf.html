@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Permintaan Maaf Tulus</title>
+  <title>Permintaan Maaf</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
   <style>
     * {
@@ -12,6 +12,7 @@
       box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
     }
+
     body {
       height: 100vh;
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -20,55 +21,29 @@
       justify-content: center;
       align-items: center;
       flex-direction: column;
-    }
-    .overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 1000;
       color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.6rem;
-      cursor: pointer;
-      text-align: center;
     }
+
     .container {
-      width: 90%;
-      max-width: 600px;
       backdrop-filter: blur(15px);
       background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       padding: 2rem;
+      text-align: center;
       border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
-      color: white;
-      text-align: center;
       margin-bottom: 2rem;
+      max-width: 600px;
+      width: 90%;
     }
+
     .message {
       font-size: 1.2rem;
-      opacity: 0;
-      animation: fadeInOut 3s ease-in-out forwards;
-    }
-    .message:nth-child(1) { animation-delay: 0s; }
-    .message:nth-child(2) { animation-delay: 4s; }
-    .message:nth-child(3) { animation-delay: 8s; }
-    .message:nth-child(4) { animation-delay: 12s; }
-    .message:nth-child(5) { animation-delay: 16s; }
-    .message:nth-child(6) { animation-delay: 20s; }
-
-    @keyframes fadeInOut {
-      0% { opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { opacity: 0; }
+      margin: 1rem 0;
     }
 
     .glow {
       font-weight: 600;
-      color: #fff;
       text-shadow: 0 0 10px #ff99cc, 0 0 20px #ff66cc, 0 0 30px #ff33cc;
     }
 
@@ -76,6 +51,7 @@
       display: flex;
       justify-content: center;
       gap: 2rem;
+      flex-wrap: wrap;
     }
 
     .btn {
@@ -91,33 +67,32 @@
       transition: 0.3s;
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     }
+
     .btn:hover {
       background: rgba(255, 255, 255, 0.3);
     }
 
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: -1;
+    #noBtn {
+      animation: shake 0.7s infinite alternate;
+      position: relative;
+    }
+
+    @keyframes shake {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(3deg); }
+      50% { transform: rotate(-3deg); }
+      75% { transform: rotate(2deg); }
+      100% { transform: rotate(-2deg); }
     }
   </style>
 </head>
 <body>
-
-  <div class="overlay" id="overlay">
-    Ketuk di mana saja untuk mulai 🎶
-  </div>
-
-  <canvas id="particles"></canvas>
-
   <div class="container">
-    <div class="message glow">Halo Andi Tenri, Andi Fiona, dan teman-teman circle tercinta...</div>
-    <div class="message">Aku ingin mengucapkan maaf dari lubuk hatiku yang terdalam...</div>
-    <div class="message">Kalau selama ini ada kata-kata yang mungkin menyakitkan...</div>
-    <div class="message">Atau sikapku yang tidak sesuai harapan kalian...</div>
-    <div class="message">Ketahuilah, kalian tetap sahabat terbaik yang pernah aku miliki...</div>
-    <div class="message glow">Maafkan aku ya... Dengan tulus dan cinta...</div>
+    <div class="message glow">Halo Andi Tenri & Andi Fiona</div>
+    <div class="message">Dari hati yang terdalam, aku mohon maaf...</div>
+    <div class="message">Jika ada kata, sikap, atau tindakan yang melukai...</div>
+    <div class="message">Tak ada niat selain ingin menjaga persahabatan kita...</div>
+    <div class="message glow">Kalian sangat berarti, lebih dari yang bisa kuungkapkan...</div>
   </div>
 
   <div class="choice-box">
@@ -126,68 +101,20 @@
   </div>
 
   <script>
-    // Particle Animation
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    for (let i = 0; i < 100; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 1,
-        speedX: Math.random() - 0.5,
-        speedY: Math.random() - 0.5,
-      });
-    }
-
-    function drawParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.fill();
-        p.x += p.speedX;
-        p.y += p.speedY;
-
-        if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
-      });
-      requestAnimationFrame(drawParticles);
-    }
-    drawParticles();
-
-    // Button "Tidak Memaafkan" menghindar
     const noBtn = document.getElementById('noBtn');
-    noBtn.addEventListener('mouseover', () => {
+
+    function moveButton() {
       const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
       const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
-      noBtn.style.position = 'absolute';
       noBtn.style.left = `${x}px`;
       noBtn.style.top = `${y}px`;
-    });
+      noBtn.style.position = 'absolute';
+    }
 
-    // Audio setup
-    const audio = new Audio('https://www.bensound.com/bensound-music/bensound-tenderness.mp3');
-    audio.loop = true;
-
-    const overlay = document.getElementById("overlay");
-    overlay.addEventListener("click", () => {
-      audio.play().then(() => {
-        overlay.style.display = "none";
-      }).catch(e => {
-        alert("Gagal memutar audio. Silakan izinkan dari pengaturan browser.");
-      });
-    });
+    // Event untuk desktop dan mobile
+    noBtn.addEventListener('mouseover', moveButton);   // PC
+    noBtn.addEventListener('touchstart', moveButton);  // HP
+    noBtn.addEventListener('click', moveButton);       // fallback
   </script>
-
 </body>
 </html>
