@@ -2,12 +2,14 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Permintaan Maaf Tulus</title>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
   <style>
     * {
-      margin: 0; padding: 0; box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
     }
     body {
@@ -18,56 +20,62 @@
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      cursor: pointer;
     }
-    canvas {
+    .overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      z-index: -1;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.6rem;
+      cursor: pointer;
+      text-align: center;
     }
     .container {
-      background: rgba(255,255,255,0.1);
+      width: 90%;
+      max-width: 600px;
       backdrop-filter: blur(15px);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       padding: 2rem;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 0 30px rgba(255,255,255,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
       color: white;
       text-align: center;
-      width: 90%;
-      max-width: 700px;
+      margin-bottom: 2rem;
     }
     .message {
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       opacity: 0;
-      animation: fadeInOut 4s ease-in-out forwards;
+      animation: fadeInOut 3s ease-in-out forwards;
     }
     .message:nth-child(1) { animation-delay: 0s; }
     .message:nth-child(2) { animation-delay: 4s; }
     .message:nth-child(3) { animation-delay: 8s; }
     .message:nth-child(4) { animation-delay: 12s; }
     .message:nth-child(5) { animation-delay: 16s; }
+    .message:nth-child(6) { animation-delay: 20s; }
 
     @keyframes fadeInOut {
-      0% { opacity: 0; transform: translateY(20px); }
-      20% { opacity: 1; transform: translateY(0); }
-      80% { opacity: 1; }
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
       100% { opacity: 0; }
     }
 
     .glow {
-      font-family: 'Great Vibes', cursive;
-      font-size: 2rem;
-      text-shadow: 0 0 15px #ff99cc, 0 0 25px #ff66cc;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 0 10px #ff99cc, 0 0 20px #ff66cc, 0 0 30px #ff33cc;
     }
 
     .choice-box {
       display: flex;
       justify-content: center;
       gap: 2rem;
-      margin-top: 2rem;
-      flex-wrap: wrap;
     }
 
     .btn {
@@ -84,41 +92,41 @@
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     }
     .btn:hover {
-      background: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.3);
     }
 
-    footer {
-      font-size: 0.7rem;
-      color: white;
-      margin-top: 2rem;
-    }
-    a {
-      color: #ffdede;
-      text-decoration: none;
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
     }
   </style>
 </head>
-<body onclick="startAudioOnce()">
+<body>
+
+  <div class="overlay" id="overlay">
+    Ketuk di mana saja untuk mulai 🎶
+  </div>
+
   <canvas id="particles"></canvas>
+
   <div class="container">
-    <div class="message glow">Untuk Andi Tenri, Andi Fiona, dan kalian semua yang sangat berarti...</div>
-    <div class="message">Maafkan aku jika selama ini ada luka yang tanpa sadar kutorehkan...</div>
-    <div class="message">Kadang aku terlalu sibuk menjadi aku, dan lupa menjadi guru yang baik...</div>
-    <div class="message">Mungkin ucapanku menusuk, atau tindakanku mengecewakan...</div>
-    <div class="message glow">Maafkan pak akhsan, dan mari kembali memulai dari awal..</div>
+    <div class="message glow">Halo Andi Tenri, Andi Fiona, dan teman-teman circle tercinta...</div>
+    <div class="message">Aku ingin mengucapkan maaf dari lubuk hatiku yang terdalam...</div>
+    <div class="message">Kalau selama ini ada kata-kata yang mungkin menyakitkan...</div>
+    <div class="message">Atau sikapku yang tidak sesuai harapan kalian...</div>
+    <div class="message">Ketahuilah, kalian tetap sahabat terbaik yang pernah aku miliki...</div>
+    <div class="message glow">Maafkan aku ya... Dengan tulus dan cinta...</div>
   </div>
 
   <div class="choice-box">
-    <button class="btn" onclick="alert('Terima kasih... 🥹❤️')">Saya Memaafkan Kamu</button>
-    <button class="btn" id="noBtn">Saya Belum Bisa Maafkan</button>
+    <button class="btn" onclick="alert('Terima kasih! 🥹❤️')">Saya Memaafkan Pak Akhsan</button>
+    <button class="btn" id="noBtn">Saya Tidak Memaafkan</button>
   </div>
 
-  <footer>
-    Maafkanma kodong nak. <a href="#" >Effort bangetma ksi na</a>
-  </footer>
-
   <script>
-    // Background Particles
+    // Particle Animation
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -130,7 +138,7 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 100; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -149,6 +157,7 @@
         ctx.fill();
         p.x += p.speedX;
         p.y += p.speedY;
+
         if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
         if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
       });
@@ -156,7 +165,7 @@
     }
     drawParticles();
 
-    // Tombol 'tidak' menghindar
+    // Button "Tidak Memaafkan" menghindar
     const noBtn = document.getElementById('noBtn');
     noBtn.addEventListener('mouseover', () => {
       const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
@@ -166,16 +175,19 @@
       noBtn.style.top = `${y}px`;
     });
 
-    // Audio setelah klik
+    // Audio setup
     const audio = new Audio('https://www.bensound.com/bensound-music/bensound-tenderness.mp3');
     audio.loop = true;
-    let started = false;
-    function startAudioOnce() {
-      if (!started) {
-        audio.play().catch(e => console.log('Autoplay error:', e));
-        started = true;
-      }
-    }
+
+    const overlay = document.getElementById("overlay");
+    overlay.addEventListener("click", () => {
+      audio.play().then(() => {
+        overlay.style.display = "none";
+      }).catch(e => {
+        alert("Gagal memutar audio. Silakan izinkan dari pengaturan browser.");
+      });
+    });
   </script>
+
 </body>
 </html>
