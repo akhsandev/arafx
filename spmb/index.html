@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Skor Penerimaan Siswa - SMAN 1 Soppeng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <style>
+        :root {
+            --bg-light: #f0f4f8;
+            --text-light: #1f2937;
+            --container-bg-light: rgba(255, 255, 255, 0.8); 
+            --container-border-light: rgba(255, 255, 255, 0.3);
+            --input-bg-light: #ffffff;
+            --input-border-light: #cbd5e1;
+            --table-header-bg-light: #f1f5f9;
+            --table-row-even-bg-light: #f8fafc;
+            --table-row-hover-bg-light: #eff6ff;
+            --info-box-bg-light: #f9fafb;
+            --info-box-border-light: #e5e7eb;
+            --modal-bg-light: rgba(255, 255, 255, 0.9);
+
+            --bg-dark: #1a202c; 
+            --text-dark: #e2e8f0; 
+            --container-bg-dark: rgba(26, 32, 44, 0.65); 
+            --container-border-dark: rgba(74, 85, 104, 0.4); 
+            --input-bg-dark: #2d3748; 
+            --input-border-dark: #4a5568; 
+            --table-header-bg-dark: #2d3748;
+            --table-row-even-bg-dark: #222b38; 
+            --table-row-hover-bg-dark: #303c4d;
+            --info-box-bg-dark: #2d3748;
+            --info-box-border-dark: #4a5568;
+            --modal-bg-dark: rgba(45, 55, 72, 0.8);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .glassmorphism {
+            background: var(--container-bg-light);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); 
+            border: 1px solid var(--container-border-light);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.17);
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        body.dark .glassmorphism {
+            background: var(--container-bg-dark);
+            border: 1px solid var(--container-border-dark);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.27);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            border-radius: 16px; 
+        }
+        @media (max-width: 768px) {
+            .container { margin: 1rem; padding: 1rem; }
+        }
+
+        .form-input, .form-select, .form-textarea {
+            border-radius: 8px;
+            border: 1px solid var(--input-border-light);
+            background-color: var(--input-bg-light);
+            color: var(--text-light);
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            width: 100%;
+        }
+        body.dark .form-input, body.dark .form-select, body.dark .form-textarea {
+            border-color: var(--input-border-dark);
+            background-color: var(--input-bg-dark);
+            color: var(--text-dark);
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            outline: none;
+        }
+        body.dark .form-input:focus, body.dark .form-select:focus, body.dark .form-textarea:focus {
+            border-color: #63b3ed; 
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn:active {
+            transform: scale(0.98) translateY(1px);
+        }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
+        .btn-secondary { background-color: #10b981; color: white; }
+        .btn-secondary:hover { background-color: #059669; transform: translateY(-1px); }
+        .btn-warning { background-color: #f59e0b; color: white; } 
+        .btn-warning:hover { background-color: #d97706; transform: translateY(-1px); }
+        .btn-danger { background-color: #ef4444; color: white; } 
+        .btn-danger:hover { background-color: #dc2626; transform: translateY(-1px); }
+        
+        .btn-action { 
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            margin-right: 0.25rem;
+            border-radius: 6px;
+        }
+        .btn-edit {
+            color: #2563eb; background-color: #eff6ff; border: 1px solid #bfdbfe;
+        }
+        .btn-edit:hover { background-color: #dbeafe; color: #1d4ed8; }
+        body.dark .btn-edit {
+            color: #93c5fd; background-color: #1e3a8a; border: 1px solid #2563eb;
+        }
+        body.dark .btn-edit:hover { background-color: #1e40af; color: #d1d5db; }
+
+        .btn-delete {
+            color: #dc2626; background-color: #fee2e2; border: 1px solid #fecaca;
+        }
+        .btn-delete:hover { background-color: #fca5a5; color: #b91c1c; }
+        body.dark .btn-delete {
+            color: #f87171; background-color: #450a0a; border: 1px solid #7f1d1d;
+        }
+        body.dark .btn-delete:hover { background-color: #7f1d1d; color: #fee2e2; }
+
+        .score-display {
+            background-color: #eef2ff; padding: 1.5rem; border-radius: 12px; 
+            margin-top: 1.5rem; text-align: center; animation: fadeInScaleUp 0.6s ease-out;
+        }
+        body.dark .score-display {
+            background-color: #2c3e50; 
+        }
+        @keyframes fadeInScaleUp { 
+            0% { opacity: 0; transform: translateY(20px) scale(0.95); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+        .score-value {
+            font-size: 2.5rem; font-weight: 700; color: #3b82f6;
+            animation: scorePulse 1.5s infinite ease-in-out;
+        }
+        body.dark .score-value { color: #60a5fa; }
+        @keyframes scorePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        .log-table { width: 100%; margin-top: 2rem; border-collapse: collapse; }
+        .log-table th, .log-table td {
+            border: 1px solid var(--input-border-light); padding: 0.75rem;
+            text-align: left; font-size: 0.875rem;
+        }
+        body.dark .log-table th, body.dark .log-table td {
+            border-color: var(--input-border-dark);
+        }
+        .log-table th { background-color: var(--table-header-bg-light); font-weight: 600; }
+        body.dark .log-table th { background-color: var(--table-header-bg-dark); }
+        .log-table tr:nth-child(even) { background-color: var(--table-row-even-bg-light); }
+        body.dark .log-table tr:nth-child(even) { background-color: var(--table-row-even-bg-dark); }
+        .log-table tr:hover { background-color: var(--table-row-hover-bg-light); }
+        body.dark .log-table tr:hover { background-color: var(--table-row-hover-bg-dark); }
+        
+        .log-entry { animation: slideInUp 0.5s ease-out; }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #map { height: 300px; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); 
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-backdrop.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            padding: 2rem; border-radius: 16px; 
+            width: 90%; max-width: 400px; 
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            background: var(--modal-bg-light);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--container-border-light);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        body.dark .modal-content {
+            background: var(--modal-bg-dark);
+            border: 1px solid var(--container-border-dark);
+             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1) translateY(0); }
+
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px;
+            border-radius: 50%; border-left-color: #3b82f6;
+            animation: spin 1s ease infinite; margin: 0 auto 1rem;
+        }
+        body.dark .loading-spinner { border-left-color: #60a5fa; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .school-checkbox-group label {
+            display: flex; align-items: center; padding: 0.5rem;
+            border: 1px solid var(--input-border-light); border-radius: 6px;
+            margin-bottom: 0.5rem; cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
+        }
+        body.dark .school-checkbox-group label { border-color: var(--input-border-dark); }
+        .school-checkbox-group label:hover { background-color: #f8fafc; }
+        body.dark .school-checkbox-group label:hover { background-color: var(--table-row-hover-bg-dark); }
+
+        .school-checkbox-group input[type="checkbox"] {
+            margin-right: 0.75rem; height: 1.1em; width: 1.1em; accent-color: #3b82f6;
+        }
+        body.dark .school-checkbox-group input[type="checkbox"] { accent-color: #60a5fa; }
+
+        .info-box {
+            background-color: var(--info-box-bg-light); padding: 1rem;
+            border-radius: 8px; border: 1px solid var(--info-box-border-light);
+            margin-top: 1rem; transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        body.dark .info-box {
+            background-color: var(--info-box-bg-dark);
+            border-color: var(--info-box-border-dark);
+        }
+        .info-box h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--text-light); margin-bottom: 0.5rem;
+        }
+        body.dark .info-box h3 { color: var(--text-dark); }
+        .info-box p { font-size: 0.9rem; color: #4b5563; margin-bottom: 0.25rem; }
+        body.dark .info-box p { color: #a0aec0; }
+        .info-box strong { color: #111827; }
+        body.dark .info-box strong { color: #e2e8f0; }
+
+        #confirmDeleteModal .modal-content { max-width: 450px; }
+        #confirmDeleteModalButtons {
+            display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;
+        }
+
+        #themeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001; 
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #themeToggle:hover {
+            background-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        body.dark #themeToggle {
+            background-color: rgba(45, 55, 72, 0.5); 
+            border-color: rgba(255,255,255,0.2);
+        }
+        body.dark #themeToggle:hover {
+            background-color: rgba(45, 55, 72, 0.7);
+        }
+        #themeToggle svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: #4a5568; 
+            transition: color 0.3s;
+        }
+        body.dark #themeToggle svg {
+            color: #fcd34d; 
+        }
+        .app-credit {
+            text-align: center;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            color: #6b7280;
+            opacity: 0.8;
+            animation: fadeInBottom 1s 0.5s ease-out forwards;
+        }
+        body.dark .app-credit {
+            color: #9ca3af;
+        }
+        @keyframes fadeInBottom {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .app-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem; 
+            animation: fadeInTop 0.8s ease-out;
+        }
+        @keyframes fadeInTop {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .app-logo {
+            width: 104px; 
+            height: 104px; 
+            background-color: white; 
+            padding: 8px; 
+            border-radius: 12px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08); 
+            margin-bottom: 0.5rem;
+            object-fit: contain; 
+        }
+        .app-school-name {
+            font-size: 1.25rem; 
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <button id="themeToggle" title="Toggle Dark/Light Mode">
+        <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        </svg>
+        <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+        </svg>
+    </button>
+
+    <div class="container glassmorphism">
+        <div class="app-logo-container">
+            <img src="https://arafx.vercel.app/logo.png" alt="Logo SMAN 1 Soppeng" class="app-logo" 
+                 onerror="this.onerror=null; this.src='https://placehold.co/104x104/FFFFFF/EFEFEF?text=Gagal+Muat+Logo';">
+            <p class="app-school-name">SMAN 1 SOPPENG</p>
+        </div>
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold">Skor Penerimaan Siswa Baru</h1>
+            <p class="mt-2 opacity-80">Lengkapi data siswa, pilih lokasi rumah di peta, dan pilih sekolah tujuan.</p>
+            <p class="text-xs opacity-70 mt-1">User ID: <span id="userIdDisplay">Memuat...</span> (<span id="userEmailDisplay"></span>)</p>
+            <p class="text-xs opacity-70 mt-1">Project ID: <span id="projectIdDisplay">Memuat...</span></p>
+        </header>
+
+        <form id="studentForm" class="space-y-6">
+            <div>
+                <label for="namaSiswa" class="block text-sm font-medium mb-1">Nama Siswa</label>
+                <input type="text" id="namaSiswa" name="namaSiswa" class="form-input" placeholder="Contoh: Budi Santoso" required>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="akumulasiRapor" class="block text-sm font-medium mb-1">Akumulasi Rapor (Minimal 0)</label>
+                    <input type="number" id="akumulasiRapor" name="akumulasiRapor" class="form-input" placeholder="Contoh: 85.5 atau 120" min="0" step="0.1" required>
+                </div>
+                <div>
+                    <label for="nilaiTPA" class="block text-sm font-medium mb-1">Nilai TPA (0-100)</label>
+                    <input type="number" id="nilaiTPA" name="nilaiTPA" class="form-input" placeholder="Contoh: 78" min="0" max="100" step="1" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1">Lokasi Rumah (Pilih di Peta)</label>
+                <div id="map"></div>
+                <input type="text" id="latitude" name="latitude" class="form-input mt-2 mb-1" placeholder="Latitude (otomatis)" readonly>
+                <input type="text" id="longitude" name="longitude" class="form-input mb-1" placeholder="Longitude (otomatis)" readonly>
+                <textarea id="alamatLengkap" name="alamatLengkap" class="form-textarea" placeholder="Alamat Lengkap (otomatis dari peta)" readonly rows="2"></textarea>
+                <p class="text-xs opacity-70 mt-1">Geser penanda di peta untuk menentukan lokasi rumah Anda.</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-1">Pilih Maksimal 3 Sekolah Tujuan (SMAN di Soppeng)</label>
+                <div id="schoolSelection" class="school-checkbox-group grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    </div>
+                <p class="text-xs opacity-70 mt-1">Pilih maksimal 3 sekolah. Jarak akan dihitung otomatis.</p>
+            </div>
+
+            <div id="jarakInfo" class="info-box hidden">
+                <h3>Informasi Jarak & Sekolah Terdekat</h3>
+                <p>Jarak ke SMAN 1 Soppeng (untuk skor): <strong id="jarakKeSMAN1Display">Memproses...</strong></p>
+                <div id="jarakKePilihanDisplay">
+                    </div>
+                <p>Sekolah Terdekat (dari pilihan): <strong id="sekolahTerdekatDisplay">Memproses...</strong></p>
+            </div>
+
+            <button type="submit" id="submitFormButton" class="btn btn-primary w-full">Hitung & Simpan Skor</button>
+            <button type="button" id="cancelEditButton" class="btn btn-danger w-full mt-2 hidden">Batal Edit</button>
+        </form>
+
+        <div id="scoreResult" class="score-display hidden">
+            <h2 class="text-xl font-semibold mb-2">Skor Akhir Siswa</h2>
+            <p id="namaSiswaResult" class="text-lg opacity-90 mb-1"></p>
+            <p id="finalScore" class="score-value">0</p>
+            <p id="detailSkor" class="text-sm opacity-80 mt-2"></p>
+        </div>
+
+        <div class="mt-10">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold">Log Data Siswa</h2>
+                <button id="exportCsv" class="btn btn-secondary">Ekspor ke CSV</button>
+            </div>
+            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Rapor</th>
+                            <th>TPA</th>
+                            <th>Alamat</th>
+                            <th>Koordinat</th>
+                            <th>Sekolah Pilihan</th>
+                            <th>Jarak SMAN 1 (m)</th>
+                            <th>Terdekat (Pilihan)</th>
+                            <th>Skor Akhir</th>
+                            <th>Waktu</th>
+                            <th>Aksi</th> 
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+            </div>
+            <p id="noDataMessage" class="text-center opacity-70 py-8 hidden">Belum ada data siswa yang diinput.</p>
+        </div>
+    </div>
+    
+    <p class="app-credit">made by @_ara.v2</p>
+
+    <div id="messageModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div id="modalSpinner" class="loading-spinner hidden"></div>
+            <h3 id="modalTitle" class="text-xl font-semibold mb-2">Pemberitahuan</h3>
+            <p id="modalMessage" class="opacity-90 mb-6"></p>
+            <button id="modalCloseButton" class="btn btn-primary">Tutup</button>
+        </div>
+    </div>
+
+    <div id="confirmDeleteModal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 id="confirmDeleteTitle" class="text-xl font-semibold mb-2">Konfirmasi Hapus</h3>
+            <p id="confirmDeleteMessage" class="opacity-90 mb-6">Apakah Anda yakin ingin menghapus data siswa ini? Tindakan ini tidak dapat diurungkan.</p>
+            <div id="confirmDeleteModalButtons">
+                <button id="cancelDeleteButton" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200">Batal</button>
+                <button id="confirmDeleteActionButton" class="btn btn-danger">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Konfigurasi Firebase dari Pengguna
+        const userFirebaseConfig = {
+            apiKey: "AIzaSyAYyegImdtLuI_7TeALDgsdG4quuFyeqrs",
+            authDomain: "tugas-4971f.firebaseapp.com",
+            databaseURL: "https://tugas-4971f-default-rtdb.firebaseio.com",
+            projectId: "tugas-4971f",
+            storageBucket: "tugas-4971f.appspot.com", 
+            messagingSenderId: "1007302051502",
+            appId: "1:1007302051502:web:0b9ecf29406aea0b500f3f",
+            measurementId: "G-JQWL0XCHMM"
+        };
+        
+        const firebaseConfig = userFirebaseConfig; 
+        const logicalAppId = "skor-siswa-soppeng-v1"; 
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"; 
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, getDocs, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+
+        const fbApp = initializeApp(firebaseConfig);
+        const auth = getAuth(fbApp);
+        const db = getFirestore(fbApp);
+
+        let userId = null;
+        let studentLogUnsubscribe = null;
+        let map, marker;
+        let jarakKeSMAN1Soppeng = 0; 
+        let editingStudentId = null; 
+        let studentIdToDelete = null; 
+
+        const studentForm = document.getElementById('studentForm');
+        const scoreResultDiv = document.getElementById('scoreResult');
+        const finalScoreP = document.getElementById('finalScore');
+        const namaSiswaResultP = document.getElementById('namaSiswaResult');
+        const detailSkorP = document.getElementById('detailSkor');
+        const logTableBody = document.getElementById('logTableBody');
+        const exportCsvButton = document.getElementById('exportCsv');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const userEmailDisplay = document.getElementById('userEmailDisplay'); 
+        const projectIdDisplay = document.getElementById('projectIdDisplay'); 
+        const noDataMessage = document.getElementById('noDataMessage');
+        const akumulasiRaporInput = document.getElementById('akumulasiRapor');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const alamatLengkapInput = document.getElementById('alamatLengkap');
+        const schoolSelectionDiv = document.getElementById('schoolSelection');
+        const jarakInfoDiv = document.getElementById('jarakInfo');
+        const jarakKeSMAN1Display = document.getElementById('jarakKeSMAN1Display');
+        const jarakKePilihanDisplay = document.getElementById('jarakKePilihanDisplay');
+        const sekolahTerdekatDisplay = document.getElementById('sekolahTerdekatDisplay');
+        const submitFormButton = document.getElementById('submitFormButton');
+        const cancelEditButton = document.getElementById('cancelEditButton');
+        
+        const messageModal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseButton = document.getElementById('modalCloseButton');
+        const modalSpinner = document.getElementById('modalSpinner');
+
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const confirmDeleteTitle = document.getElementById('confirmDeleteTitle');
+        const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+        const cancelDeleteButton = document.getElementById('cancelDeleteButton');
+        const confirmDeleteActionButton = document.getElementById('confirmDeleteActionButton');
+
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIconSun = document.getElementById('themeIconSun');
+        const themeIconMoon = document.getElementById('themeIconMoon');
+
+        const daftarSekolah = [
+            { nama: "SMAN 1 Soppeng", lat: -4.355278, lon: 119.883056, id: "sman1" },
+            { nama: "SMAN 2 Soppeng", lat: -4.370000, lon: 119.952500, id: "sman2" },
+            { nama: "SMAN 3 Soppeng", lat: -4.2319916, lon: 119.8874664, id: "sman3" },
+            { nama: "SMAN 4 Soppeng", lat: -4.3573628, lon: 119.876333, id: "sman4" },
+            { nama: "SMAN 5 Soppeng", lat: -4.4737294, lon: 119.9448161, id: "sman5" },
+            { nama: "SMAN 6 Soppeng", lat: -4.1296724, lon: 119.8661849, id: "sman6" },
+            { nama: "SMAN 7 Soppeng", lat: -4.3389245, lon: 119.998044, id: "sman7" },
+            { nama: "SMAN 8 Soppeng", lat: -4.3436769, lon: 119.8879904, id: "sman8" },
+        ];
+
+        // Fungsi Dark Mode
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark');
+                themeIconSun.classList.add('hidden');
+                themeIconMoon.classList.remove('hidden');
+            } else {
+                document.body.classList.remove('dark');
+                themeIconSun.classList.remove('hidden');
+                themeIconMoon.classList.add('hidden');
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+
+        // Inisialisasi tema saat halaman dimuat - DEFAULT KE DARK MODE
+        const savedTheme = localStorage.getItem('theme') || 'dark'; // Default ke dark
+        applyTheme(savedTheme);
+
+
+        function showModal(title, message, isLoading = false) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalSpinner.classList.toggle('hidden', !isLoading);
+            modalCloseButton.classList.toggle('hidden', isLoading);
+            messageModal.classList.add('active');
+        }
+        function hideModal() {
+            messageModal.classList.remove('active');
+        }
+        modalCloseButton.addEventListener('click', hideModal);
+
+        function showConfirmDeleteModal(studentName) {
+            confirmDeleteMessage.textContent = `Apakah Anda yakin ingin menghapus data siswa "${studentName}"? Tindakan ini tidak dapat diurungkan.`;
+            confirmDeleteModal.classList.add('active');
+        }
+
+        function hideConfirmDeleteModal() {
+            confirmDeleteModal.classList.remove('active');
+            studentIdToDelete = null; 
+        }
+        cancelDeleteButton.addEventListener('click', hideConfirmDeleteModal);
+        
+        confirmDeleteActionButton.addEventListener('click', async () => {
+            console.log("[Delete Action] Tombol konfirmasi hapus diklik.");
+            console.log("[Delete Action] studentIdToDelete:", studentIdToDelete, "userId:", userId, "logicalAppId:", logicalAppId);
+
+            const sId = studentIdToDelete; 
+            const uId = userId;
+            const lAppId = logicalAppId;
+
+            if (sId && typeof sId === 'string' && sId.trim() !== '' &&
+                uId && typeof uId === 'string' && uId.trim() !== '' &&
+                lAppId && typeof lAppId === 'string' && lAppId.trim() !== '') {
+                
+                showModal("Menghapus Data", "Mohon tunggu...", true);
+                hideConfirmDeleteModal(); 
+                try {
+                    const fullPath = `artifacts/${lAppId}/users/${uId}/studentScoresMap/${sId}`;
+                    console.log("[Delete Action] Path lengkap yang akan dihapus:", fullPath); 
+                    
+                    if (fullPath.includes("null") || fullPath.includes("undefined") || fullPath.includes("//")) {
+                        console.error("[Delete Action] Path tidak valid karena mengandung 'null', 'undefined', atau '//':", fullPath);
+                        throw new Error("Path konstruksi tidak valid: " + fullPath);
+                    }
+
+                    const docRef = doc(db, fullPath);
+                    console.log("[Delete Action] Referensi dokumen dibuat untuk path:", docRef.path);
+                    
+                    await deleteDoc(docRef);
+                    console.log("[Delete Action] deleteDoc berhasil dipanggil.");
+                    hideModal(); 
+                    showModal("Sukses", "Data siswa berhasil dihapus.");
+                } catch (error) {
+                    hideModal();
+                    console.error("[Delete Action] Error saat menghapus dokumen:", error); 
+                    console.error("[Delete Action] Pesan Error:", error.message); 
+                    console.error("[Delete Action] Stack Error:", error.stack);   
+                    showModal("Error", "Gagal menghapus data siswa: " + error.message);
+                }
+                studentIdToDelete = null; 
+            } else {
+                console.warn("[Delete Action] Penghapusan dibatalkan: Satu atau lebih ID hilang atau tidak valid.", 
+                    { studentIdToDelete: sId, userId: uId, logicalAppId: lAppId });
+                let missingInfo = [];
+                if (!sId || typeof sId !== 'string' || sId.trim() === '') missingInfo.push("ID data siswa");
+                if (!uId || typeof uId !== 'string' || uId.trim() === '') missingInfo.push("ID pengguna");
+                if (!lAppId || typeof lAppId !== 'string' || lAppId.trim() === '') missingInfo.push("ID aplikasi logis");
+                showModal("Peringatan", `Tidak dapat menghapus data. Informasi berikut tidak valid atau hilang: ${missingInfo.join(', ')}.`);
+                hideConfirmDeleteModal(); 
+            }
+        });
+
+        async function setupAuth() { 
+            showModal("Autentikasi", "Mencoba login otomatis...", true);
+            const email = "akhsanriananugrah@gmail.com";
+            const password = "Akhsan.31";
+            console.warn("PERINGATAN KEAMANAN: Kredensial login di-hardcode di sisi klien.");
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                console.log("Berhasil login dengan email dan password.");
+            } catch (error) {
+                console.error("Firebase Auth Error (Email/Password): ", error);
+                showModal("Error Autentikasi", `Gagal login otomatis dengan email: ${error.message}. Pastikan akun ada dan kredensial benar. Periksa juga aturan keamanan Firebase.`);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                hideModal(); 
+                if (user) {
+                    userId = user.uid;
+                    userIdDisplay.textContent = userId;
+                    userEmailDisplay.textContent = user.email || "Anonim"; 
+                    projectIdDisplay.textContent = firebaseConfig.projectId; 
+                    console.log("User terautentikasi:", user.email, "UID:", userId, "pada Project ID:", firebaseConfig.projectId);
+                    loadStudentLog();
+                } else {
+                    userId = null; 
+                    userIdDisplay.textContent = "Tidak terautentikasi";
+                    userEmailDisplay.textContent = "";
+                    projectIdDisplay.textContent = firebaseConfig.projectId || "Tidak diketahui";
+                    console.warn("Pengguna tidak terautentikasi setelah percobaan login.");
+                }
+            });
+        }
+
+        function initMap() { 
+            const soppengCenter = [daftarSekolah[0].lat, daftarSekolah[0].lon]; 
+            map = L.map('map').setView(soppengCenter, 12); 
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            marker = L.marker(soppengCenter, {draggable: true}).addTo(map);
+
+            marker.on('dragend', function(event){
+                const position = marker.getLatLng();
+                latitudeInput.value = position.lat.toFixed(6);
+                longitudeInput.value = position.lng.toFixed(6);
+                reverseGeocode(position.lat, position.lng);
+                updateJarakInfo();
+            });
+            latitudeInput.value = marker.getLatLng().lat.toFixed(6);
+            longitudeInput.value = marker.getLatLng().lng.toFixed(6);
+            reverseGeocode(marker.getLatLng().lat, marker.getLatLng().lng);
+            updateJarakInfo();
+        }
+
+        async function reverseGeocode(lat, lng) { 
+            alamatLengkapInput.value = "Mencari alamat...";
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (data && data.display_name) {
+                    alamatLengkapInput.value = data.display_name;
+                } else {
+                    alamatLengkapInput.value = "Alamat tidak ditemukan.";
+                }
+            } catch (error) {
+                console.error("Reverse geocoding error:", error);
+                alamatLengkapInput.value = "Gagal mendapatkan alamat.";
+            }
+        }
+        
+        function haversineDistance(coords1, coords2) { 
+            function toRad(x) { return x * Math.PI / 180; }
+            const R = 6371000; 
+            const dLat = toRad(coords2.lat - coords1.lat);
+            const dLon = toRad(coords2.lon - coords1.lon);
+            const lat1Rad = toRad(coords1.lat);
+            const lat2Rad = toRad(coords2.lat);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1Rad) * Math.cos(lat2Rad);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; 
+        }
+
+        function populateSchoolCheckboxes() { 
+            schoolSelectionDiv.innerHTML = ''; 
+            daftarSekolah.forEach(sekolah => {
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <input type="checkbox" name="sekolahPilihan" value="${sekolah.id}" data-nama="${sekolah.nama}">
+                    ${sekolah.nama}
+                `;
+                schoolSelectionDiv.appendChild(label);
+            });
+            const checkboxes = schoolSelectionDiv.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                    if (checkedCount > 3) {
+                        checkbox.checked = false;
+                        showModal("Peringatan", "Anda hanya dapat memilih maksimal 3 sekolah.");
+                    }
+                    updateJarakInfo(); 
+                });
+            });
+        }
+        
+        function getSelectedSchools() { 
+            const selected = [];
+            schoolSelectionDiv.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                const schoolData = daftarSekolah.find(s => s.id === cb.value);
+                if (schoolData) {
+                    selected.push(schoolData);
+                }
+            });
+            return selected;
+        }
+
+        function updateJarakInfo() { 
+            const homeLat = parseFloat(latitudeInput.value);
+            const homeLon = parseFloat(longitudeInput.value);
+
+            if (isNaN(homeLat) || isNaN(homeLon)) {
+                jarakInfoDiv.classList.add('hidden');
+                return;
+            }
+            jarakInfoDiv.classList.remove('hidden');
+            const homeCoords = { lat: homeLat, lon: homeLon };
+            const sman1 = daftarSekolah.find(s => s.id === "sman1");
+            if (sman1) {
+                jarakKeSMAN1Soppeng = haversineDistance(homeCoords, { lat: sman1.lat, lon: sman1.lon });
+                jarakKeSMAN1Display.textContent = `${jarakKeSMAN1Soppeng.toFixed(0)} meter`;
+            } else {
+                jarakKeSMAN1Display.textContent = "Data SMAN 1 tidak ditemukan.";
+                jarakKeSMAN1Soppeng = 0; 
+            }
+            const pilihanSekolah = getSelectedSchools();
+            jarakKePilihanDisplay.innerHTML = ''; 
+            if (pilihanSekolah.length === 0) {
+                sekolahTerdekatDisplay.textContent = "Belum ada sekolah dipilih.";
+                return;
+            }
+            let sekolahTerdekat = null;
+            let jarakTerpendek = Infinity;
+            pilihanSekolah.forEach(sekolah => {
+                const jarak = haversineDistance(homeCoords, { lat: sekolah.lat, lon: sekolah.lon });
+                const p = document.createElement('p');
+                p.innerHTML = `Jarak ke ${sekolah.nama}: <strong>${jarak.toFixed(0)} meter</strong>`;
+                jarakKePilihanDisplay.appendChild(p);
+                if (jarak < jarakTerpendek) {
+                    jarakTerpendek = jarak;
+                    sekolahTerdekat = sekolah.nama;
+                }
+            });
+            sekolahTerdekatDisplay.textContent = sekolahTerdekat ? `${sekolahTerdekat} (${jarakTerpendek.toFixed(0)} m)` : "N/A";
+        }
+
+        function calculateScore(akumulasiRapor, nilaiTPA, jarakKeSMAN1) { 
+            akumulasiRapor = parseFloat(akumulasiRapor);
+            nilaiTPA = parseFloat(nilaiTPA);
+            if (isNaN(akumulasiRapor) || isNaN(nilaiTPA) || isNaN(jarakKeSMAN1)) {
+                return { error: "Input tidak valid. Pastikan semua angka terisi dengan benar." };
+            }
+            if (akumulasiRapor < 0 || nilaiTPA < 0 || nilaiTPA > 100 || jarakKeSMAN1 < 0) {
+                 return { error: "Nilai input tidak valid. Akumulasi Rapor min 0. TPA 0-100. Jarak min 0." };
+            }
+            const skorJarak = Math.max(0, 10000 - jarakKeSMAN1); 
+            const skorAkhir = (akumulasiRapor * (nilaiTPA / 100)) + skorJarak;
+            return { skorJarak: skorJarak.toFixed(2), skorAkhir: skorAkhir.toFixed(2) };
+        }
+
+        async function prepareEditForm(studentIdToEdit) {
+            showModal("Memuat Data", "Sedang memuat data siswa untuk diedit...", true);
+            try {
+                const docRef = doc(db, `artifacts/${logicalAppId}/users/${userId}/studentScoresMap`, studentIdToEdit);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const student = { id: docSnap.id, ...docSnap.data() };
+                    editingStudentId = student.id;
+
+                    document.getElementById('namaSiswa').value = student.namaSiswa || '';
+                    akumulasiRaporInput.value = student.akumulasiRapor || '';
+                    document.getElementById('nilaiTPA').value = student.nilaiTPA || '';
+                    latitudeInput.value = student.latitude || '';
+                    longitudeInput.value = student.longitude || '';
+                    
+                    if (student.latitude && student.longitude && map && marker) {
+                        const newLatLng = L.latLng(student.latitude, student.longitude);
+                        marker.setLatLng(newLatLng);
+                        map.setView(newLatLng, map.getZoom() > 12 ? map.getZoom() : 13); 
+                        await reverseGeocode(student.latitude, student.longitude); 
+                    } else {
+                        alamatLengkapInput.value = student.alamatLengkap || ''; 
+                    }
+
+                    schoolSelectionDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    if (Array.isArray(student.sekolahPilihan)) {
+                        student.sekolahPilihan.forEach(selectedSchoolName => {
+                            const schoolCheckbox = schoolSelectionDiv.querySelector(`input[data-nama="${selectedSchoolName}"]`);
+                            if (schoolCheckbox) {
+                                schoolCheckbox.checked = true;
+                            }
+                        });
+                    }
+                    updateJarakInfo(); 
+
+                    submitFormButton.textContent = 'Update Skor';
+                    submitFormButton.classList.remove('btn-primary');
+                    submitFormButton.classList.add('btn-warning');
+                    cancelEditButton.classList.remove('hidden');
+                    
+                    hideModal();
+                    window.scrollTo({ top: studentForm.offsetTop - 20, behavior: 'smooth' });
+                } else {
+                    hideModal();
+                    showModal("Error", "Data siswa tidak ditemukan.");
+                    editingStudentId = null; 
+                }
+            } catch (error) {
+                hideModal();
+                console.error("Error preparing edit form:", error);
+                showModal("Error", "Gagal memuat data untuk diedit: " + error.message);
+                editingStudentId = null;
+            }
+        }
+
+        function cancelEdit() {
+            editingStudentId = null;
+            studentForm.reset();
+            alamatLengkapInput.value = '';
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+            
+            const soppengCenter = [daftarSekolah[0].lat, daftarSekolah[0].lon];
+            if (map && marker) {
+                marker.setLatLng(soppengCenter);
+                map.setView(soppengCenter, 12);
+                reverseGeocode(soppengCenter[0], soppengCenter[1]);
+            }
+            
+            populateSchoolCheckboxes(); 
+            jarakInfoDiv.classList.add('hidden');
+            scoreResultDiv.classList.add('hidden');
+
+            submitFormButton.textContent = 'Hitung & Simpan Skor';
+            submitFormButton.classList.remove('btn-warning');
+            submitFormButton.classList.add('btn-primary');
+            cancelEditButton.classList.add('hidden');
+        }
+        cancelEditButton.addEventListener('click', cancelEdit);
+
+
+        studentForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            if (!userId) {
+                showModal("Error", "User ID tidak ditemukan. Tidak dapat menyimpan data.");
+                return;
+            }
+             if (!logicalAppId || typeof logicalAppId !== 'string' || logicalAppId.trim() === '') {
+                showModal("Error Konfigurasi", "ID Aplikasi Logis tidak valid. Operasi tidak dapat dilanjutkan.");
+                return;
+            }
+
+
+            const namaSiswa = document.getElementById('namaSiswa').value.trim();
+            const akumulasiRaporVal = akumulasiRaporInput.value;
+            const nilaiTPAVal = document.getElementById('nilaiTPA').value;
+            const latVal = latitudeInput.value;
+            const lonVal = longitudeInput.value;
+            const alamatVal = alamatLengkapInput.value;
+            
+            const pilihanSekolahObj = getSelectedSchools();
+            const namaSekolahPilihan = pilihanSekolahObj.map(s => s.nama);
+
+            if (!namaSiswa) { showModal("Error Input", "Nama siswa tidak boleh kosong."); return; }
+            if (!latVal || !lonVal) { showModal("Error Input", "Lokasi rumah belum ditentukan di peta."); return; }
+            if (pilihanSekolahObj.length === 0 && !editingStudentId) { 
+                 const currentSelections = getSelectedSchools();
+                 if(currentSelections.length === 0){
+                    showModal("Error Input", "Pilih minimal satu sekolah tujuan."); return;
+                 }
+            }
+
+            const scores = calculateScore(akumulasiRaporVal, nilaiTPAVal, jarakKeSMAN1Soppeng);
+
+            if (scores.error) {
+                showModal("Error Kalkulasi", scores.error);
+                finalScoreP.textContent = "Error";
+                namaSiswaResultP.textContent = namaSiswa;
+                detailSkorP.textContent = `Kesalahan: ${scores.error}`;
+                scoreResultDiv.classList.remove('hidden');
+                return;
+            }
+
+            finalScoreP.textContent = scores.skorAkhir;
+            namaSiswaResultP.textContent = `Siswa: ${namaSiswa}`;
+            detailSkorP.textContent = `Detail: (Rapor ${akumulasiRaporVal} x TPA ${nilaiTPAVal}%) + Skor Jarak SMAN 1 (${scores.skorJarak})`;
+            scoreResultDiv.classList.remove('hidden');
+            finalScoreP.style.animation = 'none'; finalScoreP.offsetHeight; finalScoreP.style.animation = null; 
+            finalScoreP.style.animation = 'scaleUp 0.5s ease-out forwards';
+
+            const homeCoords = { lat: parseFloat(latVal), lon: parseFloat(lonVal) };
+            let jarakKePilihanData = {};
+            let sekolahTerdekatNama = "N/A";
+            let jarakTerpendekVal = Infinity;
+
+            pilihanSekolahObj.forEach(sekolah => {
+                const jarak = haversineDistance(homeCoords, { lat: sekolah.lat, lon: sekolah.lon });
+                jarakKePilihanData[sekolah.id] = { nama: sekolah.nama, jarak: jarak.toFixed(0) };
+                if (jarak < jarakTerpendekVal) {
+                    jarakTerpendekVal = jarak;
+                    sekolahTerdekatNama = sekolah.nama;
+                }
+            });
+            
+            const dataPayload = {
+                namaSiswa: namaSiswa,
+                akumulasiRapor: parseFloat(akumulasiRaporVal),
+                nilaiTPA: parseFloat(nilaiTPAVal),
+                latitude: parseFloat(latVal),
+                longitude: parseFloat(lonVal),
+                alamatLengkap: alamatVal,
+                sekolahPilihan: namaSekolahPilihan,
+                jarakKeSekolahPilihan: jarakKePilihanData,
+                sekolahTerdekatDariPilihan: `${sekolahTerdekatNama} (${jarakTerpendekVal > 0 && jarakTerpendekVal !== Infinity ? jarakTerpendekVal.toFixed(0) + ' m' : 'N/A'})`,
+                jarakKeSMAN1Soppeng: parseFloat(jarakKeSMAN1Soppeng.toFixed(2)),
+                skorJarakDariSMAN1: parseFloat(scores.skorJarak),
+                skorAkhir: parseFloat(scores.skorAkhir),
+            };
+
+            showModal(editingStudentId ? "Memperbarui Data" : "Menyimpan Data", "Mohon tunggu...", true);
+
+            if (editingStudentId) { 
+                dataPayload.updatedAt = serverTimestamp(); 
+                try {
+                    const docRef = doc(db, `artifacts/${logicalAppId}/users/${userId}/studentScoresMap`, editingStudentId);
+                    await setDoc(docRef, dataPayload, { merge: true }); 
+                    hideModal();
+                    showModal("Sukses", `Data ${namaSiswa} berhasil diperbarui!`);
+                    cancelEdit(); 
+                } catch (error) {
+                    hideModal();
+                    console.error("Error updating document: ", error);
+                    showModal("Error Update", `Gagal memperbarui data: ${error.message}.`);
+                }
+            } else { 
+                dataPayload.timestamp = serverTimestamp(); 
+                try {
+                    const collectionPath = `artifacts/${logicalAppId}/users/${userId}/studentScoresMap`;
+                    await addDoc(collection(db, collectionPath), dataPayload);
+                    hideModal();
+                    showModal("Sukses", `Data ${namaSiswa} berhasil disimpan!`);
+                    cancelEdit(); 
+                } catch (error) {
+                    hideModal();
+                    console.error("Error adding document: ", error);
+                    showModal("Error Penyimpanan", `Gagal menyimpan data: ${error.message}.`);
+                }
+            }
+        });
+
+        function loadStudentLog() {
+            if (!userId || !logicalAppId) { 
+                console.warn("Tidak dapat memuat log: userId atau logicalAppId hilang.", {userId, logicalAppId});
+                noDataMessage.classList.remove('hidden');
+                noDataMessage.textContent = "Gagal memuat data: Informasi pengguna atau aplikasi tidak lengkap.";
+                logTableBody.innerHTML = '';
+                return; 
+            }
+            if (studentLogUnsubscribe) studentLogUnsubscribe();
+            
+            const collectionPath = `artifacts/${logicalAppId}/users/${userId}/studentScoresMap`;
+            const q = query(collection(db, collectionPath));
+
+            studentLogUnsubscribe = onSnapshot(q, (querySnapshot) => {
+                const students = [];
+                querySnapshot.forEach((doc) => students.push({ id: doc.id, ...doc.data() }));
+                students.sort((a, b) => {
+                    const timeA = a.updatedAt || a.timestamp; 
+                    const timeB = b.updatedAt || b.timestamp;
+                    if (timeB && timeA) return timeB.toMillis() - timeA.toMillis();
+                    if (timeB) return 1; 
+                    if (timeA) return -1; 
+                    return 0;
+                });
+
+
+                logTableBody.innerHTML = '';
+                noDataMessage.classList.toggle('hidden', students.length > 0);
+
+                students.forEach(student => {
+                    const row = logTableBody.insertRow();
+                    row.classList.add('log-entry');
+                    const displayTimestamp = student.updatedAt || student.timestamp;
+                    const date = displayTimestamp ? new Date(displayTimestamp.seconds * 1000).toLocaleString('id-ID') : 'N/A';
+                    const pilihanSekolahStr = Array.isArray(student.sekolahPilihan) ? student.sekolahPilihan.join(', ') : 'N/A';
+                    
+                    row.innerHTML = `
+                        <td>${student.namaSiswa || 'N/A'}</td>
+                        <td>${student.akumulasiRapor || 'N/A'}</td>
+                        <td>${student.nilaiTPA || 'N/A'}</td>
+                        <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${student.alamatLengkap || ''}">${student.alamatLengkap || 'N/A'}</td>
+                        <td>${student.latitude ? `${student.latitude.toFixed(4)}, ${student.longitude.toFixed(4)}` : 'N/A'}</td>
+                        <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${pilihanSekolahStr}">${pilihanSekolahStr}</td>
+                        <td>${student.jarakKeSMAN1Soppeng ? student.jarakKeSMAN1Soppeng.toFixed(0) : 'N/A'}</td>
+                        <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${student.sekolahTerdekatDariPilihan || ''}">${student.sekolahTerdekatDariPilihan || 'N/A'}</td>
+                        <td>${student.skorAkhir || 'N/A'}</td>
+                        <td>${date}</td>
+                        <td class="whitespace-nowrap">
+                            <button class="btn btn-action btn-edit" data-id="${student.id}">Edit</button>
+                            <button class="btn btn-action btn-delete" data-id="${student.id}" data-nama="${student.namaSiswa || 'Siswa Ini'}">Hapus</button>
+                        </td>
+                    `;
+                });
+                
+                document.querySelectorAll('.btn-edit').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const studentIdToEdit = event.target.dataset.id;
+                        prepareEditForm(studentIdToEdit);
+                    });
+                });
+                document.querySelectorAll('.btn-delete').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        studentIdToDelete = event.target.dataset.id;
+                        const studentNameToDelete = event.target.dataset.nama;
+                        showConfirmDeleteModal(studentNameToDelete);
+                    });
+                });
+
+            }, (error) => { 
+                console.error("Error fetching student log: ", error);
+                showModal("Error Log", `Gagal memuat log: ${error.message}`);
+                noDataMessage.classList.remove('hidden');
+                noDataMessage.textContent = "Gagal memuat data.";
+            });
+        }
+
+        async function exportToCsv() { 
+            if (!userId || !logicalAppId) { 
+                 showModal("Error", "Informasi pengguna atau aplikasi tidak lengkap untuk ekspor."); return; 
+            }
+            showModal("Ekspor CSV", "Menyiapkan data...", true);
+            try {
+                const collectionPath = `artifacts/${logicalAppId}/users/${userId}/studentScoresMap`;
+                const querySnapshot = await getDocs(collection(db, collectionPath));
+                const students = [];
+                querySnapshot.forEach((doc) => students.push(doc.data()));
+
+                if (students.length === 0) { hideModal(); showModal("Info", "Tidak ada data untuk diekspor."); return; }
+                students.sort((a, b) => {
+                    const timeA = a.updatedAt || a.timestamp;
+                    const timeB = b.updatedAt || b.timestamp;
+                    if (timeB && timeA) return timeB.toMillis() - timeA.toMillis();
+                    if (timeB) return 1; 
+                    if (timeA) return -1; 
+                    return 0;
+                });
+
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Nama Siswa,Akumulasi Rapor,Nilai TPA,Latitude,Longitude,Alamat Lengkap,Sekolah Pilihan,Jarak ke SMAN 1 Soppeng (m),Skor Jarak dari SMAN 1,Sekolah Terdekat dari Pilihan,Jarak ke Sekolah Pilihan (detail),Skor Akhir,Waktu Input/Update\n";
+
+                students.forEach(s => {
+                    const displayTimestamp = s.updatedAt || s.timestamp;
+                    const date = displayTimestamp ? new Date(displayTimestamp.seconds * 1000).toLocaleString('id-ID') : 'N/A';
+                    const pilihanSekolahStr = Array.isArray(s.sekolahPilihan) ? s.sekolahPilihan.join('; ') : '';
+                    let jarakPilihanDetailStr = "";
+                    if (s.jarakKeSekolahPilihan && typeof s.jarakKeSekolahPilihan === 'object') {
+                        jarakPilihanDetailStr = Object.values(s.jarakKeSekolahPilihan)
+                            .map(val => `${val.nama}: ${val.jarak}m`)
+                            .join('; ');
+                    }
+                    const row = [
+                        `"${s.namaSiswa || ''}"`, s.akumulasiRapor || 0, s.nilaiTPA || 0,
+                        s.latitude || 0, s.longitude || 0, `"${s.alamatLengkap || ''}"`,
+                        `"${pilihanSekolahStr}"`, s.jarakKeSMAN1Soppeng ? s.jarakKeSMAN1Soppeng.toFixed(0) : 0,
+                        s.skorJarakDariSMAN1 ? s.skorJarakDariSMAN1 : 0,
+                        `"${s.sekolahTerdekatDariPilihan || ''}"`, `"${jarakPilihanDetailStr}"`,
+                        s.skorAkhir || 0, `"${date}"`
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+                
+                hideModal();
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "log_skor_siswa_peta.csv");
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                showModal("Sukses", "Data berhasil diekspor ke CSV!");
+            } catch (error) {
+                hideModal();
+                console.error("Error exporting to CSV: ", error);
+                showModal("Error Ekspor", `Gagal mengekspor: ${error.message}`);
+            }
+        }
+        exportCsvButton.addEventListener('click', exportToCsv);
+
+        window.onload = () => {
+            setupAuth(); 
+            initMap();
+            populateSchoolCheckboxes();
+        };
+    </script>
+</body>
+</html>
