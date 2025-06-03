@@ -114,6 +114,8 @@
         .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
         .btn-secondary { background-color: #10b981; color: white; }
         .btn-secondary:hover { background-color: #059669; transform: translateY(-1px); }
+        .btn-info { background-color: #0ea5e9; color: white; } /* Biru muda untuk tombol info/terapkan */
+        .btn-info:hover { background-color: #0284c7; transform: translateY(-1px); }
         .btn-warning { background-color: #f59e0b; color: white; } 
         .btn-warning:hover { background-color: #d97706; transform: translateY(-1px); }
         .btn-danger { background-color: #ef4444; color: white; } 
@@ -374,12 +376,15 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-1">Lokasi Rumah (Pilih di Peta)</label>
+                <label class="block text-sm font-medium mb-1">Lokasi Rumah</label>
                 <div id="map"></div>
-                <input type="text" id="latitude" name="latitude" class="form-input mt-2 mb-1" placeholder="Latitude (otomatis)" readonly>
-                <input type="text" id="longitude" name="longitude" class="form-input mb-1" placeholder="Longitude (otomatis)" readonly>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 mb-1">
+                    <input type="number" step="any" id="latitude" name="latitude" class="form-input" placeholder="Latitude (Contoh: -4.355)">
+                    <input type="number" step="any" id="longitude" name="longitude" class="form-input" placeholder="Longitude (Contoh: 119.883)">
+                </div>
+                <button type="button" id="applyManualCoordsButton" class="btn btn-info w-full text-sm py-2 mb-2">Gunakan Koordinat Ini</button>
                 <textarea id="alamatLengkap" name="alamatLengkap" class="form-textarea" placeholder="Alamat Lengkap (otomatis dari peta)" readonly rows="2"></textarea>
-                <p class="text-xs opacity-70 mt-1">Geser penanda di peta untuk menentukan lokasi rumah Anda.</p>
+                <p class="text-xs opacity-70 mt-1">Geser pin di peta atau masukkan koordinat manual & klik "Gunakan Koordinat Ini".</p>
             </div>
             
             <div>
@@ -513,6 +518,7 @@
         const sekolahTerdekatDisplay = document.getElementById('sekolahTerdekatDisplay');
         const submitFormButton = document.getElementById('submitFormButton');
         const cancelEditButton = document.getElementById('cancelEditButton');
+        const applyManualCoordsButton = document.getElementById('applyManualCoordsButton');
         
         const messageModal = document.getElementById('messageModal');
         const modalTitle = document.getElementById('modalTitle');
@@ -561,8 +567,7 @@
             applyTheme(newTheme);
         });
 
-        // Inisialisasi tema saat halaman dimuat - DEFAULT KE DARK MODE
-        const savedTheme = localStorage.getItem('theme') || 'dark'; // Default ke dark
+        const savedTheme = localStorage.getItem('theme') || 'dark'; 
         applyTheme(savedTheme);
 
 
@@ -689,6 +694,7 @@
                 reverseGeocode(position.lat, position.lng);
                 updateJarakInfo();
             });
+            // Inisialisasi nilai input dari posisi marker awal
             latitudeInput.value = marker.getLatLng().lat.toFixed(6);
             longitudeInput.value = marker.getLatLng().lng.toFixed(6);
             reverseGeocode(marker.getLatLng().lat, marker.getLatLng().lng);
@@ -798,6 +804,37 @@
             sekolahTerdekatDisplay.textContent = sekolahTerdekat ? `${sekolahTerdekat} (${jarakTerpendek.toFixed(0)} m)` : "N/A";
         }
 
+        // Fungsi untuk menerapkan koordinat manual ke peta
+        applyManualCoordsButton.addEventListener('click', () => {
+            const lat = parseFloat(latitudeInput.value);
+            const lon = parseFloat(longitudeInput.value);
+
+            if (isNaN(lat) || isNaN(lon)) {
+                showModal("Error Input", "Latitude dan Longitude harus berupa angka.");
+                return;
+            }
+            if (lat < -90 || lat > 90) {
+                showModal("Error Input", "Latitude harus antara -90 dan 90.");
+                return;
+            }
+            if (lon < -180 || lon > 180) {
+                showModal("Error Input", "Longitude harus antara -180 dan 180.");
+                return;
+            }
+
+            if (map && marker) {
+                const newLatLng = L.latLng(lat, lon);
+                marker.setLatLng(newLatLng);
+                map.setView(newLatLng, map.getZoom() > 13 ? map.getZoom() : 14); // Zoom lebih dekat
+                reverseGeocode(lat, lon);
+                updateJarakInfo();
+                showModal("Info", "Koordinat manual diterapkan ke peta.");
+            } else {
+                showModal("Error Peta", "Peta belum terinisialisasi dengan benar.");
+            }
+        });
+
+
         function calculateScore(akumulasiRapor, nilaiTPA, jarakKeSMAN1) { 
             akumulasiRapor = parseFloat(akumulasiRapor);
             nilaiTPA = parseFloat(nilaiTPA);
@@ -825,8 +862,8 @@
                     document.getElementById('namaSiswa').value = student.namaSiswa || '';
                     akumulasiRaporInput.value = student.akumulasiRapor || '';
                     document.getElementById('nilaiTPA').value = student.nilaiTPA || '';
-                    latitudeInput.value = student.latitude || '';
-                    longitudeInput.value = student.longitude || '';
+                    latitudeInput.value = student.latitude || ''; // Isi input lat
+                    longitudeInput.value = student.longitude || ''; // Isi input lon
                     
                     if (student.latitude && student.longitude && map && marker) {
                         const newLatLng = L.latLng(student.latitude, student.longitude);
@@ -872,14 +909,17 @@
             editingStudentId = null;
             studentForm.reset();
             alamatLengkapInput.value = '';
-            latitudeInput.value = '';
-            longitudeInput.value = '';
-            
-            const soppengCenter = [daftarSekolah[0].lat, daftarSekolah[0].lon];
+            // Saat batal edit, setel ulang input lat/lon ke posisi marker awal peta
             if (map && marker) {
-                marker.setLatLng(soppengCenter);
-                map.setView(soppengCenter, 12);
-                reverseGeocode(soppengCenter[0], soppengCenter[1]);
+                 const initialMapCenter = [daftarSekolah[0].lat, daftarSekolah[0].lon];
+                 marker.setLatLng(initialMapCenter);
+                 map.setView(initialMapCenter, 12);
+                 latitudeInput.value = initialMapCenter[0].toFixed(6);
+                 longitudeInput.value = initialMapCenter[1].toFixed(6);
+                 reverseGeocode(initialMapCenter[0], initialMapCenter[1]);
+            } else {
+                latitudeInput.value = '';
+                longitudeInput.value = '';
             }
             
             populateSchoolCheckboxes(); 
@@ -917,7 +957,7 @@
             const namaSekolahPilihan = pilihanSekolahObj.map(s => s.nama);
 
             if (!namaSiswa) { showModal("Error Input", "Nama siswa tidak boleh kosong."); return; }
-            if (!latVal || !lonVal) { showModal("Error Input", "Lokasi rumah belum ditentukan di peta."); return; }
+            if (!latVal || !lonVal) { showModal("Error Input", "Lokasi rumah belum ditentukan di peta atau input manual."); return; }
             if (pilihanSekolahObj.length === 0 && !editingStudentId) { 
                  const currentSelections = getSelectedSchools();
                  if(currentSelections.length === 0){
