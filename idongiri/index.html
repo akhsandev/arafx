@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDONGIRI - Monitoring Keterlambatan Siswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+        /* Light Mode Default - Tailwind akan menangani dark mode dengan prefix 'dark:' */
+        .tab-button.active { 
+            border-color: #3B82F6; /* blue-500 */
+            color: #3B82F6; /* blue-500 */
+        }
+        html.dark .tab-button.active {
+            border-color: #60A5FA; /* blue-400 for dark */
+            color: #60A5FA; /* blue-400 for dark */
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        html.dark ::-webkit-scrollbar-track { background: #2D3748; } /* gray-800 */
+        html.dark ::-webkit-scrollbar-thumb { background: #718096; } /* gray-500 */
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: #A0AEC0; } /* gray-400 */
+
+        /* Glassmorphism base for panels (Tailwind handles dark mode specifics) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6); /* Light mode glass */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        html.dark .glass-panel {
+            background: rgba(30, 41, 59, 0.6); /* slate-800 with alpha for dark mode glass */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Modal Styling */
+        .custom-modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        /* Styling for custom dropdown suggestions */
+        .suggestion-item:hover {
+            background-color: #EFF6FF; /* blue-50 */
+        }
+        html.dark .suggestion-item:hover {
+            background-color: #374151; /* gray-700 */
+        }
+    </style>
+    <script>
+        // Apply theme from localStorage before content loads to prevent FOUC
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+
+    <!-- Auth Screen -->
+    <div id="authScreen" class="min-h-screen flex flex-col items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-md glass-panel">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 mb-2 text-center">IDONGIRI</h1>
+            <p class="text-slate-600 dark:text-slate-400 mb-8 text-center">Monitoring Keterlambatan Siswa</p>
+            
+            <div id="authFormContainer">
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+                        <input type="email" id="loginEmail" name="loginEmail" required class="mt-1 block w-full px-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="anda@email.com">
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                        <input type="password" id="loginPassword" name="loginPassword" required class="mt-1 block w-full px-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="********">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">
+                        Login
+                    </button>
+                    <p class="text-sm text-center text-slate-500 dark:text-slate-400">
+                        Belum punya akun? <a href="#" id="showRegisterLink" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Daftar di sini</a>
+                    </p>
+                </form>
+
+                <!-- Register Form (Hidden by default) -->
+                <form id="registerForm" class="space-y-6 hidden">
+                    <div>
+                        <label for="registerEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+                        <input type="email" id="registerEmail" name="registerEmail" required class="mt-1 block w-full px-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="anda@email.com">
+                    </div>
+                    <div>
+                        <label for="registerPassword" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                        <input type="password" id="registerPassword" name="registerPassword" required class="mt-1 block w-full px-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Minimal 6 karakter">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
+                        Daftar
+                    </button>
+                    <p class="text-sm text-center text-slate-500 dark:text-slate-400">
+                        Sudah punya akun? <a href="#" id="showLoginLink" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Login di sini</a>
+                    </p>
+                </form>
+            </div>
+            <p id="authError" class="mt-4 text-center text-red-500 dark:text-red-400 text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Main App Screen (Hidden by default) -->
+    <div id="appScreen" class="hidden">
+        <header class="bg-gradient-to-r from-blue-600 to-purple-700 dark:from-blue-700 dark:to-purple-800 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-50">
+            <h1 class="text-2xl font-bold">IDONGIRI</h1>
+            <div class="flex items-center">
+                <span id="userEmailDisplay" class="mr-4 text-sm"></span>
+                <button id="themeToggleButton" class="mr-4 p-2 rounded-full hover:bg-white/20 transition-colors duration-200" title="Toggle Light/Dark Mode">
+                    <!-- Sun Icon -->
+                    <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m8.66-8.66l-.707.707M4.04 4.04l-.707.707M21 12h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707" />
+                    </svg>
+                    <!-- Moon Icon -->
+                    <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                <button id="logoutButton" class="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition duration-150">Logout</button>
+            </div>
+        </header>
+
+        <nav class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md -webkit-backdrop-blur-md shadow-sm sticky top-[72px] z-40">
+            <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+                <div class="relative flex items-center justify-center h-16">
+                    <div class="flex space-x-1 sm:space-x-2 md:space-x-4">
+                        <button data-tab="rekap" class="tab-button active py-2 px-3 sm:px-4 font-medium text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition duration-150">Rekap Bulanan</button>
+                        <button data-tab="inputSiswa" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition duration-150">Input Siswa</button>
+                        <button data-tab="grafik" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition duration-150">Grafik Penanganan</button>
+                        <button data-tab="database" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition duration-150">Database Siswa</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+            <div id="loadingIndicator" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] hidden">
+                <div class="bg-white dark:bg-slate-700 p-5 rounded-lg shadow-xl text-center">
+                    <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-slate-700 dark:text-slate-200 font-medium">Memproses...</p>
+                </div>
+            </div>
+            <div id="messagePopup" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl z-[90] hidden transition-all duration-300 opacity-0 transform translate-y-10">
+                <p id="messagePopupText"></p>
+            </div>
+
+            <!-- Custom Confirmation Modal -->
+            <div id="confirmationModal" class="fixed inset-0 z-[99] items-center justify-center custom-modal-backdrop hidden">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl w-full max-w-sm glass-panel">
+                    <h3 id="confirmationModalTitle" class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Konfirmasi</h3>
+                    <p id="confirmationModalMessage" class="text-sm text-slate-600 dark:text-slate-300 mb-6">Apakah Anda yakin?</p>
+                    <div class="flex justify-end space-x-3">
+                        <button id="confirmationModalCancel" class="py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition duration-150">Batal</button>
+                        <button id="confirmationModalConfirm" class="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">Ya, Lanjutkan</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Rekap Bulanan Panel -->
+            <div id="rekapPanel" class="tab-content glass-panel p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 text-slate-700 dark:text-slate-200">Rekap Keterlambatan Bulan Ini</h2>
+                <div class="mb-4">
+                    <label for="rekapFilterKelas" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Filter berdasarkan Kelas:</label>
+                    <select id="rekapFilterKelas" class="mt-1 block w-full max-w-xs py-2 px-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">Semua Kelas</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jam</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama Siswa</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kelas</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Alasan</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekapTableBody" class="bg-white dark:bg-slate-800/30 divide-y divide-slate-200 dark:divide-slate-700">
+                            <tr><td colspan="7" class="text-center py-10 text-slate-500 dark:text-slate-400">Tidak ada data keterlambatan untuk bulan ini.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Input Siswa Panel -->
+            <div id="inputSiswaPanel" class="tab-content hidden glass-panel p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 text-slate-700 dark:text-slate-200">Input Keterlambatan Siswa</h2>
+                <form id="inputSiswaForm" class="space-y-6">
+                    <div>
+                        <label for="inputKelas" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Kelas</label>
+                        <select id="inputKelas" required class="mt-1 block w-full py-3 px-4 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Pilih Kelas</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Searchable Student Input -->
+                    <div id="studentSearchWrapper" class="hidden"> <!-- Initially hidden, shown when class is selected -->
+                        <label for="searchStudentNameInput" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nama Siswa</label>
+                        <div class="relative mt-1">
+                            <input type="text" id="searchStudentNameInput" autocomplete="off"
+                                   class="block w-full py-3 px-4 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   placeholder="Ketik untuk mencari siswa...">
+                            <div id="studentSuggestionsDropdown"
+                                 class="absolute z-20 w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg hidden">
+                                <!-- Suggestions populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden select to store the actual student ID for the form -->
+                    <select id="inputNamaSiswa" name="inputNamaSiswa" required class="hidden"> <!-- This name attribute is important for form.reset() to clear it if it has a value -->
+                        <option value=""></option> <!-- Default empty value -->
+                    </select>
+
+                    <div>
+                        <label for="inputAlasan" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Alasan Keterlambatan</label>
+                        <textarea id="inputAlasan" rows="3" required class="mt-1 block w-full py-3 px-4 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Contoh: Bangun kesiangan"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="inputTanggal" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal</label>
+                            <input type="date" id="inputTanggal" readonly class="mt-1 block w-full py-3 px-4 border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="inputJam" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Jam</label>
+                            <input type="time" id="inputJam" readonly class="mt-1 block w-full py-3 px-4 border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm sm:text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Status Penanganan</label>
+                        <div class="mt-2 space-y-2 sm:space-y-0 sm:flex sm:space-x-4">
+                            <div class="flex items-center">
+                                <input id="statusBelum" name="statusPenanganan" type="radio" value="Belum Ditangani" checked class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                                <label for="statusBelum" class="ml-2 block text-sm text-slate-900 dark:text-slate-200">Belum Ditangani</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="statusSudah" name="statusPenanganan" type="radio" value="Sudah Ditangani" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                                <label for="statusSudah" class="ml-2 block text-sm text-slate-900 dark:text-slate-200">Sudah Ditangani</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancelInputSiswa" class="py-2 px-6 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition duration-150">Batal</button>
+                        <button type="submit" class="py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">Simpan</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Grafik Penanganan Panel -->
+            <div id="grafikPanel" class="tab-content hidden glass-panel p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 text-slate-700 dark:text-slate-200">Grafik Penanganan Keterlambatan</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 border dark:border-slate-700 rounded-lg shadow-sm bg-white/30 dark:bg-slate-800/30">
+                        <h3 class="text-lg font-medium text-slate-600 dark:text-slate-300 mb-1">Total Keterlambatan Bulan Ini</h3>
+                        <p id="totalKeterlambatanText" class="text-3xl font-bold text-blue-600 dark:text-blue-400">0</p>
+                    </div>
+                     <div class="p-4 border dark:border-slate-700 rounded-lg shadow-sm bg-white/30 dark:bg-slate-800/30">
+                        <h3 class="text-lg font-medium text-slate-600 dark:text-slate-300 mb-1">Persentase Penanganan</h3>
+                        <p id="persentasePenangananText" class="text-3xl font-bold text-green-600 dark:text-green-400">0%</p>
+                    </div>
+                </div>
+                <div class="mt-8 h-64 md:h-80 relative">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Database Siswa Panel -->
+            <div id="databasePanel" class="tab-content hidden glass-panel p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 text-slate-700 dark:text-slate-200">Kelola Data Siswa & Kelas</h2>
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-2 text-slate-700 dark:text-slate-100">Import Data Siswa</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Tempel data siswa dengan format: <strong>Nama Siswa, Kelas</strong> (satu siswa per baris). Contoh:</p>
+                    <pre class="bg-slate-100 dark:bg-slate-700 p-3 rounded-md text-sm text-slate-700 dark:text-slate-300 mb-4 overflow-x-auto">Budi Sudarsono, X IPA 1
+Siti Aminah, X IPA 2</pre>
+                    <textarea id="pasteDataSiswa" rows="8" class="mt-1 block w-full py-3 px-4 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Tempel data di sini..."></textarea>
+                    <button id="importDataSiswaButton" class="mt-4 py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">Import Data Siswa</button>
+                    <div id="importResult" class="mt-4 text-sm text-slate-600 dark:text-slate-400"></div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-2 text-slate-700 dark:text-slate-100">Daftar Kelas Terdaftar</h3>
+                    <div id="daftarKelasContainer" class="max-h-60 overflow-y-auto border border-slate-300 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-700/50">
+                        <ul id="daftarKelasList" class="list-disc list-inside text-slate-700 dark:text-slate-300">
+                            <li class="italic">Belum ada kelas terdaftar.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold mb-2 text-slate-700 dark:text-slate-100">Manajemen Data Keterlambatan</h3>
+                     <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Gunakan tombol di bawah untuk mereset data keterlambatan siswa, misalnya untuk memulai tahun ajaran baru. Tindakan ini tidak dapat diurungkan.</p>
+                    <button id="resetTardinessDataButton" class="py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                        Reset Data Keterlambatan Tahunan
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYyegImdtLuI_7TeALDgsdG4quuFyeqrs",
+            authDomain: "tugas-4971f.firebaseapp.com",
+            databaseURL: "https://tugas-4971f-default-rtdb.firebaseio.com",
+            projectId: "tugas-4971f",
+            storageBucket: "tugas-4971f.firebasestorage.app",
+            messagingSenderId: "1007302051502",
+            appId: "1:1007302051502:web:0b9ecf29406aea0b500f3f",
+            measurementId: "G-JQWL0XCHMM"
+        };
+
+        // Import fungsi Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signOut as firebaseSignOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set, 
+            push, 
+            onValue, 
+            get, 
+            update,
+            remove, // Untuk menghapus data
+            serverTimestamp,
+            query, 
+            orderByChild,
+            equalTo
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tugas-4971f';
+        const basePath = `artifacts/${appId}/public/data`;
+        const classesPath = `${basePath}/classes`;
+        const studentsPath = `${basePath}/students`;
+        const tardinessRecordsPath = `${basePath}/tardinessRecords`;
+
+        // DOM Elements
+        const authScreen = document.getElementById('authScreen');
+        const appScreen = document.getElementById('appScreen');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const showRegisterLink = document.getElementById('showRegisterLink');
+        const showLoginLink = document.getElementById('showLoginLink');
+        const authError = document.getElementById('authError');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const logoutButton = document.getElementById('logoutButton');
+        const themeToggleButton = document.getElementById('themeToggleButton');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const messagePopup = document.getElementById('messagePopup');
+        const messagePopupText = document.getElementById('messagePopupText');
+        
+        const confirmationModal = document.getElementById('confirmationModal');
+        const confirmationModalTitle = document.getElementById('confirmationModalTitle');
+        const confirmationModalMessage = document.getElementById('confirmationModalMessage');
+        const confirmationModalConfirm = document.getElementById('confirmationModalConfirm');
+        const confirmationModalCancel = document.getElementById('confirmationModalCancel');
+        let currentConfirmAction = null;
+
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        const rekapTableBody = document.getElementById('rekapTableBody');
+        const rekapFilterKelas = document.getElementById('rekapFilterKelas');
+
+        const inputSiswaForm = document.getElementById('inputSiswaForm');
+        const inputKelas = document.getElementById('inputKelas');
+        
+        // Elements for new searchable student input
+        const studentSearchWrapper = document.getElementById('studentSearchWrapper');
+        const searchStudentNameInput = document.getElementById('searchStudentNameInput');
+        const studentSuggestionsDropdown = document.getElementById('studentSuggestionsDropdown');
+        const inputNamaSiswa = document.getElementById('inputNamaSiswa'); // This is now the hidden select
+
+        const inputAlasan = document.getElementById('inputAlasan');
+        const inputTanggal = document.getElementById('inputTanggal');
+        const inputJam = document.getElementById('inputJam');
+        const cancelInputSiswa = document.getElementById('cancelInputSiswa');
+        let originalStudentOptions = []; // Array of {id: '...', name: '...'}
+
+        const totalKeterlambatanText = document.getElementById('totalKeterlambatanText');
+        const persentasePenangananText = document.getElementById('persentasePenangananText');
+        const statusChartCanvas = document.getElementById('statusChart').getContext('2d');
+        let statusChartInstance = null;
+
+        const pasteDataSiswa = document.getElementById('pasteDataSiswa');
+        const importDataSiswaButton = document.getElementById('importDataSiswaButton');
+        const importResult = document.getElementById('importResult');
+        const daftarKelasList = document.getElementById('daftarKelasList');
+        const daftarKelasContainer = document.getElementById('daftarKelasContainer');
+        const resetTardinessDataButton = document.getElementById('resetTardinessDataButton');
+
+        // --- Theme Toggle ---
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'light');
+            }
+            if (statusChartInstance) loadGrafikData();
+        }
+
+        themeToggleButton.addEventListener('click', () => {
+            const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        const preferredTheme = localStorage.getItem('theme');
+        if (preferredTheme) setTheme(preferredTheme);
+        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+        else setTheme('light');
+
+        // --- Utility Functions ---
+        function showLoading(show) {
+            loadingIndicator.classList.toggle('hidden', !show);
+            loadingIndicator.classList.toggle('flex', show);
+        }
+
+        function showMessage(message, type = 'info', duration = 3000) {
+            messagePopupText.textContent = message;
+            const existingColorClasses = ['bg-blue-500', 'dark:bg-blue-600', 'bg-red-500', 'dark:bg-red-600', 'bg-green-500', 'dark:bg-green-600'];
+            existingColorClasses.forEach(cls => messagePopup.classList.remove(cls));
+            messagePopup.classList.remove('opacity-0', 'translate-y-10');
+            
+            let bgColorClassesToAdd = ['bg-blue-500', 'dark:bg-blue-600'];
+            if (type === 'error') bgColorClassesToAdd = ['bg-red-500', 'dark:bg-red-600'];
+            else if (type === 'success') bgColorClassesToAdd = ['bg-green-500', 'dark:bg-green-600'];
+            bgColorClassesToAdd.forEach(cls => messagePopup.classList.add(cls));
+            
+            messagePopup.classList.remove('hidden');
+            setTimeout(() => { messagePopup.classList.add('opacity-100'); messagePopup.classList.remove('translate-y-10'); }, 50);
+            setTimeout(() => { messagePopup.classList.remove('opacity-100'); messagePopup.classList.add('translate-y-10'); setTimeout(() => messagePopup.classList.add('hidden'), 300); }, duration);
+        }
+
+        function getCurrentDate() { return new Date().toISOString().split('T')[0]; }
+        function getCurrentTime() { return new Date().toTimeString().split(' ')[0].substring(0,5); }
+
+        // --- Custom Confirmation Modal ---
+        function showConfirmationModal(title, message, onConfirm) {
+            confirmationModalTitle.textContent = title;
+            confirmationModalMessage.textContent = message;
+            currentConfirmAction = onConfirm;
+            confirmationModal.classList.remove('hidden');
+            confirmationModal.classList.add('flex');
+        }
+
+        confirmationModalCancel.addEventListener('click', () => { confirmationModal.classList.add('hidden'); confirmationModal.classList.remove('flex'); currentConfirmAction = null; });
+        confirmationModalConfirm.addEventListener('click', () => { if (typeof currentConfirmAction === 'function') currentConfirmAction(); confirmationModal.classList.add('hidden'); confirmationModal.classList.remove('flex'); currentConfirmAction = null; });
+
+        // --- Authentication & App Initialization ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authScreen.classList.add('hidden');
+                appScreen.classList.remove('hidden');
+                userEmailDisplay.textContent = user.email;
+                initializeAppData();
+            } else {
+                authScreen.classList.remove('hidden');
+                appScreen.classList.add('hidden');
+                userEmailDisplay.textContent = '';
+                if (statusChartInstance) { statusChartInstance.destroy(); statusChartInstance = null; }
+            }
+        });
+        // Login, Register, Logout functions (no changes from previous version, omitted for brevity but are part of the full script)
+        loginForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); authError.textContent = ''; const email = loginForm.loginEmail.value; const password = loginForm.loginPassword.value; try { await signInWithEmailAndPassword(auth, email, password); showMessage('Login berhasil!', 'success'); } catch (error) { console.error("Login error:", error); authError.textContent = `Error: ${error.message.replace('Firebase: ', '')}`; showMessage(`Login gagal: ${error.code}`, 'error'); } finally { showLoading(false); } });
+        registerForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); authError.textContent = ''; const email = registerForm.registerEmail.value; const password = registerForm.registerPassword.value; if (password.length < 6) { authError.textContent = 'Password minimal 6 karakter.'; showLoading(false); return; } try { await createUserWithEmailAndPassword(auth, email, password); showMessage('Registrasi berhasil! Silakan login.', 'success'); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); loginForm.loginEmail.value = email; } catch (error) { console.error("Register error:", error); authError.textContent = `Error: ${error.message.replace('Firebase: ', '')}`; showMessage(`Registrasi gagal: ${error.code}`, 'error'); } finally { showLoading(false); } });
+        showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authError.textContent = ''; });
+        showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); authError.textContent = ''; });
+        logoutButton.addEventListener('click', async () => { showLoading(true); try { await firebaseSignOut(auth); showMessage('Logout berhasil.', 'info'); } catch (error) { console.error("Logout error:", error); showMessage('Logout gagal.', 'error'); } finally { showLoading(false); } });
+
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const targetTab = button.dataset.tab;
+                tabContents.forEach(content => content.classList.toggle('hidden', content.id !== `${targetTab}Panel`));
+                if (targetTab === 'rekap') loadRekapData();
+                if (targetTab === 'grafik') loadGrafikData();
+                if (targetTab === 'inputSiswa') resetInputSiswaPanel(); // Use reset function
+            });
+        });
+
+        function initializeAppData() {
+            loadClassesForDropdowns();
+            loadRekapData(); 
+            loadGrafikData();
+            listenToTardinessRecords(); 
+            listenToClasses(); 
+        }
+        
+        async function loadClassesForDropdowns() {
+            const classesRef = ref(db, classesPath);
+            onValue(classesRef, (snapshot) => {
+                const classesData = snapshot.val();
+                const options = ['<option value="">Semua Kelas</option>'];
+                const inputOptions = ['<option value="">Pilih Kelas</option>'];
+                if (classesData) {
+                    Object.entries(classesData).forEach(([classId, classObj]) => {
+                        options.push(`<option value="${classId}">${classObj.name}</option>`);
+                        inputOptions.push(`<option value="${classId}" data-classname="${classObj.name}">${classObj.name}</option>`);
+                    });
+                }
+                rekapFilterKelas.innerHTML = options.join('');
+                inputKelas.innerHTML = inputOptions.join('');
+                updateDaftarKelasList(classesData);
+            });
+        }
+
+        // Database Panel Logic (Import, Daftar Kelas, Reset Keterlambatan - no changes from previous, omitted for brevity)
+        importDataSiswaButton.addEventListener('click', async () => { const dataToPaste = pasteDataSiswa.value.trim(); if (!dataToPaste) { showMessage('Area data kosong.', 'error'); return; } showLoading(true); importResult.textContent = ''; let importedCount = 0, errorCount = 0; const lines = dataToPaste.split('\n'); const classesRef = ref(db, classesPath); try { const existingClassesSnapshot = await get(classesRef); const existingClasses = existingClassesSnapshot.val() || {}; let classMap = {}; Object.entries(existingClasses).forEach(([id, data]) => { classMap[data.name.trim().toLowerCase()] = id; }); for (const line of lines) { const parts = line.split(','); if (parts.length === 2) { const studentName = parts[0].trim(); const className = parts[1].trim(); if (studentName && className) { let classId = classMap[className.toLowerCase()]; if (!classId) { const newClassRef = push(classesRef); classId = newClassRef.key; await set(newClassRef, { name: className }); classMap[className.toLowerCase()] = classId; } const classStudentsRef = ref(db, `${studentsPath}/${classId}`); const classStudentsSnapshot = await get(query(classStudentsRef, orderByChild('name'), equalTo(studentName))); if (!classStudentsSnapshot.exists()) { const newStudentRef = push(classStudentsRef); await set(newStudentRef, { name: studentName, classId: classId }); importedCount++; } } else { errorCount++; } } else if (line.trim() !== "") { errorCount++; } } importResult.textContent = `Impor selesai. ${importedCount} siswa berhasil ditambahkan. ${errorCount} baris bermasalah.`; showMessage(`Impor selesai: ${importedCount} siswa ditambahkan.`, 'success'); pasteDataSiswa.value = ''; } catch (error) { console.error("Error importing data:", error); importResult.textContent = `Error saat impor: ${error.message}`; showMessage('Impor gagal.', 'error'); } finally { showLoading(false); } });
+        function listenToClasses() { const classesRef = ref(db, classesPath); onValue(classesRef, (snapshot) => { updateDaftarKelasList(snapshot.val()); }); }
+        function updateDaftarKelasList(classesData) { daftarKelasList.innerHTML = ''; if (classesData && Object.keys(classesData).length > 0) { Object.values(classesData).forEach(classObj => { const li = document.createElement('li'); li.textContent = classObj.name; daftarKelasList.appendChild(li); }); daftarKelasContainer.classList.remove('items-center', 'justify-center'); } else { daftarKelasList.innerHTML = '<li class="italic text-slate-500 dark:text-slate-400">Belum ada kelas terdaftar.</li>'; daftarKelasContainer.classList.add('items-center', 'justify-center'); } }
+        resetTardinessDataButton.addEventListener('click', () => { showConfirmationModal( 'Reset Data Keterlambatan', 'Anda yakin ingin menghapus SEMUA data keterlambatan siswa? Tindakan ini tidak dapat diurungkan dan biasanya dilakukan untuk memulai tahun ajaran baru.', async () => { showLoading(true); try { await remove(ref(db, tardinessRecordsPath)); showMessage('Semua data keterlambatan berhasil direset.', 'success'); loadRekapData(); loadGrafikData(); } catch (error) { console.error("Error resetting tardiness data:", error); showMessage('Gagal mereset data keterlambatan.', 'error'); } finally { showLoading(false); } } ); });
+
+        // --- Input Siswa Panel Logic (NEW Searchable Dropdown) ---
+        function resetInputSiswaPanel() {
+            inputSiswaForm.reset(); // Resets all form elements, including the hidden select 'inputNamaSiswa'
+            inputTanggal.value = getCurrentDate();
+            inputJam.value = getCurrentTime();
+            
+            studentSearchWrapper.classList.add('hidden'); // Hide search input
+            searchStudentNameInput.value = ''; // Clear search text
+            studentSuggestionsDropdown.innerHTML = ''; // Clear suggestions
+            studentSuggestionsDropdown.classList.add('hidden'); // Hide suggestions dropdown
+            originalStudentOptions = []; // Clear student data
+            
+            // Reset the hidden select more explicitly if form.reset() isn't enough or if it was manipulated
+            inputNamaSiswa.innerHTML = '<option value=""></option>'; 
+            inputNamaSiswa.value = '';
+        }
+
+        inputKelas.addEventListener('change', async () => {
+            const selectedClassId = inputKelas.value;
+            originalStudentOptions = [];
+            searchStudentNameInput.value = '';
+            studentSuggestionsDropdown.innerHTML = '';
+            studentSuggestionsDropdown.classList.add('hidden');
+            // Clear and reset hidden select for student ID
+            inputNamaSiswa.innerHTML = '<option value=""></option>';
+            inputNamaSiswa.value = '';
+
+            if (!selectedClassId) {
+                studentSearchWrapper.classList.add('hidden');
+                return;
+            }
+            
+            studentSearchWrapper.classList.remove('hidden');
+            searchStudentNameInput.placeholder = "Memuat siswa...";
+            searchStudentNameInput.disabled = true;
+            showLoading(true);
+
+            try {
+                const classStudentsRef = ref(db, `${studentsPath}/${selectedClassId}`);
+                const snapshot = await get(classStudentsRef);
+                const studentsData = snapshot.val();
+                if (studentsData) {
+                    Object.entries(studentsData).forEach(([studentId, studentObj]) => {
+                         originalStudentOptions.push({ id: studentId, name: studentObj.name });
+                    });
+                    searchStudentNameInput.placeholder = "Ketik untuk mencari siswa...";
+                } else {
+                    searchStudentNameInput.placeholder = "Tidak ada siswa di kelas ini";
+                }
+            } catch (error) {
+                console.error("Error loading students for class:", error);
+                searchStudentNameInput.placeholder = "Gagal memuat siswa";
+                showMessage('Gagal memuat daftar siswa.', 'error');
+            } finally {
+                searchStudentNameInput.disabled = false;
+                showLoading(false);
+            }
+        });
+
+        searchStudentNameInput.addEventListener('input', () => {
+            const searchTerm = searchStudentNameInput.value.toLowerCase().trim();
+            studentSuggestionsDropdown.innerHTML = ''; // Clear previous suggestions
+            
+            if (searchTerm === '' || !inputKelas.value) {
+                studentSuggestionsDropdown.classList.add('hidden');
+                // Clear selection in hidden select if search term is cleared
+                inputNamaSiswa.innerHTML = '<option value=""></option>';
+                inputNamaSiswa.value = '';
+                return;
+            }
+
+            const filteredStudents = originalStudentOptions.filter(student =>
+                student.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredStudents.length > 0) {
+                filteredStudents.forEach(student => {
+                    const item = document.createElement('div');
+                    item.textContent = student.name;
+                    item.dataset.id = student.id;
+                    item.dataset.name = student.name;
+                    item.className = 'p-2 cursor-pointer suggestion-item text-slate-700 dark:text-slate-200';
+                    item.addEventListener('click', () => {
+                        searchStudentNameInput.value = student.name; // Set text input value
+                        // Update the hidden select
+                        inputNamaSiswa.innerHTML = `<option value="${student.id}">${student.name}</option>`;
+                        inputNamaSiswa.value = student.id;
+                        studentSuggestionsDropdown.classList.add('hidden'); // Hide dropdown
+                    });
+                    studentSuggestionsDropdown.appendChild(item);
+                });
+                studentSuggestionsDropdown.classList.remove('hidden');
+            } else {
+                const noResultItem = document.createElement('div');
+                noResultItem.textContent = 'Tidak ada siswa cocok';
+                noResultItem.className = 'p-2 text-slate-500 dark:text-slate-400';
+                studentSuggestionsDropdown.appendChild(noResultItem);
+                studentSuggestionsDropdown.classList.remove('hidden');
+                // Clear selection in hidden select if no results
+                inputNamaSiswa.innerHTML = '<option value=""></option>';
+                inputNamaSiswa.value = '';
+            }
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!studentSearchWrapper.contains(event.target)) {
+                studentSuggestionsDropdown.classList.add('hidden');
+            }
+        });
+        // Prevent hiding when clicking inside the input itself if it was already focused
+         searchStudentNameInput.addEventListener('focus', () => {
+             // Show suggestions if there's a search term and options
+            if (searchStudentNameInput.value.trim() !== '' && originalStudentOptions.length > 0) {
+                 // Re-trigger input event to repopulate/show dropdown
+                searchStudentNameInput.dispatchEvent(new Event('input'));
+            }
+         });
+
+
+        inputSiswaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading(true);
+            const selectedClassOption = inputKelas.options[inputKelas.selectedIndex];
+            
+            const studentIdFromHiddenSelect = inputNamaSiswa.value; // Get ID from hidden select
+            const studentNameFromSearchInput = searchStudentNameInput.value; // Get name from visible input
+
+            const record = {
+                classId: inputKelas.value,
+                className: selectedClassOption.dataset.classname, 
+                studentId: studentIdFromHiddenSelect,
+                studentName: studentNameFromSearchInput, // Use the name from the search input which was set on selection
+                reason: inputAlasan.value.trim(),
+                date: inputTanggal.value,
+                time: inputJam.value,
+                status: document.querySelector('input[name="statusPenanganan"]:checked').value,
+                recordedAt: serverTimestamp()
+            };
+
+            if (!record.classId || !record.studentId || !record.reason) { 
+                showMessage('Harap lengkapi semua field (Kelas, Nama Siswa, Alasan).', 'error');
+                showLoading(false);
+                return;
+            }
+
+            try {
+                const newRecordRef = push(ref(db, tardinessRecordsPath));
+                await set(newRecordRef, record);
+                showMessage('Data keterlambatan berhasil disimpan.', 'success');
+                resetInputSiswaPanel(); // Reset the entire panel
+            } catch (error) {
+                console.error("Error saving tardiness record:", error);
+                showMessage(`Gagal menyimpan data: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        cancelInputSiswa.addEventListener('click', () => {
+            resetInputSiswaPanel();
+        });
+
+        // Rekap Bulanan & Grafik Panel Logic (no changes from previous, omitted for brevity but are part of the full script)
+        function loadRekapData() { showLoading(true); const recordsRef = ref(db, tardinessRecordsPath); onValue(recordsRef, (snapshot) => { const allRecords = snapshot.val() || {}; const currentMonthYear = new Date().toISOString().slice(0, 7); const selectedClassFilter = rekapFilterKelas.value; const filteredRecords = Object.entries(allRecords) .map(([id, record]) => ({ id, ...record })) .filter(record => record.date && record.date.startsWith(currentMonthYear)) .filter(record => !selectedClassFilter || record.classId === selectedClassFilter) .sort((a, b) => (b.recordedAt || 0) - (a.recordedAt || 0)); renderRekapTable(filteredRecords); showLoading(false); }, (error) => { console.error("Error loading rekap data:", error); rekapTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500 dark:text-red-400">Gagal memuat data: ${error.message}</td></tr>`; showLoading(false); }); }
+        rekapFilterKelas.addEventListener('change', loadRekapData);
+        function renderRekapTable(records) { rekapTableBody.innerHTML = ''; if (records.length === 0) { rekapTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-500 dark:text-slate-400">Tidak ada data keterlambatan untuk filter ini.</td></tr>`; return; } records.forEach(record => { const row = rekapTableBody.insertRow(); row.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150"; row.innerHTML = ` <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">${record.date}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">${record.time}</td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">${record.studentName}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">${record.className}</td> <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 max-w-xs truncate" title="${record.reason}">${record.reason}</td> <td class="px-4 py-3 whitespace-nowrap text-sm"> <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.status === 'Sudah Ditangani' ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100'}"> ${record.status} </span> </td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium"> ${record.status === 'Belum Ditangani' ?  `<button data-id="${record.id}" class="mark-handled-button text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition duration-150">Tandai Sudah</button>` :  '<span class="text-green-600 dark:text-green-400">Selesai</span>'} </td> `; }); document.querySelectorAll('.mark-handled-button').forEach(button => { button.addEventListener('click', (e) => markAsHandled(e.target.dataset.id)); }); }
+        async function markAsHandled(recordId) { showLoading(true); try { const recordRef = ref(db, `${tardinessRecordsPath}/${recordId}`); await update(recordRef, { status: "Sudah Ditangani" }); showMessage('Status berhasil diperbarui.', 'success'); } catch (error) { console.error("Error updating status:", error); showMessage('Gagal memperbarui status.', 'error'); } finally { showLoading(false); } }
+        function loadGrafikData() { const recordsRef = ref(db, tardinessRecordsPath); onValue(recordsRef, (snapshot) => { const allRecords = snapshot.val() || {}; const currentMonthYear = new Date().toISOString().slice(0, 7); const monthlyRecords = Object.values(allRecords) .filter(record => record.date && record.date.startsWith(currentMonthYear)); let totalLate = monthlyRecords.length; let handledCount = monthlyRecords.filter(r => r.status === "Sudah Ditangani").length; let unhandledCount = totalLate - handledCount; let percentageHandled = totalLate > 0 ? ((handledCount / totalLate) * 100).toFixed(1) : 0; totalKeterlambatanText.textContent = totalLate; persentasePenangananText.textContent = `${percentageHandled}%`; if (statusChartInstance) statusChartInstance.destroy(); const isDarkMode = document.documentElement.classList.contains('dark'); const chartTextColor = isDarkMode ? '#E2E8F0' : '#334155'; statusChartInstance = new Chart(statusChartCanvas, { type: 'pie', data: { labels: ['Sudah Ditangani', 'Belum Ditangani'], datasets: [{ label: 'Status Penanganan', data: [handledCount, unhandledCount], backgroundColor: [ 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)' ], borderColor: [ 'rgba(5, 150, 105, 1)', 'rgba(217, 119, 6, 1)' ], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: chartTextColor } }, title: { display: true, text: 'Status Penanganan Keterlambatan Bulan Ini', color: chartTextColor, font: { size: 16 } } } } }); }, (error) => { console.error("Error loading grafik data:", error); totalKeterlambatanText.textContent = 'Error'; persentasePenangananText.textContent = 'Error'; showMessage('Gagal memuat data grafik.', 'error'); }); }
+        function listenToTardinessRecords() { const recordsRef = ref(db, tardinessRecordsPath); onValue(recordsRef, () => { const activeTab = document.querySelector('.tab-button.active')?.dataset.tab; if (activeTab === 'rekap') loadRekapData(); if (activeTab === 'grafik') loadGrafikData(); }); }
+
+    </script>
+</body>
+</html>
