@@ -946,12 +946,21 @@
             const studentCounts = {};
             allTimeViolationRecords.forEach(record => {
                 if(record.studentId) {
-                    studentCounts[record.studentId] = studentCounts[record.studentId] || { name: record.studentName, class: record.className, count: 0 };
-                    studentCounts[record.studentId].count++;
+                    if (!studentCounts[record.studentId]) {
+                        studentCounts[record.studentId] = { 
+                            name: record.studentName, 
+                            class: record.className, 
+                            totalCount: 0, 
+                            violations: {} 
+                        };
+                    }
+                    studentCounts[record.studentId].totalCount++;
+                    const category = record.category || 'LAINNYA';
+                    studentCounts[record.studentId].violations[category] = (studentCounts[record.studentId].violations[category] || 0) + 1;
                 }
             });
 
-            const frequentViolators = Object.values(studentCounts).filter(student => student.count >= 3).sort((a, b) => b.count - a.count);
+            const frequentViolators = Object.values(studentCounts).filter(student => student.totalCount >= 3).sort((a, b) => b.totalCount - a.count);
             
             container.innerHTML = ''; // Clear container
             if (frequentViolators.length === 0) {
@@ -961,15 +970,23 @@
 
             frequentViolators.forEach(student => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'p-3 bg-slate-700/50 rounded-lg flex justify-between items-center';
+                itemDiv.className = 'p-4 bg-slate-700/50 rounded-lg flex justify-between items-start gap-4';
+                
+                let violationDetailsHTML = '<ul class="text-xs space-y-1 mt-2 text-slate-400">';
+                Object.entries(student.violations).forEach(([category, count]) => {
+                    violationDetailsHTML += `<li><span class="font-semibold">${category}:</span> ${count} kali</li>`;
+                });
+                violationDetailsHTML += '</ul>';
+
                 itemDiv.innerHTML = `
-                    <div>
+                    <div class="flex-grow">
                         <p class="font-semibold text-slate-100">${student.name}</p>
                         <p class="text-sm text-slate-400">${student.class || 'Kelas tidak diketahui'}</p>
+                        ${violationDetailsHTML}
                     </div>
-                    <div class="text-right">
-                        <p class="text-lg font-bold text-orange-400">${student.count}</x></p>
-                        <p class="text-xs text-slate-500">Pelanggaran</p>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-2xl font-bold text-orange-400">${student.totalCount}x</p>
+                        <p class="text-xs text-slate-500">Total Pelanggaran</p>
                     </div>
                 `;
                 container.appendChild(itemDiv);
