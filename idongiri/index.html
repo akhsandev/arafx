@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDONGIRI - Monitoring Keterlambatan Siswa</title>
+    <title>IDONGIRI - Monitoring Pelanggaran Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -159,8 +159,8 @@
             <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
                 <div class="relative flex items-center justify-center h-16">
                     <div class="flex space-x-1 sm:space-x-2 md:space-x-4">
-                        <button data-tab="rekap" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-300 hover:text-blue-400 border-b-2 border-transparent hover:border-blue-400 transition duration-150">Rekap Keterlambatan</button>
-                        <button data-tab="inputSiswa" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-300 hover:text-blue-400 border-b-2 border-transparent hover:border-blue-400 transition duration-150">Input Siswa</button>
+                        <button data-tab="rekap" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-300 hover:text-blue-400 border-b-2 border-transparent hover:border-blue-400 transition duration-150">Rekap Pelanggaran</button>
+                        <button data-tab="inputSiswa" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-300 hover:text-blue-400 border-b-2 border-transparent hover:border-blue-400 transition duration-150">Input Pelanggaran</button>
                         <button data-tab="grafik" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-300 hover:text-blue-400 border-b-2 border-transparent hover:border-blue-400 transition duration-150">Grafik Penanganan</button>
                         <button data-tab="database" class="tab-button py-2 px-3 sm:px-4 font-medium text-sm text-slate-300 hover:text-blue-400 border-b-2 border-transparent hover:border-blue-400 transition duration-150">Database Siswa</button>
                     </div>
@@ -193,13 +193,13 @@
                 </div>
             </div>
             
-            <div id="editReasonModal" class="fixed inset-0 z-[99] items-center justify-center custom-modal-backdrop hidden">
+            <div id="editDescriptionModal" class="fixed inset-0 z-[99] items-center justify-center custom-modal-backdrop hidden">
                 <div class="bg-slate-800 p-6 rounded-xl shadow-2xl w-full max-w-md glass-panel">
-                    <h3 class="text-lg font-semibold text-slate-100 mb-4">Edit Alasan Keterlambatan</h3>
-                    <textarea id="editReasonTextarea" rows="4" class="w-full p-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <h3 class="text-lg font-semibold text-slate-100 mb-4">Edit Keterangan Pelanggaran</h3>
+                    <textarea id="editDescriptionTextarea" rows="4" class="w-full p-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200 focus:ring-blue-500 focus:border-blue-500"></textarea>
                     <div class="flex justify-end space-x-3 mt-4">
-                        <button id="editReasonModalCancel" class="py-2 px-4 border border-slate-600 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700">Batal</button>
-                        <button id="editReasonModalSave" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Simpan Perubahan</button>
+                        <button id="editDescriptionModalCancel" class="py-2 px-4 border border-slate-600 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700">Batal</button>
+                        <button id="editDescriptionModalSave" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Simpan Perubahan</button>
                     </div>
                 </div>
             </div>
@@ -229,18 +229,18 @@
             <div id="cardViewContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div data-target-panel="rekapPanel" class="card-item glass-panel p-6 rounded-xl shadow-lg cursor-pointer hover:shadow-2xl flex flex-col items-center text-center">
                     <i class="fas fa-calendar-check fa-3x mb-4 text-blue-400"></i>
-                    <h3 class="text-xl font-semibold text-slate-100">Rekap Keterlambatan</h3>
-                    <p class="text-sm text-slate-400 mt-2">Lihat rekapitulasi keterlambatan siswa per bulan.</p>
+                    <h3 class="text-xl font-semibold text-slate-100">Rekap Pelanggaran</h3>
+                    <p class="text-sm text-slate-400 mt-2">Lihat rekapitulasi pelanggaran siswa per bulan.</p>
                 </div>
                 <div data-target-panel="inputSiswaPanel" class="card-item glass-panel p-6 rounded-xl shadow-lg cursor-pointer hover:shadow-2xl flex flex-col items-center text-center">
                     <i class="fas fa-user-plus fa-3x mb-4 text-green-400"></i>
-                    <h3 class="text-xl font-semibold text-slate-100">Input Siswa</h3>
-                    <p class="text-sm text-slate-400 mt-2">Catat keterlambatan siswa baru hari ini.</p>
+                    <h3 class="text-xl font-semibold text-slate-100">Input Pelanggaran</h3>
+                    <p class="text-sm text-slate-400 mt-2">Catat pelanggaran siswa baru hari ini.</p>
                 </div>
                 <div data-target-panel="grafikPanel" class="card-item glass-panel p-6 rounded-xl shadow-lg cursor-pointer hover:shadow-2xl flex flex-col items-center text-center">
                     <i class="fas fa-chart-pie fa-3x mb-4 text-purple-400"></i>
                     <h3 class="text-xl font-semibold text-slate-100">Grafik Penanganan</h3>
-                    <p class="text-sm text-slate-400 mt-2">Visualisasikan data penanganan keterlambatan.</p>
+                    <p class="text-sm text-slate-400 mt-2">Visualisasikan data penanganan pelanggaran.</p>
                 </div>
                 <div data-target-panel="databasePanel" class="card-item glass-panel p-6 rounded-xl shadow-lg cursor-pointer hover:shadow-2xl flex flex-col items-center text-center">
                     <i class="fas fa-database fa-3x mb-4 text-yellow-400"></i>
@@ -250,17 +250,17 @@
                 <div data-target-panel="perhatianPanel" class="card-item glass-panel p-6 rounded-xl shadow-lg cursor-pointer hover:shadow-2xl flex flex-col items-center text-center lg:col-span-1 sm:col-span-2">
                     <i class="fas fa-exclamation-triangle fa-3x mb-4 text-orange-400"></i>
                     <h3 class="text-xl font-semibold text-slate-100">Perhatian Khusus</h3>
-                    <p class="text-sm text-slate-400 mt-2">Daftar siswa dengan keterlambatan 3x atau lebih.</p>
+                    <p class="text-sm text-slate-400 mt-2">Daftar siswa dengan 3 atau lebih pelanggaran.</p>
                 </div>
             </div>
 
 
-            <!-- Rekap Bulanan Panel -->
+            <!-- Rekap Panel -->
             <div id="rekapPanel" class="tab-content hidden glass-panel p-6 rounded-xl shadow-lg">
                 <button class="back-to-menu-button mb-6 text-sm text-blue-400 hover:underline hidden">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
-                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Rekap Keterlambatan</h2>
+                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Rekap Pelanggaran</h2>
                 <div class="flex flex-wrap items-center gap-4 mb-4">
                     <div>
                         <label for="rekapFilterBulan" class="block text-sm font-medium text-slate-300">Bulan</label>
@@ -285,7 +285,8 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Jam</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Nama Siswa</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Kelas</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Alasan</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Kategori</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Keterangan</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -311,12 +312,12 @@
                 </div>
             </div>
 
-            <!-- Input Siswa Panel -->
+            <!-- Input Pelanggaran Panel -->
             <div id="inputSiswaPanel" class="tab-content hidden glass-panel p-6 rounded-xl shadow-lg">
                 <button class="back-to-menu-button mb-6 text-sm text-blue-400 hover:underline hidden">
                      <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
-                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Input Keterlambatan Siswa</h2>
+                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Input Pelanggaran Siswa</h2>
                 <form id="inputSiswaForm" class="space-y-6">
                     <div>
                         <label for="inputKelas" class="block text-sm font-medium text-slate-300">Kelas</label>
@@ -342,8 +343,20 @@
                     </select>
 
                     <div>
-                        <label for="inputAlasan" class="block text-sm font-medium text-slate-300">Alasan Keterlambatan</label>
-                        <textarea id="inputAlasan" rows="3" required class="mt-1 block w-full py-3 px-4 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Contoh: Bangun kesiangan"></textarea>
+                        <label for="inputKategori" class="block text-sm font-medium text-slate-300">Kategori Pelanggaran</label>
+                        <select id="inputKategori" required class="mt-1 block w-full py-3 px-4 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Pilih Kategori</option>
+                            <option value="KETERLAMBATAN">Keterlambatan</option>
+                            <option value="KERAPIAN">Kerapian</option>
+                            <option value="MORAL">Moral</option>
+                            <option value="BULLYING">Bullying</option>
+                            <option value="PENYALAHGUNAAN NARKOBA">Penyalahgunaan Narkoba</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="inputKeterangan" class="block text-sm font-medium text-slate-300">Keterangan</label>
+                        <textarea id="inputKeterangan" rows="3" required class="mt-1 block w-full py-3 px-4 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Contoh: Terlambat 15 menit"></textarea>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -380,10 +393,10 @@
                  <button class="back-to-menu-button mb-6 text-sm text-blue-400 hover:underline hidden">
                      <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
-                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Grafik Penanganan Keterlambatan</h2>
+                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Grafik Penanganan Pelanggaran</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="p-4 border border-slate-700 rounded-lg shadow-sm bg-slate-800/50">
-                        <h3 class="text-lg font-medium text-slate-300 mb-1">Total Keterlambatan Bulan Ini</h3>
+                        <h3 class="text-lg font-medium text-slate-300 mb-1">Total Pelanggaran Bulan Ini</h3>
                         <p id="totalKeterlambatanText" class="text-3xl font-bold text-blue-400">0</p>
                     </div>
                      <div class="p-4 border border-slate-700 rounded-lg shadow-sm bg-slate-800/50">
@@ -420,7 +433,7 @@
 
                 <div>
                     <h3 class="text-xl font-semibold mb-2 text-slate-100">Reset Aplikasi</h3>
-                     <p class="text-sm text-slate-400 mb-4">Gunakan tombol di bawah untuk memulai tahun ajaran baru. Tindakan ini akan menghapus **semua data** (siswa, kelas, dan riwayat keterlambatan) dan tidak dapat diurungkan.</p>
+                     <p class="text-sm text-slate-400 mb-4">Gunakan tombol di bawah untuk memulai tahun ajaran baru. Tindakan ini akan menghapus **semua data** (siswa, kelas, dan riwayat pelanggaran) dan tidak dapat diurungkan.</p>
                     <button id="resetTahunAjaranButton" class="py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
                         Reset Total Tahun Ajaran
                     </button>
@@ -433,7 +446,7 @@
                      <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
                 <h2 class="text-2xl font-semibold mb-6 text-slate-100">Siswa Perlu Perhatian Khusus</h2>
-                <p class="text-sm text-slate-400 mb-4">Berikut adalah daftar siswa yang tercatat terlambat 3 kali atau lebih.</p>
+                <p class="text-sm text-slate-400 mb-4">Berikut adalah daftar siswa yang tercatat melakukan pelanggaran 3 kali atau lebih.</p>
                 <div id="perhatianListContainer" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
                     <!-- List will be populated by JS -->
                 </div>
@@ -491,7 +504,7 @@
         const basePath = `artifacts/${currentAppId}/public/data`;
         const classesPath = `${basePath}/classes`;
         const studentsPath = `${basePath}/students`;
-        const tardinessRecordsPath = `${basePath}/tardinessRecords`;
+        const violationRecordsPath = `${basePath}/violationRecords`; // Renamed for clarity
 
         // DOM Elements
         const authScreen = document.getElementById('authScreen');
@@ -524,10 +537,10 @@
         const confirmationModalCancel = document.getElementById('confirmationModalCancel');
         let currentConfirmAction = null;
         
-        const editReasonModal = document.getElementById('editReasonModal');
-        const editReasonTextarea = document.getElementById('editReasonTextarea');
-        const editReasonModalCancel = document.getElementById('editReasonModalCancel');
-        const editReasonModalSave = document.getElementById('editReasonModalSave');
+        const editDescriptionModal = document.getElementById('editDescriptionModal');
+        const editDescriptionTextarea = document.getElementById('editDescriptionTextarea');
+        const editDescriptionModalCancel = document.getElementById('editDescriptionModalCancel');
+        const editDescriptionModalSave = document.getElementById('editDescriptionModalSave');
         let currentRecordIdToEdit = null;
         
         const editStudentModal = document.getElementById('editStudentModal');
@@ -551,8 +564,10 @@
         const searchStudentNameInput = document.getElementById('searchStudentNameInput');
         const studentSuggestionsDropdown = document.getElementById('studentSuggestionsDropdown');
         const inputNamaSiswa = document.getElementById('inputNamaSiswa'); 
+        
+        const inputKategori = document.getElementById('inputKategori'); // New category dropdown
+        const inputKeterangan = document.getElementById('inputKeterangan'); // Formerly inputAlasan
 
-        const inputAlasan = document.getElementById('inputAlasan');
         const inputTanggal = document.getElementById('inputTanggal');
         const inputJam = document.getElementById('inputJam');
         const cancelInputSiswa = document.getElementById('cancelInputSiswa');
@@ -568,9 +583,10 @@
         const importResult = document.getElementById('importResult');
         const classManagementContainer = document.getElementById('classManagementContainer'); 
         const resetTahunAjaranButton = document.getElementById('resetTahunAjaranButton');
-        
+        const perhatianListContainer = document.getElementById('perhatianListContainer');
+
         // Pagination & Rekap state
-        let allTimeTardinessRecords = [];
+        let allTimeViolationRecords = [];
         let filteredRekapRecords = [];
         let rekapCurrentPage = 1;
         let rekapItemsPerPage = 20;
@@ -632,9 +648,15 @@
         function showConfirmationModal(title, message, onConfirm) { confirmationModalTitle.textContent = title; confirmationModalMessage.textContent = message; currentConfirmAction = onConfirm; confirmationModal.classList.remove('hidden'); confirmationModal.classList.add('flex'); }
         confirmationModalCancel.addEventListener('click', () => { confirmationModal.classList.add('hidden'); confirmationModal.classList.remove('flex'); currentConfirmAction = null; });
         confirmationModalConfirm.addEventListener('click', () => { if (typeof currentConfirmAction === 'function') currentConfirmAction(); confirmationModal.classList.add('hidden'); confirmationModal.classList.remove('flex'); currentConfirmAction = null; });
-        function showEditReasonModal(recordId, currentReason) { currentRecordIdToEdit = recordId; editReasonTextarea.value = currentReason; editReasonModal.classList.remove('hidden'); editReasonModal.classList.add('flex'); }
-        editReasonModalCancel.addEventListener('click', () => { editReasonModal.classList.add('hidden'); editReasonModal.classList.remove('flex'); currentRecordIdToEdit = null; });
-        editReasonModalSave.addEventListener('click', async () => { if (!currentRecordIdToEdit) return; const newReason = editReasonTextarea.value.trim(); if (newReason === "") { showMessage('Alasan tidak boleh kosong.', 'error'); return; } showLoading(true); try { const recordRef = ref(db, `${tardinessRecordsPath}/${currentRecordIdToEdit}`); await update(recordRef, { reason: newReason }); showMessage('Alasan berhasil diperbarui.', 'success'); editReasonModal.classList.add('hidden'); editReasonModal.classList.remove('flex'); currentRecordIdToEdit = null; } catch (error) { console.error("Error updating reason:", error); showMessage('Gagal memperbarui alasan.', 'error'); } finally { showLoading(false); } });
+        
+        function showEditDescriptionModal(recordId, currentDescription) { 
+            currentRecordIdToEdit = recordId; 
+            editDescriptionTextarea.value = currentDescription; 
+            editDescriptionModal.classList.remove('hidden'); 
+            editDescriptionModal.classList.add('flex'); 
+        }
+        editDescriptionModalCancel.addEventListener('click', () => { editDescriptionModal.classList.add('hidden'); editDescriptionModal.classList.remove('flex'); currentRecordIdToEdit = null; });
+        editDescriptionModalSave.addEventListener('click', async () => { if (!currentRecordIdToEdit) return; const newDescription = editDescriptionTextarea.value.trim(); if (newDescription === "") { showMessage('Keterangan tidak boleh kosong.', 'error'); return; } showLoading(true); try { const recordRef = ref(db, `${violationRecordsPath}/${currentRecordIdToEdit}`); await update(recordRef, { description: newDescription }); showMessage('Keterangan berhasil diperbarui.', 'success'); editDescriptionModal.classList.add('hidden'); editDescriptionModal.classList.remove('flex'); currentRecordIdToEdit = null; } catch (error) { console.error("Error updating description:", error); showMessage('Gagal memperbarui keterangan.', 'error'); } finally { showLoading(false); } });
         
         async function showEditStudentModal(studentId, studentName, classId) {
             currentStudentToEdit = { studentId, originalClassId: classId, originalName: studentName };
@@ -755,7 +777,7 @@
             setAppView(preferredView); 
             setupRekapFilters();
             loadClassesForDropdowns();
-            listenToTardinessRecords(); 
+            listenToViolationRecords(); 
             listenToClasses(); 
         }
         
@@ -849,17 +871,17 @@
             }
         });
         
-        resetTahunAjaranButton.addEventListener('click', () => { showConfirmationModal( 'Reset Total Tahun Ajaran', 'Anda yakin ingin menghapus SEMUA data, termasuk daftar siswa, kelas, dan riwayat keterlambatan? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await Promise.all([ remove(ref(db, tardinessRecordsPath)), remove(ref(db, studentsPath)), remove(ref(db, classesPath)) ]); showMessage('Semua data aplikasi berhasil direset.', 'success'); } catch (error) { console.error("Error resetting all data:", error); showMessage('Gagal mereset data aplikasi.', 'error'); } finally { showLoading(false); } } ); });
+        resetTahunAjaranButton.addEventListener('click', () => { showConfirmationModal( 'Reset Total Tahun Ajaran', 'Anda yakin ingin menghapus SEMUA data, termasuk daftar siswa, kelas, dan riwayat pelanggaran? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await Promise.all([ remove(ref(db, violationRecordsPath)), remove(ref(db, studentsPath)), remove(ref(db, classesPath)) ]); showMessage('Semua data aplikasi berhasil direset.', 'success'); } catch (error) { console.error("Error resetting all data:", error); showMessage('Gagal mereset data aplikasi.', 'error'); } finally { showLoading(false); } } ); });
         function resetInputSiswaPanel() { inputSiswaForm.reset(); inputTanggal.value = getCurrentDate(); inputJam.value = getCurrentTime(); studentSearchWrapper.classList.add('hidden'); searchStudentNameInput.value = ''; studentSuggestionsDropdown.innerHTML = ''; studentSuggestionsDropdown.classList.add('hidden'); originalStudentOptions = []; inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; }
         inputKelas.addEventListener('change', async () => { const selectedClassId = inputKelas.value; originalStudentOptions = []; searchStudentNameInput.value = ''; studentSuggestionsDropdown.innerHTML = ''; studentSuggestionsDropdown.classList.add('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; if (!selectedClassId) { studentSearchWrapper.classList.add('hidden'); return; } studentSearchWrapper.classList.remove('hidden'); searchStudentNameInput.placeholder = "Memuat siswa..."; searchStudentNameInput.disabled = true; showLoading(true); try { const classStudentsRef = ref(db, `${studentsPath}/${selectedClassId}`); const snapshot = await get(classStudentsRef); const studentsData = snapshot.val(); if (studentsData) { Object.entries(studentsData).forEach(([studentId, studentObj]) => { originalStudentOptions.push({ id: studentId, name: studentObj.name }); }); searchStudentNameInput.placeholder = "Ketik untuk mencari siswa..."; } else { searchStudentNameInput.placeholder = "Tidak ada siswa di kelas ini"; } } catch (error) { console.error("Error loading students for class:", error); searchStudentNameInput.placeholder = "Gagal memuat siswa"; showMessage('Gagal memuat daftar siswa.', 'error'); } finally { searchStudentNameInput.disabled = false; showLoading(false); } });
         searchStudentNameInput.addEventListener('input', () => { const searchTerm = searchStudentNameInput.value.toLowerCase().trim(); studentSuggestionsDropdown.innerHTML = ''; if (searchTerm === '' || !inputKelas.value) { studentSuggestionsDropdown.classList.add('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; return; } const filteredStudents = originalStudentOptions.filter(student => student.name.toLowerCase().includes(searchTerm) ); if (filteredStudents.length > 0) { filteredStudents.forEach(student => { const item = document.createElement('div'); item.textContent = student.name; item.dataset.id = student.id; item.dataset.name = student.name; item.className = 'p-2 cursor-pointer suggestion-item text-slate-200'; item.addEventListener('click', () => { searchStudentNameInput.value = student.name; inputNamaSiswa.innerHTML = `<option value="${student.id}">${student.name}</option>`; inputNamaSiswa.value = student.id; studentSuggestionsDropdown.classList.add('hidden'); }); studentSuggestionsDropdown.appendChild(item); }); studentSuggestionsDropdown.classList.remove('hidden'); } else { const noResultItem = document.createElement('div'); noResultItem.textContent = 'Tidak ada siswa cocok'; noResultItem.className = 'p-2 text-slate-400'; studentSuggestionsDropdown.appendChild(noResultItem); studentSuggestionsDropdown.classList.remove('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; } });
         document.addEventListener('click', function(event) { if (!studentSearchWrapper.contains(event.target)) { studentSuggestionsDropdown.classList.add('hidden'); } });
         searchStudentNameInput.addEventListener('focus', () => { if (searchStudentNameInput.value.trim() !== '' && originalStudentOptions.length > 0) { searchStudentNameInput.dispatchEvent(new Event('input')); } });
-        inputSiswaForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); const selectedClassOption = inputKelas.options[inputKelas.selectedIndex]; const studentIdFromHiddenSelect = inputNamaSiswa.value; const studentNameFromSearchInput = searchStudentNameInput.value; const record = { classId: inputKelas.value, className: selectedClassOption.dataset.classname, studentId: studentIdFromHiddenSelect, studentName: studentNameFromSearchInput, reason: inputAlasan.value.trim(), date: inputTanggal.value, time: inputJam.value, status: document.querySelector('input[name="statusPenanganan"]:checked').value, recordedAt: serverTimestamp() }; if (!record.classId || !record.studentId || !record.reason) { showMessage('Harap lengkapi semua field (Kelas, Nama Siswa, Alasan).', 'error'); showLoading(false); return; } let isDuplicate = false; const recordsCheckRef = ref(db, tardinessRecordsPath); try { const snapshot = await get(recordsCheckRef); const allRecords = snapshot.val() || {}; for (const key in allRecords) { const existingRecord = allRecords[key]; if (existingRecord.studentId === record.studentId && existingRecord.date === record.date) { isDuplicate = true; break; } } } catch (error) { console.error("Error checking for duplicates:", error); showMessage("Gagal memeriksa duplikasi, coba lagi.", "error"); showLoading(false); return; } if (isDuplicate) { showMessage('Siswa sudah didata terlambat hari ini.', 'error'); showLoading(false); return; } try { const newRecordRef = push(ref(db, tardinessRecordsPath)); await set(newRecordRef, record); showMessage('Data keterlambatan berhasil disimpan.', 'success'); resetInputSiswaPanel(); } catch (error) { console.error("Error saving tardiness record:", error); showMessage(`Gagal menyimpan data: ${error.message}`, 'error'); } finally { showLoading(false); } });
+        inputSiswaForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); const selectedClassOption = inputKelas.options[inputKelas.selectedIndex]; const studentIdFromHiddenSelect = inputNamaSiswa.value; const studentNameFromSearchInput = searchStudentNameInput.value; const record = { classId: inputKelas.value, className: selectedClassOption.dataset.classname, studentId: studentIdFromHiddenSelect, studentName: studentNameFromSearchInput, description: inputKeterangan.value.trim(), date: inputTanggal.value, time: inputJam.value, category: inputKategori.value, status: document.querySelector('input[name="statusPenanganan"]:checked').value, recordedAt: serverTimestamp() }; if (!record.classId || !record.studentId || !record.description || !record.category) { showMessage('Harap lengkapi semua field.', 'error'); showLoading(false); return; } let isDuplicate = false; const recordsCheckRef = ref(db, violationRecordsPath); try { const snapshot = await get(recordsCheckRef); const allRecords = snapshot.val() || {}; for (const key in allRecords) { const existingRecord = allRecords[key]; if (existingRecord.studentId === record.studentId && existingRecord.date === record.date && existingRecord.category === record.category) { isDuplicate = true; break; } } } catch (error) { console.error("Error checking for duplicates:", error); showMessage("Gagal memeriksa duplikasi, coba lagi.", "error"); showLoading(false); return; } if (isDuplicate) { showMessage('Pelanggaran kategori ini untuk siswa tersebut sudah didata hari ini.', 'error'); showLoading(false); return; } try { const newRecordRef = push(ref(db, violationRecordsPath)); await set(newRecordRef, record); showMessage('Data pelanggaran berhasil disimpan.', 'success'); resetInputSiswaPanel(); } catch (error) { console.error("Error saving violation record:", error); showMessage(`Gagal menyimpan data: ${error.message}`, 'error'); } finally { showLoading(false); } });
         cancelInputSiswa.addEventListener('click', () => { resetInputSiswaPanel(); });
-        function renderRekapTable(recordsToRender) { rekapTableBody.innerHTML = ''; if (recordsToRender.length === 0) { rekapTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-400">Tidak ada data keterlambatan untuk filter ini.</td></tr>`; return; } recordsToRender.forEach(record => { const row = rekapTableBody.insertRow(); row.className = "hover:bg-slate-700/50 transition-colors duration-150"; const escapedReason = record.reason.replace(/</g, "&lt;").replace(/>/g, "&gt;"); row.innerHTML = ` <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.date}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.time}</td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">${record.studentName}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.className}</td> <td class="px-4 py-3 text-sm text-slate-300 max-w-xs truncate" title="${escapedReason}">${escapedReason}</td> <td class="px-4 py-3 whitespace-nowrap text-sm"> <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.status === 'Sudah Ditangani' ?  'bg-green-700 text-green-100' :  'bg-yellow-700 text-yellow-100'}"> ${record.status} </span> </td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2"> ${record.status === 'Belum Ditangani' ?   `<button data-id="${record.id}" class="mark-handled-button text-blue-400 hover:text-blue-300 transition duration-150">Tandai Sudah</button>` :   '<span class="text-green-400">Selesai</span>'} <button data-id="${record.id}" data-reason="${escapedReason}" class="edit-reason-button text-indigo-400 hover:text-indigo-300 transition duration-150">Edit</button> <button data-id="${record.id}" class="delete-record-button text-red-400 hover:text-red-300 transition duration-150">Hapus</button> </td> `; }); document.querySelectorAll('.mark-handled-button').forEach(button => { button.addEventListener('click', (e) => markAsHandled(e.target.dataset.id)); }); document.querySelectorAll('.edit-reason-button').forEach(button => { button.addEventListener('click', (e) => { const recordId = e.target.dataset.id; const rawReason = filteredRekapRecords.find(r => r.id === recordId)?.reason || e.target.dataset.reason; showEditReasonModal(recordId, rawReason); }); }); document.querySelectorAll('.delete-record-button').forEach(button => { button.addEventListener('click', (e) => deleteTardinessRecord(e.target.dataset.id)); }); }
-        async function markAsHandled(recordId) { showLoading(true); try { const recordRef = ref(db, `${tardinessRecordsPath}/${recordId}`); await update(recordRef, { status: "Sudah Ditangani" }); showMessage('Status berhasil diperbarui.', 'success'); } catch (error) { console.error("Error updating status:", error); showMessage('Gagal memperbarui status.', 'error'); } finally { showLoading(false); } }
-        async function deleteTardinessRecord(recordId) { showConfirmationModal( 'Hapus Data Keterlambatan', 'Anda yakin ingin menghapus data keterlambatan ini? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await remove(ref(db, `${tardinessRecordsPath}/${recordId}`)); showMessage('Data keterlambatan berhasil dihapus.', 'success'); } catch (error) { console.error("Error deleting record:", error); showMessage('Gagal menghapus data.', 'error'); } finally { showLoading(false); } } ); }
+        function renderRekapTable(recordsToRender) { rekapTableBody.innerHTML = ''; if (recordsToRender.length === 0) { rekapTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400">Tidak ada data pelanggaran untuk filter ini.</td></tr>`; return; } recordsToRender.forEach(record => { const row = rekapTableBody.insertRow(); row.className = "hover:bg-slate-700/50 transition-colors duration-150"; const escapedDescription = record.description.replace(/</g, "&lt;").replace(/>/g, "&gt;"); row.innerHTML = ` <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.date}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.time}</td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">${record.studentName}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.className}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300 font-semibold">${record.category || '-'}</td> <td class="px-4 py-3 text-sm text-slate-300 max-w-xs truncate" title="${escapedDescription}">${escapedDescription}</td> <td class="px-4 py-3 whitespace-nowrap text-sm"> <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.status === 'Sudah Ditangani' ?  'bg-green-700 text-green-100' :  'bg-yellow-700 text-yellow-100'}"> ${record.status} </span> </td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2"> ${record.status === 'Belum Ditangani' ?   `<button data-id="${record.id}" class="mark-handled-button text-blue-400 hover:text-blue-300 transition duration-150">Tandai Sudah</button>` :   '<span class="text-green-400">Selesai</span>'} <button data-id="${record.id}" data-description="${escapedDescription}" class="edit-description-button text-indigo-400 hover:text-indigo-300 transition duration-150">Edit</button> <button data-id="${record.id}" class="delete-record-button text-red-400 hover:text-red-300 transition duration-150">Hapus</button> </td> `; }); document.querySelectorAll('.mark-handled-button').forEach(button => { button.addEventListener('click', (e) => markAsHandled(e.target.dataset.id)); }); document.querySelectorAll('.edit-description-button').forEach(button => { button.addEventListener('click', (e) => { const recordId = e.target.dataset.id; const rawDescription = filteredRekapRecords.find(r => r.id === recordId)?.description || e.target.dataset.description; showEditDescriptionModal(recordId, rawDescription); }); }); document.querySelectorAll('.delete-record-button').forEach(button => { button.addEventListener('click', (e) => deleteViolationRecord(e.target.dataset.id)); }); }
+        async function markAsHandled(recordId) { showLoading(true); try { const recordRef = ref(db, `${violationRecordsPath}/${recordId}`); await update(recordRef, { status: "Sudah Ditangani" }); showMessage('Status berhasil diperbarui.', 'success'); } catch (error) { console.error("Error updating status:", error); showMessage('Gagal memperbarui status.', 'error'); } finally { showLoading(false); } }
+        async function deleteViolationRecord(recordId) { showConfirmationModal( 'Hapus Data Pelanggaran', 'Anda yakin ingin menghapus data pelanggaran ini? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await remove(ref(db, `${violationRecordsPath}/${recordId}`)); showMessage('Data pelanggaran berhasil dihapus.', 'success'); } catch (error) { console.error("Error deleting record:", error); showMessage('Gagal menghapus data.', 'error'); } finally { showLoading(false); } } ); }
         
         // --- REKAP & PAGINATION LOGIC ---
         function setupRekapFilters() {
@@ -869,9 +891,8 @@
 
             rekapFilterBulan.innerHTML = months.map((month, index) => `<option value="${index}" ${index === currentMonth ? 'selected' : ''}>${month}</option>`).join('');
             
-            // Populate years dynamically based on available data + current year
             let years = new Set([currentYear]);
-            allTimeTardinessRecords.forEach(rec => years.add(new Date(rec.date).getFullYear()));
+            allTimeViolationRecords.forEach(rec => years.add(new Date(rec.date).getFullYear()));
             rekapFilterTahun.innerHTML = Array.from(years).sort((a,b) => b-a).map(year => `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`).join('');
             
             [rekapFilterBulan, rekapFilterTahun, rekapFilterKelas, rekapItemsPerPageSelect].forEach(el => {
@@ -882,17 +903,16 @@
         }
 
         function filterAndDisplayRekap() {
-            rekapCurrentPage = 1; // Reset to first page on any filter change
+            rekapCurrentPage = 1; 
             rekapItemsPerPage = rekapItemsPerPageSelect.value === "All" ? Infinity : parseInt(rekapItemsPerPageSelect.value);
 
-            const selectedMonth = rekapFilterBulan.value.padStart(2, '0'); // e.g., '0' becomes '00', '11' becomes '11'
-            const selectedMonthJS = parseInt(rekapFilterBulan.value); // 0-11 for JS Date
+            const selectedMonthJS = parseInt(rekapFilterBulan.value);
             const selectedYear = rekapFilterTahun.value;
             const selectedClass = rekapFilterKelas.value;
             
-            const monthYearString = `${selectedYear}-${String(selectedMonthJS + 1).padStart(2, '0')}`; // YYYY-MM
+            const monthYearString = `${selectedYear}-${String(selectedMonthJS + 1).padStart(2, '0')}`;
             
-            filteredRekapRecords = allTimeTardinessRecords
+            filteredRekapRecords = allTimeViolationRecords
                 .filter(record => record.date && record.date.startsWith(monthYearString))
                 .filter(record => !selectedClass || record.classId === selectedClass);
             
@@ -917,23 +937,58 @@
         }
 
 
-        function loadGrafikData() { const recordsRef = ref(db, tardinessRecordsPath); onValue(recordsRef, (snapshot) => { const allRecords = snapshot.val() || {}; const currentMonthYear = new Date().toISOString().slice(0, 7); const monthlyRecords = Object.values(allRecords) .filter(record => record.date && record.date.startsWith(currentMonthYear)); let totalLate = monthlyRecords.length; let handledCount = monthlyRecords.filter(r => r.status === "Sudah Ditangani").length; let unhandledCount = totalLate - handledCount; let percentageHandled = totalLate > 0 ? ((handledCount / totalLate) * 100).toFixed(1) : 0; totalKeterlambatanText.textContent = totalLate; persentasePenangananText.textContent = `${percentageHandled}%`; if (statusChartInstance) statusChartInstance.destroy(); const chartTextColor = '#E2E8F0'; statusChartInstance = new Chart(statusChartCanvas, { type: 'pie', data: { labels: ['Sudah Ditangani', 'Belum Ditangani'], datasets: [{ label: 'Status Penanganan', data: [handledCount, unhandledCount], backgroundColor: [ 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)' ], borderColor: [ 'rgba(5, 150, 105, 1)', 'rgba(217, 119, 6, 1)' ], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: chartTextColor } }, title: { display: true, text: 'Status Penanganan Keterlambatan Bulan Ini', color: chartTextColor, font: { size: 16 } } } } }); }, (error) => { console.error("Error loading grafik data:", error); totalKeterlambatanText.textContent = 'Error'; persentasePenangananText.textContent = 'Error'; showMessage('Gagal memuat data grafik.', 'error'); }); }
+        function loadGrafikData() { const recordsRef = ref(db, violationRecordsPath); onValue(recordsRef, (snapshot) => { const allRecords = snapshot.val() || {}; const currentMonthYear = new Date().toISOString().slice(0, 7); const monthlyRecords = Object.values(allRecords) .filter(record => record.date && record.date.startsWith(currentMonthYear)); let totalLate = monthlyRecords.length; let handledCount = monthlyRecords.filter(r => r.status === "Sudah Ditangani").length; let unhandledCount = totalLate - handledCount; let percentageHandled = totalLate > 0 ? ((handledCount / totalLate) * 100).toFixed(1) : 0; totalKeterlambatanText.textContent = totalLate; persentasePenangananText.textContent = `${percentageHandled}%`; if (statusChartInstance) statusChartInstance.destroy(); const chartTextColor = '#E2E8F0'; statusChartInstance = new Chart(statusChartCanvas, { type: 'pie', data: { labels: ['Sudah Ditangani', 'Belum Ditangani'], datasets: [{ label: 'Status Penanganan', data: [handledCount, unhandledCount], backgroundColor: [ 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)' ], borderColor: [ 'rgba(5, 150, 105, 1)', 'rgba(217, 119, 6, 1)' ], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: chartTextColor } }, title: { display: true, text: 'Status Penanganan Pelanggaran Bulan Ini', color: chartTextColor, font: { size: 16 } } } } }); }, (error) => { console.error("Error loading grafik data:", error); totalKeterlambatanText.textContent = 'Error'; persentasePenangananText.textContent = 'Error'; showMessage('Gagal memuat data grafik.', 'error'); }); }
         
-        function listenToTardinessRecords() { 
-            const recordsRef = ref(db, tardinessRecordsPath); 
+        function loadPerhatianData() {
+            const container = document.getElementById('perhatianListContainer');
+            container.innerHTML = '<p class="text-slate-400 italic">Menganalisis data pelanggaran...</p>';
+
+            const studentCounts = {};
+            allTimeViolationRecords.forEach(record => {
+                if(record.studentId) {
+                    studentCounts[record.studentId] = studentCounts[record.studentId] || { name: record.studentName, class: record.className, count: 0 };
+                    studentCounts[record.studentId].count++;
+                }
+            });
+
+            const frequentViolators = Object.values(studentCounts).filter(student => student.count >= 3).sort((a, b) => b.count - a.count);
+            
+            container.innerHTML = ''; // Clear container
+            if (frequentViolators.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 italic">Tidak ada siswa yang tercatat melakukan pelanggaran 3 kali atau lebih.</p>';
+                return;
+            }
+
+            frequentViolators.forEach(student => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'p-3 bg-slate-700/50 rounded-lg flex justify-between items-center';
+                itemDiv.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-slate-100">${student.name}</p>
+                        <p class="text-sm text-slate-400">${student.class || 'Kelas tidak diketahui'}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-orange-400">${student.count}</x></p>
+                        <p class="text-xs text-slate-500">Pelanggaran</p>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+        
+        function listenToViolationRecords() { 
+            const recordsRef = ref(db, violationRecordsPath); 
             onValue(recordsRef, (snapshot) => { 
                 const recordsData = snapshot.val() || {};
-                allTimeTardinessRecords = Object.entries(recordsData).map(([id, record]) => ({ id, ...record })).sort((a, b) => (b.recordedAt || 0) - (a.recordedAt || 0));
+                allTimeViolationRecords = Object.entries(recordsData).map(([id, record]) => ({ id, ...record })).sort((a, b) => (b.recordedAt || 0) - (a.recordedAt || 0));
                 setupRekapFilters();
                 
                 const currentView = localStorage.getItem('viewMode') || 'card';
                 const activePanel = document.querySelector('.tab-content:not(.hidden)');
-                if (activePanel && activePanel.id === 'rekapPanel') {
-                    filterAndDisplayRekap();
-                }
-
-                if (activePanel && activePanel.id === 'grafikPanel') {
-                    loadGrafikData();
+                if (activePanel) {
+                   if (activePanel.id === 'rekapPanel') filterAndDisplayRekap();
+                   if (activePanel.id === 'grafikPanel') loadGrafikData();
+                   if (activePanel.id === 'perhatianPanel') loadPerhatianData();
                 }
             }); 
         }
