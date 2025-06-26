@@ -16,6 +16,9 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
     <!-- Custom CSS for animations and glassmorphism -->
     <style>
         body {
@@ -115,6 +118,7 @@
                 <a href="#masterpiece" class="nav-link text-gray-300 hover:text-sky-400">Masterpiece</a>
                 <a href="#hobbies" class="nav-link text-gray-300 hover:text-sky-400">Hobi</a>
                 <a href="#contact" class="nav-link text-gray-300 hover:text-sky-400">Kontak</a>
+                <a href="#location" class="nav-link text-gray-300 hover:text-sky-400">Lokasi</a>
             </nav>
             <button id="mobile-menu-button" class="md:hidden text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,6 +133,7 @@
              <a href="#masterpiece" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Masterpiece</a>
              <a href="#hobbies" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Hobi</a>
              <a href="#contact" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Kontak</a>
+             <a href="#location" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Lokasi</a>
         </div>
     </header>
 
@@ -298,6 +303,16 @@
                 </div>
             </div>
         </section>
+
+        <!-- Map Section -->
+        <section id="location" class="py-20 fade-in-section">
+            <h3 class="text-3xl font-bold text-center mb-2 text-white">Lokasi Saya</h3>
+            <p class="text-sky-400 text-center mb-12">Temukan saya di Soppeng</p>
+            <div class="glass-card rounded-2xl p-2 md:p-4">
+                <div id="map" class="w-full h-96 md:h-[500px] rounded-lg z-10"></div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -305,6 +320,9 @@
         <p class="text-gray-400">Didesain dan dikembangkan dengan ❤️ dan sedikit `code`.</p>
         <p class="text-gray-500 text-sm mt-2">© 2024 Akhsan Rian Anugrah. Semua Hak Cipta Dilindungi.</p>
     </footer>
+
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
         // Simple script for mobile menu toggle
@@ -331,6 +349,17 @@
         mobileNavLinks.forEach(link => {
             link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
         });
+
+        // Map Initialization
+        const map = L.map('map').setView([-4.348218, 119.895914], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        L.marker([-4.348218, 119.895914]).addTo(map)
+            .bindPopup('<b>Lokasi Saya</b><br>BTN Malaka Raya, Soppeng.')
+            .openPopup();
     </script>
 
 </body>
