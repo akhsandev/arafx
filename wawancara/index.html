@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Wawancara Siswa | SMAN 1 Soppeng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+        }
+        .glass-card {
+            background: rgba(31, 41, 55, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px;}
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(-20px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+        .notification { animation: fadeInOut 4s ease-in-out forwards; }
+
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.7); }
+
+        /* Style for required fields */
+        .required-field {
+            border-color: #ef4444 !important;
+        }
+        .required-field:focus {
+            box-shadow: 0 0 0 2px #ef4444;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-300">
+
+    <!-- Notifications -->
+    <div id="notification" class="hidden fixed top-5 right-5 bg-green-600 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+    <div id="error-notification" class="hidden fixed top-5 right-5 bg-red-600 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+
+    <!-- Modals (Edit, Delete) -->
+    <div id="edit-questions-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
+        <div class="glass-card w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-gray-600 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-white">Ubah Pertanyaan Wawancara</h3>
+                <button id="close-edit-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div id="edit-questions-container" class="p-6 overflow-y-auto space-y-4"></div>
+            <div class="p-4 border-t border-gray-600 mt-auto">
+                <button id="save-questions-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+    <div id="delete-confirm-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
+        <div class="glass-card w-full max-w-md p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white">Konfirmasi Hapus</h3>
+            <p class="text-gray-400 mt-2 mb-6">Apakah Anda yakin ingin menghapus log wawancara ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">Batal</button>
+                <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <img src="https://arafx.vercel.app/logo.png" alt="Logo Sekolah" class="mx-auto h-20 w-auto mb-4 bg-white p-2 rounded-lg">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Formulir Wawancara SPMB 2025</h1>
+            <p class="text-gray-400 mt-1">UPT SMAN 1 Soppeng</p>
+            <p class="text-xs text-gray-500 mt-2">dibuat dengan penuh cinta oleh tim teknis SPMB UPT SMAN 1 SOPPENG 2025</p>
+        </header>
+
+        <!-- Form Section -->
+        <div class="glass-card p-6 md:p-8 shadow-lg mb-8">
+            <form id="interviewForm">
+                <!-- Parent Section -->
+                <div id="form-section-parent">
+                    <h3 class="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-2">Bagian 1: Wawancara Orang Tua</h3>
+                    <div id="parent-questions-container" class="space-y-6"></div>
+                    <div class="mt-8 pt-6 border-t border-gray-700">
+                        <button type="button" id="continue-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg">Lanjutkan ke Wawancara Murid</button>
+                    </div>
+                </div>
+                <!-- Student Section (hidden by default) -->
+                <div id="form-section-student" class="hidden">
+                    <h3 class="text-xl font-semibold mb-4 text-white border-b border-gray-700 pb-2">Bagian 2: Wawancara Murid</h3>
+                    <div id="student-questions-container" class="space-y-6"></div>
+                    <div class="mt-8 pt-6 border-t border-gray-700 flex flex-col sm:flex-row-reverse gap-4">
+                        <button type="submit" id="submit-button" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Kirim Jawaban</button>
+                        <button type="button" id="back-btn" class="w-full sm:w-auto bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg">Kembali ke Bagian 1</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Log Section -->
+        <div class="glass-card p-6 md:p-8 shadow-lg">
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold text-white">Log Jawaban</h2>
+                 <div class="flex space-x-2">
+                    <button id="edit-questions-btn" title="Ubah Pertanyaan" class="p-2 bg-gray-600 hover:bg-gray-500 rounded-md text-white"✏️</button>
+                    <button id="download-csv-btn" title="Download CSV" class="p-2 bg-green-600 hover:bg-green-500 rounded-md text-white">📄</button>
+                 </div>
+            </div>
+            <div id="log-container" class="w-full overflow-x-auto">
+                 <p id="log-placeholder" class="text-gray-500 text-center mt-10">Menghubungkan ke server...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, getDoc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Config & Security Note ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5swNXHIGRNOnNu8XnpenQzmt8PAFdQik",
+            authDomain: "wawancara-d7b10.firebaseapp.com",
+            projectId: "wawancara-d7b10",
+            storageBucket: "wawancara-d7b10.appspot.com",
+            messagingSenderId: "970358399148",
+            appId: "1:970358399148:web:e9fa84b8193b5672b0ff09"
+        };
+        // NOTE: Ensure Firestore rules allow read/write for authenticated users on 'wawancara' and 'questions' collections.
+
+        // --- State ---
+        let db, auth;
+        let questions = {};
+        let docIdToDelete = null;
+        let tableHeaders = [];
+
+        // --- DOM Elements ---
+        const DOMElements = {
+            notification: document.getElementById('notification'),
+            errorNotification: document.getElementById('error-notification'),
+            formSectionParent: document.getElementById('form-section-parent'),
+            formSectionStudent: document.getElementById('form-section-student'),
+            parentQuestionsContainer: document.getElementById('parent-questions-container'),
+            studentQuestionsContainer: document.getElementById('student-questions-container'),
+            interviewForm: document.getElementById('interviewForm'),
+            logContainer: document.getElementById('log-container'),
+            logPlaceholder: document.getElementById('log-placeholder'),
+            continueBtn: document.getElementById('continue-btn'),
+            backBtn: document.getElementById('back-btn'),
+            submitButton: document.getElementById('submit-button'),
+            editQuestionsModal: document.getElementById('edit-questions-modal'),
+            editQuestionsBtn: document.getElementById('edit-questions-btn'),
+            closeEditModalBtn: document.getElementById('close-edit-modal-btn'),
+            saveQuestionsBtn: document.getElementById('save-questions-btn'),
+            editQuestionsContainer: document.getElementById('edit-questions-container'),
+            deleteConfirmModal: document.getElementById('delete-confirm-modal'),
+            cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
+            confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
+            downloadCsvBtn: document.getElementById('download-csv-btn'),
+        };
+
+        // --- Default Questions with Hints (Exact from user request) ---
+        const defaultQuestions = {
+            parent_identitas: ["Nama Orang Tua", "No. HP/WA", "Alamat"],
+            parent_pertanyaan: [
+                { question: "Ceritakan tentang diri anda dan keluarga ?", hint: "(Pekerjaan, status pernikahan, gambaran hubungan dengan anak, siapa yang lebih berperan dalam hal pendidikan anak, dan yang lebih memiliki kedekatan emosional dengan anak)" },
+                { question: "Apakah anak anda memiliki riwayat penyakit, alergi atau memiliki kondisi gangguan perkembangan/psikologis tertentu?", hint: "" },
+                { question: "Apa saja kebiasaan baik yang sering dilakukan anak anda di rumah ?", hint: "" },
+                { question: "Menurut anda apakah ada kebiasaan atau perilaku anak anda yang perlu dirubah ? jika ada tolong dijelaskan", hint: "(Upaya yang dilakukan orang tua dan gambaran kesulitan yang dihadapi orang tua) !" },
+                { question: "Apakah anak anda terbiasa mengucapkan salam, maaf, terima kasih dan tolong dalam kehidupan sehari-hari?", hint: "" },
+                { question: "Berikan gambaran bagaimana hubungan pertemanan anak anda?", hint: "(dengan siapa bergaul, dimana mereka berkumpul, dan waktu kapan mereka berkumpul)" },
+                { question: "Seberapa sering anda berkomunikasi dengan guru anak anda di sekolah sebelumnya ?", hint: "" },
+                { question: "Apa yang anda ketahui tentang sekolah kami dan alasan Anda memilih sekolah ini untuk anak Anda?", hint: "" },
+                { question: "Apakah anda mendukung kegiatan anak di luar jam pelajaran di lingkungan sekolah?", hint: "" },
+                { question: "Apakah anda siap membantu dan mendukung anak anda untuk bisa menyesuaikan diri dengan keyakinan sekolah serta segala ketentuan yang berlaku di UPT SMAN 1 Soppeng ?", hint: "(memastikan orangtua bersedia melakukan kolaborasi dengan sekolah terkait progress atau hambatan belajar anak di sekolah)" },
+                { question: "Apakah Anda memiliki pertanyaan atau hal lain yang ingin Anda ketahui tentang sekolah ini?", hint: "" }
+            ],
+            student_identitas: ["Nama murid", "Nama Orang Tua", "Hari/Tanggal Wawancara", "Alamat", "Asal Sekolah"],
+            student_pertanyaan: [
+                { question: "Mata pelajaran yang diminati dan Hoby", hint: "" },
+                { question: "Bakat Murid", hint: "" },
+                { question: "Cita – Cita Murid", hint: "" },
+                { question: "Motivasi sekolah di SMA Negeri 1 Soppeng !", hint: "" },
+                { question: "Ceritakan tentang dirimu!", hint: "(Potensi dan kelemahan yang dimiliki, kesulitan belajar yang dialami di SMP)" },
+                { question: "Gambarkan kebiasaan baik yang sering kamu lakukan dalam kehidupan sehari-hari !", hint: "" },
+                { question: "Pengalaman yang paling berkesan bagi anda !", hint: "( menyenangkan atau tidak menyenangkan)" },
+                { question: "Ceritakan tentang hubungan pertemananmu !", hint: "(Siapa teman dekat, Alasan berteman dengan mereka, aktivitas yang sering dilakukan bersama mereka, dimana dan kapan waktu berkumpul dengan mereka)" },
+                { question: "Tinggal dengan siapa dan berapa anggota keluarga yang tinggal bersama denganmu?", hint: "" },
+                { question: "Pekerjaan orang tua?", hint: "" },
+                { question: "Jumlah tanggungan orangtua?", hint: "" },
+                { question: "Deskripsikan hubunganmu dengan anggota keluarga lainnya !", hint: "(Ayah, Ibu dan saudara) * keluarga harmonis/tidak harmonis/broken home*" }
+            ]
+        };
+
+        // --- Helper Functions ---
+        const showNotification = (isSuccess, message) => {
+            const el = isSuccess ? DOMElements.notification : DOMElements.errorNotification;
+            el.textContent = message;
+            el.classList.remove('hidden');
+            el.classList.add('notification');
+            setTimeout(() => el.classList.add('hidden'), 4000);
+        };
+
+        const validateSection = (containerId) => {
+            let isValid = true;
+            const fields = document.querySelectorAll(`#${containerId} input, #${containerId} textarea`);
+            fields.forEach(field => {
+                field.classList.remove('required-field');
+                if (field.value.trim() === '') {
+                    isValid = false;
+                    field.classList.add('required-field');
+                }
+            });
+            return isValid;
+        };
+
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                await signInAnonymously(auth);
+                await loadQuestions();
+                renderForms();
+                setupListeners();
+            } catch (error) {
+                console.error("Initialization failed: ", error);
+                DOMElements.logPlaceholder.textContent = "Gagal terhubung. Periksa koneksi & aturan keamanan Firebase.";
+            }
+        });
+
+        // --- Question Management ---
+        async function loadQuestions() {
+            const docRef = doc(db, "questions", "main_interview");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().parent_pertanyaan && docSnap.data().parent_pertanyaan[0].question) {
+                questions = docSnap.data();
+            } else {
+                await setDoc(docRef, defaultQuestions);
+                questions = defaultQuestions;
+            }
+            tableHeaders = [
+                questions.student_identitas[0] || 'Nama Murid',
+                questions.parent_identitas[0] || 'Nama Orang Tua',
+                'Waktu',
+                'Aksi'
+            ];
+        }
+
+        function renderForms() {
+            const createFields = (container, identitas, pertanyaan) => {
+                container.innerHTML = '';
+                identitas.forEach(q => {
+                    container.innerHTML += `<div><label class="block text-base font-medium text-white">${q}</label><input type="text" data-question="${q}" class="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>`;
+                });
+                pertanyaan.forEach((q, i) => {
+                    container.innerHTML += `<div><label class="block text-base font-medium text-white">${i + 1}. ${q.question}</label>${q.hint ? `<p class="text-sm text-yellow-400 mt-1">${q.hint}</p>` : ''}<textarea data-question="${q.question}" rows="3" class="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea></div>`;
+                });
+            };
+            createFields(DOMElements.parentQuestionsContainer, questions.parent_identitas, questions.parent_pertanyaan);
+            createFields(DOMElements.studentQuestionsContainer, questions.student_identitas, questions.student_pertanyaan);
+        }
+
+        // --- Listeners ---
+        function setupListeners() {
+            DOMElements.continueBtn.addEventListener('click', handleContinue);
+            DOMElements.backBtn.addEventListener('click', handleBack);
+            DOMElements.interviewForm.addEventListener('submit', handleFormSubmit);
+            DOMElements.editQuestionsBtn.addEventListener('click', openEditModal);
+            DOMElements.closeEditModalBtn.addEventListener('click', () => DOMElements.editQuestionsModal.classList.add('hidden'));
+            DOMElements.saveQuestionsBtn.addEventListener('click', saveQuestions);
+            DOMElements.downloadCsvBtn.addEventListener('click', downloadCSV);
+            DOMElements.confirmDeleteBtn.addEventListener('click', confirmDelete);
+            DOMElements.cancelDeleteBtn.addEventListener('click', () => DOMElements.deleteConfirmModal.classList.add('hidden'));
+            
+            const q = query(collection(db, "wawancara"));
+            onSnapshot(q, updateLog, (error) => console.error("Snapshot listener error:", error));
+        }
+
+        // --- Core Logic ---
+        function handleContinue() {
+            if (validateSection('parent-questions-container')) {
+                DOMElements.formSectionParent.classList.add('hidden');
+                DOMElements.formSectionStudent.classList.remove('hidden');
+            } else {
+                showNotification(false, 'Harap isi semua pertanyaan di Bagian 1.');
+            }
+        }
+        
+        function handleBack() {
+             DOMElements.formSectionStudent.classList.add('hidden');
+             DOMElements.formSectionParent.classList.remove('hidden');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!validateSection('student-questions-container')) {
+                showNotification(false, 'Harap isi semua pertanyaan di Bagian 2.');
+                return;
+            }
+
+            DOMElements.submitButton.disabled = true;
+            DOMElements.submitButton.textContent = 'Mengirim...';
+
+            let answers = {};
+            document.querySelectorAll('#interviewForm input, #interviewForm textarea').forEach(input => {
+                answers[input.dataset.question] = input.value;
+            });
+
+            try {
+                await addDoc(collection(db, "wawancara"), { timestamp: new Date(), answers });
+                showNotification(true, 'Jawaban berhasil dikirim!');
+                DOMElements.interviewForm.reset();
+                handleBack(); // Go back to the first section
+            } catch (error) {
+                showNotification(false, 'Gagal mengirim jawaban.');
+                console.error("Error adding document: ", error);
+            } finally {
+                DOMElements.submitButton.disabled = false;
+                DOMElements.submitButton.textContent = 'Kirim Jawaban';
+            }
+        }
+
+        function updateLog(querySnapshot) {
+            if (querySnapshot.empty) {
+                DOMElements.logContainer.innerHTML = `<p id="log-placeholder" class="text-gray-500 text-center mt-10">Belum ada jawaban yang masuk.</p>`;
+                return;
+            }
+
+            let allDocs = [];
+            querySnapshot.forEach(doc => allDocs.push({ id: doc.id, ...doc.data() }));
+            allDocs.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+
+            const headerHTML = tableHeaders.map(h => `<th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">${h}</th>`).join('');
+            
+            const bodyHTML = allDocs.map(docData => {
+                if (!docData.answers) return '';
+                const rowTds = tableHeaders.map(header => {
+                    let cellContent = '';
+                    if (header === 'Waktu') {
+                        cellContent = docData.timestamp.toDate().toLocaleString('id-ID');
+                    } else if (header === 'Aksi') {
+                        cellContent = `<button class="delete-btn text-gray-500 hover:text-red-500" data-id="${docData.id}" title="Hapus Log">🗑️</button>`;
+                    } else {
+                        cellContent = docData.answers[header] || '-';
+                    }
+                    return `<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-300">${cellContent}</td>`;
+                }).join('');
+                return `<tr class="border-b border-gray-700">${rowTds}</tr>`;
+            }).join('');
+
+            DOMElements.logContainer.innerHTML = `
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-gray-800"><tr>${headerHTML}</tr></thead>
+                    <tbody class="divide-y divide-gray-700">${bodyHTML}</tbody>
+                </table>
+            `;
+            
+            DOMElements.logContainer.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    docIdToDelete = e.currentTarget.dataset.id;
+                    DOMElements.deleteConfirmModal.classList.remove('hidden');
+                });
+            });
+        }
+        
+        async function confirmDelete() {
+            if (!docIdToDelete) return;
+            try {
+                await deleteDoc(doc(db, "wawancara", docIdToDelete));
+                showNotification(true, 'Log berhasil dihapus.');
+            } catch (error) {
+                showNotification(false, 'Gagal menghapus log.');
+            } finally {
+                docIdToDelete = null;
+                DOMElements.deleteConfirmModal.classList.add('hidden');
+            }
+        }
+
+        function openEditModal() {
+            const container = DOMElements.editQuestionsContainer;
+            container.innerHTML = '';
+            
+            const createInputs = (title, category, dataList, isObject = false) => {
+                let html = `<div class="mb-4"><h4 class="text-lg font-semibold text-white border-b border-gray-600 pb-2 mb-3">${title}</h4><div class="space-y-3">`;
+                dataList.forEach((item, i) => {
+                    if (isObject) {
+                        html += `
+                            <div class="p-2 border border-gray-700 rounded-md">
+                                <label class="text-xs text-gray-400">Pertanyaan ${i+1}</label>
+                                <textarea rows="2" class="w-full p-2 mt-1 rounded-md bg-gray-700" data-category="${category}" data-index="${i}" data-field="question">${item.question}</textarea>
+                                <label class="text-xs text-gray-400">Konteks/Petunjuk (opsional)</label>
+                                <textarea rows="1" class="w-full p-2 mt-1 rounded-md bg-gray-700" data-category="${category}" data-index="${i}" data-field="hint">${item.hint || ''}</textarea>
+                            </div>
+                        `;
+                    } else {
+                         html += `<textarea rows="1" class="w-full p-2 mt-1 rounded-md bg-gray-700" data-category="${category}" data-index="${i}">${item}</textarea>`;
+                    }
+                });
+                html += `</div></div>`;
+                return html;
+            };
+            
+            container.innerHTML += createInputs('Identitas Orang Tua', 'parent_identitas', questions.parent_identitas);
+            container.innerHTML += createInputs('Pertanyaan Orang Tua', 'parent_pertanyaan', questions.parent_pertanyaan, true);
+            container.innerHTML += createInputs('Identitas Murid', 'student_identitas', questions.student_identitas);
+            container.innerHTML += createInputs('Pertanyaan Murid', 'student_pertanyaan', questions.student_pertanyaan, true);
+            
+            DOMElements.editQuestionsModal.classList.remove('hidden');
+        }
+
+        async function saveQuestions() {
+            const newQuestions = { parent_identitas: [], parent_pertanyaan: [], student_identitas: [], student_pertanyaan: [] };
+            
+            // Re-initialize arrays to the correct size to avoid sparse arrays
+            for (const key in newQuestions) {
+                const count = questions[key].length;
+                newQuestions[key] = Array.from({ length: count }, () => (key.includes('pertanyaan') ? {question: '', hint: ''} : ''));
+            }
+
+            DOMElements.editQuestionsContainer.querySelectorAll('textarea').forEach(el => {
+                const { category, index, field } = el.dataset;
+                const value = el.value.trim();
+                if (field === 'question') {
+                    newQuestions[category][parseInt(index)].question = value;
+                } else if (field === 'hint') {
+                     newQuestions[category][parseInt(index)].hint = value;
+                } else {
+                    newQuestions[category][parseInt(index)] = value;
+                }
+            });
+
+            try {
+                await setDoc(doc(db, "questions", "main_interview"), newQuestions);
+                await loadQuestions();
+                renderForms();
+                DOMElements.editQuestionsModal.classList.add('hidden');
+                showNotification(true, 'Pertanyaan berhasil diperbarui!');
+            } catch (error) {
+                showNotification(false, 'Gagal menyimpan pertanyaan.');
+                console.error(error);
+            }
+        }
+
+        async function downloadCSV() {
+            const qSnapshot = await getDocs(collection(db, "wawancara"));
+            if (qSnapshot.empty) {
+                showNotification(false, 'Tidak ada data untuk diunduh.');
+                return;
+            }
+
+            // Create ordered headers based on the current questions structure
+            const orderedHeaders = ['Waktu'];
+            questions.parent_identitas.forEach(q => orderedHeaders.push(q));
+            questions.parent_pertanyaan.forEach(q => orderedHeaders.push(q.question));
+            questions.student_identitas.forEach(q => orderedHeaders.push(q));
+            questions.student_pertanyaan.forEach(q => orderedHeaders.push(q.question));
+            
+            const headerRow = orderedHeaders.map(header => `"${String(header).replace(/"/g, '""')}"`).join(',') + '\r\n';
+
+            let csvRows = [];
+            qSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!data.answers) return;
+                const row = orderedHeaders.map(header => {
+                    let value = (header === 'Waktu') ? data.timestamp.toDate().toISOString() : (data.answers[header] || '');
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                }).join(',');
+                csvRows.push(row);
+            });
+
+            const csvContent = headerRow + csvRows.join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `hasil_wawancara_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+    </script>
+</body>
+</html>
