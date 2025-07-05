@@ -48,16 +48,39 @@
     <div id="notification" class="hidden fixed top-5 right-5 bg-green-600 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
     <div id="error-notification" class="hidden fixed top-5 right-5 bg-red-600 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
 
-    <!-- Modals (Edit, Delete) -->
+    <!-- Modals -->
     <div id="edit-questions-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
         <div class="glass-card w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
             <div class="p-4 border-b border-gray-600 flex justify-between items-center">
                 <h3 class="text-xl font-bold text-white">Ubah Pertanyaan Wawancara</h3>
-                <button id="close-edit-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
+                <button id="close-edit-questions-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
             </div>
             <div id="edit-questions-container" class="p-6 overflow-y-auto space-y-4"></div>
             <div class="p-4 border-t border-gray-600 mt-auto">
-                <button id="save-questions-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Perubahan</button>
+                <button id="save-questions-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Perubahan Pertanyaan</button>
+            </div>
+        </div>
+    </div>
+    <div id="edit-answer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="glass-card w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-gray-600 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-white">Ubah Jawaban Wawancara</h3>
+                <button id="close-edit-answer-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="editAnswerForm" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-white">Bagian 1: Orang Tua</h4>
+                        <div id="edit-parent-answers-container" class="space-y-4"></div>
+                    </div>
+                     <div>
+                        <h4 class="text-lg font-semibold mb-4 text-white">Bagian 2: Murid</h4>
+                        <div id="edit-student-answers-container" class="space-y-4"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-4 border-t border-gray-600 mt-auto">
+                <button id="save-answer-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Perubahan Jawaban</button>
             </div>
         </div>
     </div>
@@ -122,7 +145,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, getDoc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, getDoc, setDoc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Config & Security Note ---
         const firebaseConfig = {
@@ -138,6 +161,7 @@
         // --- State ---
         let db, auth;
         let questions = {};
+        let docIdToEdit = null;
         let docIdToDelete = null;
         let tableHeaders = [];
 
@@ -155,11 +179,17 @@
             continueBtn: document.getElementById('continue-btn'),
             backBtn: document.getElementById('back-btn'),
             submitButton: document.getElementById('submit-button'),
+            // Modals
             editQuestionsModal: document.getElementById('edit-questions-modal'),
             editQuestionsBtn: document.getElementById('edit-questions-btn'),
-            closeEditModalBtn: document.getElementById('close-edit-modal-btn'),
+            closeEditQuestionsModalBtn: document.getElementById('close-edit-questions-modal-btn'),
             saveQuestionsBtn: document.getElementById('save-questions-btn'),
             editQuestionsContainer: document.getElementById('edit-questions-container'),
+            editAnswerModal: document.getElementById('edit-answer-modal'),
+            closeEditAnswerModalBtn: document.getElementById('close-edit-answer-modal-btn'),
+            editParentAnswersContainer: document.getElementById('edit-parent-answers-container'),
+            editStudentAnswersContainer: document.getElementById('edit-student-answers-container'),
+            saveAnswerBtn: document.getElementById('save-answer-btn'),
             deleteConfirmModal: document.getElementById('delete-confirm-modal'),
             cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
             confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
@@ -274,9 +304,11 @@
             DOMElements.continueBtn.addEventListener('click', handleContinue);
             DOMElements.backBtn.addEventListener('click', handleBack);
             DOMElements.interviewForm.addEventListener('submit', handleFormSubmit);
-            DOMElements.editQuestionsBtn.addEventListener('click', openEditModal);
-            DOMElements.closeEditModalBtn.addEventListener('click', () => DOMElements.editQuestionsModal.classList.add('hidden'));
+            DOMElements.editQuestionsBtn.addEventListener('click', openEditQuestionsModal);
+            DOMElements.closeEditQuestionsModalBtn.addEventListener('click', () => DOMElements.editQuestionsModal.classList.add('hidden'));
             DOMElements.saveQuestionsBtn.addEventListener('click', saveQuestions);
+            DOMElements.closeEditAnswerModalBtn.addEventListener('click', () => DOMElements.editAnswerModal.classList.add('hidden'));
+            DOMElements.saveAnswerBtn.addEventListener('click', saveAnswerChanges);
             DOMElements.downloadCsvBtn.addEventListener('click', downloadCSV);
             DOMElements.confirmDeleteBtn.addEventListener('click', confirmDelete);
             DOMElements.cancelDeleteBtn.addEventListener('click', () => DOMElements.deleteConfirmModal.classList.add('hidden'));
@@ -291,7 +323,6 @@
                 DOMElements.formSectionParent.classList.add('hidden');
                 DOMElements.formSectionStudent.classList.remove('hidden');
 
-                // Auto-fill date
                 const dateInput = document.querySelector('[data-question="Hari/Tanggal Wawancara"]');
                 if (dateInput && !dateInput.value) {
                     const today = new Date();
@@ -329,7 +360,7 @@
                 await addDoc(collection(db, "wawancara"), { timestamp: new Date(), answers });
                 showNotification(true, 'Jawaban berhasil dikirim!');
                 DOMElements.interviewForm.reset();
-                handleBack(); // Go back to the first section
+                handleBack();
             } catch (error) {
                 showNotification(false, 'Gagal mengirim jawaban.');
                 console.error("Error adding document: ", error);
@@ -358,7 +389,12 @@
                     if (header === 'Waktu') {
                         cellContent = docData.timestamp.toDate().toLocaleString('id-ID');
                     } else if (header === 'Aksi') {
-                        cellContent = `<button class="delete-btn text-gray-500 hover:text-red-500" data-id="${docData.id}" title="Hapus Log">🗑️</button>`;
+                        cellContent = `
+                            <div class="flex space-x-2">
+                                <button class="edit-answer-btn text-gray-500 hover:text-yellow-400" data-id="${docData.id}" title="Ubah Jawaban">✏️</button>
+                                <button class="delete-btn text-gray-500 hover:text-red-500" data-id="${docData.id}" title="Hapus Log">🗑️</button>
+                            </div>
+                        `;
                     } else {
                         cellContent = docData.answers[header] || '-';
                     }
@@ -380,6 +416,11 @@
                     DOMElements.deleteConfirmModal.classList.remove('hidden');
                 });
             });
+            DOMElements.logContainer.querySelectorAll('.edit-answer-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    openEditAnswerModal(e.currentTarget.dataset.id);
+                });
+            });
         }
         
         async function confirmDelete() {
@@ -395,7 +436,7 @@
             }
         }
 
-        function openEditModal() {
+        function openEditQuestionsModal() {
             const container = DOMElements.editQuestionsContainer;
             container.innerHTML = '';
             
@@ -430,7 +471,6 @@
         async function saveQuestions() {
             const newQuestions = { parent_identitas: [], parent_pertanyaan: [], student_identitas: [], student_pertanyaan: [] };
             
-            // Re-initialize arrays to the correct size to avoid sparse arrays
             for (const key in newQuestions) {
                 const count = questions[key].length;
                 newQuestions[key] = Array.from({ length: count }, () => (key.includes('pertanyaan') ? {question: '', hint: ''} : ''));
@@ -460,6 +500,61 @@
             }
         }
 
+        async function openEditAnswerModal(docId) {
+            docIdToEdit = docId;
+            const docRef = doc(db, "wawancara", docId);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                showNotification(false, "Gagal memuat data untuk diedit.");
+                return;
+            }
+
+            const data = docSnap.data();
+            const answers = data.answers || {};
+
+            const populateFields = (container, identitas, pertanyaan) => {
+                container.innerHTML = '';
+                identitas.forEach(q => {
+                    container.innerHTML += `<div><label class="block text-sm font-medium text-white">${q}</label><input type="text" value="${answers[q] || ''}" data-question="${q}" class="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-gray-200"></div>`;
+                });
+                pertanyaan.forEach((q, i) => {
+                    container.innerHTML += `<div><label class="block text-sm font-medium text-white">${i + 1}. ${q.question}</label>${q.hint ? `<p class="text-xs text-yellow-400 mt-1">${q.hint}</p>` : ''}<textarea data-question="${q.question}" rows="2" class="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-gray-200">${answers[q.question] || ''}</textarea></div>`;
+                });
+            };
+
+            populateFields(DOMElements.editParentAnswersContainer, questions.parent_identitas, questions.parent_pertanyaan);
+            populateFields(DOMElements.editStudentAnswersContainer, questions.student_identitas, questions.student_pertanyaan);
+            
+            DOMElements.editAnswerModal.classList.remove('hidden');
+        }
+
+        async function saveAnswerChanges() {
+            if (!docIdToEdit) return;
+
+            DOMElements.saveAnswerBtn.disabled = true;
+            DOMElements.saveAnswerBtn.textContent = 'Menyimpan...';
+
+            let newAnswers = {};
+            document.querySelectorAll('#editAnswerForm input, #editAnswerForm textarea').forEach(input => {
+                newAnswers[input.dataset.question] = input.value;
+            });
+
+            const docRef = doc(db, "wawancara", docIdToEdit);
+            try {
+                await updateDoc(docRef, { answers: newAnswers });
+                showNotification(true, 'Jawaban berhasil diperbarui.');
+                DOMElements.editAnswerModal.classList.add('hidden');
+            } catch (error) {
+                showNotification(false, 'Gagal menyimpan perubahan.');
+                console.error("Error updating document:", error);
+            } finally {
+                docIdToEdit = null;
+                DOMElements.saveAnswerBtn.disabled = false;
+                DOMElements.saveAnswerBtn.textContent = 'Simpan Perubahan Jawaban';
+            }
+        }
+
         async function downloadCSV() {
             const qSnapshot = await getDocs(collection(db, "wawancara"));
             if (qSnapshot.empty) {
@@ -467,7 +562,6 @@
                 return;
             }
 
-            // Create ordered headers based on the current questions structure
             const orderedHeaders = ['Waktu'];
             questions.parent_identitas.forEach(q => orderedHeaders.push(q));
             questions.parent_pertanyaan.forEach(q => orderedHeaders.push(q.question));
