@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animated Scientific Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .header-text {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(to right, #00f260, #0575e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glowText 3s infinite ease-in-out alternate;
+    }
+
+    @keyframes glowText {
+      0% {
+        text-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+      }
+      100% {
+        text-shadow: 0 0 20px #0ff, 0 0 30px #0ff;
+      }
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      padding: 20px;
+      border-radius: 25px;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+      animation: slideIn 1.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .screen {
+      background: linear-gradient(to right, #232526, #414345);
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      color: #00ffcc;
+      text-align: right;
+      overflow-x: auto;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      background: linear-gradient(to bottom right, #00c6ff, #0072ff);
+      color: white;
+      border: none;
+      padding: 15px;
+      font-size: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      background: linear-gradient(to bottom right, #ff512f, #dd2476);
+    }
+
+    .bg-animated {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://media.giphy.com/media/l0HUpt2s9Pclgt9Vm/giphy.gif') center center / cover;
+      opacity: 0.08;
+      z-index: -1;
+      animation: floatBg 20s infinite linear;
+    }
+
+    @keyframes floatBg {
+      0% { background-position: 0 0; }
+      100% { background-position: 100% 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-animated"></div>
+  <div class="header-text">Kalkulator Scientific by Muhammad Rastra Husada, SMAN 1 SOPPENG</div>
+  <div class="container">
+    <div id="screen" class="screen">0</div>
+    <div class="buttons">
+      <button onclick="clearScreen()">C</button>
+      <button onclick="appendValue('(')">(</button>
+      <button onclick="appendValue(')')">)</button>
+      <button onclick="appendValue('%')">%</button>
+      <button onclick="deleteLast()">DEL</button>
+
+      <button onclick="appendValue('7')">7</button>
+      <button onclick="appendValue('8')">8</button>
+      <button onclick="appendValue('9')">9</button>
+      <button onclick="appendValue('/')">/</button>
+      <button onclick="appendValue('Math.sqrt(')">√</button>
+
+      <button onclick="appendValue('4')">4</button>
+      <button onclick="appendValue('5')">5</button>
+      <button onclick="appendValue('6')">6</button>
+      <button onclick="appendValue('*')">×</button>
+      <button onclick="appendValue('**')">^</button>
+
+      <button onclick="appendValue('1')">1</button>
+      <button onclick="appendValue('2')">2</button>
+      <button onclick="appendValue('3')">3</button>
+      <button onclick="appendValue('-')">-</button>
+      <button onclick="appendValue('Math.sin(')">sin</button>
+
+      <button onclick="appendValue('0')">0</button>
+      <button onclick="appendValue('.')">.</button>
+      <button onclick="calculate()">=</button>
+      <button onclick="appendValue('+')">+</button>
+      <button onclick="appendValue('Math.cos(')">cos</button>
+
+      <button onclick="appendValue('Math.tan(')">tan</button>
+      <button onclick="appendValue('Math.log10(')">log</button>
+      <button onclick="appendValue('Math.PI')">π</button>
+      <button onclick="appendValue('Math.E')">e</button>
+      <button onclick="appendValue('Math.abs(')">|x|</button>
+    </div>
+  </div>
+  <script>
+    const screen = document.getElementById('screen');
+
+    function appendValue(value) {
+      if (screen.innerText === '0') {
+        screen.innerText = value;
+      } else {
+        screen.innerText += value;
+      }
+    }
+
+    function clearScreen() {
+      screen.innerText = '0';
+    }
+
+    function deleteLast() {
+      screen.innerText = screen.innerText.slice(0, -1) || '0';
+    }
+
+    function calculate() {
+      try {
+        screen.innerText = eval(screen.innerText);
+      } catch (e) {
+        screen.innerText = 'Error';
+      }
+    }
+  </script>
+</body>
+</html>
