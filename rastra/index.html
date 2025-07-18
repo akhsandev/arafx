@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mari Belajar - Website Siswa Interaktif</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Custom Styles & Animations */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f9fafb; /* text-gray-50 */
+        }
+
+        /* Animated Gradient for Text */
+        .animated-gradient-text {
+            background: linear-gradient(-45deg, #c77dff, #ff8a00, #00c6ff, #6f86d6);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Page transition animation */
+        .page {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* bg-gray-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6366f1; /* bg-indigo-500 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #818cf8; /* bg-indigo-400 */
+        }
+        
+        /* Particles.js canvas styling */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+        
+        /* Ensure content is above particles */
+        header, main, footer {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <!-- Particles.js Container -->
+    <div id="particles-js"></div>
+
+    <!-- Header -->
+    <header class="bg-gray-900/70 backdrop-blur-sm sticky top-0 z-50 shadow-lg shadow-indigo-500/10">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-white hover:text-indigo-400 transition-colors duration-300" data-page="beranda">
+                <i class="fas fa-book-open-reader mr-2"></i>Mari Belajar
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#" class="nav-link active" data-page="beranda">Beranda</a>
+                <div class="relative" id="apps-dropdown-container">
+                    <button class="nav-link flex items-center" id="apps-nav-link">
+                        Aplikasi <i class="fas fa-chevron-down ml-2 text-xs transition-transform duration-300"></i>
+                    </button>
+                    <div id="apps-dropdown" class="absolute top-full right-0 mt-4 w-60 rounded-xl shadow-2xl">
+                        <a href="#" class="dropdown-link" data-page="tugas"><i class="fas fa-tasks fa-fw mr-3 text-sky-400"></i>Kelola Tugas</a>
+                        <a href="#" class="dropdown-link" data-page="absen"><i class="fas fa-user-check fa-fw mr-3 text-emerald-400"></i>Isi Absensi</a>
+                        <a href="https://arafx.vercel.app/pengumpultugas.html" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fas fa-upload fa-fw mr-3 text-amber-400"></i>Pengumpul Tugas</a>
+                        <a href="https://arafx.vercel.app/calc.html" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fas fa-calculator fa-fw mr-3 text-rose-400"></i>Kalkulator</a>
+                    </div>
+                </div>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-2xl">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800/90 backdrop-blur-sm">
+            <a href="#" class="mobile-nav-link" data-page="beranda">Beranda</a>
+            <a href="#" class="mobile-nav-link" data-page="tugas">Kelola Tugas</a>
+            <a href="#" class="mobile-nav-link" data-page="absen">Isi Absensi</a>
+            <a href="https://arafx.vercel.app/pengumpultugas.html" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">Pengumpul Tugas</a>
+            <a href="https://arafx.vercel.app/calc.html" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">Kalkulator</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <!-- Beranda Page -->
+        <section id="page-beranda" class="page min-h-[80vh] flex items-center">
+            <div class="w-full flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4">
+                        MARI <span class="animated-gradient-text bg-clip-text text-transparent">BELAJAR</span>
+                    </h1>
+                    <h2 class="text-xl md:text-2xl font-light text-gray-300 mb-6">Website nya siswa andalan!</h2>
+                    <p class="text-gray-400 mb-8 max-w-lg mx-auto md:mx-0">Ini adalah website dimana siswa bisa melatih kedisiplinan dan mengelola tugas sekolah dengan lebih baik.</p>
+                    <div class="flex flex-wrap justify-center md:justify-start items-center gap-4">
+                        <a href="#" class="btn-primary" data-page="tugas">
+                            <i class="fas fa-tasks mr-2"></i>Kelola Tugas
+                        </a>
+                        <a href="#" class="btn-secondary" data-page="absen">
+                            <i class="fas fa-user-check mr-2"></i>Isi Absensi
+                        </a>
+                        <a href="https://arafx.vercel.app/pengumpultugas.html" target="_blank" rel="noopener noreferrer" class="btn-tertiary">
+                            <i class="fas fa-upload mr-2"></i>Pengumpul Tugas
+                        </a>
+                        <a href="https://arafx.vercel.app/calc.html" target="_blank" rel="noopener noreferrer" class="btn-quaternary">
+                            <i class="fas fa-calculator mr-2"></i>Kalkulator
+                        </a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <img src="https://arafx.vercel.app/IMG_3706.png" alt="Siswa Belajar" class="rounded-full shadow-2xl shadow-indigo-500/40 w-64 h-64 md:w-96 md:h-96 object-cover border-4 border-indigo-500/50">
+                </div>
+            </div>
+        </section>
+
+        <!-- Tugas Page (Revised) -->
+        <section id="page-tugas" class="page hidden">
+            <h1 class="text-4xl font-bold text-center mb-2 animated-gradient-text bg-clip-text text-transparent">Alat Bantu Siswa</h1>
+            <p class="text-center text-gray-400 mb-10">Atur semua tugas, jadwal, dan daftar mata pelajaranmu di sini.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Kolom Tugas -->
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-clipboard-list mr-3 text-sky-400"></i>Daftar Tugas</h2>
+                    <form id="assignment-form" class="space-y-4 mt-4">
+                        <input type="text" id="nama-tugas" placeholder="Contoh: Mengerjakan LKS Hal. 10" class="form-input" required>
+                        <input type="date" id="batas-kumpul" class="form-input" required>
+                        <button type="submit" class="btn-primary w-full"><i class="fas fa-plus mr-2"></i>Tambahkan Tugas</button>
+                    </form>
+                    <ul id="list-tugas" class="mt-6 space-y-3"></ul>
+                </div>
+                <!-- Kolom Mata Pelajaran -->
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-book mr-3 text-emerald-400"></i>Mata Pelajaran</h2>
+                    <form id="grade-form" class="space-y-4 mt-4">
+                        <input type="text" id="mata-pelajaran" placeholder="Contoh: Matematika" class="form-input" required>
+                        <input type="number" id="jumlah-tugas" placeholder="Jumlah Tugas" class="form-input" required>
+                        <button type="submit" class="btn-primary w-full"><i class="fas fa-plus mr-2"></i>Tambahkan Mapel</button>
+                    </form>
+                    <ul id="grade-list" class="mt-6 space-y-3"></ul>
+                </div>
+                <!-- Kolom Jadwal Belajar -->
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-calendar-alt mr-3 text-amber-400"></i>Jadwal Belajar</h2>
+                    <form id="schedule-form" class="space-y-4 mt-4">
+                        <input type="text" id="jadwal-mapel" placeholder="Contoh: Belajar Fisika Bab 2" class="form-input" required>
+                        <input type="datetime-local" id="study-time" class="form-input" required>
+                        <button type="submit" class="btn-primary w-full"><i class="fas fa-plus mr-2"></i>Tambahkan Jadwal</button>
+                    </form>
+                    <ul id="schedule-list" class="mt-6 space-y-3"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Absen Page (Revised) -->
+        <section id="page-absen" class="page hidden">
+             <h1 class="text-4xl font-bold text-center mb-2 animated-gradient-text bg-clip-text text-transparent">Absensi Siswa</h1>
+             <p class="text-center text-gray-400 mb-10">Catat kehadiranmu setiap hari untuk melatih kedisiplinan.</p>
+             <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="card lg:col-span-2">
+                    <h2 class="card-title"><i class="fas fa-edit mr-3 text-indigo-400"></i>Input Data Absensi</h2>
+                    <div class="space-y-4 mt-4">
+                        <input type="text" id="name" placeholder="Nama Lengkap" class="form-input">
+                        <input type="text" id="class" placeholder="Kelas" class="form-input">
+                        <input type="date" id="date" class="form-input">
+                        <label for="arrival" class="block text-sm font-medium text-gray-400 pt-2">Jam Kedatangan</label>
+                        <input type="time" id="arrival" class="form-input">
+                        <button id="checkButton" class="btn-secondary w-full"><i class="fas fa-stopwatch mr-2"></i>Cek Keterlambatan</button>
+                        <p id="result" class="text-center font-semibold h-6 transition-all"></p>
+                        <button id="saveButton" class="btn-primary w-full"><i class="fas fa-save mr-2"></i>Simpan Data</button>
+                    </div>
+                </div>
+                <div class="card lg:col-span-3">
+                     <h2 class="card-title"><i class="fas fa-table mr-3 text-indigo-400"></i>Data Kehadiran Tersimpan</h2>
+                     <div class="overflow-x-auto mt-4">
+                        <table id="dataTable" class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-300 uppercase bg-gray-900/40">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Nama</th>
+                                    <th scope="col" class="px-4 py-3">Kelas</th>
+                                    <th scope="col" class="px-4 py-3">Tanggal</th>
+                                    <th scope="col" class="px-4 py-3">Jam</th>
+                                    <th scope="col" class="px-4 py-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                     </div>
+                </div>
+             </div>
+        </section>
+    </main>
+    
+    <footer class="text-center py-8 mt-12 border-t border-gray-800/50">
+        <p class="text-gray-500">&copy; 2025 Mari Belajar. By: Muhammad Rastra Husada <i class="fas fa-heart text-red-500"></i>.</p>
+    </footer>
+
+    <!-- Particles.js Library -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Inisialisasi Particles.js ---
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#ffffff" },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": true, "anim": { "enable": false } },
+                    "size": { "value": 3, "random": true, "anim": { "enable": false } },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                    "modes": { "repulse": { "distance": 100, "duration": 0.4 }, "push": { "particles_nb": 4 } }
+                },
+                "retina_detect": true
+            });
+
+            // --- Logika Navigasi Halaman (SPA) ---
+            const pages = document.querySelectorAll('.page');
+            const navLinkBeranda = document.querySelector('.nav-link[data-page="beranda"]');
+            const navLinkAplikasi = document.getElementById('apps-nav-link');
+            const allLinks = document.querySelectorAll('a[data-page]');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const appsDropdownContainer = document.getElementById('apps-dropdown-container');
+            const appsDropdown = document.getElementById('apps-dropdown');
+            const dropdownIcon = appsDropdownContainer.querySelector('i');
+
+            function showPage(pageId) {
+                // Update active link state
+                if (pageId === 'tugas' || pageId === 'absen') {
+                    navLinkAplikasi.classList.add('active');
+                    navLinkBeranda.classList.remove('active');
+                } else {
+                    navLinkAplikasi.classList.remove('active');
+                    navLinkBeranda.classList.add('active');
+                }
+
+                pages.forEach(page => {
+                    page.classList.toggle('hidden', page.id !== `page-${pageId}`);
+                });
+                mobileMenu.classList.add('hidden');
+            }
+
+            allLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const pageId = link.getAttribute('data-page');
+                    if (pageId) {
+                        e.preventDefault();
+                        showPage(pageId);
+                    }
+                });
+            });
+            
+            mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            
+            // --- PERBAIKAN LOGIKA DROPDOWN ---
+            let dropdownTimeout;
+
+            if (appsDropdownContainer && appsDropdown) {
+                const showDropdown = () => {
+                    clearTimeout(dropdownTimeout);
+                    appsDropdown.classList.add('active');
+                    dropdownIcon.style.transform = 'rotate(180deg)';
+                };
+
+                const hideDropdown = () => {
+                    dropdownTimeout = setTimeout(() => {
+                        appsDropdown.classList.remove('active');
+                        dropdownIcon.style.transform = 'rotate(0deg)';
+                    }, 150); // Jeda 150ms sebelum menu tertutup
+                };
+
+                appsDropdownContainer.addEventListener('mouseenter', showDropdown);
+                appsDropdownContainer.addEventListener('mouseleave', hideDropdown);
+            }
+
+
+            // --- Logika Halaman Tugas ---
+            const assignmentForm = document.getElementById('assignment-form');
+            const assignmentList = document.getElementById('list-tugas');
+            const gradeForm = document.getElementById('grade-form');
+            const gradeList = document.getElementById('grade-list');
+            const scheduleForm = document.getElementById('schedule-form');
+            const scheduleList = document.getElementById('schedule-list');
+
+            function createListItem(text, listElement, iconClass) {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-item';
+                
+                const contentSpan = document.createElement('span');
+                contentSpan.className = 'flex items-center';
+                contentSpan.innerHTML = `<i class="fas ${iconClass} mr-3"></i> ${text}`;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteButton.className = 'delete-button';
+                
+                deleteButton.addEventListener('click', function() {
+                    listItem.classList.add('animate-fade-out');
+                    setTimeout(() => listElement.removeChild(listItem), 300);
+                });
+
+                listItem.appendChild(contentSpan);
+                listItem.appendChild(deleteButton);
+                
+                return listItem;
+            }
+
+            assignmentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const assignmentName = document.getElementById('nama-tugas').value;
+                const dueDate = document.getElementById('batas-kumpul').value;
+                const listItem = createListItem(`<strong>${assignmentName}</strong> - Batas: ${dueDate}`, assignmentList, 'fa-clipboard-check text-sky-400');
+                assignmentList.appendChild(listItem);
+                assignmentForm.reset();
+            });
+
+            gradeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const subject = document.getElementById('mata-pelajaran').value;
+                const grade = document.getElementById('jumlah-tugas').value;
+                const listItem = createListItem(`<strong>${subject}</strong>: ${grade} Tugas`, gradeList, 'fa-book-open text-emerald-400');
+                gradeList.appendChild(listItem);
+                gradeForm.reset();
+            });
+
+            scheduleForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const studyTopic = document.getElementById('jadwal-mapel').value;
+                const studyTime = document.getElementById('study-time').value;
+                const listItem = createListItem(`<strong>${studyTopic}</strong> - ${new Date(studyTime).toLocaleString('id-ID')}`, scheduleList, 'fa-clock text-amber-400');
+                scheduleList.appendChild(listItem);
+                scheduleForm.reset();
+            });
+
+            // --- Logika Halaman Absen ---
+            const checkButton = document.getElementById('checkButton');
+            const saveButton = document.getElementById('saveButton');
+            const resultEl = document.getElementById('result');
+            let currentStatus = '';
+            let database = [];
+
+            checkButton.addEventListener('click', () => {
+                const arrivalTime = document.getElementById('arrival').value;
+                if (!arrivalTime) {
+                    resultEl.textContent = 'Masukkan jam kedatangan!';
+                    resultEl.className = 'text-center font-semibold h-6 text-yellow-400';
+                    return;
+                }
+                const [hours, minutes] = arrivalTime.split(':').map(Number);
+                if (hours > 7 || (hours === 7 && minutes > 0)) {
+                    currentStatus = 'Terlambat';
+                    resultEl.textContent = 'Status: Terlambat';
+                    resultEl.className = 'text-center font-semibold h-6 text-red-400';
+                } else {
+                    currentStatus = 'Tepat Waktu';
+                    resultEl.textContent = 'Status: Tepat Waktu';
+                    resultEl.className = 'text-center font-semibold h-6 text-green-400';
+                }
+            });
+
+            saveButton.addEventListener('click', () => {
+                const name = document.getElementById('name').value;
+                const studentClass = document.getElementById('class').value;
+                const date = document.getElementById('date').value;
+                const arrivalInput = document.getElementById('arrival').value;
+
+                if (!name || !studentClass || !date || !arrivalInput || !currentStatus) {
+                    resultEl.textContent = 'Cek keterlambatan & isi semua data!';
+                    resultEl.className = 'text-center font-semibold h-6 text-yellow-400';
+                    return;
+                }
+
+                const newData = { name, studentClass, date, arrival: arrivalInput, status: currentStatus };
+                database.push(newData);
+                updateTable();
+
+                // Reset form
+                document.getElementById('name').value = '';
+                document.getElementById('class').value = '';
+                document.getElementById('date').value = '';
+                document.getElementById('arrival').value = '';
+                resultEl.textContent = 'Data berhasil disimpan!';
+                resultEl.className = 'text-center font-semibold h-6 text-green-400';
+                currentStatus = '';
+                setTimeout(() => resultEl.textContent = '', 2000);
+            });
+
+            function updateTable() {
+                const tbody = document.querySelector('#dataTable tbody');
+                tbody.innerHTML = '';
+                database.forEach(data => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-700/50 hover:bg-gray-800/60 transition-colors duration-200';
+                    const statusBadge = data.status === 'Terlambat' 
+                        ? '<span class="status-badge bg-red-500/20 text-red-300">Terlambat</span>' 
+                        : '<span class="status-badge bg-green-500/20 text-green-300">Tepat Waktu</span>';
+                    row.innerHTML = `
+                        <td class="px-4 py-3 font-medium text-white">${data.name}</td>
+                        <td class="px-4 py-3">${data.studentClass}</td>
+                        <td class="px-4 py-3">${data.date}</td>
+                        <td class="px-4 py-3">${data.arrival}</td>
+                        <td class="px-4 py-3 text-center">${statusBadge}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // --- Tambahan CSS dinamis untuk elemen kustom ---
+            const styleSheet = document.createElement("style");
+            styleSheet.innerText = `
+                .btn-primary { @apply flex items-center justify-center bg-indigo-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-600/20; }
+                .btn-secondary { @apply flex items-center justify-center bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-gray-700/20; }
+                .btn-tertiary { @apply flex items-center justify-center bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-semibold py-2.5 px-6 rounded-lg hover:from-sky-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-sky-500/30; }
+                .btn-quaternary { @apply flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-500 text-white font-semibold py-2.5 px-6 rounded-lg hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/30; }
+                
+                .nav-link { @apply text-gray-300 hover:text-white font-medium transition-colors duration-300 relative after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-indigo-400 after:transition-all after:duration-300; }
+                .nav-link.active { @apply text-white; }
+                .nav-link.active::after { @apply w-full; }
+                
+                /* REVISI DROPDOWN ESTETIK */
+                #apps-dropdown {
+                    background: rgba(31, 41, 55, 0.6);
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    padding: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    opacity: 0;
+                    transform: translateY(10px) scale(0.95);
+                    pointer-events: none;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+                }
+                #apps-dropdown.active {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                    pointer-events: auto;
+                }
+                .dropdown-link {
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
+                    padding: 10px 16px;
+                    text-align: left;
+                    font-size: 14px;
+                    color: #D1D5DB; /* gray-300 */
+                    border-radius: 8px;
+                    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+                }
+                .dropdown-link:hover {
+                    background-color: rgba(99, 102, 241, 0.5);
+                    color: #FFFFFF;
+                }
+                
+                .mobile-nav-link { @apply block py-3 px-4 text-base hover:bg-indigo-600/50 transition-colors duration-200 border-b border-gray-700/50; }
+                
+                /* GLASSMORPHISM CARD */
+                .card { 
+                    background: rgba(31, 41, 55, 0.5); /* bg-gray-800/50 */
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 1.5rem;
+                    border-radius: 0.75rem;
+                    transition: all 0.3s ease;
+                }
+                .card:hover {
+                    border-color: rgba(99, 102, 241, 0.5);
+                }
+                .card-title { @apply text-xl font-bold flex items-center text-gray-200; }
+                
+                /* GLASSMORPHISM INPUT */
+                .form-input {
+                    width: 100%;
+                    background: rgba(255, 255, 255, 0.05);
+                    backdrop-filter: blur(4px);
+                    -webkit-backdrop-filter: blur(4px);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    border-radius: 0.5rem;
+                    padding: 0.6rem 1rem;
+                    color: #f9fafb;
+                    transition: all 0.2s ease-in-out;
+                }
+                .form-input::placeholder {
+                    color: #9ca3af;
+                }
+                .form-input:focus {
+                    outline: none;
+                    border-color: rgba(129, 140, 248, 0.7);
+                    background: rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+                }
+
+                /* PERBAIKAN UNTUK AUTOFILL BROWSER */
+                .form-input:-webkit-autofill,
+                .form-input:-webkit-autofill:hover, 
+                .form-input:-webkit-autofill:focus, 
+                .form-input:-webkit-autofill:active {
+                    -webkit-box-shadow: 0 0 0 30px #222733 inset !important;
+                    -webkit-text-fill-color: #f9fafb !important;
+                    border-color: rgba(255, 255, 255, 0.15) !important;
+                }
+
+                .form-input[type="date"]::-webkit-calendar-picker-indicator,
+                .form-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+                .form-input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+                
+                .list-item { @apply bg-gray-700/50 p-3 rounded-lg flex justify-between items-center transition-all duration-300 hover:bg-gray-700 hover:shadow-md; }
+                .delete-button { @apply text-gray-400 hover:text-red-500 transition-colors duration-200; }
+                .animate-fade-out { animation: fadeOut 0.3s ease-out forwards; }
+                @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+                .status-badge { @apply text-xs font-semibold px-2.5 py-1 rounded-full; }
+            `;
+            document.head.appendChild(styleSheet);
+        });
+    </script>
+</body>
+</html>
