@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Monitoring Hafalan (Guru & Siswa)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .table-container { max-height: 55vh; overflow-y: auto; }
+        .mode-btn.active { background-color: #0d9488; color: white; }
+        .mode-btn:not(.active) { background-color: #f0fdfa; color: #115e59; }
+        textarea { resize: vertical; }
+        .progress-bar { background-color: #e0e0e0; border-radius: 9999px; overflow: hidden; }
+        .progress-bar-inner { background-color: #10b981; height: 100%; border-radius: 9999px; transition: width 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-teal-700">Aplikasi Monitoring Hafalan</h1>
+            <p class="text-gray-600 mt-2">SMA Negeri 1 Soppeng</p>
+        </header>
+
+        <!-- Mode Selector -->
+        <div class="flex justify-center mb-6 bg-white p-2 rounded-xl shadow-sm max-w-sm mx-auto">
+            <button id="guru-mode-btn" class="mode-btn active w-1/2 text-center font-semibold py-2 px-4 rounded-lg transition-colors">Monitoring Guru</button>
+            <button id="siswa-mode-btn" class="mode-btn w-1/2 text-center font-semibold py-2 px-4 rounded-lg transition-colors">Monitoring Siswa</button>
+        </div>
+
+        <!-- Main Content -->
+        <main class="bg-white p-6 rounded-2xl shadow-lg">
+
+            <!-- GURU VIEW -->
+            <div id="guru-view">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Monitoring Hafalan Guru</h2>
+                <div id="import-guru-container" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <label for="import-guru-textarea" class="block mb-2 font-semibold text-gray-700">Import Data Guru</label>
+                    <textarea id="import-guru-textarea" rows="4" class="w-full p-2 border rounded-md" placeholder="Paste daftar nama guru di sini (satu nama per baris)."></textarea>
+                    <button id="import-guru-btn" class="mt-2 bg-teal-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-teal-700">Import Guru</button>
+                </div>
+                <div id="guru-filters" class="mb-4">
+                    <div class="relative">
+                        <label for="search-guru-input" class="block mb-2 font-semibold text-gray-700">Cari Nama Guru:</label>
+                        <input type="text" id="search-guru-input" placeholder="Ketik nama untuk mencari..." class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" autocomplete="off">
+                        <div id="search-guru-results-container" class="absolute z-10 w-full bg-white border rounded-b-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                    </div>
+                </div>
+                <div id="guru-tracker-section" class="hidden">
+                    <h3 id="selected-guru-name" class="text-xl font-semibold text-teal-700 mb-4"></h3>
+                    <div id="guru-table-container" class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Surat</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/4">Jml Ayat Dihafal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/3">Ketuntasan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tgl Lulus</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guru-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SISWA VIEW -->
+            <div id="siswa-view" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Monitoring Hafalan Siswa</h2>
+                <div id="import-siswa-container" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <label for="import-siswa-textarea" class="block mb-2 font-semibold text-gray-700">Import Data Siswa</label>
+                    <textarea id="import-siswa-textarea" rows="4" class="w-full p-2 border rounded-md" placeholder="Paste daftar siswa di sini. Format: Nama Siswa, Kelas"></textarea>
+                    <button id="import-siswa-btn" class="mt-2 bg-teal-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-teal-700">Import Siswa</button>
+                </div>
+                
+                <div id="siswa-filters" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="relative">
+                        <label for="search-siswa-input" class="block mb-2 font-semibold text-gray-700">Cari Nama Siswa:</label>
+                        <input type="text" id="search-siswa-input" placeholder="Ketik nama untuk mencari..." class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" autocomplete="off">
+                        <div id="search-siswa-results-container" class="absolute z-10 w-full bg-white border rounded-b-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                    </div>
+                    <div>
+                        <label for="class-filter-select" class="block mb-2 font-semibold text-gray-700">Filter Berdasarkan Kelas:</label>
+                        <select id="class-filter-select" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500"></select>
+                    </div>
+                </div>
+
+                <div id="siswa-tracker-section" class="hidden">
+                     <h3 id="selected-student-name" class="text-xl font-semibold text-teal-700 mb-4"></h3>
+                    <div id="siswa-table-container" class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Surat</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelancaran</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paraf</th>
+                                </tr>
+                            </thead>
+                            <tbody id="siswa-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="no-selection-msg" class="text-center p-8 bg-gray-50 rounded-lg">
+                <p class="text-gray-600">Pilih mode di atas, lalu import dan pilih nama untuk melihat progres.</p>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIG & STATE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIWrjGCFAgde0vWN8I-aX9csR8bGbC7Qk",
+            authDomain: "hafalan-quran-7efda.firebaseapp.com",
+            projectId: "hafalan-quran-7efda",
+            storageBucket: "hafalan-quran-7efda.appspot.com",
+            messagingSenderId: "1095592882407",
+            appId: "1:1095592882407:web:d58f0bf94a1efd7c84b242",
+            measurementId: "G-MNX10FRJQ2"
+        };
+        // ID Aplikasi yang konsisten untuk memastikan data sama di semua perangkat
+        const appId = 'hafalan-quran-smansa-soppeng';
+        let currentMode = 'guru';
+        let allTeachers = [];
+        let allStudents = [];
+        let selectedGuruId = null;
+        let selectedSiswaId = null;
+        
+        // --- DATA CONSTANTS ---
+        const juz30Surahs = [
+            { id: 78, name: "An-Naba'", verseCount: 40 }, { id: 79, name: "An-Nazi'at", verseCount: 46 }, { id: 80, name: "'Abasa", verseCount: 42 }, { id: 81, name: "At-Takwir", verseCount: 29 }, { id: 82, name: "Al-Infitar", verseCount: 19 }, { id: 83, name: "Al-Mutaffifin", verseCount: 36 }, { id: 84, name: "Al-Insyiqaq", verseCount: 25 }, { id: 85, name: "Al-Buruj", verseCount: 22 }, { id: 86, name: "At-Tariq", verseCount: 17 }, { id: 87, name: "Al-A'la", verseCount: 19 }, { id: 88, name: "Al-Ghasyiyah", verseCount: 26 }, { id: 89, name: "Al-Fajr", verseCount: 30 }, { id: 90, name: "Al-Balad", verseCount: 20 }, { id: 91, name: "Asy-Syams", verseCount: 15 }, { id: 92, name: "Al-Lail", verseCount: 21 }, { id: 93, name: "Ad-Duha", verseCount: 11 }, { id: 94, name: "Asy-Syarh", verseCount: 8 }, { id: 95, name: "At-Tin", verseCount: 8 }, { id: 96, name: "Al-'Alaq", verseCount: 19 }, { id: 97, name: "Al-Qadr", verseCount: 5 }, { id: 98, name: "Al-Bayyinah", verseCount: 8 }, { id: 99, name: "Az-Zalzalah", verseCount: 8 }, { id: 100, name: "Al-'Adiyat", verseCount: 11 }, { id: 101, name: "Al-Qari'ah", verseCount: 11 }, { id: 102, name: "At-Takasur", verseCount: 8 }, { id: 103, name: "Al-'Asr", verseCount: 3 }, { id: 104, name: "Al-Humazah", verseCount: 9 }, { id: 105, name: "Al-Fil", verseCount: 5 }, { id: 106, name: "Quraisy", verseCount: 4 }, { id: 107, name: "Al-Ma'un", verseCount: 7 }, { id: 108, name: "Al-Kausar", verseCount: 3 }, { id: 109, name: "Al-Kafirun", verseCount: 6 }, { id: 110, name: "An-Nasr", verseCount: 3 }, { id: 111, name: "Al-Lahab", verseCount: 5 }, { id: 112, name: "Al-Ikhlas", verseCount: 4 }, { id: 113, name: "Al-Falaq", verseCount: 5 }, { id: 114, name: "An-Nas", verseCount: 6 }
+        ];
+        const parafGurus = ["", "Hisbullah Anas, S.Ag., M.Pd.I", "H. M. Tahir, S.Ag, M.Pd.I", "Asnintang, S.Pd.I, M.Pd.I", "Ardiaman, S.Pd.I"];
+
+        // --- DOM ELEMENTS ---
+        const guruModeBtn = document.getElementById('guru-mode-btn');
+        const siswaModeBtn = document.getElementById('siswa-mode-btn');
+        const guruView = document.getElementById('guru-view');
+        const siswaView = document.getElementById('siswa-view');
+        const noSelectionMsg = document.getElementById('no-selection-msg');
+        // Guru Elements
+        const importGuruContainer = document.getElementById('import-guru-container');
+        const importGuruBtn = document.getElementById('import-guru-btn');
+        const searchGuruInput = document.getElementById('search-guru-input');
+        const searchGuruResultsContainer = document.getElementById('search-guru-results-container');
+        const guruTrackerSection = document.getElementById('guru-tracker-section');
+        const selectedGuruName = document.getElementById('selected-guru-name');
+        const guruTableBody = document.getElementById('guru-table-body');
+        // Siswa Elements
+        const importSiswaContainer = document.getElementById('import-siswa-container');
+        const importSiswaBtn = document.getElementById('import-siswa-btn');
+        const searchSiswaInput = document.getElementById('search-siswa-input');
+        const searchResultsContainer = document.getElementById('search-siswa-results-container');
+        const classFilterSelect = document.getElementById('class-filter-select');
+        const siswaTrackerSection = document.getElementById('siswa-tracker-section');
+        const selectedStudentName = document.getElementById('selected-student-name');
+        const siswaTableBody = document.getElementById('siswa-table-body');
+
+        // --- FIREBASE ---
+        let db;
+        let guruUnsubscribe, siswaUnsubscribe, guruDataUnsubscribe, siswaDataUnsubscribe;
+
+        async function initializeFirebase() {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            const auth = getAuth(app);
+            onAuthStateChanged(auth, user => {
+                if (!user) signInAnonymously(auth);
+                else updateViewForMode();
+            });
+        }
+
+        // --- MODE & VIEW MANAGEMENT ---
+        function updateViewForMode() {
+            const isGuruMode = currentMode === 'guru';
+            guruView.classList.toggle('hidden', !isGuruMode);
+            siswaView.classList.toggle('hidden', isGuruMode);
+            guruModeBtn.classList.toggle('active', isGuruMode);
+            siswaModeBtn.classList.toggle('active', !isGuruMode);
+            
+            noSelectionMsg.style.display = 'block';
+            guruTrackerSection.style.display = 'none';
+            siswaTrackerSection.style.display = 'none';
+
+            if (guruUnsubscribe) guruUnsubscribe();
+            if (siswaUnsubscribe) siswaUnsubscribe();
+            if (guruDataUnsubscribe) guruDataUnsubscribe();
+            if (siswaDataUnsubscribe) siswaDataUnsubscribe();
+            
+            if (isGuruMode) {
+                listenForGuru();
+            } else {
+                listenForSiswa();
+            }
+        }
+        
+        // --- DATA IMPORT ---
+        async function handleImport(type, textareaId) {
+            const textarea = document.getElementById(textareaId);
+            const text = textarea.value.trim();
+            if (!text) return alert("Textarea import tidak boleh kosong.");
+
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) return;
+
+            try {
+                const batch = writeBatch(db);
+                const collectionRef = collection(db, `artifacts/${appId}/public/data/${type}`);
+                
+                lines.forEach(line => {
+                    const newDocRef = doc(collectionRef);
+                    let data = {};
+                    if (type === 'teachers') {
+                        data = { name: line.trim(), createdAt: new Date() };
+                    } else {
+                        const parts = line.split(',');
+                        data = { name: parts[0]?.trim() || 'N/A', class: parts[1]?.trim() || 'N/A', createdAt: new Date() };
+                    }
+                    batch.set(newDocRef, data);
+                });
+
+                await batch.commit();
+                textarea.value = '';
+                alert(`${lines.length} data berhasil diimport!`);
+            } catch (error) {
+                console.error(`Error importing ${type}:`, error);
+                alert(`Gagal mengimport data.`);
+            }
+        }
+
+        // --- DATA HANDLING & RENDERING ---
+        function listenForGuru() {
+            const ref = collection(db, `artifacts/${appId}/public/data/teachers`);
+            guruUnsubscribe = onSnapshot(ref, (snapshot) => {
+                allTeachers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                importGuruContainer.style.display = allTeachers.length > 0 ? 'none' : 'block';
+                document.getElementById('guru-filters').style.display = allTeachers.length > 0 ? 'block' : 'none';
+            });
+        }
+
+        function listenForSiswa() {
+            const ref = collection(db, `artifacts/${appId}/public/data/students`);
+            siswaUnsubscribe = onSnapshot(ref, (snapshot) => {
+                allStudents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                importSiswaContainer.style.display = allStudents.length > 0 ? 'none' : 'block';
+                document.getElementById('siswa-filters').style.display = allStudents.length > 0 ? 'grid' : 'none';
+                populateClassFilter(allStudents);
+            });
+        }
+
+        function populateClassFilter(students) {
+            const classes = [...new Set(students.map(s => s.class))].sort();
+            classFilterSelect.innerHTML = '<option value="">Semua Kelas</option>';
+            classes.forEach(c => classFilterSelect.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+        
+        function handleGuruSearch() {
+            const searchTerm = searchGuruInput.value.toLowerCase();
+            searchGuruResultsContainer.innerHTML = '';
+
+            if (!searchTerm) {
+                searchGuruResultsContainer.classList.add('hidden');
+                return;
+            }
+
+            const filteredTeachers = allTeachers.filter(t => t.name.toLowerCase().includes(searchTerm));
+            
+            if (filteredTeachers.length > 0) {
+                filteredTeachers.forEach(teacher => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                    resultItem.textContent = teacher.name;
+                    resultItem.dataset.id = teacher.id;
+                    resultItem.dataset.name = teacher.name;
+                    searchGuruResultsContainer.appendChild(resultItem);
+                });
+                searchGuruResultsContainer.classList.remove('hidden');
+            } else {
+                searchGuruResultsContainer.classList.add('hidden');
+            }
+        }
+
+        function handleStudentSearch() {
+            const searchTerm = searchSiswaInput.value.toLowerCase();
+            const selectedClass = classFilterSelect.value;
+            searchResultsContainer.innerHTML = '';
+
+            if (!searchTerm) {
+                searchResultsContainer.classList.add('hidden');
+                return;
+            }
+
+            let filteredStudents = allStudents;
+            if (selectedClass) {
+                filteredStudents = filteredStudents.filter(s => s.class === selectedClass);
+            }
+            filteredStudents = filteredStudents.filter(s => s.name.toLowerCase().includes(searchTerm));
+            
+            if (filteredStudents.length > 0) {
+                filteredStudents.forEach(student => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                    resultItem.textContent = `${student.name} (${student.class})`;
+                    resultItem.dataset.id = student.id;
+                    resultItem.dataset.name = student.name;
+                    resultItem.dataset.class = student.class;
+                    searchResultsContainer.appendChild(resultItem);
+                });
+                searchResultsContainer.classList.remove('hidden');
+            } else {
+                searchResultsContainer.classList.add('hidden');
+            }
+        }
+        
+        function selectGuru(id, name) {
+            selectedGuruId = id;
+            searchGuruInput.value = name;
+            searchGuruResultsContainer.classList.add('hidden');
+            
+            guruTrackerSection.style.display = 'block';
+            noSelectionMsg.style.display = 'none';
+            selectedGuruName.textContent = `Progres Hafalan: ${name}`;
+            listenForMemorizationData('teachers', id);
+        }
+
+        function selectStudent(id, name, studentClass) {
+            selectedSiswaId = id;
+            searchSiswaInput.value = `${name} (${studentClass})`;
+            searchResultsContainer.classList.add('hidden');
+            
+            siswaTrackerSection.style.display = 'block';
+            noSelectionMsg.style.display = 'none';
+            selectedStudentName.textContent = `Progres Hafalan: ${name}`;
+            listenForMemorizationData('students', id);
+        }
+
+        function listenForMemorizationData(type, personId) {
+            if (!personId) return;
+            const dataUnsubscribe = type === 'teachers' ? guruDataUnsubscribe : siswaDataUnsubscribe;
+            if (dataUnsubscribe) dataUnsubscribe();
+
+            const docRef = doc(db, `artifacts/${appId}/public/data/${type}/${personId}`);
+            const newUnsubscribe = onSnapshot(docRef, (docSnap) => {
+                const data = docSnap.data()?.memorization || {};
+                if (type === 'teachers') renderGuruTable(data);
+                else renderSiswaTable(data);
+            });
+
+            if (type === 'teachers') guruDataUnsubscribe = newUnsubscribe;
+            else siswaDataUnsubscribe = newUnsubscribe;
+        }
+        
+        async function updateMemorization(type, personId, surahId, field, value) {
+            if (!personId) return;
+            const docRef = doc(db, `artifacts/${appId}/public/data/${type}/${personId}`);
+            await setDoc(docRef, { memorization: { [surahId]: { [field]: value } } }, { merge: true });
+        }
+
+        function renderGuruTable(data) {
+            guruTableBody.innerHTML = '';
+            juz30Surahs.forEach(surah => {
+                const d = data[surah.id] || {};
+                const ayatDihafal = Number(d.ayatDihafal) || 0;
+                const percentage = surah.verseCount > 0 ? Math.round((ayatDihafal / surah.verseCount) * 100) : 0;
+                
+                guruTableBody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${surah.name}</td>
+                        <td class="px-6 py-4"><input type="number" data-surah-id="${surah.id}" data-verse-count="${surah.verseCount}" data-field="ayatDihafal" value="${ayatDihafal}" class="w-full p-2 border rounded-md" min="0" max="${surah.verseCount}"></td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-full bg-gray-200 rounded-full h-4 mr-3"><div class="bg-teal-500 h-4 rounded-full progress-bar-inner" style="width: ${percentage}%"></div></div>
+                                <span class="text-sm font-medium text-gray-700 percentage-text">${percentage}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4"><input type="date" data-surah-id="${surah.id}" data-field="tglLulus" value="${d.tglLulus || ''}" class="w-full p-2 border rounded-md"></td>
+                    </tr>`;
+            });
+        }
+
+        function renderSiswaTable(data) {
+            siswaTableBody.innerHTML = '';
+            juz30Surahs.forEach(surah => {
+                const d = data[surah.id] || {};
+                siswaTableBody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${surah.name}</td>
+                        <td class="px-6 py-4"><select data-surah-id="${surah.id}" data-field="status" class="w-full p-2 border rounded-md"><option value="Belum Hafal" ${d.status !== 'Sudah Hafal' ? 'selected' : ''}>Belum Hafal</option><option value="Sudah Hafal" ${d.status === 'Sudah Hafal' ? 'selected' : ''}>Sudah Hafal</option></select></td>
+                        <td class="px-6 py-4"><select data-surah-id="${surah.id}" data-field="kelancaran" class="w-full p-2 border rounded-md"><option value="" ${!d.kelancaran ? 'selected' : ''}>--</option><option value="Rendah" ${d.kelancaran === 'Rendah' ? 'selected' : ''}>Rendah</option><option value="Sedang" ${d.kelancaran === 'Sedang' ? 'selected' : ''}>Sedang</option><option value="Tinggi" ${d.kelancaran === 'Tinggi' ? 'selected' : ''}>Tinggi</option></select></td>
+                        <td class="px-6 py-4"><input type="text" data-surah-id="${surah.id}" data-field="keterangan" value="${d.keterangan || ''}" class="w-full p-2 border rounded-md"></td>
+                        <td class="px-6 py-4"><select data-surah-id="${surah.id}" data-field="paraf" class="w-full p-2 border rounded-md">${parafGurus.map(g => `<option value="${g}" ${g === (d.paraf || '') ? 'selected' : ''}>${g || '-- Pilih Paraf --'}</option>`).join('')}</select></td>
+                    </tr>`;
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        guruModeBtn.addEventListener('click', () => { currentMode = 'guru'; updateViewForMode(); });
+        siswaModeBtn.addEventListener('click', () => { currentMode = 'siswa'; updateViewForMode(); });
+
+        importGuruBtn.addEventListener('click', () => handleImport('teachers', 'import-guru-textarea'));
+        importSiswaBtn.addEventListener('click', () => handleImport('students', 'import-siswa-textarea'));
+
+        searchGuruInput.addEventListener('input', handleGuruSearch);
+        searchGuruResultsContainer.addEventListener('click', (e) => {
+            const target = e.target.closest('div');
+            if(target && target.dataset.id) {
+                selectGuru(target.dataset.id, target.dataset.name);
+            }
+        });
+
+        searchSiswaInput.addEventListener('input', handleStudentSearch);
+        classFilterSelect.addEventListener('change', handleStudentSearch);
+        
+        searchResultsContainer.addEventListener('click', (e) => {
+            const target = e.target.closest('div');
+            if(target && target.dataset.id) {
+                selectStudent(target.dataset.id, target.dataset.name, target.dataset.class);
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                if(searchResultsContainer) searchResultsContainer.classList.add('hidden');
+                if(searchGuruResultsContainer) searchGuruResultsContainer.classList.add('hidden');
+            }
+        });
+
+        guruTableBody.addEventListener('change', e => {
+            updateMemorization('teachers', selectedGuruId, e.target.dataset.surahId, e.target.dataset.field, e.target.value);
+        });
+
+        guruTableBody.addEventListener('input', e => {
+            if (e.target.dataset.field === 'ayatDihafal') {
+                const input = e.target;
+                const totalAyat = Number(input.dataset.verseCount);
+                let ayatDihafal = Number(input.value);
+                if (ayatDihafal > totalAyat) input.value = ayatDihafal = totalAyat;
+                if (ayatDihafal < 0) input.value = ayatDihafal = 0;
+                const percentage = totalAyat > 0 ? Math.round((ayatDihafal / totalAyat) * 100) : 0;
+                const row = input.closest('tr');
+                row.querySelector('.progress-bar-inner').style.width = `${percentage}%`;
+                row.querySelector('.percentage-text').textContent = `${percentage}%`;
+            }
+        });
+
+        siswaTableBody.addEventListener('change', e => {
+            updateMemorization('students', selectedSiswaId, e.target.dataset.surahId, e.target.dataset.field, e.target.value);
+        });
+
+        // --- INITIALIZATION ---
+        initializeFirebase();
+    </script>
+</body>
+</html>
