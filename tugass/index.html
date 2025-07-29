@@ -70,7 +70,7 @@
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
         
-        /* Glow effect for title */
+        /* Glow effect for title and quotes */
         .text-glow {
             animation: glow 3s ease-in-out infinite;
         }
@@ -157,6 +157,11 @@
                 </button>
             </div>
         </header>
+
+        <!-- Inspirational Quote Section -->
+        <section id="quote-section" class="my-8 text-center">
+            <p id="inspirational-quote" class="text-lg md:text-xl font-medium text-cyan-300 text-glow italic">"Memuat kutipan inspiratif..."</p>
+        </section>
 
         <!-- Statistics Section -->
         <section id="statistik-section" class="mb-12">
@@ -260,8 +265,18 @@
                                 <input id="link-pdf" type="url" placeholder="Link Google Drive PDF" class="w-full p-3 rounded-lg glass-input text-white" required>
                                 <button type="submit" class="w-full btn-secondary text-white font-bold py-3 rounded-lg">Tambah Materi</button>
                             </form>
-                            <div id="manage-materi-list" class="space-y-3 max-h-40 overflow-y-auto pr-2">
+                            <div id="manage-materi-list" class="space-y-3">
                                 <p class="text-gray-400">Belum ada materi.</p>
+                            </div>
+                            <!-- Materi Pagination Controls -->
+                            <div class="mt-4 flex justify-between items-center hidden" id="materi-pagination-controls">
+                                <button id="prev-materi-page-btn" class="p-2 rounded-md glass-card hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </button>
+                                <span id="materi-page-info" class="text-xs text-gray-400"></span>
+                                <button id="next-materi-page-btn" class="p-2 rounded-md glass-card hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -301,6 +316,18 @@
                                    <tr><td colspan="5" class="text-center p-8 text-gray-400">Belum ada tugas yang dikumpulkan.</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- Pagination Controls -->
+                        <div class="mt-6 flex justify-between items-center hidden" id="pagination-controls">
+                            <button id="prev-page-btn" class="px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Sebelumnya</span>
+                            </button>
+                            <span id="page-info" class="text-sm text-gray-400"></span>
+                            <button id="next-page-btn" class="px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <span>Selanjutnya</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -447,10 +474,17 @@
         let allTasks = {};
         let allSubmissions = [];
         let allStudents = [];
+        let allMaterials = [];
         let itemToDelete = null;
         let submissionChartInstance = null;
         let seenSubmissions = new Set();
         let newSubmissionCount = 0;
+        
+        // Pagination State
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let materiCurrentPage = 1;
+        const materiItemsPerPage = 5;
 
         function safeCreateIcons() {
             if (typeof lucide !== 'undefined') {
@@ -505,6 +539,42 @@
             }
             return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : null;
         }
+
+        // Function to fetch an inspirational quote
+        async function fetchInspirationalQuote() {
+            const quoteElement = document.getElementById('inspirational-quote');
+            try {
+                const prompt = "Berikan satu kutipan singkat yang inspiratif dan memotivasi tentang semangat belajar atau pendidikan, dalam bahasa Indonesia. Jawab langsung dengan kutipan, tidak usah ada tambahan lain";
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const apiKey = ""; // API key is handled by the environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    const text = result.candidates[0].content.parts[0].text.replace(/"/g, ''); // Remove quotes
+                    quoteElement.textContent = `"${text}"`;
+                } else {
+                    // Fallback if the API response structure is unexpected
+                    quoteElement.textContent = '"Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia." - Nelson Mandela';
+                }
+            } catch (error) {
+                console.error("Error fetching quote:", error);
+                // Provide a fallback quote in case of network error or API failure
+                quoteElement.textContent = '"Ilmu tanpa amal adalah omong kosong, amal tanpa ilmu adalah kesesatan."';
+            }
+        }
+
 
         onAuthStateChanged(auth, user => {
             if (user) {
@@ -701,6 +771,9 @@
                         seenSubmissions.add(newSubmissionId);
                     }
                 }
+                 if (change.type === "removed") {
+                    seenSubmissions.delete(change.doc.id);
+                }
             });
 
             allSubmissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -749,24 +822,8 @@
                 });
             }
             
-            // Render materi di panel guru
-            if (snapshot.empty) {
-                manageMateriList.innerHTML = '<p class="text-gray-400">Belum ada materi.</p>';
-            } else {
-                manageMateriList.innerHTML = '';
-                 snapshot.docs.forEach(doc => {
-                    const materi = { id: doc.id, ...doc.data() };
-                    const materiItem = document.createElement('div');
-                    materiItem.className = 'flex justify-between items-center bg-white/5 p-3 rounded-lg';
-                    materiItem.innerHTML = `
-                        <p class="font-semibold truncate w-4/5">${materi.judul}</p>
-                        <button data-id="${materi.id}" data-type="materi" class="delete-btn p-2 rounded-md bg-red-500/20 hover:bg-red-500/40 transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i>
-                        </button>
-                    `;
-                    manageMateriList.appendChild(materiItem);
-                });
-            }
+            allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderManageMateriList();
             safeCreateIcons();
         });
 
@@ -782,45 +839,131 @@
                 sub.namaSiswa.toLowerCase().includes(searchTerm)
             );
 
-            if (filteredSubmissions.length === 0) {
-                 monitoringTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-400">Tidak ada data yang cocok.</td></tr>';
-                 return;
+            // --- PAGINATION LOGIC START ---
+            const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+            } else if (totalPages === 0) {
+                currentPage = 1;
             }
 
-            monitoringTableBody.innerHTML = '';
-            filteredSubmissions.forEach(sub => {
-                const task = allTasks[sub.tugasId] || { judul: 'Tugas Dihapus' };
-                const isGraded = sub.status === 'Sudah Dinilai';
-                const isLate = sub.status === 'Terkumpul (Terlambat)';
-                
-                let statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/30 text-yellow-300">Terkumpul</span>`;
-                if (isGraded) {
-                    statusBadge = `<span class="px-2 py-1 text-lg font-bold rounded-full bg-green-500/30 text-green-300">${sub.nilai}</span>`;
-                } else if (isLate) {
-                    statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-500/30 text-orange-300">Terlambat</span>`;
-                }
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedSubmissions = filteredSubmissions.slice(startIndex, endIndex);
+            // --- PAGINATION LOGIC END ---
 
-                const row = document.createElement('tr');
-                row.className = 'border-b border-white/10';
-                row.innerHTML = `
-                    <td class="p-4">${sub.namaSiswa}</td>
-                    <td class="p-4">${sub.kelasSiswa}</td>
-                    <td class="p-4">${task.judul}</td>
-                    <td class="p-4">${statusBadge}</td>
-                    <td class="p-4">
-                        <div class="flex items-center gap-2">
-                            <a href="${sub.linkGdrive}" target="_blank" class="text-blue-400 hover:underline">Lihat</a>
-                            ${!isGraded ? `
-                                <input type="number" min="0" max="100" placeholder="Nilai" class="grade-input w-20 p-1 rounded-md glass-input text-white">
-                                <textarea placeholder="Umpan balik..." class="feedback-input w-32 p-1 rounded-md glass-input text-white text-xs h-10"></textarea>
-                                <button data-id="${sub.id}" class="save-grade-btn text-indigo-400 hover:underline">Simpan</button>
-                            ` : ''}
-                        </div>
-                    </td>
-                `;
-                monitoringTableBody.appendChild(row);
-            });
+            if (paginatedSubmissions.length === 0) {
+                 monitoringTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-400">Tidak ada data yang cocok.</td></tr>';
+            } else {
+                monitoringTableBody.innerHTML = '';
+                paginatedSubmissions.forEach(sub => {
+                    const task = allTasks[sub.tugasId] || { judul: 'Tugas Dihapus' };
+                    const isGraded = sub.status === 'Sudah Dinilai';
+                    const isLate = sub.status === 'Terkumpul (Terlambat)';
+                    
+                    let statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/30 text-yellow-300">Terkumpul</span>`;
+                    if (isGraded) {
+                        statusBadge = `<span class="px-2 py-1 text-lg font-bold rounded-full bg-green-500/30 text-green-300">${sub.nilai}</span>`;
+                    } else if (isLate) {
+                        statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-500/30 text-orange-300">Terlambat</span>`;
+                    }
+
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-white/10';
+                    row.innerHTML = `
+                        <td class="p-4">${sub.namaSiswa}</td>
+                        <td class="p-4">${sub.kelasSiswa}</td>
+                        <td class="p-4">${task.judul}</td>
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
+                                <a href="${sub.linkGdrive}" target="_blank" class="text-blue-400 hover:underline">Lihat Tugas</a>
+                                <button data-id="${sub.id}" class="delete-submission-btn text-red-400 hover:underline">Hapus</button>
+                                ${!isGraded ? `
+                                    <div class="flex items-center gap-2 mt-2 w-full">
+                                        <input type="number" min="0" max="100" placeholder="Nilai" class="grade-input w-20 p-1 rounded-md glass-input text-white">
+                                        <textarea placeholder="Umpan balik..." class="feedback-input flex-grow p-1 rounded-md glass-input text-white text-xs h-10"></textarea>
+                                        <button data-id="${sub.id}" class="save-grade-btn p-2 rounded-md bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                                            <i data-lucide="save" class="w-4 h-4 text-white pointer-events-none"></i>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </td>
+                    `;
+                    monitoringTableBody.appendChild(row);
+                });
+            }
+            
+            renderPaginationControls(totalPages, filteredSubmissions.length);
             safeCreateIcons();
+        }
+        
+        function renderPaginationControls(totalPages, totalItems) {
+            const pageInfo = document.getElementById('page-info');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+            const paginationContainer = document.getElementById('pagination-controls');
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            paginationContainer.classList.remove('hidden');
+
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages} (${totalItems} data)`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        function renderManageMateriList() {
+            const totalPages = Math.ceil(allMaterials.length / materiItemsPerPage);
+            if (materiCurrentPage > totalPages && totalPages > 0) {
+                materiCurrentPage = totalPages;
+            } else if (totalPages === 0) {
+                materiCurrentPage = 1;
+            }
+
+            const startIndex = (materiCurrentPage - 1) * materiItemsPerPage;
+            const endIndex = startIndex + materiItemsPerPage;
+            const paginatedMaterials = allMaterials.slice(startIndex, endIndex);
+
+            if (paginatedMaterials.length === 0) {
+                manageMateriList.innerHTML = '<p class="text-gray-400">Belum ada materi.</p>';
+            } else {
+                manageMateriList.innerHTML = '';
+                paginatedMaterials.forEach(materi => {
+                    const materiItem = document.createElement('div');
+                    materiItem.className = 'flex justify-between items-center bg-white/5 p-3 rounded-lg';
+                    materiItem.innerHTML = `
+                        <p class="font-semibold truncate w-4/5">${materi.judul}</p>
+                        <button data-id="${materi.id}" data-type="materi" class="delete-btn p-2 rounded-md bg-red-500/20 hover:bg-red-500/40 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4 text-red-400 pointer-events-none"></i>
+                        </button>
+                    `;
+                    manageMateriList.appendChild(materiItem);
+                });
+            }
+            renderMateriPaginationControls(totalPages);
+        }
+
+        function renderMateriPaginationControls(totalPages) {
+            const pageInfo = document.getElementById('materi-page-info');
+            const prevBtn = document.getElementById('prev-materi-page-btn');
+            const nextBtn = document.getElementById('next-materi-page-btn');
+            const paginationContainer = document.getElementById('materi-pagination-controls');
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            paginationContainer.classList.remove('hidden');
+
+            pageInfo.textContent = `${materiCurrentPage} / ${totalPages}`;
+            prevBtn.disabled = materiCurrentPage === 1;
+            nextBtn.disabled = materiCurrentPage === totalPages;
         }
         
         function renderStatistics() {
@@ -907,10 +1050,12 @@
         }
 
         monitoringTableBody.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('save-grade-btn')) {
-                const docId = e.target.dataset.id;
-                const gradeInput = e.target.parentElement.querySelector('.grade-input');
-                const feedbackInput = e.target.parentElement.querySelector('.feedback-input');
+            // Handle Save Grade Button
+            if (e.target.closest('.save-grade-btn')) {
+                const button = e.target.closest('.save-grade-btn');
+                const docId = button.dataset.id;
+                const gradeInput = button.parentElement.querySelector('.grade-input');
+                const feedbackInput = button.parentElement.querySelector('.feedback-input');
                 const nilai = gradeInput.value;
                 const komentar = feedbackInput.value;
 
@@ -930,6 +1075,17 @@
                 } catch (error) {
                     showToast('Gagal menyimpan nilai.', 'error');
                 }
+            }
+            
+            // Handle Delete Submission Button
+            if (e.target.classList.contains('delete-submission-btn')) {
+                itemToDelete = {
+                    id: e.target.dataset.id,
+                    type: 'submission'
+                };
+                document.getElementById('delete-modal-title').textContent = `Konfirmasi Hapus Pengumpulan`;
+                document.getElementById('delete-modal-text').textContent = `Apakah Anda yakin ingin menghapus data pengumpulan ini? Siswa akan dapat mengumpulkan ulang tugasnya.`;
+                deleteConfirmModal.classList.remove('hidden');
             }
         });
         
@@ -951,18 +1107,40 @@
         setupDeleteListener('manage-materi-list');
 
         document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
-            if (itemToDelete) {
-                const collectionName = itemToDelete.type === 'task' ? 'tugas' : 'materi';
-                try {
-                    await deleteDoc(doc(db, collectionName, itemToDelete.id));
-                    showToast(`${itemToDelete.type === 'task' ? 'Tugas' : 'Materi'} berhasil dihapus.`, 'success');
-                } catch (error) {
-                    console.error(`Gagal menghapus ${collectionName}:`, error);
-                    showToast(`Gagal menghapus: ${error.message}`, 'error');
-                } finally {
+            if (!itemToDelete) return;
+
+            let collectionName;
+            let successMessage;
+
+            switch (itemToDelete.type) {
+                case 'task':
+                    collectionName = 'tugas';
+                    successMessage = 'Tugas berhasil dihapus.';
+                    break;
+                case 'materi':
+                    collectionName = 'materi';
+                    successMessage = 'Materi berhasil dihapus.';
+                    break;
+                case 'submission':
+                    collectionName = 'pengumpulan';
+                    successMessage = 'Data pengumpulan siswa berhasil dihapus.';
+                    break;
+                default:
+                    console.error('Unknown delete type:', itemToDelete.type);
                     itemToDelete = null;
                     deleteConfirmModal.classList.add('hidden');
-                }
+                    return;
+            }
+
+            try {
+                await deleteDoc(doc(db, collectionName, itemToDelete.id));
+                showToast(successMessage, 'success');
+            } catch (error) {
+                console.error(`Gagal menghapus ${collectionName}:`, error);
+                showToast(`Gagal menghapus: ${error.message}`, 'error');
+            } finally {
+                itemToDelete = null;
+                deleteConfirmModal.classList.add('hidden');
             }
         });
 
@@ -1120,7 +1298,35 @@
             }
         });
 
-        searchSubmissionInput.addEventListener('input', renderMonitoringTable);
+        searchSubmissionInput.addEventListener('input', () => {
+            currentPage = 1; // Reset ke halaman pertama saat mencari
+            renderMonitoringTable();
+        });
+        
+        document.getElementById('prev-page-btn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderMonitoringTable();
+            }
+        });
+
+        document.getElementById('next-page-btn').addEventListener('click', () => {
+            currentPage++;
+            renderMonitoringTable();
+        });
+
+        document.getElementById('prev-materi-page-btn').addEventListener('click', () => {
+            if (materiCurrentPage > 1) {
+                materiCurrentPage--;
+                renderManageMateriList();
+            }
+        });
+
+        document.getElementById('next-materi-page-btn').addEventListener('click', () => {
+            materiCurrentPage++;
+            renderManageMateriList();
+        });
+
 
         document.querySelectorAll('.collapsible-header').forEach(header => {
             header.addEventListener('click', () => {
@@ -1134,6 +1340,12 @@
                     content.style.maxHeight = content.scrollHeight + "px";
                     icon.style.transform = 'rotate(180deg)';
                 }
+                
+                setTimeout(() => {
+                    if(content.style.maxHeight) {
+                       content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                }, 500);
             });
         });
 
@@ -1141,6 +1353,9 @@
         document.getElementById('close-login-modal').onclick = () => loginModal.classList.add('hidden');
         document.getElementById('close-submission-modal').onclick = () => submissionModal.classList.add('hidden');
         
+        // Initial call to fetch quote
+        fetchInspirationalQuote();
+
         // Final icon render on initial load
         safeCreateIcons();
     </script>
