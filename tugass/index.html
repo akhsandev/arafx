@@ -572,7 +572,7 @@
             try {
                 const prompt = "Berikan satu kutipan singkat yang inspiratif dan memotivasi tentang semangat belajar atau pendidikan, dalam bahasa Indonesia. Jawab langsung dengan kutipan, tidak usah ada tambahan lain";
                 const payload = { contents: [{ parts: [{ text: prompt }] }] };
-                const apiKey = ""; // API key is handled by the environment
+                const apiKey = "AIzaSyAujsfwXZGSisISNjsvzi84_74vr8SK94g"; // API key is handled by the environment
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
