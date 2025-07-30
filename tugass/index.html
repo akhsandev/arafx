@@ -16,6 +16,9 @@
     <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- NOTE: Lucide Icons script moved to the end of the body to prevent loading errors -->
 
     <style>
@@ -419,9 +422,15 @@
                         <p id="submission-feedback-text" class="text-sm text-gray-300 mt-2 italic"></p>
                      </div>
                     <div id="submission-input-container">
-                        <label for="gdrive-link" class="block text-sm font-medium text-gray-300 mb-2">Link Google Drive Tugas</label>
-                        <input id="gdrive-link" type="url" placeholder="https://docs.google.com/..." class="w-full p-3 rounded-lg glass-input text-white" required>
-                        <button type="submit" class="w-full btn-primary text-white font-bold py-3 rounded-lg mt-4">Kirim Tugas</button>
+                        <label for="gdrive-link" class="block text-sm font-medium text-gray-300 mb-2">Link Google Drive Tugas (Opsional)</label>
+                        <input id="gdrive-link" type="url" placeholder="https://docs.google.com/..." class="w-full p-3 rounded-lg glass-input text-white">
+                        
+                        <label for="file-upload" class="block text-sm font-medium text-gray-300 mb-2 mt-4">Unggah File (Foto/Dokumen)</label>
+                        <input id="file-upload" type="file" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-300 hover:file:bg-indigo-500/30">
+                        
+                        <div id="upload-progress" class="hidden mt-2 text-center text-sm text-yellow-400">Mengunggah file...</div>
+
+                        <button type="submit" id="submit-assignment-btn" class="w-full btn-primary text-white font-bold py-3 rounded-lg mt-4">Kirim Tugas</button>
                     </div>
                 </div>
 
@@ -451,7 +460,7 @@
 
     <!-- Firebase SDK & Main App Logic -->
     <script type="module">
-        // Konfigurasi Firebase Anda
+        // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyAi1FScYEP9X7BQlFJdmMM_waiTQjvs42I",
             authDomain: "aplikasi-pengumpul-tugas.firebaseapp.com",
@@ -462,6 +471,10 @@
             measurementId: "G-N8EL3KMRBR"
         };
 
+        // --- KONFIGURASI SUPABASE ---
+        const supabaseUrl = 'https://ggzbopqnncapbrhszagn.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnemJvcHFubmNhcGJyaHN6YWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTA4NzEsImV4cCI6MjA2OTQyNjg3MX0.NFfanxR8cMzhLNAQFvGQgArkmyxecD8rQZowCbHsgkQ';
+
         // Import fungsi yang diperlukan dari SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -471,6 +484,16 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        // Inisialisasi Supabase
+        let supabaseClient = null;
+        if (supabaseUrl && supabaseAnonKey && window.supabase) {
+            const { createClient } = window.supabase; 
+            supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+        } else {
+            console.warn("Supabase belum dikonfigurasi. Fitur unggah file tidak akan berfungsi.");
+        }
+
 
         // Referensi Koleksi
         const tugasCollection = collection(db, 'tugas');
@@ -912,7 +935,8 @@
                         <td class="p-4">${statusBadge}</td>
                         <td class="p-4">
                             <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
-                                <a href="${sub.linkGdrive}" target="_blank" class="text-blue-400 hover:underline">Lihat Tugas</a>
+                                ${sub.linkGdrive ? `<a href="${sub.linkGdrive}" target="_blank" class="text-blue-400 hover:underline">Lihat Link</a>` : ''}
+                                ${sub.fileUrl ? `<a href="${sub.fileUrl}" target="_blank" class="text-green-400 hover:underline">Lihat File</a>` : ''}
                                 <button data-id="${sub.id}" class="delete-submission-btn text-red-400 hover:underline">Hapus</button>
                                 ${!isGraded ? `
                                     <div class="flex items-center gap-2 mt-2 w-full">
@@ -938,7 +962,7 @@
             renderPaginationControls(totalPages, filteredSubmissions.length);
             document.getElementById('select-all-checkbox').checked = false;
             safeCreateIcons();
-            updateOpenCollapsibles(); // REVISI: Panggil fungsi ini untuk menyesuaikan tinggi
+            updateOpenCollapsibles();
         }
         
         function renderPaginationControls(totalPages, totalItems) {
@@ -988,7 +1012,7 @@
                 });
             }
             renderMateriPaginationControls(totalPages);
-            updateOpenCollapsibles(); // REVISI: Panggil fungsi ini juga di sini
+            updateOpenCollapsibles();
         }
 
         function renderMateriPaginationControls(totalPages) {
@@ -1197,12 +1221,12 @@
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Nama Siswa,Kelas,Judul Tugas,Status,Nilai,Komentar,Link,Tanggal Kumpul\r\n";
+            csvContent += "Nama Siswa,Kelas,Judul Tugas,Status,Nilai,Komentar,Link,File URL,Tanggal Kumpul\r\n";
 
             allSubmissions.forEach(sub => {
                 const task = allTasks[sub.tugasId] || { judul: 'N/A' };
                 const date = sub.dikumpulkanPada ? sub.dikumpulkanPada.toDate().toLocaleString('id-ID') : 'N/A';
-                const row = [sub.namaSiswa, sub.kelasSiswa, `"${task.judul}"`, sub.status, sub.nilai || '', `"${sub.komentar || ''}"`, sub.linkGdrive, `"${date}"`].join(",");
+                const row = [sub.namaSiswa, sub.kelasSiswa, `"${task.judul}"`, sub.status, sub.nilai || '', `"${sub.komentar || ''}"`, sub.linkGdrive || '', sub.fileUrl || '', `"${date}"`].join(",");
                 csvContent += row + "\r\n";
             });
 
@@ -1292,10 +1316,49 @@
 
         document.getElementById('submission-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-assignment-btn');
+            const uploadProgress = document.getElementById('upload-progress');
+            
             const tugasId = document.getElementById('submission-tugas-id').value;
             const [namaSiswa, kelasSiswa] = document.getElementById('student-select').value.split('||');
             const linkGdrive = document.getElementById('gdrive-link').value;
-            
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput.files[0];
+
+            if (!linkGdrive && !file) {
+                showToast('Harap berikan link Google Drive atau unggah file.', 'error');
+                return;
+            }
+            if (!supabaseClient && file) {
+                showToast('Fitur unggah file belum dikonfigurasi oleh admin.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            let fileUrl = null;
+
+            if (file) {
+                try {
+                    uploadProgress.classList.remove('hidden');
+                    const filePath = `submissions/${tugasId}-${namaSiswa.replace(/\s+/g, '_')}-${Date.now()}`;
+                    const { data, error } = await supabaseClient.storage.from('tugas-uploads').upload(filePath, file);
+
+                    if (error) throw error;
+                    
+                    const { data: urlData } = supabaseClient.storage.from('tugas-uploads').getPublicUrl(data.path);
+                    fileUrl = urlData.publicUrl;
+                } catch (error) {
+                    showToast('Gagal mengunggah file.', 'error');
+                    console.error("Supabase upload error:", error);
+                    submitBtn.disabled = false;
+                    uploadProgress.classList.add('hidden');
+                    return;
+                } finally {
+                    uploadProgress.classList.add('hidden');
+                }
+            }
+
             const task = allTasks[tugasId];
             const now = Timestamp.now();
             const deadline = task.deadline;
@@ -1308,7 +1371,8 @@
                     tugasId,
                     namaSiswa,
                     kelasSiswa,
-                    linkGdrive,
+                    linkGdrive: linkGdrive || null,
+                    fileUrl: fileUrl || null,
                     status,
                     nilai: null,
                     komentar: "",
@@ -1318,6 +1382,8 @@
                 submissionModal.classList.add('hidden');
             } catch (error) {
                 showToast('Gagal mengirim tugas.', 'error');
+            } finally {
+                submitBtn.disabled = false;
             }
         });
         
@@ -1405,7 +1471,6 @@
             }
         });
 
-        // REVISI: Fungsi untuk menyesuaikan tinggi collapsible content yang terbuka
         function updateOpenCollapsibles() {
             document.querySelectorAll('.collapsible-content').forEach(content => {
                 if (content.style.maxHeight && content.style.maxHeight !== '0px') {
