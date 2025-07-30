@@ -119,13 +119,6 @@
             height: 100%;
             z-index: -20;
         }
-        /* Remove default marker from summary */
-        summary {
-            list-style: none;
-        }
-        summary::-webkit-details-marker {
-            display: none;
-        }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -596,63 +589,38 @@
             return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : null;
         }
 
-        // Function to fetch an inspirational quote with exponential backoff
+        // Function to fetch an inspirational quote
         async function fetchInspirationalQuote() {
             const quoteElement = document.getElementById('inspirational-quote');
-            const prompt = "buat quotes keren yang membahas tentang pendidikan, 10-20 kata, langsung tulis saja tampa embel-embel, tulis langsung disini 1 pilihan yang menurut anda terbaik";
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            const apiKey = ""; // API key is handled by the environment
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            try {
+                const prompt = "buat quotes keren yang membahas tentang pendidikan, 10-20 kata, langsung tulis saja tampa embel-embel, tulis langsung disini 1 pilihan yang menurut anda terbaik";
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const apiKey = "AIzaSyAujsfwXZGSisISNjsvzi84_74vr8SK94g"; // API key is handled by the environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-            let response;
-            let retries = 5;
-            let delay = 1000; // start with 1 second
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            for (let i = 0; i < retries; i++) {
-                try {
-                    response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.candidates && result.candidates[0].content.parts[0].text) {
-                            const text = result.candidates[0].content.parts[0].text.replace(/"/g, ''); // Remove quotes
-                            quoteElement.textContent = `"${text}"`;
-                        } else {
-                            // Fallback if the API response structure is unexpected
-                            quoteElement.textContent = '"Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia." - Nelson Mandela';
-                        }
-                        return; // Success, exit the function
-                    } else if (response.status === 503) {
-                        // If service is unavailable, wait and retry
-                        console.warn(`API service unavailable (503). Retrying in ${delay / 1000}s...`);
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2; // Double the delay for the next retry
-                    } else {
-                        // For other errors, throw to be caught by the outer catch block
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                } catch (error) {
-                    // This catches network errors or errors thrown from the else block
-                    if (i === retries - 1) { // If it's the last retry, handle the final error
-                        console.error("Error fetching quote after multiple retries:", error);
-                        quoteElement.textContent = '"Ilmu tanpa amal adalah omong kosong, amal tanpa ilmu adalah kesesatan."';
-                        break; // Exit loop after final attempt
-                    } else {
-                         console.warn(`Fetch failed. Retrying in ${delay / 1000}s...`);
-                         await new Promise(resolve => setTimeout(resolve, delay));
-                         delay *= 2;
-                    }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            }
-            
-            // This part is reached if all retries fail and the loop is exited
-            if (!response || !response.ok) {
-                 console.error("Error fetching quote: All retries failed.");
-                 quoteElement.textContent = '"Ilmu tanpa amal adalah omong kosong, amal tanpa ilmu adalah kesesatan."';
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    const text = result.candidates[0].content.parts[0].text.replace(/"/g, ''); // Remove quotes
+                    quoteElement.textContent = `"${text}"`;
+                } else {
+                    // Fallback if the API response structure is unexpected
+                    quoteElement.textContent = '"Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia." - Nelson Mandela';
+                }
+            } catch (error) {
+                console.error("Error fetching quote:", error);
+                // Provide a fallback quote in case of network error or API failure
+                quoteElement.textContent = '"Ilmu tanpa amal adalah omong kosong, amal tanpa ilmu adalah kesesatan."';
             }
         }
 
@@ -771,85 +739,12 @@
             `).join('');
         }
 
-        // --- RENDER FUNCTIONS ---
-        
-        /**
-         * Renders the list of available tasks.
-         * This function is now called whenever tasks or submissions change.
-         */
-        function renderTugasList() {
-            const taskDocs = Object.entries(allTasks).map(([id, data]) => ({ id, ...data }));
-            
-            if (taskDocs.length === 0) {
-                loadingText.textContent = 'Belum ada tugas yang tersedia.';
-                daftarTugasContainer.innerHTML = '';
-                return;
-            }
-
-            loadingText.classList.add('hidden');
-            daftarTugasContainer.innerHTML = '';
-            taskDocs.forEach(tugas => {
-                const deadlineText = formatDeadline(tugas.deadline);
-                const kelasList = tugas.targetKelas || [];
-
-                // Logic to find unsubmitted students
-                const targetKelasUpper = kelasList.map(k => k.toUpperCase());
-                const studentsForTask = allStudents.filter(s => targetKelasUpper.includes(s.kelas.toUpperCase()));
-                const submittedStudentNames = allSubmissions
-                    .filter(s => s.tugasId === tugas.id)
-                    .map(s => s.namaSiswa);
-                const unsubmittedStudents = studentsForTask
-                    .filter(s => !submittedStudentNames.includes(s.nama))
-                    .map(s => s.nama)
-                    .sort();
-                
-                let unsubmittedListHtml = '';
-                if (unsubmittedStudents.length > 0) {
-                    unsubmittedListHtml = unsubmittedStudents.map(nama => `<li class="px-3 py-1 text-gray-300">${nama}</li>`).join('');
-                } else {
-                    unsubmittedListHtml = '<li class="px-3 py-1 text-gray-400 italic">Semua siswa telah mengumpulkan.</li>';
-                }
-
-                const card = document.createElement('div');
-                card.className = 'p-6 rounded-2xl glass-card flex flex-col';
-                card.innerHTML = `
-                    <div class="flex-grow">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="inline-block bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full">${kelasList.join(', ')}</span>
-                            <span class="text-xs font-medium">${deadlineText}</span>
-                        </div>
-                        <h3 class="text-xl font-bold text-white mb-2">${tugas.judul}</h3>
-                        <p class="text-gray-300 text-sm mb-4">${tugas.deskripsi}</p>
-                    </div>
-                    
-                    <!-- NEW UI: Collapsible list using <details> and <summary> -->
-                    <div class="mt-4 border-t border-white/10 pt-4">
-                        <details class="group">
-                            <summary class="flex justify-between items-center cursor-pointer text-sm text-gray-400 hover:text-white list-none">
-                                <span class="font-medium">${unsubmittedStudents.length} Siswa Belum Mengumpulkan</span>
-                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
-                            </summary>
-                            <ul class="mt-2 text-sm max-h-32 overflow-y-auto pr-2">
-                                ${unsubmittedListHtml}
-                            </ul>
-                        </details>
-                    </div>
-                    <!-- END NEW UI -->
-
-                    <button data-id="${tugas.id}" data-judul="${tugas.judul}" data-deskripsi="${tugas.deskripsi}" data-kelas="${kelasList.join(',')}" class="mt-4 w-full btn-primary text-white font-semibold py-2 rounded-lg">Kerjakan Tugas</button>
-                `;
-                daftarTugasContainer.appendChild(card);
-            });
-            safeCreateIcons();
-        }
-
-        // --- DATA LISTENERS (for all users) ---
+        // --- PUBLIC LISTENERS (for all users) ---
         onSnapshot(siswaDocRef, (doc) => {
             if (doc.exists()) {
                 allStudents = doc.data().daftar || [];
                 const uniqueClasses = [...new Set(allStudents.map(s => s.kelas.toUpperCase()))].sort();
                 renderKelasCheckboxes(uniqueClasses);
-                renderTugasList(); // Re-render tasks if student list changes
                 renderStatistics();
             }
         }, (error) => {
@@ -859,17 +754,42 @@
         const qTugas = query(tugasCollection, orderBy('dibuatPada', 'desc'));
         onSnapshot(qTugas, (snapshot) => {
             allTasks = {};
-            snapshot.docs.forEach(doc => allTasks[doc.id] = { id: doc.id, ...doc.data() });
-            
-            renderTugasList();
+            snapshot.docs.forEach(doc => allTasks[doc.id] = doc.data());
+
+            // Render student view
+            if (snapshot.empty) {
+                loadingText.textContent = 'Belum ada tugas yang tersedia.';
+                daftarTugasContainer.innerHTML = '';
+            } else {
+                loadingText.classList.add('hidden');
+                daftarTugasContainer.innerHTML = '';
+                snapshot.docs.forEach(doc => {
+                    const tugas = { id: doc.id, ...doc.data() };
+                    const deadlineText = formatDeadline(tugas.deadline);
+                    const kelasList = tugas.targetKelas || [];
+                    const card = document.createElement('div');
+                    card.className = 'p-6 rounded-2xl glass-card flex flex-col justify-between';
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="inline-block bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full">${kelasList.join(', ')}</span>
+                                <span class="text-xs font-medium">${deadlineText}</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">${tugas.judul}</h3>
+                            <p class="text-gray-300 text-sm mb-4">${tugas.deskripsi}</p>
+                        </div>
+                        <button data-id="${tugas.id}" data-judul="${tugas.judul}" data-deskripsi="${tugas.deskripsi}" data-kelas="${kelasList.join(',')}" class="mt-4 w-full btn-primary text-white font-semibold py-2 rounded-lg">Kerjakan Tugas</button>
+                    `;
+                    daftarTugasContainer.appendChild(card);
+                });
+            }
 
             // Render teacher management view
-            const taskDocs = snapshot.docs;
-            if (taskDocs.length === 0) {
+            if (snapshot.empty) {
                  manageTasksList.innerHTML = '<p class="text-gray-400">Belum ada tugas yang dibuat.</p>';
             } else {
                 manageTasksList.innerHTML = '';
-                taskDocs.forEach(doc => {
+                snapshot.docs.forEach(doc => {
                     const tugas = { id: doc.id, ...doc.data() };
                     const kelasList = tugas.targetKelas || [];
                     const taskItem = document.createElement('div');
@@ -907,13 +827,10 @@
 
             allSubmissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            // Re-render all relevant parts of the UI
-            renderTugasList(); 
             updateNotificationBadge();
             renderMonitoringTable();
             renderStatistics();
             
-            // Check status in the modal if it's open
             if (!submissionModal.classList.contains('hidden')) {
                 const tugasId = document.getElementById('submission-tugas-id').value;
                 const [namaSiswa] = (document.getElementById('student-select').value || '').split('||');
@@ -1126,18 +1043,18 @@
 
             uniqueClasses.forEach(kelas => {
                 const studentsInClass = allStudents.filter(s => s.kelas.toUpperCase() === kelas);
-                const totalStudentsInClass = studentsInClass.length;
+                const tasksForClass = Object.values(allTasks).filter(t => t.targetKelas.includes(kelas));
+                
+                let totalPossibleSubmissions = 0;
+                tasksForClass.forEach(task => {
+                    totalPossibleSubmissions += studentsInClass.length;
+                });
 
-                // --- NEW FEATURE LOGIC: Calculate submission stats for the chart ---
-                const submissionsForClass = allSubmissions.filter(sub => sub.kelasSiswa.toUpperCase() === kelas);
-                const uniqueSubmitters = new Set(submissionsForClass.map(s => s.namaSiswa));
-                const submittedCount = uniqueSubmitters.size;
+                const actualSubmissions = allSubmissions.filter(sub => sub.kelasSiswa.toUpperCase() === kelas);
+                const percentage = totalPossibleSubmissions > 0 ? (actualSubmissions.length / totalPossibleSubmissions) * 100 : 0;
                 
-                const percentage = totalStudentsInClass > 0 ? (submittedCount / totalStudentsInClass) * 100 : 0;
-                
-                labels.push([kelas, `${submittedCount}/${totalStudentsInClass} Siswa`]); // Multi-line label
+                labels.push(kelas);
                 data.push(percentage.toFixed(1));
-                // --- END NEW FEATURE LOGIC ---
             });
 
             const ctx = document.getElementById('submissionChart').getContext('2d');
@@ -1172,10 +1089,6 @@
                             titleFont: { size: 14 },
                             bodyFont: { size: 12 },
                             callbacks: {
-                                title: function(context) {
-                                    // Show only the class name in the tooltip title
-                                    return context[0].label.split(',')[0];
-                                },
                                 label: function(context) {
                                     return `Terkumpul: ${context.raw}%`;
                                 }
@@ -1196,12 +1109,7 @@
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { 
-                                color: '#d1d5db',
-                                font: {
-                                    size: 10 // Adjust font size for better fit
-                                }
-                            }
+                            ticks: { color: '#d1d5db' }
                         }
                     }
                 }
@@ -1332,24 +1240,20 @@
         });
 
         daftarTugasContainer.addEventListener('click', (e) => {
-            const button = e.target.closest('button[data-id]');
-
-            if (button) { // "Kerjakan Tugas" button
-                document.getElementById('submission-modal-title').textContent = button.dataset.judul;
-                document.getElementById('submission-modal-desc').textContent = button.dataset.deskripsi;
-                document.getElementById('submission-tugas-id').value = button.dataset.id;
+            if (e.target.tagName === 'BUTTON') {
+                document.getElementById('submission-modal-title').textContent = e.target.dataset.judul;
+                document.getElementById('submission-modal-desc').textContent = e.target.dataset.deskripsi;
+                document.getElementById('submission-tugas-id').value = e.target.dataset.id;
                 
                 document.getElementById('submission-form').reset();
                 document.getElementById('submission-details').classList.add('hidden');
                 
-                const targetKelas = button.dataset.kelas.split(',');
+                const targetKelas = e.target.dataset.kelas.split(',');
                 populateStudentDropdown(targetKelas);
                 
                 submissionModal.classList.remove('hidden');
                 safeCreateIcons();
             }
-            // The <details> element now handles its own open/close state,
-            // so no specific JS is needed for the collapsible list anymore.
         });
         
         function populateStudentDropdown(targetKelasArray) {
