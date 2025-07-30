@@ -570,7 +570,7 @@
         async function fetchInspirationalQuote() {
             const quoteElement = document.getElementById('inspirational-quote');
             try {
-                const prompt = "Berikan satu kutipan singkat yang inspiratif dan memotivasi tentang semangat belajar atau pendidikan, dalam bahasa Indonesia. Jawab langsung dengan kutipan, tidak usah ada tambahan lain";
+                const prompt = "buat quotes keren yang membahas tentang pendidikan, 10-20 kata, langsung tulis saja tampa embel-embel, tulis langsung disini 1 pilihan yang menurut anda terbaik";
                 const payload = { contents: [{ parts: [{ text: prompt }] }] };
                 const apiKey = "AIzaSyAujsfwXZGSisISNjsvzi84_74vr8SK94g"; // API key is handled by the environment
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
