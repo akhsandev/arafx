@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Mengajar Futuristik - Akhsan Rian Anugrah, S.Pd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- Variabel Desain --- */
+        :root {
+            --dark-bg: #010409;
+            --primary-neon: #00bfff; /* Deep Sky Blue */
+            --secondary-neon: #00ffff; /* Aqua */
+            --text-color: #e6f1ff;
+            --card-bg: rgba(15, 32, 49, 0.3);
+            --card-border: rgba(0, 191, 255, 0.3);
+            --glow-color: rgba(0, 191, 255, 0.7);
+        }
+
+        /* --- Reset & Pengaturan Dasar --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- Latar Belakang Partikel --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* --- Kontainer Utama & Header --- */
+        .container {
+            padding: 30px;
+            max-width: 1920px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: var(--primary-neon);
+            text-shadow: 
+                0 0 5px var(--glow-color),
+                0 0 10px var(--glow-color),
+                0 0 20px var(--glow-color),
+                0 0 40px var(--glow-color);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        /* --- Grid Jadwal --- */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .day-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .day-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            text-align: center;
+            color: var(--secondary-neon);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--card-border);
+            text-shadow: 0 0 10px var(--secondary-neon);
+        }
+
+        /* --- Desain Kartu Jadwal --- */
+        .schedule-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .schedule-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 0 15px var(--glow-color), 0 0 30px var(--glow-color);
+            border-color: var(--primary-neon);
+        }
+
+        .schedule-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .schedule-card:hover::before {
+            left: 100%;
+        }
+
+        .card-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--secondary-neon);
+            margin-bottom: 15px;
+        }
+
+        .card-subject {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .card-class {
+            background-color: var(--primary-neon);
+            color: var(--dark-bg);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        /* Kartu dengan tema khusus */
+        .schedule-card.special {
+            --primary-neon: #9400D3; /* Dark Violet */
+            --glow-color: rgba(148, 0, 211, 0.7);
+            --card-border: rgba(148, 0, 211, 0.3);
+        }
+
+        /* --- Animasi --- */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* --- Responsif --- */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            .schedule-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        <header>
+            <h1>Akhsan Rian Anugrah, S.Pd</h1>
+            <p>Jadwal Mengajar - UPT SMAN 1 SOPPENG</p>
+        </header>
+        
+        <div class="schedule-grid" id="schedule-container">
+            <!-- Kolom hari akan diisi oleh JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // --- DATA JADWAL ---
+        // Data diekstrak dari gambar yang Anda berikan
+        const scheduleData = {
+            "Senin": [
+                { time: "08:00 - 09:30", subject: "Fisika", class: "X.2" },
+                { time: "13:30 - 15:00", subject: "Fisika", class: "X.6" }
+            ],
+            "Selasa": [
+                { time: "07:15 - 09:30", subject: "Fisika", class: "X.11" },
+                { time: "09:30 - 11:45", subject: "TIK", class: "XI.4" },
+                { time: "13:30 - 15:00", subject: "Fisika", class: "X.4" }
+            ],
+            "Rabu": [
+                { time: "07:15 - 08:00", subject: "Literasi Al-Quran", class: "Spesial", type: "special" },
+                { time: "08:00 - 09:30", subject: "Fisika", class: "X.3" },
+                { time: "09:30 - 11:45", subject: "TIK", class: "XI.4" },
+                { time: "13:30 - 15:00", subject: "Fisika", class: "X.8" }
+            ],
+            "Kamis": [
+                { time: "08:00 - 09:30", subject: "Fisika", class: "X.9" },
+                { time: "09:30 - 11:00", subject: "Fisika", class: "X.7" },
+                { time: "13:30 - 15:00", subject: "Fisika", class: "X.5" }
+            ],
+            "Jumat": [
+                { time: "07:15 - 09:30", subject: "Fisika", class: "X.1" },
+                { time: "13:30 - 15:00", subject: "Fisika", class: "X.10" }
+            ]
+        };
+
+        // --- FUNGSI UNTUK MEMBUAT KARTU JADWAL ---
+        function createScheduleCards() {
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = ''; // Kosongkan kontainer
+
+            for (const day in scheduleData) {
+                // Buat div untuk kolom hari
+                const dayColumn = document.createElement('div');
+                dayColumn.className = 'day-column';
+
+                // Buat judul hari
+                const dayTitle = document.createElement('h2');
+                dayTitle.className = 'day-title';
+                dayTitle.textContent = day;
+                dayColumn.appendChild(dayTitle);
+
+                // Buat kartu untuk setiap jadwal di hari itu
+                scheduleData[day].forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'schedule-card';
+                    if (item.type === 'special') {
+                        card.classList.add('special');
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-time">${item.time}</div>
+                        <div class="card-subject">${item.subject}</div>
+                        <div class="card-class">${item.class}</div>
+                    `;
+                    dayColumn.appendChild(card);
+                });
+
+                container.appendChild(dayColumn);
+            }
+        }
+
+        // --- SKRIP LATAR BELAKANG PARTIKEL ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray;
+
+        // Dapatkan posisi mouse
+        const mouse = {
+            x: null,
+            y: null,
+            radius: (canvas.height / 120) * (canvas.width / 120)
+        };
+
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // Buat partikel
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            // Gambar partikel
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = 'rgba(0, 191, 255, 0.5)';
+                ctx.fill();
+            }
+            // Pergerakan partikel dan interaksi
+            update() {
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
+                }
+
+                // Cek interaksi dengan mouse
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < mouse.radius + this.size) {
+                    if (mouse.x < this.x && this.x < canvas.width - this.size * 10) {
+                        this.x += 5;
+                    }
+                    if (mouse.x > this.x && this.x > this.size * 10) {
+                        this.x -= 5;
+                    }
+                    if (mouse.y < this.y && this.y < canvas.height - this.size * 10) {
+                        this.y += 5;
+                    }
+                    if (mouse.y > this.y && this.y > this.size * 10) {
+                        this.y -= 5;
+                    }
+                }
+                // Gerakkan partikel
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        // Inisialisasi partikel
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.4) - 0.2;
+                let directionY = (Math.random() * 0.4) - 0.2;
+                let color = 'rgba(0, 191, 255, 0.8)';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        // Loop animasi
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+        }
+        
+        // --- EVENT LISTENERS & INISIALISASI ---
+        window.addEventListener('resize', function() {
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
+            mouse.radius = (canvas.height / 120) * (canvas.width / 120);
+            init();
+        });
+        
+        // Atur agar mouse keluar dari layar tidak meninggalkan efek
+        window.addEventListener('mouseout', function(){
+            mouse.x = undefined;
+            mouse.y = undefined;
+        });
+
+        // Jalankan semua fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            createScheduleCards();
+            init();
+            animate();
+        });
+    </script>
+</body>
+</html>
