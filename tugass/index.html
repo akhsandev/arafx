@@ -126,6 +126,16 @@
         summary::-webkit-details-marker {
             display: none;
         }
+        /* Filter button styling */
+        .filter-btn {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .filter-btn.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -177,22 +187,25 @@
         <section id="statistik-section" class="mb-12">
             <div class="glass-card p-6 rounded-2xl">
                 <h2 class="text-2xl font-bold mb-6 text-white flex items-center gap-3"><i data-lucide="bar-chart-3" class="text-green-400"></i> Statistik Umum</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Key Metrics -->
-                    <div class="glass-card p-4 rounded-lg col-span-1 lg:col-span-1">
-                        <h3 class="text-sm font-medium text-gray-400">Total Tugas Aktif</h3>
-                        <p id="total-tugas-stat" class="text-3xl font-bold text-white">0</p>
-                    </div>
-                    <div class="glass-card p-4 rounded-lg col-span-1 lg:col-span-1">
-                        <h3 class="text-sm font-medium text-gray-400">Total Siswa</h3>
-                        <p id="total-siswa-stat" class="text-3xl font-bold text-white">0</p>
-                    </div>
+                <!-- REVISED LAYOUT: Chart is now full width, metrics are in a nested grid below -->
+                <div class="grid grid-cols-1 gap-6">
                     <!-- Chart -->
-                    <div class="glass-card p-4 rounded-lg col-span-1 md:col-span-2 lg:col-span-2">
+                    <div class="glass-card p-4 rounded-lg">
                          <h3 class="text-sm font-medium text-gray-400 mb-2">Tingkat Pengumpulan per Kelas</h3>
-                         <div class="relative h-48 md:h-56">
+                         <div class="relative h-56 md:h-64">
                             <canvas id="submissionChart"></canvas>
                          </div>
+                    </div>
+                    <!-- Nested Grid for Key Metrics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-sm font-medium text-gray-400">Total Tugas Aktif</h3>
+                            <p id="total-tugas-stat" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-sm font-medium text-gray-400">Total Siswa</h3>
+                            <p id="total-siswa-stat" class="text-3xl font-bold text-white">0</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -301,7 +314,7 @@
                 </div>
                 <div class="collapsible-content">
                     <div id="monitoring-section" class="p-4 border-t border-white/10">
-                        <div class="flex flex-wrap gap-4 justify-between items-center mb-6">
+                        <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
                             <h4 class="text-lg font-semibold text-white">Data Pengumpulan</h4>
                             <div class="flex gap-4 items-center">
                                 <input id="search-submission-input" type="text" placeholder="Cari nama siswa..." class="p-2 rounded-lg glass-input text-white">
@@ -311,6 +324,15 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- NEW FEATURE: Filter Buttons -->
+                        <div id="filter-container" class="flex flex-wrap gap-2 mb-6">
+                            <button data-filter="semua" class="filter-btn active px-3 py-1.5 text-sm rounded-lg transition-colors">Semua</button>
+                            <button data-filter="belum_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Belum Diperiksa</button>
+                            <button data-filter="sudah_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Sudah Diperiksa</button>
+                            <button data-filter="terlambat" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Terlambat</button>
+                        </div>
+                        <!-- END NEW FEATURE -->
 
                         <!-- Bulk Grading Section -->
                         <div id="bulk-grade-section" class="mb-6 p-4 rounded-lg glass-card space-y-3">
@@ -525,6 +547,7 @@
         const notificationBellContainer = document.getElementById('notification-bell-container');
         const notificationBadge = document.getElementById('notification-badge');
         const searchSubmissionInput = document.getElementById('search-submission-input');
+        const filterContainer = document.getElementById('filter-container');
 
         // State Cache
         let allTasks = {};
@@ -536,11 +559,12 @@
         let seenSubmissions = new Set();
         let newSubmissionCount = 0;
         
-        // Pagination State
+        // Pagination & Filter State
         let currentPage = 1;
         const itemsPerPage = 20;
         let materiCurrentPage = 1;
         const materiItemsPerPage = 5;
+        let currentFilter = 'semua'; // NEW: State for the active filter
 
         function safeCreateIcons() {
             if (typeof lucide !== 'undefined') {
@@ -778,7 +802,7 @@
          * This function is now called whenever tasks or submissions change.
          */
         function renderTugasList() {
-            const taskDocs = Object.entries(allTasks).map(([id, data]) => ({ id, ...data }));
+            const taskDocs = Object.values(allTasks).sort((a, b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0));
             
             if (taskDocs.length === 0) {
                 loadingText.textContent = 'Belum ada tugas yang tersedia.';
@@ -967,16 +991,39 @@
             return options;
         }
 
+        /**
+         * NEW: Central function to get filtered submissions based on current state.
+         * This avoids code duplication.
+         */
+        function getFilteredSubmissions() {
+            let filtered = allSubmissions;
+
+            // Apply status filter
+            if (currentFilter === 'belum_diperiksa') {
+                filtered = allSubmissions.filter(sub => sub.status !== 'Sudah Dinilai');
+            } else if (currentFilter === 'sudah_diperiksa') {
+                filtered = allSubmissions.filter(sub => sub.status === 'Sudah Dinilai');
+            } else if (currentFilter === 'terlambat') {
+                filtered = allSubmissions.filter(sub => sub.status === 'Terkumpul (Terlambat)');
+            }
+
+            // Apply search filter
+            const searchTerm = searchSubmissionInput.value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(sub =>
+                    sub.namaSiswa.toLowerCase().includes(searchTerm)
+                );
+            }
+            return filtered;
+        }
+
         function renderMonitoringTable() {
             if (!auth.currentUser) {
                 monitoringTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-400">Silakan login untuk melihat data.</td></tr>';
                 return;
             }
             
-            const searchTerm = searchSubmissionInput.value.toLowerCase();
-            const filteredSubmissions = allSubmissions.filter(sub => 
-                sub.namaSiswa.toLowerCase().includes(searchTerm)
-            );
+            const filteredSubmissions = getFilteredSubmissions();
 
             const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
             if (currentPage > totalPages && totalPages > 0) {
@@ -1308,14 +1355,16 @@
 
 
         document.getElementById('download-csv-btn').addEventListener('click', () => {
-            if (allSubmissions.length === 0) {
-                showToast('Tidak ada data untuk diunduh.', 'error');
+            const submissionsToDownload = getFilteredSubmissions(); // Get currently filtered data
+
+            if (submissionsToDownload.length === 0) {
+                showToast('Tidak ada data untuk diunduh sesuai filter.', 'error');
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,";
             csvContent += "Nama Siswa,Kelas,Judul Tugas,Status,Nilai,Komentar,Link,File URL,Tanggal Kumpul\r\n";
 
-            allSubmissions.forEach(sub => {
+            submissionsToDownload.forEach(sub => {
                 const task = allTasks[sub.tugasId] || { judul: 'N/A' };
                 const date = sub.dikumpulkanPada ? sub.dikumpulkanPada.toDate().toLocaleString('id-ID') : 'N/A';
                 const row = [sub.namaSiswa, sub.kelasSiswa, `"${task.judul}"`, sub.status, sub.nilai || '', `"${sub.komentar || ''}"`, sub.linkGdrive || '', sub.fileUrl || '', `"${date}"`].join(",");
@@ -1325,7 +1374,7 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "rekapan_tugas.csv");
+            link.setAttribute("download", `rekapan_tugas_${currentFilter}.csv`); // Dynamic filename
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1504,6 +1553,20 @@
         searchSubmissionInput.addEventListener('input', () => {
             currentPage = 1; 
             renderMonitoringTable();
+        });
+
+        // --- NEW FEATURE: Filter button event listener ---
+        filterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                currentFilter = e.target.dataset.filter;
+                
+                // Update active button style
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+
+                currentPage = 1; // Reset to first page on filter change
+                renderMonitoringTable();
+            }
         });
         
         document.getElementById('prev-page-btn').addEventListener('click', () => {
