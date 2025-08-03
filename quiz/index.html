@@ -30,16 +30,67 @@
             border-radius: 1rem;
         }
 
+        /* Efek neon standar untuk teks kecil */
         .neon-text {
             color: #00ffff;
             text-shadow:
                 0 0 5px #00ffff,
-                0 0 10px #00ffff,
-                0 0 20px #00ffff,
-                0 0 40px #00ffff,
-                0 0 80px #00ffff;
+                0 0 10px #00ffff;
         }
         
+        /* Header utama dengan animasi kelip */
+        #main-header {
+            font-size: 2.8rem; /* Ukuran font diperkecil */
+            line-height: 1.1;
+            color: #cceeff;
+            animation: neon-flicker 2.5s infinite alternate;
+        }
+        @media (min-width: 768px) {
+            #main-header {
+                font-size: 3.8rem; /* Ukuran font diperkecil */
+            }
+        }
+        @keyframes neon-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow:
+                    0 0 4px #fff,
+                    0 0 10px #fff,
+                    0 0 20px #00ffff,
+                    0 0 40px #00ffff,
+                    0 0 70px #00ffff,
+                    0 0 80px #00ffff;
+                color: #cceeff;
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+                color: #00ffff;
+            }
+        }
+        
+        /* Sub-header dengan animasi kelip pink */
+        #sub-header {
+            font-size: 1.25rem;
+            color: #ffccff;
+            animation: neon-flicker-pink 3s infinite alternate;
+        }
+
+        @keyframes neon-flicker-pink {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow:
+                    0 0 2px #fff,
+                    0 0 5px #fff,
+                    0 0 10px #ff00ff,
+                    0 0 20px #ff00ff,
+                    0 0 35px #ff00ff,
+                    0 0 40px #ff00ff;
+                color: #ffccff;
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+                color: #ff00ff;
+            }
+        }
+
         .neon-border {
             border: 2px solid #00ffff;
             box-shadow: 0 0 10px #00ffff, inset 0 0 10px #00ffff;
@@ -107,6 +158,22 @@
           animation: pulse-once 0.5s ease-in-out;
         }
 
+        /* Styling untuk dropdown */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300FFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 0.8em;
+            padding-right: 2.5rem; /* Memberi ruang untuk panah */
+        }
+        select option {
+            background: #0f0c29;
+            color: #e0e0e0;
+        }
+
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -129,11 +196,25 @@
 
             <!-- Start Screen -->
             <div id="start-screen" class="glass-card p-8 text-center space-y-6">
-                <h1 class="font-orbitron text-4xl md:text-5xl font-bold neon-text">Kuis Numerasi Fisika</h1>
-                <p class="text-lg text-gray-300">Uji kemampuan numerasi awal Anda sebelum masuk ke dunia pengukuran!</p>
+                <h1 id="main-header" class="font-orbitron font-bold">Kuis Numerasi Fisika</h1>
+                <p id="sub-header" class="font-orbitron font-semibold mt-2">Dibuat Oleh Pak Akhsan</p>
+                <p class="text-lg text-gray-300 mt-6">Uji kemampuan numerasi awal Anda sebelum masuk ke dunia pengukuran!</p>
                 <div class="space-y-4">
                     <input id="name-input" type="text" placeholder="Masukkan Nama Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
-                    <input id="class-input" type="text" placeholder="Masukkan Kelas Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
+                    <select id="class-input" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
+                        <option value="" disabled selected>Pilih Kelas Anda</option>
+                        <option value="X.1">X.1</option>
+                        <option value="X.2">X.2</option>
+                        <option value="X.3">X.3</option>
+                        <option value="X.4">X.4</option>
+                        <option value="X.5">X.5</option>
+                        <option value="X.6">X.6</option>
+                        <option value="X.7">X.7</option>
+                        <option value="X.8">X.8</option>
+                        <option value="X.9">X.9</option>
+                        <option value="X.10">X.10</option>
+                        <option value="X.11">X.11</option>
+                    </select>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="start-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Mulai Kuis</button>
