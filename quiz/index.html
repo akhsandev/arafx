@@ -111,75 +111,89 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div id="app-container" class="w-full max-w-2xl mx-auto">
+    <!-- Container Utama -->
+    <div class="relative w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
 
-        <!-- Start Screen -->
-        <div id="start-screen" class="glass-card p-8 text-center space-y-6">
-            <h1 class="font-orbitron text-4xl md:text-5xl font-bold neon-text">Kuis Numerasi Fisika</h1>
-            <p class="text-lg text-gray-300">Uji kemampuan numerasi awal Anda sebelum masuk ke dunia pengukuran!</p>
-            <div class="space-y-4">
-                <input id="name-input" type="text" placeholder="Masukkan Nama Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
-                <input id="class-input" type="text" placeholder="Masukkan Kelas Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
-            </div>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="start-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Mulai Kuis</button>
-                <button id="hof-button-start" class="w-full sm:w-auto neon-button-pink font-bold py-3 px-8 rounded-lg text-lg">Hall of Fame</button>
-            </div>
-            <p id="error-message" class="text-red-400 h-4"></p>
-        </div>
-
-        <!-- Quiz Screen -->
-        <div id="quiz-screen" class="hidden glass-card p-6 md:p-8 space-y-6">
-            <div class="flex justify-between items-center">
-                <div id="progress-text" class="font-bold text-lg">Soal 1 / 10</div>
-                <div id="score-text" class="font-bold text-lg neon-text">Skor: 0</div>
-            </div>
-            <div class="w-full bg-gray-700 rounded-full h-2.5">
-                <div id="progress-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 10%"></div>
-            </div>
-            <h2 id="question-text" class="text-2xl font-bold text-center min-h-[100px]"></h2>
-            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Answer buttons will be generated here -->
-            </div>
-             <p id="hint-text" class="text-center text-gray-400 italic h-6"></p>
-        </div>
-
-        <!-- Result Screen -->
-        <div id="result-screen" class="hidden glass-card p-8 text-center space-y-6">
-            <h1 class="font-orbitron text-4xl font-bold neon-text">Kuis Selesai!</h1>
-            <p class="text-2xl">Skor Akhir Anda:</p>
-            <p id="final-score" class="font-orbitron text-6xl font-bold neon-text">0</p>
-            <p id="feedback-message" class="text-xl"></p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="retry-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Coba Lagi</button>
-                <button id="hof-button-result" class="w-full sm:w-auto neon-button-pink font-bold py-3 px-8 rounded-lg text-lg">Hall of Fame</button>
-            </div>
-        </div>
-
-        <!-- Hall of Fame Screen -->
-        <div id="hof-screen" class="hidden glass-card p-8 space-y-6">
-            <h1 class="font-orbitron text-4xl font-bold text-center neon-text">Hall of Fame</h1>
-            <div id="hof-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                <!-- Scores will be listed here -->
-                <div id="loading-spinner" class="text-center p-8">
-                    <svg class="animate-spin h-10 w-10 text-cyan-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <p class="mt-4">Memuat data...</p>
+        <!-- Panel Progres Real-time (hanya muncul saat kuis) -->
+        <div id="progress-tracker-container" class="hidden md:block w-full md:w-1/3 lg:w-1/4 order-first md:order-last">
+            <div class="glass-card p-4 space-y-3 h-full">
+                <h3 class="font-orbitron text-xl text-center neon-text">Progres Siswa Lain</h3>
+                <div id="progress-tracker-list" class="space-y-2 max-h-96 md:max-h-full overflow-y-auto pr-2">
+                    <!-- Daftar progres siswa akan muncul di sini -->
                 </div>
             </div>
-            <div class="text-center">
-                <button id="back-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Kembali</button>
-            </div>
         </div>
 
+        <!-- Konten Kuis Utama -->
+        <div id="app-container" class="w-full md:w-2/3 lg:w-3/4">
+
+            <!-- Start Screen -->
+            <div id="start-screen" class="glass-card p-8 text-center space-y-6">
+                <h1 class="font-orbitron text-4xl md:text-5xl font-bold neon-text">Kuis Numerasi Fisika</h1>
+                <p class="text-lg text-gray-300">Uji kemampuan numerasi awal Anda sebelum masuk ke dunia pengukuran!</p>
+                <div class="space-y-4">
+                    <input id="name-input" type="text" placeholder="Masukkan Nama Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
+                    <input id="class-input" type="text" placeholder="Masukkan Kelas Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="start-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Mulai Kuis</button>
+                    <button id="hof-button-start" class="w-full sm:w-auto neon-button-pink font-bold py-3 px-8 rounded-lg text-lg">Hall of Fame</button>
+                </div>
+                <p id="error-message" class="text-red-400 h-4"></p>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="hidden glass-card p-6 md:p-8 space-y-6">
+                <div class="flex justify-between items-center">
+                    <div id="progress-text" class="font-bold text-lg">Soal 1 / 10</div>
+                    <div id="score-text" class="font-bold text-lg neon-text">Skor: 0</div>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 10%"></div>
+                </div>
+                <h2 id="question-text" class="text-2xl font-bold text-center min-h-[100px]"></h2>
+                <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Answer buttons will be generated here -->
+                </div>
+                 <p id="hint-text" class="text-center text-gray-400 italic h-6"></p>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="hidden glass-card p-8 text-center space-y-6">
+                <h1 class="font-orbitron text-4xl font-bold neon-text">Kuis Selesai!</h1>
+                <p class="text-2xl">Skor Akhir Anda:</p>
+                <p id="final-score" class="font-orbitron text-6xl font-bold neon-text">0</p>
+                <p id="feedback-message" class="text-xl"></p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="retry-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Coba Lagi</button>
+                    <button id="hof-button-result" class="w-full sm:w-auto neon-button-pink font-bold py-3 px-8 rounded-lg text-lg">Hall of Fame</button>
+                </div>
+            </div>
+
+            <!-- Hall of Fame Screen -->
+            <div id="hof-screen" class="hidden glass-card p-8 space-y-6">
+                <h1 class="font-orbitron text-4xl font-bold text-center neon-text">Hall of Fame</h1>
+                <div id="hof-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <!-- Scores will be listed here -->
+                    <div id="loading-spinner" class="text-center p-8">
+                        <svg class="animate-spin h-10 w-10 text-cyan-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="mt-4">Memuat data...</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button id="back-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Kembali</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         // Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, serverTimestamp, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
@@ -201,6 +215,8 @@
         const quizScreen = document.getElementById('quiz-screen');
         const resultScreen = document.getElementById('result-screen');
         const hofScreen = document.getElementById('hof-screen');
+        const progressTrackerContainer = document.getElementById('progress-tracker-container');
+        const progressTrackerList = document.getElementById('progress-tracker-list');
         
         const nameInput = document.getElementById('name-input');
         const classInput = document.getElementById('class-input');
@@ -225,18 +241,15 @@
         const backButton = document.getElementById('back-button');
 
         // --- Quiz Data (Encoded) ---
-        // Data soal dan jawaban disamarkan menggunakan Base64. String ini telah diperbaiki
-        // untuk memastikan tidak ada karakter yang korup.
-        const encodedQuizData = "W3sicXVlc3Rpb24iOiJQZXJoYXRpa2FuIGhhc2lsIHBlbmd1a3VyYW4gZGlhbWV0ZXIgc2VidWFoIGtlbGVyZW5nIG1lbmdndW5ha2FuIG1pa3JvbWV0ZXIgc2VrcnVwLiBTa2FsYSB1dGFtYSBtZW51bmp1a2thbiA0LDUgbW0gZGFuIHNrYWxhIG5vbml1cyB5YW5nIHNlZ2FyaXMgYWRhbGFoIGFuZ2thIDM1LiBCZXJhcGFrYWggaGFzaWwgcGVuZ3VrdXJhbm55YT8iLCJoaW50IjoiSGFzaWwgPSBTa2FsYSBVdGFtYSArIChTa2FsYSBOb25pdXMgeCAwLDAxIG1tKSIsImFuc3dlcnMiOlt7InRleHQiOiI0LDg1IG1tIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiNCwzNSBtbSIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI4LDAgbW0iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiNCw1MzUgbW0iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiU2VvcmFuZyBwZWRhZ2FuZyBtZW1pbGlraSAyLDUga2cgZ3VsYSBkYW4gaWEgbWVtYmVsaSBsYWdpIDc1MCBncmFtIGd1bGEuIEJlcmFwYWthaCB0b3RhbCBtYXNzYSBndWxhIHNla2FyYW5nIGRhbGFtIGtpbG9ncmFtIChrZyk/IiwiaGludCI6IjEga2cgPSAxMDAwIGdyYW0uIFNhbWFrYW4gc2F0dWFuIHRlcmxlYmlpZCBkYWh1bHUuIiwiYW5zd2VycyI6W3sidGV4dCI6IjMsMjUga2ciLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiI3NTIsNSBrZyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxMCwwIGtnIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjIsNzUwIGtnIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IktyZXRhIGFwaSBicmFuZ2thdCBwdWt1bCAxMDo0MCBkYW4gdGliYSBwdWt1bCAxMzoxNS4gQmVyYXBhIGxhbWEgZHVyYXNpIHBlcmphbGFuYW4ga2VyZXRhIHRlcnNlYnV0PyIsImhpbnQiOiJIaXR1bmcgc2VsaXNpaCB3YWt0dSBhbnRhcmEgamFtIGJlcmFuZ2thdCBkYW4gdGliYS4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMiBqYW0gMzUgbWVuaXQiLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIzIGphbSAyNSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyIGphbSA3NSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxIGphbSAzNSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJQb21wYSBhaXIgbWVuZ2lzaSB0YW5na2kgNTAwIGxpdGVyIGRhbGFtIDIwIG1lbml0LiBCZXJhcGEgdm9sdW1lIGFpciB5YW5nIGRpaXNpIHBvbXBhIHNlbGFtYSAxIGphbT8iLCJoaW50IjoiQ2FyaSBsYWp1IHBlbmdpc2lhbiBwZXIgbWVuaXQsIGxhbHUga2FsaWthbiA2MC4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMTUwMCBsaXRlciIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjI1MTAwIGxpdGVyIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjUwMCBsaXRlciIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIzMDAwIGxpdGVyIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IkxhbnRhaSBydWFuZ2FuIDggbSB4IDYgbSBha2FuIGRpcGFzYW5naSB1YmluIDQwIGNtIHggNDAgY20uIEJlcmFwYSBqdW1sYWggdWJpbiB5YW5nIGRpYnV0dWhrYW4/IiwiaGludCI6IkJhZ2kgbHVhcyBsYW50YWkgZGVuZ2FuIGx1YXMgc2F0dSB1YmluLiBIYXRpLWhhdGkgZGVuZ2FuIHNhdHVhbiEiLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMzAwIHViaW4iLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIzMCB1YmluIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjEyMDAgdWJpbiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI3NSB1YmluIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IkRhdGEgd2FrdHUgamF0dWggYm9sYTogMiwxIHMsIDIsMyBzLCAyLDAgcywgMiwyIHMsIGRhbiAyLDQgc2FudG9zLiBCZXJhcGFrYWggd2FrdHUgamF0dWggcmF0YS1yYXRhbnlhPyIsImhpbnQiOiJKdW1sYWhrYW4gc2VtdWEgZGF0YSBsYWx1IGJhZ2kgZGVuZ2FuIGJhbnlha255YSBkYXRhLiIsImFuc3dlcnMiOlt7InRleHQiOiIyLDIgcyIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjIsMSBzIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjIsNCBzIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjExLDAgcyIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJIYXNpbCBwZXJoaXR1bmdhbiBsdWFzIGFkYWxhaCAyNCw1NzggY20yLiBKaWthIGRpemVsaWthbiBtZW5qYWRpIHRpZ2EgYW5na2EgcGVudGluZywgaGFzaWxuYWEgYWRhbGFoLi4uIiwiaGludCI6IkxpaGF0IGFuZ2thIGtlLTQgYWdhaSBtZW1idWxhdGthbiBhbmdrYSBrZS0zLiIsImFuc3dlcnMiOlt7InRleHQiOiIyNCw2IGNtMiIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjI0LDUgY20yIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjI0LDU4IGNtMiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyNSwwIGNtMiIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJQZW5ndWt1cmFuIHBhbmphbmcgdG9uZ2thdCBkaWxhcG9ya2FuIHNlYmFnYWkgKDg1LDQgKy8tIDAsMikgY20uIEFwYSBhcnRpbnlhPyIsImhpbnQiOiJTaW1ib2wgKy8tIG1lbnVuSnVrYW4gcmVudGFuZyBrZXRpZGFrcGFzdGlhbi4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiUGFuamFuZ255YSBhbnRhcmEgODUsMiBjbSBkYW4gODUsNiBjbS4iLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiJQYW5qYW5nbnkgcGFzdGlsYWggODUsNCBjbS4iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiUGVuZ3VrdXJhbiBzYWxhaCBzZWJlc2FyIDAsMiBjbS4iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiUGFuamFuZ255YSA4NSwyIGNtIGF0YXUgODUsNiBjbS4iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiSmlrYSAnTWFzc2EgSmVuaXMnIChrZy9tMykgZGlrYWxpa2FuIGRlbmNhbiAnVm9sdW1lJyAobTMpLCBtYWthIGFrYW4gbWVuZ2hhc2lsa2FuIGJlc2FyYW4gYXBhPyIsImhpbnQiOiJQZXJoYXRpa2FuIHNhdHVhbiBhZGFsYWggc2V0ZWxhaCBkaWthbGlrYW4uIiwiYW5zd2VycyI6W3sidGV4dCI6Ik1hc3NhIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiQmVyYXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiTHVhcyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiJLZWNlcGF0YW4iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiTWFuYWthaCBlc3RpbWFzaSBwYWxpbmcgbWFzdWsgYWthbCB1bnR1ayBtYXNzYSBzZWJ1YWggc2VwZWRhIG1vdG9yIHN0YW5kYXI/IiwiaGludCI6IkJhbmRpbmdrYW4gZGVuZ2FuIG1hc3NhIGJlbmRhIHlhbmcgQW5kYSBrZW5hbC4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMTIwIGtnIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiMjAga2ciLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiNTAwIGtnIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjEyMDAgZyIsImNvcnJlY3QiOmZhbHNlfV19XQ==";
+        const encodedQuizData = "W3sicXVlc3Rpb24iOiJQZXJoYXRpa2FuIGhhc2lsIHBlbmd1a3VyYW4gZGlhbWV0ZXIgc2VidWFoIGtlbGVyZW5nIG1lbmdndW5ha2FuIG1pa3JvbWV0ZXIgc2VrcnVwLiBTa2FsYSB1dGFtYSBtZW51bmp1a2thbiA0LDUgbW0gZGFuIHNrYWxhIG5vbml1cyB5YW5nIHNlZ2FyaXMgYWRhbGFoIGFuZ2thIDM1LiBCZXJhcGFrYWggaGFzaWwgcGVuZ3VrdXJhbm55YT8iLCJoaW50IjoiSGFzaWwgPSBTa2FsYSBVdGFtYSArIChTa2FsYSBOb25pdXMgeCAwLDAxIG1tKSIsImFuc3dlcnMiOlt7InRleHQiOiI0LDg1IG1tIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiNCwzNSBtbSIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI4LDAgbW0iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiNCw1MzUgbW0iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiU2VvcmFuZyBwZWRhZ2FuZyBtZW1pbGlraSAyLDUga2cgZ3VsYSBkYW4gaWEgbWVtYmVsaSBsYWdpIDc1MCBncmFtIGd1bGEuIEJlcmFwYWthaCB0b3RhbCBtYXNzYSBndWxhIHNla2FyYW5nIGRhbGFtIGtpbG9ncmFtIChrZyk/IiwiaGludCI6IjEga2cgPSAxMDAwIGdyYW0uIFNhbWFrYW4gc2F0dWFuIHRlcmxlYmlpZCBkYWh1bHUuIiwiYW5zd2VycyI6W3sidGV4dCI6IjIuNzUwIGtnIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjMuMjUga2ciLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiI3NTIuNSBrZyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxMC4wIGtnIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IktyZXRhIGFwaSBicmFuZ2thdCBwdWt1bCAxMDo0MCBkYW4gdGliYSBwdWt1bCAxMzoxNS4gQmVyYXBhIGxhbWEgZHVyYXNpIHBlcmphbGFuYW4ga2VyZXRhIHRlcnNlYnV0PyIsImhpbnQiOiJIaXR1bmcgc2VsaXNpaCB3YWt0dSBhbnRhcmEgamFtIGJlcmFuZ2thdCBkYW4gdGliYS4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMyBqYW0gMjUgbWVuaXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMiBqYW0gNzUgbWVuaXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMiBqYW0gMzUgbWVuaXQiLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIxIGphbSAzNSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJQb21wYSBhaXIgbWVuZ2lzaSB0YW5na2kgNTAwIGxpdGVyIGRhbGFtIDIwIG1lbml0LiBCZXJhcGEgdm9sdW1lIGFpciB5YW5nIGRpaXNpIHBvbXBhIHNlbGFtYSAxIGphbT8iLCJoaW50IjoiQ2FyaSBsYWp1IHBlbmdpc2lhbiBwZXIgbWVuaXQsIGxhbHUga2FsaWthbiA2MC4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMjUwMCBsaXRlciIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI1MDAgbGl0ZXIiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMzAwMCBsaXRlciIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxNTAwIGxpdGVyIiwiY29ycmVjdCI6dHJ1ZX1dfSx7InF1ZXN0aW9uIjoiTGFudGFpIHJ1YW5nYW4gOCBtIHggyzYgbSBha2FuIGRpcGFzYW5naSB1YmluIDQwIGNtIHggNDAgY20uIEJlcmFwYSBqdW1sYWggdWJpbiB5YW5nIGRpYnV0dWhrYW4/IiwiaGludCI6IkJhZ2kgbHVhcyBsYW50YWkgZGVuZ2FuIGx1YXMgc2F0dSB1YmluLiBIYXRpLWhhdGkgZGVuZ2FuIHNhdHVhbiEiLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMzAwIHViaW4iLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIzMCB1YmluIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjEyMDAgdWJpbiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI3NSB1YmluIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IkRhdGEgd2FrdHUgamF0dWggYm9sYTogMiwxIHMsIDIsMyBzLCAyLDAgcywgMiwyIHMsIGRhbiAyLDQgc2FudG9zLiBCZXJhcGFrYWggd2FrdHUgamF0dWggcmF0YS1yYXRhbnlhPyIsImhpbnQiOiJKdW1sYWhrYW4gc2VtdWEgZGF0YSBsYWx1IGJhZ2kgZGVuZ2FuIGJhbnlha255YSBkYXRhLiIsImFuc3dlcnMiOlt7InRleHQiOiIyLDEgcyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyLDIgcyIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjIsNCBzIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjExLDAgcyIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJIYXNpbCBwZXJoaXR1bmdhbiBsdWFzIGFkYWxhaCAyNCw1NzggY20yLiBKaWthIGRpemVsaWthbiBtZW5qYWRpIHRpZ2EgYW5na2EgcGVudGluZywgaGFzaWxuYWEgYWRhbGFoLi4uIiwiaGludCI6IkxpaGF0IGFuZ2thIGtlLTQgYWdhaSBtZW1idWxhdGthbiBhbmdrYSBrZS0zLiIsImFuc3dlcnMiOlt7InRleHQiOiIyNCw1IGNtMiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyNCw1OCBjbTIiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMjUsMCBjbTIiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMjQuNiBjbTIiLCJjb3JyZWN0Ijp0cnVlfV19LHsicXVlc3Rpb24iOiJQZW5ndWt1cmFuIHBhbmphbmcgdG9uZ2thdCBkaWxhcG9ya2FuIHNlYmFnYWkgKDg1LDQgKy8tIDAsMikgY20uIEFwYSBhcnRpbnlhPyIsImhpbnQiOiJTaW1ib2wgKy8tIG1lbnVuSnVrYW4gcmVudGFuZyBrZXRpZGFrcGFzdGlhbi4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiUGFuamFuZ255YSBwYXN0aWxhIDg1LDQgY20uIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IlBlbmd1a3VyYW4gc2FsYWggc2ViZXNhciAwLDIgY20uIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IlBhbmphbmduYSA4NSwyIGNtIGF0YXUgODUsNiBjbS4iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiUGFuamFuZ255YSBhbnRhcmEgODUsMiBjbSBkYW4gODUsNiBjbS4iLCJjb3JyZWN0Ijp0cnVlfV19LHsicXVlc3Rpb24iOiJKaWthICdNYXNzYSBKZW5pcycgKGtnL20zKSBkaWthbGlrYW4gZGVuY2FuICdWb2x1bWUnIChtMyksIG1ha2EgYWthbiBtZW5naGFzaWxrYW4gYmVzYXJhbiBhcGE/IiwiaGludCI6IlBlcmhhdGlrYW4gc2F0dWFuIGFkYWxhaCBzZXRlbGFoIGRpa2FsaWthbi4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiQmVyYXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiTHVhcyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiJNYXNzYSIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IktlY2VwYXRhbiIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJNYW5ha2FoIGVzdGltYXNpIHBhbGluZyBtYXN1ayBha2FsIHVudHVrIG1hc3NhIHNlYnVhaCBzZXBlZGEgbW90b3Igc3RhbmRhcj8iLCJoaW50IjoiQmFuZGluZ2thbiBkZW5nYW4gbWFzc2EgYmVuZGEgeWFuZyBBbmRhIGtlbmFsLiIsImFuc3dlcnMiOlt7InRleHQiOiIyMCBrZyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxMjAga2ciLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiI1MDAga2ciLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMTIwMCBnIiwiY29ycmVjdCI6ZmFsc2V9XX1d";
+        
         let quizData;
         try {
             quizData = JSON.parse(atob(encodedQuizData));
         } catch (e) {
             console.error("Gagal mendekode data kuis:", e);
-            // Fallback atau tampilkan pesan error ke pengguna
             document.body.innerHTML = '<div class="text-center text-red-500 p-8">Gagal memuat data kuis. Silakan hubungi guru Anda.</div>';
         }
-
 
         // --- Game State ---
         let currentQuestionIndex;
@@ -244,10 +257,12 @@
         let userName;
         let userClass;
         let shuffledQuestions;
-        let unsubscribeHofListener = null; // Untuk listener real-time
+        let currentSessionId = null;
+        let unsubscribeHofListener = null;
+        let unsubscribeProgressListener = null;
         
         // --- Functions ---
-        function startQuiz() {
+        async function startQuiz() {
             userName = nameInput.value.trim();
             userClass = classInput.value.trim();
 
@@ -259,24 +274,51 @@
 
             currentQuestionIndex = 0;
             score = 0;
-            shuffledQuestions = [...quizData].sort(() => Math.random() - 0.5);
+            shuffledQuestions = [...quizData]; // Tidak perlu di-shuffle jika jawaban sudah diacak
 
+            // Buat sesi baru untuk progres real-time
+            try {
+                const sessionRef = await addDoc(collection(db, `artifacts/${appId}/public/data/active_sessions`), {
+                    name: userName,
+                    kelas: userClass,
+                    progress: 0,
+                    timestamp: serverTimestamp()
+                });
+                currentSessionId = sessionRef.id;
+            } catch (error) {
+                console.error("Gagal membuat sesi:", error);
+                errorMessage.textContent = 'Gagal memulai sesi. Coba lagi.';
+                return;
+            }
+            
+            progressTrackerContainer.classList.remove('hidden');
             startScreen.classList.add('hidden');
             resultScreen.classList.add('hidden');
             hofScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
 
+            listenToProgress();
             updateScoreDisplay();
-            showQuestion();
+            await showQuestion();
         }
 
-        function showQuestion() {
+        async function showQuestion() {
             resetState();
+            
+            // Update progress di Firestore
+            if (currentSessionId) {
+                const sessionDoc = doc(db, `artifacts/${appId}/public/data/active_sessions`, currentSessionId);
+                await updateDoc(sessionDoc, { progress: currentQuestionIndex + 1 });
+            }
+
             const question = shuffledQuestions[currentQuestionIndex];
             questionText.textContent = question.question;
             hintText.textContent = `Petunjuk: ${question.hint}`;
             
-            question.answers.forEach(answer => {
+            // Acak urutan jawaban setiap kali soal ditampilkan
+            const shuffledAnswers = [...question.answers].sort(() => Math.random() - 0.5);
+
+            shuffledAnswers.forEach(answer => {
                 const button = document.createElement('button');
                 button.innerText = answer.text;
                 button.classList.add('w-full', 'p-4', 'rounded-lg', 'border-2', 'border-gray-500', 'transition-all', 'duration-300', 'hover:bg-gray-700', 'text-lg');
@@ -315,12 +357,12 @@
                 button.disabled = true;
             });
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 currentQuestionIndex++;
                 if (currentQuestionIndex < shuffledQuestions.length) {
-                    showQuestion();
+                    await showQuestion();
                 } else {
-                    showResult();
+                    await showResult();
                 }
             }, 1500);
         }
@@ -336,7 +378,11 @@
         }
 
         async function showResult() {
+            // Hapus sesi dari progress real-time
+            await cleanupSession();
+
             quizScreen.classList.add('hidden');
+            progressTrackerContainer.classList.add('hidden');
             resultScreen.classList.remove('hidden');
             finalScore.textContent = score;
 
@@ -372,17 +418,13 @@
             hofList.innerHTML = '';
             hofList.appendChild(loadingSpinner);
 
-            // Hentikan listener lama jika ada
-            if (unsubscribeHofListener) {
-                unsubscribeHofListener();
-            }
+            if (unsubscribeHofListener) unsubscribeHofListener();
 
             const q = query(collection(db, `artifacts/${appId}/public/data/scores`), orderBy("score", "desc"), limit(10));
             
-            // Gunakan onSnapshot untuk listener real-time
             unsubscribeHofListener = onSnapshot(q, (querySnapshot) => {
                 loadingSpinner.classList.add('hidden');
-                hofList.innerHTML = ''; // Kosongkan list setiap ada update
+                hofList.innerHTML = ''; 
                 
                 if (querySnapshot.empty) {
                     hofList.innerHTML = '<p class="text-center text-gray-400">Belum ada skor. Jadilah yang pertama!</p>';
@@ -419,8 +461,47 @@
             });
         }
         
+        function listenToProgress() {
+            if (unsubscribeProgressListener) unsubscribeProgressListener();
+            
+            const q = query(collection(db, `artifacts/${appId}/public/data/active_sessions`), orderBy("timestamp", "desc"));
+            unsubscribeProgressListener = onSnapshot(q, (snapshot) => {
+                progressTrackerList.innerHTML = '';
+                if (snapshot.empty) {
+                     progressTrackerList.innerHTML = '<p class="text-center text-sm text-gray-400">Menunggu siswa lain...</p>';
+                }
+                snapshot.forEach(doc => {
+                    const session = doc.data();
+                    if (doc.id === currentSessionId) return; // Jangan tampilkan diri sendiri
+
+                    const progressItem = document.createElement('div');
+                    progressItem.classList.add('glass-card', 'p-3', 'rounded-lg');
+                    progressItem.innerHTML = `
+                        <p class="font-bold text-white">${session.name}</p>
+                        <div class="flex items-center gap-2">
+                            <div class="w-full bg-gray-600 rounded-full h-1.5">
+                                <div class="bg-pink-500 h-1.5 rounded-full" style="width: ${session.progress * 10}%"></div>
+                            </div>
+                            <span class="text-xs font-bold">${session.progress}/10</span>
+                        </div>
+                    `;
+                    progressTrackerList.appendChild(progressItem);
+                });
+            });
+        }
+
+        async function cleanupSession() {
+            if (currentSessionId) {
+                await deleteDoc(doc(db, `artifacts/${appId}/public/data/active_sessions`, currentSessionId));
+                currentSessionId = null;
+            }
+            if (unsubscribeProgressListener) {
+                unsubscribeProgressListener();
+                unsubscribeProgressListener = null;
+            }
+        }
+
         function goBackToStart() {
-            // Hentikan listener saat kembali ke menu utama
             if (unsubscribeHofListener) {
                 unsubscribeHofListener();
                 unsubscribeHofListener = null;
@@ -440,6 +521,7 @@
         hofButtonStart.addEventListener('click', showHallOfFame);
         hofButtonResult.addEventListener('click', showHallOfFame);
         backButton.addEventListener('click', goBackToStart);
+        window.addEventListener('beforeunload', cleanupSession);
 
     </script>
 </body>
