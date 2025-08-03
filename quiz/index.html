@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Numerasi Fisika - Neon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles untuk tema neon dan glassmorphism */
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            color: #e0e0e0;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .neon-text {
+            color: #00ffff;
+            text-shadow:
+                0 0 5px #00ffff,
+                0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 40px #00ffff,
+                0 0 80px #00ffff;
+        }
+        
+        .neon-border {
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 10px #00ffff, inset 0 0 10px #00ffff;
+        }
+
+        .neon-button {
+            transition: all 0.3s ease;
+            color: #00ffff;
+        }
+
+        .neon-button:hover {
+            background-color: #00ffff;
+            color: #0f0c29;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .neon-button-pink {
+            border-color: #ff00ff;
+            color: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff, inset 0 0 10px #ff00ff;
+        }
+
+        .neon-button-pink:hover {
+            background-color: #ff00ff;
+            color: #0f0c29;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+
+        .correct-answer {
+            background-color: rgba(0, 255, 0, 0.3) !important;
+            border-color: #00ff00 !important;
+            color: #fff !important;
+            transform: scale(1.05);
+        }
+
+        .wrong-answer {
+            background-color: rgba(255, 0, 0, 0.3) !important;
+            border-color: #ff0000 !important;
+            color: #fff !important;
+            opacity: 0.7;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00ffff;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00bfff;
+        }
+        
+        /* Animasi untuk entri Hall of Fame baru */
+        @keyframes pulse-once {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        .animate-pulse-once {
+          animation: pulse-once 0.5s ease-in-out;
+        }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="w-full max-w-2xl mx-auto">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="glass-card p-8 text-center space-y-6">
+            <h1 class="font-orbitron text-4xl md:text-5xl font-bold neon-text">Kuis Numerasi Fisika</h1>
+            <p class="text-lg text-gray-300">Uji kemampuan numerasi awal Anda sebelum masuk ke dunia pengukuran!</p>
+            <div class="space-y-4">
+                <input id="name-input" type="text" placeholder="Masukkan Nama Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
+                <input id="class-input" type="text" placeholder="Masukkan Kelas Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="start-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Mulai Kuis</button>
+                <button id="hof-button-start" class="w-full sm:w-auto neon-button-pink font-bold py-3 px-8 rounded-lg text-lg">Hall of Fame</button>
+            </div>
+            <p id="error-message" class="text-red-400 h-4"></p>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden glass-card p-6 md:p-8 space-y-6">
+            <div class="flex justify-between items-center">
+                <div id="progress-text" class="font-bold text-lg">Soal 1 / 10</div>
+                <div id="score-text" class="font-bold text-lg neon-text">Skor: 0</div>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 10%"></div>
+            </div>
+            <h2 id="question-text" class="text-2xl font-bold text-center min-h-[100px]"></h2>
+            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Answer buttons will be generated here -->
+            </div>
+             <p id="hint-text" class="text-center text-gray-400 italic h-6"></p>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden glass-card p-8 text-center space-y-6">
+            <h1 class="font-orbitron text-4xl font-bold neon-text">Kuis Selesai!</h1>
+            <p class="text-2xl">Skor Akhir Anda:</p>
+            <p id="final-score" class="font-orbitron text-6xl font-bold neon-text">0</p>
+            <p id="feedback-message" class="text-xl"></p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="retry-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Coba Lagi</button>
+                <button id="hof-button-result" class="w-full sm:w-auto neon-button-pink font-bold py-3 px-8 rounded-lg text-lg">Hall of Fame</button>
+            </div>
+        </div>
+
+        <!-- Hall of Fame Screen -->
+        <div id="hof-screen" class="hidden glass-card p-8 space-y-6">
+            <h1 class="font-orbitron text-4xl font-bold text-center neon-text">Hall of Fame</h1>
+            <div id="hof-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                <!-- Scores will be listed here -->
+                <div id="loading-spinner" class="text-center p-8">
+                    <svg class="animate-spin h-10 w-10 text-cyan-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="mt-4">Memuat data...</p>
+                </div>
+            </div>
+            <div class="text-center">
+                <button id="back-button" class="w-full sm:w-auto neon-button neon-border font-bold py-3 px-8 rounded-lg text-lg">Kembali</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- KONFIGURASI FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPjAixXLCJtRSxDgtWe210nFtiTWrppe4",
+            authDomain: "quiz-32672.firebaseapp.com",
+            projectId: "quiz-32672",
+            storageBucket: "quiz-32672.firebasestorage.app",
+            messagingSenderId: "168006086401",
+            appId: "1:168006086401:web:980837424fcff6bb5fb500"
+        };
+        
+        // --- Inisialisasi Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'quiz-numerasi-fisika';
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const hofScreen = document.getElementById('hof-screen');
+        
+        const nameInput = document.getElementById('name-input');
+        const classInput = document.getElementById('class-input');
+        const startButton = document.getElementById('start-button');
+        const errorMessage = document.getElementById('error-message');
+
+        const questionText = document.getElementById('question-text');
+        const answerButtons = document.getElementById('answer-buttons');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreText = document.getElementById('score-text');
+        const hintText = document.getElementById('hint-text');
+
+        const finalScore = document.getElementById('final-score');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const retryButton = document.getElementById('retry-button');
+        
+        const hofButtonStart = document.getElementById('hof-button-start');
+        const hofButtonResult = document.getElementById('hof-button-result');
+        const hofList = document.getElementById('hof-list');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const backButton = document.getElementById('back-button');
+
+        // --- Quiz Data (Encoded) ---
+        // Data soal dan jawaban disamarkan menggunakan Base64. String ini telah diperbaiki
+        // untuk memastikan tidak ada karakter yang korup.
+        const encodedQuizData = "W3sicXVlc3Rpb24iOiJQZXJoYXRpa2FuIGhhc2lsIHBlbmd1a3VyYW4gZGlhbWV0ZXIgc2VidWFoIGtlbGVyZW5nIG1lbmdndW5ha2FuIG1pa3JvbWV0ZXIgc2VrcnVwLiBTa2FsYSB1dGFtYSBtZW51bmp1a2thbiA0LDUgbW0gZGFuIHNrYWxhIG5vbml1cyB5YW5nIHNlZ2FyaXMgYWRhbGFoIGFuZ2thIDM1LiBCZXJhcGFrYWggaGFzaWwgcGVuZ3VrdXJhbm55YT8iLCJoaW50IjoiSGFzaWwgPSBTa2FsYSBVdGFtYSArIChTa2FsYSBOb25pdXMgeCAwLDAxIG1tKSIsImFuc3dlcnMiOlt7InRleHQiOiI0LDg1IG1tIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiNCwzNSBtbSIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI4LDAgbW0iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiNCw1MzUgbW0iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiU2VvcmFuZyBwZWRhZ2FuZyBtZW1pbGlraSAyLDUga2cgZ3VsYSBkYW4gaWEgbWVtYmVsaSBsYWdpIDc1MCBncmFtIGd1bGEuIEJlcmFwYWthaCB0b3RhbCBtYXNzYSBndWxhIHNla2FyYW5nIGRhbGFtIGtpbG9ncmFtIChrZyk/IiwiaGludCI6IjEga2cgPSAxMDAwIGdyYW0uIFNhbWFrYW4gc2F0dWFuIHRlcmxlYmlpZCBkYWh1bHUuIiwiYW5zd2VycyI6W3sidGV4dCI6IjMsMjUga2ciLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiI3NTIsNSBrZyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxMCwwIGtnIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjIsNzUwIGtnIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IktyZXRhIGFwaSBicmFuZ2thdCBwdWt1bCAxMDo0MCBkYW4gdGliYSBwdWt1bCAxMzoxNS4gQmVyYXBhIGxhbWEgZHVyYXNpIHBlcmphbGFuYW4ga2VyZXRhIHRlcnNlYnV0PyIsImhpbnQiOiJIaXR1bmcgc2VsaXNpaCB3YWt0dSBhbnRhcmEgamFtIGJlcmFuZ2thdCBkYW4gdGliYS4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMiBqYW0gMzUgbWVuaXQiLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIzIGphbSAyNSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyIGphbSA3NSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxIGphbSAzNSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJQb21wYSBhaXIgbWVuZ2lzaSB0YW5na2kgNTAwIGxpdGVyIGRhbGFtIDIwIG1lbml0LiBCZXJhcGEgdm9sdW1lIGFpciB5YW5nIGRpaXNpIHBvbXBhIHNlbGFtYSAxIGphbT8iLCJoaW50IjoiQ2FyaSBsYWp1IHBlbmdpc2lhbiBwZXIgbWVuaXQsIGxhbHUga2FsaWthbiA2MC4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMTUwMCBsaXRlciIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjI1MTAwIGxpdGVyIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjUwMCBsaXRlciIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIzMDAwIGxpdGVyIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IkxhbnRhaSBydWFuZ2FuIDggbSB4IDYgbSBha2FuIGRpcGFzYW5naSB1YmluIDQwIGNtIHggNDAgY20uIEJlcmFwYSBqdW1sYWggdWJpbiB5YW5nIGRpYnV0dWhrYW4/IiwiaGludCI6IkJhZ2kgbHVhcyBsYW50YWkgZGVuZ2FuIGx1YXMgc2F0dSB1YmluLiBIYXRpLWhhdGkgZGVuZ2FuIHNhdHVhbiEiLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMzAwIHViaW4iLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIzMCB1YmluIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjEyMDAgdWJpbiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI3NSB1YmluIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IkRhdGEgd2FrdHUgamF0dWggYm9sYTogMiwxIHMsIDIsMyBzLCAyLDAgcywgMiwyIHMsIGRhbiAyLDQgc2FudG9zLiBCZXJhcGFrYWggd2FrdHUgamF0dWggcmF0YS1yYXRhbnlhPyIsImhpbnQiOiJKdW1sYWhrYW4gc2VtdWEgZGF0YSBsYWx1IGJhZ2kgZGVuZ2FuIGJhbnlha255YSBkYXRhLiIsImFuc3dlcnMiOlt7InRleHQiOiIyLDIgcyIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjIsMSBzIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjIsNCBzIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjExLDAgcyIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJIYXNpbCBwZXJoaXR1bmdhbiBsdWFzIGFkYWxhaCAyNCw1NzggY20yLiBKaWthIGRpemVsaWthbiBtZW5qYWRpIHRpZ2EgYW5na2EgcGVudGluZywgaGFzaWxuYWEgYWRhbGFoLi4uIiwiaGludCI6IkxpaGF0IGFuZ2thIGtlLTQgYWdhaSBtZW1idWxhdGthbiBhbmdrYSBrZS0zLiIsImFuc3dlcnMiOlt7InRleHQiOiIyNCw2IGNtMiIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjI0LDUgY20yIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjI0LDU4IGNtMiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyNSwwIGNtMiIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJQZW5ndWt1cmFuIHBhbmphbmcgdG9uZ2thdCBkaWxhcG9ya2FuIHNlYmFnYWkgKDg1LDQgKy8tIDAsMikgY20uIEFwYSBhcnRpbnlhPyIsImhpbnQiOiJTaW1ib2wgKy8tIG1lbnVuSnVrYW4gcmVudGFuZyBrZXRpZGFrcGFzdGlhbi4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiUGFuamFuZ255YSBhbnRhcmEgODUsMiBjbSBkYW4gODUsNiBjbS4iLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiJQYW5qYW5nbnkgcGFzdGlsYWggODUsNCBjbS4iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiUGVuZ3VrdXJhbiBzYWxhaCBzZWJlc2FyIDAsMiBjbS4iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiUGFuamFuZ255YSA4NSwyIGNtIGF0YXUgODUsNiBjbS4iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiSmlrYSAnTWFzc2EgSmVuaXMnIChrZy9tMykgZGlrYWxpa2FuIGRlbmNhbiAnVm9sdW1lJyAobTMpLCBtYWthIGFrYW4gbWVuZ2hhc2lsa2FuIGJlc2FyYW4gYXBhPyIsImhpbnQiOiJQZXJoYXRpa2FuIHNhdHVhbiBhZGFsYWggc2V0ZWxhaCBkaWthbGlrYW4uIiwiYW5zd2VycyI6W3sidGV4dCI6Ik1hc3NhIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiQmVyYXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiTHVhcyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiJLZWNlcGF0YW4iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiTWFuYWthaCBlc3RpbWFzaSBwYWxpbmcgbWFzdWsgYWthbCB1bnR1ayBtYXNzYSBzZWJ1YWggc2VwZWRhIG1vdG9yIHN0YW5kYXI/IiwiaGludCI6IkJhbmRpbmdrYW4gZGVuZ2FuIG1hc3NhIGJlbmRhIHlhbmcgQW5kYSBrZW5hbC4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMTIwIGtnIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiMjAga2ciLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiNTAwIGtnIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjEyMDAgZyIsImNvcnJlY3QiOmZhbHNlfV19XQ==";
+        let quizData;
+        try {
+            quizData = JSON.parse(atob(encodedQuizData));
+        } catch (e) {
+            console.error("Gagal mendekode data kuis:", e);
+            // Fallback atau tampilkan pesan error ke pengguna
+            document.body.innerHTML = '<div class="text-center text-red-500 p-8">Gagal memuat data kuis. Silakan hubungi guru Anda.</div>';
+        }
+
+
+        // --- Game State ---
+        let currentQuestionIndex;
+        let score;
+        let userName;
+        let userClass;
+        let shuffledQuestions;
+        let unsubscribeHofListener = null; // Untuk listener real-time
+        
+        // --- Functions ---
+        function startQuiz() {
+            userName = nameInput.value.trim();
+            userClass = classInput.value.trim();
+
+            if (userName === '' || userClass === '') {
+                errorMessage.textContent = 'Nama dan Kelas wajib diisi!';
+                return;
+            }
+            errorMessage.textContent = '';
+
+            currentQuestionIndex = 0;
+            score = 0;
+            shuffledQuestions = [...quizData].sort(() => Math.random() - 0.5);
+
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            hofScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            updateScoreDisplay();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const question = shuffledQuestions[currentQuestionIndex];
+            questionText.textContent = question.question;
+            hintText.textContent = `Petunjuk: ${question.hint}`;
+            
+            question.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerText = answer.text;
+                button.classList.add('w-full', 'p-4', 'rounded-lg', 'border-2', 'border-gray-500', 'transition-all', 'duration-300', 'hover:bg-gray-700', 'text-lg');
+                if (answer.correct) {
+                    button.dataset.correct = answer.correct;
+                }
+                button.addEventListener('click', selectAnswer);
+                answerButtons.appendChild(button);
+            });
+
+            updateProgress();
+        }
+
+        function resetState() {
+            while (answerButtons.firstChild) {
+                answerButtons.removeChild(answerButtons.firstChild);
+            }
+            hintText.textContent = '';
+        }
+
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const correct = selectedButton.dataset.correct === 'true';
+
+            if (correct) {
+                score += 10;
+                updateScoreDisplay();
+            }
+
+            Array.from(answerButtons.children).forEach(button => {
+                if (button.dataset.correct === 'true') {
+                    button.classList.add('correct-answer');
+                } else {
+                    button.classList.add('wrong-answer');
+                }
+                button.disabled = true;
+            });
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < shuffledQuestions.length) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1500);
+        }
+
+        function updateProgress() {
+            progressText.textContent = `Soal ${currentQuestionIndex + 1} / ${shuffledQuestions.length}`;
+            const progressPercentage = ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+        
+        function updateScoreDisplay() {
+            scoreText.textContent = `Skor: ${score}`;
+        }
+
+        async function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            finalScore.textContent = score;
+
+            let feedback = '';
+            if (score >= 80) {
+                feedback = 'Luar biasa! Kemampuan numerasimu sangat baik!';
+            } else if (score >= 60) {
+                feedback = 'Bagus! Kamu punya dasar yang kuat.';
+            } else if (score >= 40) {
+                feedback = 'Cukup baik! Terus berlatih ya.';
+            } else {
+                feedback = 'Jangan menyerah, ayo coba lagi untuk lebih paham!';
+            }
+            feedbackMessage.textContent = feedback;
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/public/data/scores`), {
+                    name: userName,
+                    kelas: userClass,
+                    score: score,
+                    timestamp: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+        
+        function showHallOfFame() {
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            hofScreen.classList.remove('hidden');
+            loadingSpinner.classList.remove('hidden');
+            hofList.innerHTML = '';
+            hofList.appendChild(loadingSpinner);
+
+            // Hentikan listener lama jika ada
+            if (unsubscribeHofListener) {
+                unsubscribeHofListener();
+            }
+
+            const q = query(collection(db, `artifacts/${appId}/public/data/scores`), orderBy("score", "desc"), limit(10));
+            
+            // Gunakan onSnapshot untuk listener real-time
+            unsubscribeHofListener = onSnapshot(q, (querySnapshot) => {
+                loadingSpinner.classList.add('hidden');
+                hofList.innerHTML = ''; // Kosongkan list setiap ada update
+                
+                if (querySnapshot.empty) {
+                    hofList.innerHTML = '<p class="text-center text-gray-400">Belum ada skor. Jadilah yang pertama!</p>';
+                    return;
+                }
+
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const hofEntry = document.createElement('div');
+                    let rankColor = 'text-gray-400';
+                    if (rank === 1) rankColor = 'text-yellow-400';
+                    if (rank === 2) rankColor = 'text-gray-300';
+                    if (rank === 3) rankColor = 'text-yellow-600';
+
+                    hofEntry.classList.add('glass-card', 'p-4', 'rounded-lg', 'flex', 'items-center', 'justify-between', 'gap-4', 'animate-pulse-once');
+                    hofEntry.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <span class="font-orbitron text-2xl font-bold w-8 text-center ${rankColor}">#${rank}</span>
+                            <div>
+                                <p class="font-bold text-lg text-white">${data.name}</p>
+                                <p class="text-sm text-gray-300">${data.kelas}</p>
+                            </div>
+                        </div>
+                        <span class="font-orbitron text-3xl font-bold neon-text">${data.score}</span>
+                    `;
+                    hofList.appendChild(hofEntry);
+                    rank++;
+                });
+            }, (error) => {
+                console.error("Error listening to scores: ", error);
+                loadingSpinner.classList.add('hidden');
+                hofList.innerHTML = '<p class="text-center text-red-400">Gagal memuat data. Silakan coba lagi.</p>';
+            });
+        }
+        
+        function goBackToStart() {
+            // Hentikan listener saat kembali ke menu utama
+            if (unsubscribeHofListener) {
+                unsubscribeHofListener();
+                unsubscribeHofListener = null;
+            }
+            hofScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startQuiz);
+        retryButton.addEventListener('click', () => {
+             resultScreen.classList.add('hidden');
+             startScreen.classList.remove('hidden');
+             nameInput.value = '';
+             classInput.value = '';
+        });
+        hofButtonStart.addEventListener('click', showHallOfFame);
+        hofButtonResult.addEventListener('click', showHallOfFame);
+        backButton.addEventListener('click', goBackToStart);
+
+    </script>
+</body>
+</html>
