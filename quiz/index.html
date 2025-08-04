@@ -226,11 +226,11 @@
             <!-- Quiz Screen -->
             <div id="quiz-screen" class="hidden glass-card p-6 md:p-8 space-y-6">
                 <div class="flex justify-between items-center">
-                    <div id="progress-text" class="font-bold text-lg">Soal 1 / 10</div>
+                    <div id="progress-text" class="font-bold text-lg">Soal 1 / 15</div>
                     <div id="score-text" class="font-bold text-lg neon-text">Skor: 0</div>
                 </div>
                 <div class="w-full bg-gray-700 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 10%"></div>
+                    <div id="progress-bar" class="bg-cyan-400 h-2.5 rounded-full" style="width: 0%"></div>
                 </div>
                 <h2 id="question-text" class="text-2xl font-bold text-center min-h-[100px]"></h2>
                 <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -274,7 +274,7 @@
     <script type="module">
         // Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, serverTimestamp, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, serverTimestamp, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
@@ -321,16 +321,24 @@
         const loadingSpinner = document.getElementById('loading-spinner');
         const backButton = document.getElementById('back-button');
 
-        // --- Quiz Data (Encoded) ---
-        const encodedQuizData = "W3sicXVlc3Rpb24iOiJQZXJoYXRpa2FuIGhhc2lsIHBlbmd1a3VyYW4gZGlhbWV0ZXIgc2VidWFoIGtlbGVyZW5nIG1lbmdndW5ha2FuIG1pa3JvbWV0ZXIgc2VrcnVwLiBTa2FsYSB1dGFtYSBtZW51bmp1a2thbiA0LDUgbW0gZGFuIHNrYWxhIG5vbml1cyB5YW5nIHNlZ2FyaXMgYWRhbGFoIGFuZ2thIDM1LiBCZXJhcGFrYWggaGFzaWwgcGVuZ3VrdXJhbm55YT8iLCJoaW50IjoiSGFzaWwgPSBTa2FsYSBVdGFtYSArIChTa2FsYSBOb25pdXMgeCAwLDAxIG1tKSIsImFuc3dlcnMiOlt7InRleHQiOiI0LDg1IG1tIiwiY29ycmVjdCI6dHJ1ZX0seyJ0ZXh0IjoiNCwzNSBtbSIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI4LDAgbW0iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiNCw1MzUgbW0iLCJjb3JyZWN0IjpmYWxzZX1dfSx7InF1ZXN0aW9uIjoiU2VvcmFuZyBwZWRhZ2FuZyBtZW1pbGlraSAyLDUga2cgZ3VsYSBkYW4gaWEgbWVtYmVsaSBsYWdpIDc1MCBncmFtIGd1bGEuIEJlcmFwYWthaCB0b3RhbCBtYXNzYSBndWxhIHNla2FyYW5nIGRhbGFtIGtpbG9ncmFtIChrZyk/IiwiaGludCI6IjEga2cgPSAxMDAwIGdyYW0uIFNhbWFrYW4gc2F0dWFuIHRlcmxlYmlpZCBkYWh1bHUuIiwiYW5zd2VycyI6W3sidGV4dCI6IjIuNzUwIGtnIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjMuMjUga2ciLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiI3NTIuNSBrZyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxMC4wIGtnIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IktyZXRhIGFwaSBicmFuZ2thdCBwdWt1bCAxMDo0MCBkYW4gdGliYSBwdWt1bCAxMzoxNS4gQmVyYXBhIGxhbWEgZHVyYXNpIHBlcmphbGFuYW4ga2VyZXRhIHRlcnNlYnV0PyIsImhpbnQiOiJIaXR1bmcgc2VsaXNpaCB3YWt0dSBhbnRhcmEgamFtIGJlcmFuZ2thdCBkYW4gdGliYS4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMyBqYW0gMjUgbWVuaXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMiBqYW0gNzUgbWVuaXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMiBqYW0gMzUgbWVuaXQiLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIxIGphbSAzNSBtZW5pdCIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJQb21wYSBhaXIgbWVuZ2lzaSB0YW5na2kgNTAwIGxpdGVyIGRhbGFtIDIwIG1lbml0LiBCZXJhcGEgdm9sdW1lIGFpciB5YW5nIGRpaXNpIHBvbXBhIHNlbGFtYSAxIGphbT8iLCJoaW50IjoiQ2FyaSBsYWp1IHBlbmdpc2lhbiBwZXIgbWVuaXQsIGxhbHUga2FsaWthbiA2MC4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMjUwMCBsaXRlciIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI1MDAgbGl0ZXIiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMzAwMCBsaXRlciIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxNTAwIGxpdGVyIiwiY29ycmVjdCI6dHJ1ZX1dfSx7InF1ZXN0aW9uIjoiTGFudGFpIHJ1YW5nYW4gOCBtIHggyzYgbSBha2FuIGRpcGFzYW5naSB1YmluIDQwIGNtIHggNDAgY20uIEJlcmFwYSBqdW1sYWggdWJpbiB5YW5nIGRpYnV0dWhrYW4/IiwiaGludCI6IkJhZ2kgbHVhcyBsYW50YWkgZGVuZ2FuIGx1YXMgc2F0dSB1YmluLiBIYXRpLWhhdGkgZGVuZ2FuIHNhdHVhbiEiLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiMzAwIHViaW4iLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiIzMCB1YmluIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjEyMDAgdWJpbiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiI3NSB1YmluIiwiY29ycmVjdCI6ZmFsc2V9XX0seyJxdWVzdGlvbiI6IkRhdGEgd2FrdHUgamF0dWggYm9sYTogMiwxIHMsIDIsMyBzLCAyLDAgcywgMiwyIHMsIGRhbiAyLDQgc2FudG9zLiBCZXJhcGFrYWggd2FrdHUgamF0dWggcmF0YS1yYXRhbnlhPyIsImhpbnQiOiJKdW1sYWhrYW4gc2VtdWEgZGF0YSBsYWx1IGJhZ2kgZGVuZ2FuIGJhbnlha255YSBkYXRhLiIsImFuc3dlcnMiOlt7InRleHQiOiIyLDEgcyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyLDIgcyIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IjIsNCBzIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IjExLDAgcyIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJIYXNpbCBwZXJoaXR1bmdhbiBsdWFzIGFkYWxhaCAyNCw1NzggY20yLiBKaWthIGRpemVsaWthbiBtZW5qYWRpIHRpZ2EgYW5na2EgcGVudGluZywgaGFzaWxuYWEgYWRhbGFoLi4uIiwiaGludCI6IkxpaGF0IGFuZ2thIGtlLTQgYWdhaSBtZW1idWxhdGthbiBhbmdrYSBrZS0zLiIsImFuc3dlcnMiOlt7InRleHQiOiIyNCw1IGNtMiIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIyNCw1OCBjbTIiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMjUsMCBjbTIiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMjQuNiBjbTIiLCJjb3JyZWN0Ijp0cnVlfV19LHsicXVlc3Rpb24iOiJQZW5ndWt1cmFuIHBhbmphbmcgdG9uZ2thdCBkaWxhcG9ya2FuIHNlYmFnYWkgKDg1LDQgKy8tIDAsMikgY20uIEFwYSBhcnRpbnlhPyIsImhpbnQiOiJTaW1ib2wgKy8tIG1lbnVuSnVrYW4gcmVudGFuZyBrZXRpZGFrcGFzdGlhbi4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiUGFuamFuZ255YSBwYXN0aWxhIDg1LDQgY20uIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IlBlbmd1a3VyYW4gc2FsYWggc2ViZXNhciAwLDIgY20uIiwiY29ycmVjdCI6ZmFsc2V9LHsidGV4dCI6IlBhbmphbmduYSA4NSwyIGNtIGF0YXUgODUsNiBjbS4iLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiUGFuamFuZ255YSBhbnRhcmEgODUsMiBjbSBkYW4gODUsNiBjbS4iLCJjb3JyZWN0Ijp0cnVlfV19LHsicXVlc3Rpb24iOiJKaWthICdNYXNzYSBKZW5pcycgKGtnL20zKSBkaWthbGlrYW4gZGVuY2FuICdWb2x1bWUnIChtMyksIG1ha2EgYWthbiBtZW5naGFzaWxrYW4gYmVzYXJhbiBhcGE/IiwiaGludCI6IlBlcmhhdGlrYW4gc2F0dWFuIGFkYWxhaCBzZXRlbGFoIGRpa2FsaWthbi4iLCJhbnN3ZXJzIjpbeyJ0ZXh0IjoiQmVyYXQiLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiTHVhcyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiJNYXNzYSIsImNvcnJlY3QiOnRydWV9LHsidGV4dCI6IktlY2VwYXRhbiIsImNvcnJlY3QiOmZhbHNlfV19LHsicXVlc3Rpb24iOiJNYW5ha2FoIGVzdGltYXNpIHBhbGluZyBtYXN1ayBha2FsIHVudHVrIG1hc3NhIHNlYnVhaCBzZXBlZGEgbW90b3Igc3RhbmRhcj8iLCJoaW50IjoiQmFuZGluZ2thbiBkZW5nYW4gbWFzc2EgYmVuZGEgeWFuZyBBbmRhIGtlbmFsLiIsImFuc3dlcnMiOlt7InRleHQiOiIyMCBrZyIsImNvcnJlY3QiOmZhbHNlfSx7InRleHQiOiIxMjAga2ciLCJjb3JyZWN0Ijp0cnVlfSx7InRleHQiOiI1MDAga2ciLCJjb3JyZWN0IjpmYWxzZX0seyJ0ZXh0IjoiMTIwMCBnIiwiY29ycmVjdCI6ZmFsc2V9XX1d";
-        
-        let quizData;
-        try {
-            quizData = JSON.parse(atob(encodedQuizData));
-        } catch (e) {
-            console.error("Gagal mendekode data kuis:", e);
-            document.body.innerHTML = '<div class="text-center text-red-500 p-8">Gagal memuat data kuis. Silakan hubungi guru Anda.</div>';
-        }
+        // --- Quiz Data (Plain JSON) ---
+        const quizData = [
+            { question: "Perhatikan hasil pengukuran diameter sebuah kelereng menggunakan mikrometer sekrup. Skala utama menunjukkan 4,5 mm dan skala nonius yang segaris adalah angka 35. Berapakah hasil pengukurannya?", hint: "Hasil = Skala Utama + (Skala Nonius x 0,01 mm)", answers: [{ text: "4,85 mm", correct: true },{ text: "4,35 mm", correct: false },{ text: "8,0 mm", correct: false },{ text: "4,535 mm", correct: false }]},
+            { question: "Seorang pedagang memiliki 2,5 kg gula dan ia membeli lagi 750 gram gula. Berapakah total massa gula sekarang dalam kilogram (kg)?", hint: "1 kg = 1000 gram. Samakan satuan terlebih dahulu.", answers: [{ text: "2.750 kg", correct: false },{ text: "3.25 kg", correct: true },{ text: "752.5 kg", correct: false },{ text: "10.0 kg", correct: false }]},
+            { question: "Kereta api berangkat pukul 10:40 dan tiba pukul 13:15. Berapa lama durasi perjalanan kereta tersebut?", hint: "Hitung selisih waktu antara jam berangkat dan tiba.", answers: [{ text: "3 jam 25 menit", correct: false },{ text: "2 jam 75 menit", correct: false },{ text: "2 jam 35 menit", correct: true },{ text: "1 jam 35 menit", correct: false }]},
+            { question: "Pompa air mengisi tangki 500 liter dalam 20 menit. Berapa volume air yang diisi pompa selama 1 jam?", hint: "Cari laju pengisian per menit, lalu kalikan 60.", answers: [{ text: "2500 liter", correct: false },{ text: "500 liter", correct: false },{ text: "3000 liter", correct: false },{ text: "1500 liter", correct: true }]},
+            { question: "Lantai ruangan 8 m x 6 m akan dipasangi ubin 40 cm x 40 cm. Berapa jumlah ubin yang dibutuhkan?", hint: "Bagi luas lantai dengan luas satu ubin. Hati-hati dengan satuan!", answers: [{ text: "300 ubin", correct: true },{ text: "30 ubin", correct: false },{ text: "1200 ubin", correct: false },{ text: "75 ubin", correct: false }]},
+            { question: "Data waktu jatuh bola: 2,1 s; 2,3 s; 2,0 s; 2,2 s; dan 2,4 s. Berapakah waktu jatuh rata-ratanya?", hint: "Jumlahkan semua data lalu bagi dengan banyaknya data.", answers: [{ text: "2,1 s", correct: false },{ text: "2,2 s", correct: true },{ text: "2,4 s", correct: false },{ text: "11,0 s", correct: false }]},
+            { question: "Hasil perhitungan luas adalah 24,578 cm². Jika dibulatkan menjadi tiga angka penting, hasilnya adalah...", hint: "Lihat angka ke-4 untuk membulatkan angka ke-3.", answers: [{ text: "24,5 cm²", correct: false },{ text: "24,58 cm²", correct: false },{ text: "25,0 cm²", correct: false },{ text: "24,6 cm²", correct: true }]},
+            { question: "Pengukuran panjang tongkat dilaporkan sebagai (85,4 +/- 0,2) cm. Apa artinya?", hint: "Simbol +/- menunjukkan rentang ketidakpastian.", answers: [{ text: "Panjangnya pastilah 85,4 cm.", correct: false },{ text: "Pengukuran salah sebesar 0,2 cm.", correct: false },{ text: "Panjangnya 85,2 cm atau 85,6 cm.", correct: false },{ text: "Panjangnya antara 85,2 cm dan 85,6 cm.", correct: true }]},
+            { question: "Jika 'Massa Jenis' (kg/m³) dikalikan dengan 'Volume' (m³), akan menghasilkan besaran apa?", hint: "Perhatikan satuan akhirnya setelah dikalikan.", answers: [{ text: "Berat", correct: false },{ text: "Luas", correct: false },{ text: "Massa", correct: true },{ text: "Kecepatan", correct: false }]},
+            { question: "Manakah estimasi paling masuk akal untuk massa sebuah sepeda motor standar?", hint: "Bandingkan dengan massa benda yang Anda kenal.", answers: [{ text: "20 kg", correct: false },{ text: "120 kg", correct: true },{ text: "500 kg", correct: false },{ text: "1200 g", correct: false }]},
+            { question: "Seorang siswa menyambung dua utas tali. Panjang tali pertama adalah 2 1/2 meter dan tali kedua adalah 3/4 meter. Berapa total panjang kedua tali setelah disambung?", hint: "Samakan penyebut pecahan terlebih dahulu sebelum menjumlahkan.", answers: [{ text: "3 1/4 meter", correct: true },{ text: "2 4/6 meter", correct: false },{ text: "3 meter", correct: false },{ text: "2 3/8 meter", correct: false }]},
+            { question: "Sebuah papan kayu memiliki panjang total 4 1/2 meter. Jika papan tersebut dipotong sepanjang 1 3/4 meter, berapakah sisa panjang papan kayu tersebut?", hint: "Ubah pecahan campuran menjadi pecahan biasa untuk memudahkan pengurangan.", answers: [{ text: "3 1/4 meter", correct: false },{ text: "3 meter", correct: false },{ text: "2 3/4 meter", correct: true },{ text: "2 1/2 meter", correct: false }]},
+            { question: "Sebuah lantai keramik berbentuk persegi panjang memiliki ukuran panjang 1/2 meter dan lebar 1/4 meter. Berapakah luas satu buah keramik tersebut?", hint: "Luas = Panjang x Lebar. Ingat cara mengalikan pecahan.", answers: [{ text: "1/8 m²", correct: true },{ text: "2/6 m²", correct: false },{ text: "3/4 m²", correct: false },{ text: "1/6 m²", correct: false }]},
+            { question: "Sebuah mobil bergerak menempuh jarak 200 kilometer (km) dalam waktu 4 jam (jam). Jika kelajuan adalah hasil bagi antara 'jarak' dan 'waktu', maka satuan dari kelajuan mobil tersebut adalah...", hint: "Bagilah satuan jarak (km) dengan satuan waktu (jam).", answers: [{ text: "km", correct: false },{ text: "jam/km", correct: false },{ text: "km/jam", correct: true },{ text: "km.jam", correct: false }]},
+            { question: "Sebuah benda memiliki massa 600 gram (g) dan menempati ruang dengan volume 50 sentimeter kubik (cm³). Jika massa jenis adalah hasil bagi antara 'massa' dan 'volume', maka satuan dari massa jenis benda tersebut adalah...", hint: "Bagilah satuan massa (g) dengan satuan volume (cm³).", answers: [{ text: "g/cm³", correct: true },{ text: "g.cm³", correct: false },{ text: "cm³/g", correct: false },{ text: "g.cm", correct: false }]}
+        ];
 
         // --- Game State ---
         let currentQuestionIndex;
@@ -345,7 +353,7 @@
         // --- Functions ---
         async function startQuiz() {
             userName = nameInput.value.trim();
-            userClass = classInput.value.trim();
+            userClass = classInput.value; // Mengambil nilai dari dropdown
 
             if (userName === '' || userClass === '') {
                 errorMessage.textContent = 'Nama dan Kelas wajib diisi!';
@@ -355,9 +363,8 @@
 
             currentQuestionIndex = 0;
             score = 0;
-            shuffledQuestions = [...quizData]; // Tidak perlu di-shuffle jika jawaban sudah diacak
+            shuffledQuestions = [...quizData];
 
-            // Buat sesi baru untuk progres real-time
             try {
                 const sessionRef = await addDoc(collection(db, `artifacts/${appId}/public/data/active_sessions`), {
                     name: userName,
@@ -386,7 +393,6 @@
         async function showQuestion() {
             resetState();
             
-            // Update progress di Firestore
             if (currentSessionId) {
                 const sessionDoc = doc(db, `artifacts/${appId}/public/data/active_sessions`, currentSessionId);
                 await updateDoc(sessionDoc, { progress: currentQuestionIndex + 1 });
@@ -396,7 +402,6 @@
             questionText.textContent = question.question;
             hintText.textContent = `Petunjuk: ${question.hint}`;
             
-            // Acak urutan jawaban setiap kali soal ditampilkan
             const shuffledAnswers = [...question.answers].sort(() => Math.random() - 0.5);
 
             shuffledAnswers.forEach(answer => {
@@ -459,7 +464,6 @@
         }
 
         async function showResult() {
-            // Hapus sesi dari progress real-time
             await cleanupSession();
 
             quizScreen.classList.add('hidden');
@@ -468,11 +472,11 @@
             finalScore.textContent = score;
 
             let feedback = '';
-            if (score >= 80) {
+            if (score >= 120) { // Disesuaikan untuk 15 soal (80%)
                 feedback = 'Luar biasa! Kemampuan numerasimu sangat baik!';
-            } else if (score >= 60) {
+            } else if (score >= 90) { // 60%
                 feedback = 'Bagus! Kamu punya dasar yang kuat.';
-            } else if (score >= 40) {
+            } else if (score >= 60) { // 40%
                 feedback = 'Cukup baik! Terus berlatih ya.';
             } else {
                 feedback = 'Jangan menyerah, ayo coba lagi untuk lebih paham!';
@@ -501,7 +505,7 @@
 
             if (unsubscribeHofListener) unsubscribeHofListener();
 
-            const q = query(collection(db, `artifacts/${appId}/public/data/scores`), orderBy("score", "desc"), limit(10));
+            const q = query(collection(db, `artifacts/${appId}/public/data/scores`), orderBy("score", "desc"));
             
             unsubscribeHofListener = onSnapshot(q, (querySnapshot) => {
                 loadingSpinner.classList.add('hidden');
@@ -553,7 +557,7 @@
                 }
                 snapshot.forEach(doc => {
                     const session = doc.data();
-                    if (doc.id === currentSessionId) return; // Jangan tampilkan diri sendiri
+                    if (doc.id === currentSessionId) return;
 
                     const progressItem = document.createElement('div');
                     progressItem.classList.add('glass-card', 'p-3', 'rounded-lg');
@@ -561,9 +565,9 @@
                         <p class="font-bold text-white">${session.name}</p>
                         <div class="flex items-center gap-2">
                             <div class="w-full bg-gray-600 rounded-full h-1.5">
-                                <div class="bg-pink-500 h-1.5 rounded-full" style="width: ${session.progress * 10}%"></div>
+                                <div class="bg-pink-500 h-1.5 rounded-full" style="width: ${(session.progress / shuffledQuestions.length) * 100}%"></div>
                             </div>
-                            <span class="text-xs font-bold">${session.progress}/10</span>
+                            <span class="text-xs font-bold">${session.progress}/${shuffledQuestions.length}</span>
                         </div>
                     `;
                     progressTrackerList.appendChild(progressItem);
