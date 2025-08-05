@@ -195,7 +195,7 @@
                 <div class="grid grid-cols-1 gap-6">
                     <!-- Chart -->
                     <div class="glass-card p-4 rounded-lg">
-                         <h3 class="text-sm font-medium text-gray-400 mb-2">Tingkat Pengumpulan per Kelas</h3>
+                         <h3 class="text-sm font-medium text-gray-400 mb-2">Tingkat Pengumpulan Tugas Terbaru per Kelas</h3>
                          <div class="relative h-56 md:h-64">
                             <canvas id="submissionChart"></canvas>
                          </div>
@@ -320,24 +320,50 @@
                     <div id="monitoring-section" class="p-4 border-t border-white/10">
                         <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
                             <h4 class="text-lg font-semibold text-white">Data Pengumpulan</h4>
-                            <div class="flex gap-4 items-center">
+                            <div class="flex flex-wrap gap-4 items-center">
+                                <!-- NEW FEATURE: Class and Task Filter Dropdowns -->
+                                <div class="relative">
+                                    <select id="class-filter-select" class="w-full md:w-auto p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                        <option value="semua" class="bg-gray-800">Semua Kelas</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <select id="task-filter-select" class="w-full md:w-auto p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                        <option value="semua" class="bg-gray-800">Semua Tugas</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
                                 <input id="search-submission-input" type="text" placeholder="Cari nama siswa..." class="p-2 rounded-lg glass-input text-white">
-                                <button id="download-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-green-700 transition-all">
-                                    <i data-lucide="download" class="w-4 h-4"></i>
-                                    Unduh CSV
-                                </button>
                             </div>
                         </div>
 
-                        <!-- NEW FEATURE: Filter Buttons -->
-                        <div id="filter-container" class="flex flex-wrap gap-2 mb-6">
-                            <button data-filter="semua" class="filter-btn active px-3 py-1.5 text-sm rounded-lg transition-colors">Semua</button>
-                            <button data-filter="belum_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Belum Diperiksa</button>
-                            <button data-filter="sudah_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Sudah Diperiksa</button>
-                            <button data-filter="terlambat" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Terlambat</button>
+                        <!-- Status Filter Buttons -->
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <div id="filter-container" class="flex flex-wrap gap-2">
+                                <button data-filter="semua" class="filter-btn active px-3 py-1.5 text-sm rounded-lg transition-colors">Semua</button>
+                                <button data-filter="belum_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Belum Diperiksa</button>
+                                <button data-filter="sudah_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Sudah Diperiksa</button>
+                                <button data-filter="terlambat" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Terlambat</button>
+                            </div>
+                            <div class="flex-grow"></div>
+                            <!-- NEW FEATURE: Download Buttons -->
+                            <div class="flex flex-wrap gap-2">
+                                <button id="download-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-green-700 transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Unduh Data Filter
+                                </button>
+                                <button id="download-rekap-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-purple-600 hover:bg-purple-700 transition-all">
+                                    <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                                    Unduh Rekap Kemajuan
+                                </button>
+                            </div>
                         </div>
-                        <!-- END NEW FEATURE -->
-
+                        
                         <!-- Bulk Grading Section -->
                         <div id="bulk-grade-section" class="mb-6 p-4 rounded-lg glass-card space-y-3">
                             <h5 class="font-semibold text-white">Mode Penilaian Cepat</h5>
@@ -372,11 +398,12 @@
                                         <th class="p-4">Tugas</th>
                                         <th class="p-4">Status / Nilai</th>
                                         <th class="p-4">Keterangan</th>
+                                        <th class="p-4">Waktu Kumpul</th>
                                         <th class="p-4">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="monitoring-table-body">
-                                   <tr><td colspan="7" class="text-center p-8 text-gray-400">Belum ada tugas yang dikumpulkan.</td></tr>
+                                   <tr><td colspan="8" class="text-center p-8 text-gray-400">Belum ada tugas yang dikumpulkan.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -395,6 +422,41 @@
                     </div>
                 </div>
             </div>
+
+            <!-- NEW FEATURE: Data Cleanup Section -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Pembersihan Data</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10 space-y-4">
+                        <p class="text-sm text-gray-400">Gunakan fitur ini untuk mencari dan menghapus data pengumpulan siswa yang tugasnya sudah tidak ada lagi (terhapus).</p>
+                        <button id="find-orphaned-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-blue-600 hover:bg-blue-700 transition-all">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            Cari Data Pengumpulan Terhapus
+                        </button>
+                        <div id="orphaned-results-container" class="hidden">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-md font-semibold text-white">Hasil Pencarian:</h4>
+                                <button id="delete-selected-orphaned-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    Hapus yang Dipilih
+                                </button>
+                            </div>
+                            <div class="p-3 rounded-lg glass-input">
+                                <label class="flex items-center gap-3 pb-2 mb-2 border-b border-white/10">
+                                    <input type="checkbox" id="select-all-orphaned-checkbox" class="form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">
+                                    <span class="text-sm font-semibold">Pilih Semua</span>
+                                </label>
+                                <div id="orphaned-list" class="space-y-2 max-h-60 overflow-y-auto">
+                                    <!-- Orphaned data will be listed here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
 
@@ -402,8 +464,8 @@
         <div>
             <h2 class="text-2xl font-bold mb-6 text-white flex items-center gap-3"><i data-lucide="list-checks" class="text-blue-400"></i> Daftar Tugas Tersedia</h2>
             <div id="daftar-tugas-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Task cards will be injected here -->
-                <p id="loading-text" class="text-gray-400">Memuat tugas...</p>
+                <!-- Task cards and expired dropdown will be injected here -->
+                <p class="text-gray-400 col-span-full">Memuat tugas...</p>
             </div>
         </div>
 
@@ -553,6 +615,14 @@
         const notificationBadge = document.getElementById('notification-badge');
         const searchSubmissionInput = document.getElementById('search-submission-input');
         const filterContainer = document.getElementById('filter-container');
+        const classFilterSelect = document.getElementById('class-filter-select');
+        const taskFilterSelect = document.getElementById('task-filter-select');
+        const findOrphanedBtn = document.getElementById('find-orphaned-btn');
+        const orphanedResultsContainer = document.getElementById('orphaned-results-container');
+        const orphanedList = document.getElementById('orphaned-list');
+        const deleteSelectedOrphanedBtn = document.getElementById('delete-selected-orphaned-btn');
+        const selectAllOrphanedCheckbox = document.getElementById('select-all-orphaned-checkbox');
+        const downloadRekapCsvBtn = document.getElementById('download-rekap-csv-btn');
 
         // State Cache
         let allTasks = {};
@@ -569,7 +639,9 @@
         const itemsPerPage = 20;
         let materiCurrentPage = 1;
         const materiItemsPerPage = 5;
-        let currentFilter = 'semua'; // NEW: State for the active filter
+        let currentStatusFilter = 'semua';
+        let currentClassFilter = 'semua';
+        let currentTaskFilter = 'semua';
 
         function safeCreateIcons() {
             if (typeof lucide !== 'undefined') {
@@ -630,7 +702,7 @@
             const quoteElement = document.getElementById('inspirational-quote');
             const prompt = "buat quotes keren yang membahas tentang pendidikan, 10-20 kata, langsung tulis saja tampa embel-embel, tulis langsung disini 1 pilihan yang menurut anda terbaik";
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            const apiKey = "AIzaSyAujsfwXZGSisISNjsvzi84_74vr8SK94g"; // API key is handled by the environment
+            const apiKey = ""; // API key is handled by the environment
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             let response;
@@ -802,46 +874,29 @@
 
         // --- RENDER FUNCTIONS ---
         
-        /**
-         * Renders the list of available tasks.
-         * This function is now called whenever tasks or submissions change.
-         */
-        function renderTugasList() {
-            const taskDocs = Object.values(allTasks).sort((a, b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0));
+        function createTaskCardHtml(tugas) {
+            const deadlineText = formatDeadline(tugas.deadline);
+            const kelasList = tugas.targetKelas || [];
+
+            const targetKelasUpper = kelasList.map(k => k.toUpperCase());
+            const studentsForTask = allStudents.filter(s => targetKelasUpper.includes(s.kelas.toUpperCase()));
+            const submittedStudentNames = allSubmissions
+                .filter(s => s.tugasId === tugas.id)
+                .map(s => s.namaSiswa);
+            const unsubmittedStudents = studentsForTask
+                .filter(s => !submittedStudentNames.includes(s.nama))
+                .map(s => s.nama)
+                .sort();
             
-            if (taskDocs.length === 0) {
-                loadingText.textContent = 'Belum ada tugas yang tersedia.';
-                daftarTugasContainer.innerHTML = '';
-                return;
+            let unsubmittedListHtml = '';
+            if (unsubmittedStudents.length > 0) {
+                unsubmittedListHtml = unsubmittedStudents.map(nama => `<li class="px-3 py-1 text-gray-300">${nama}</li>`).join('');
+            } else {
+                unsubmittedListHtml = '<li class="px-3 py-1 text-gray-400 italic">Semua siswa telah mengumpulkan.</li>';
             }
 
-            loadingText.classList.add('hidden');
-            daftarTugasContainer.innerHTML = '';
-            taskDocs.forEach(tugas => {
-                const deadlineText = formatDeadline(tugas.deadline);
-                const kelasList = tugas.targetKelas || [];
-
-                // Logic to find unsubmitted students
-                const targetKelasUpper = kelasList.map(k => k.toUpperCase());
-                const studentsForTask = allStudents.filter(s => targetKelasUpper.includes(s.kelas.toUpperCase()));
-                const submittedStudentNames = allSubmissions
-                    .filter(s => s.tugasId === tugas.id)
-                    .map(s => s.namaSiswa);
-                const unsubmittedStudents = studentsForTask
-                    .filter(s => !submittedStudentNames.includes(s.nama))
-                    .map(s => s.nama)
-                    .sort();
-                
-                let unsubmittedListHtml = '';
-                if (unsubmittedStudents.length > 0) {
-                    unsubmittedListHtml = unsubmittedStudents.map(nama => `<li class="px-3 py-1 text-gray-300">${nama}</li>`).join('');
-                } else {
-                    unsubmittedListHtml = '<li class="px-3 py-1 text-gray-400 italic">Semua siswa telah mengumpulkan.</li>';
-                }
-
-                const card = document.createElement('div');
-                card.className = 'p-6 rounded-2xl glass-card flex flex-col';
-                card.innerHTML = `
+            return `
+                <div class="p-6 rounded-2xl glass-card flex flex-col">
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-3">
                             <span class="inline-block bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full">${kelasList.join(', ')}</span>
@@ -851,7 +906,6 @@
                         <p class="text-gray-300 text-sm mb-4">${tugas.deskripsi}</p>
                     </div>
                     
-                    <!-- NEW UI: Collapsible list using <details> and <summary> -->
                     <div class="mt-4 border-t border-white/10 pt-4">
                         <details class="group">
                             <summary class="flex justify-between items-center cursor-pointer text-sm text-gray-400 hover:text-white list-none">
@@ -863,12 +917,67 @@
                             </ul>
                         </details>
                     </div>
-                    <!-- END NEW UI -->
 
                     <button data-id="${tugas.id}" data-judul="${tugas.judul}" data-deskripsi="${tugas.deskripsi}" data-kelas="${kelasList.join(',')}" class="mt-4 w-full btn-primary text-white font-semibold py-2 rounded-lg">Kerjakan Tugas</button>
-                `;
-                daftarTugasContainer.appendChild(card);
+                </div>
+            `;
+        }
+
+        function renderTugasList() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            const allTaskArray = Object.values(allTasks).sort((a, b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0));
+
+            const activeTasks = [];
+            const expiredTasks = [];
+
+            allTaskArray.forEach(tugas => {
+                if (tugas.deadline && tugas.deadline.toDate() < now) {
+                    expiredTasks.push(tugas);
+                } else {
+                    activeTasks.push(tugas);
+                }
             });
+
+            daftarTugasContainer.innerHTML = '';
+
+            if (activeTasks.length === 0 && expiredTasks.length === 0) {
+                daftarTugasContainer.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada tugas yang tersedia.</p>';
+                return;
+            }
+
+            if (activeTasks.length > 0) {
+                activeTasks.forEach(tugas => {
+                    const cardHtml = createTaskCardHtml(tugas);
+                    daftarTugasContainer.innerHTML += cardHtml;
+                });
+            } else {
+                 daftarTugasContainer.innerHTML = '<p class="text-gray-400 col-span-full">Tidak ada tugas aktif.</p>';
+            }
+
+            if (expiredTasks.length > 0) {
+                const expiredContainer = document.createElement('div');
+                expiredContainer.className = 'col-span-1 md:col-span-2 lg:col-span-3';
+
+                const expiredTasksHtml = expiredTasks.map(tugas => createTaskCardHtml(tugas)).join('');
+
+                expiredContainer.innerHTML = `
+                    <details class="group glass-card rounded-2xl mt-6">
+                        <summary class="flex justify-between items-center cursor-pointer list-none p-6">
+                            <span class="text-lg font-bold text-white">Tugas yang Sudah Terlewat (${expiredTasks.length})</span>
+                            <i data-lucide="chevron-down" class="w-5 h-5 transition-transform group-open:rotate-180"></i>
+                        </summary>
+                        <div class="p-6 border-t border-white/10">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${expiredTasksHtml}
+                            </div>
+                        </div>
+                    </details>
+                `;
+                daftarTugasContainer.appendChild(expiredContainer);
+            }
+
             safeCreateIcons();
         }
 
@@ -878,7 +987,8 @@
                 allStudents = doc.data().daftar || [];
                 const uniqueClasses = [...new Set(allStudents.map(s => s.kelas.toUpperCase()))].sort();
                 renderKelasCheckboxes(uniqueClasses);
-                renderTugasList(); // Re-render tasks if student list changes
+                renderClassFilterDropdown(uniqueClasses);
+                renderTugasList(); 
                 renderStatistics();
             }
         }, (error) => {
@@ -891,8 +1001,8 @@
             snapshot.docs.forEach(doc => allTasks[doc.id] = { id: doc.id, ...doc.data() });
             
             renderTugasList();
+            renderTaskFilterDropdown(Object.values(allTasks));
 
-            // Render teacher management view
             const taskDocs = snapshot.docs;
             if (taskDocs.length === 0) {
                  manageTasksList.innerHTML = '<p class="text-gray-400">Belum ada tugas yang dibuat.</p>';
@@ -936,13 +1046,11 @@
 
             allSubmissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            // Re-render all relevant parts of the UI
             renderTugasList(); 
             updateNotificationBadge();
             renderMonitoringTable();
             renderStatistics();
             
-            // Check status in the modal if it's open
             if (!submissionModal.classList.contains('hidden')) {
                 const tugasId = document.getElementById('submission-tugas-id').value;
                 const [namaSiswa] = (document.getElementById('student-select').value || '').split('||');
@@ -955,7 +1063,6 @@
         
         const qMateri = query(materiCollection, orderBy('dibuatPada', 'desc'));
         onSnapshot(qMateri, (snapshot) => {
-            // Render materi di homepage
             if (snapshot.empty) {
                 loadingMateriText.textContent = 'Belum ada materi yang tersedia.';
                 materiContainer.innerHTML = '<p class="text-gray-400">Belum ada materi yang tersedia.</p>';
@@ -996,26 +1103,28 @@
             return options;
         }
 
-        /**
-         * NEW: Central function to get filtered submissions based on current state.
-         * This avoids code duplication.
-         */
         function getFilteredSubmissions() {
             let filtered = allSubmissions;
 
-            // Apply status filter
-            if (currentFilter === 'belum_diperiksa') {
-                filtered = allSubmissions.filter(sub => sub.status !== 'Sudah Dinilai');
-            } else if (currentFilter === 'sudah_diperiksa') {
-                filtered = allSubmissions.filter(sub => sub.status === 'Sudah Dinilai');
-            } else if (currentFilter === 'terlambat') {
-                filtered = allSubmissions.filter(sub => {
+            if (currentClassFilter !== 'semua') {
+                filtered = filtered.filter(sub => sub.kelasSiswa.toUpperCase() === currentClassFilter);
+            }
+
+            if (currentTaskFilter !== 'semua') {
+                filtered = filtered.filter(sub => sub.tugasId === currentTaskFilter);
+            }
+
+            if (currentStatusFilter === 'belum_diperiksa') {
+                filtered = filtered.filter(sub => sub.status !== 'Sudah Dinilai');
+            } else if (currentStatusFilter === 'sudah_diperiksa') {
+                filtered = filtered.filter(sub => sub.status === 'Sudah Dinilai');
+            } else if (currentStatusFilter === 'terlambat') {
+                filtered = filtered.filter(sub => {
                     const task = allTasks[sub.tugasId];
                     return task && sub.dikumpulkanPada && task.deadline && sub.dikumpulkanPada.toDate() > task.deadline.toDate();
                 });
             }
 
-            // Apply search filter
             const searchTerm = searchSubmissionInput.value.toLowerCase();
             if (searchTerm) {
                 filtered = filtered.filter(sub =>
@@ -1027,7 +1136,7 @@
 
         function renderMonitoringTable() {
             if (!auth.currentUser) {
-                monitoringTableBody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-gray-400">Silakan login untuk melihat data.</td></tr>';
+                monitoringTableBody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-400">Silakan login untuk melihat data.</td></tr>';
                 return;
             }
             
@@ -1045,7 +1154,7 @@
             const paginatedSubmissions = filteredSubmissions.slice(startIndex, endIndex);
 
             if (paginatedSubmissions.length === 0) {
-                 monitoringTableBody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-gray-400">Tidak ada data yang cocok.</td></tr>';
+                 monitoringTableBody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-400">Tidak ada data yang cocok.</td></tr>';
             } else {
                 monitoringTableBody.innerHTML = '';
                 const scoreOptions = generateScoreOptions();
@@ -1063,7 +1172,6 @@
                     const row = document.createElement('tr');
                     row.className = 'border-b border-white/10';
                     
-                    // --- NEW FEATURE: KETERANGAN COLUMN ---
                     let keteranganHtml = '<span class="text-xs text-gray-500">-</span>';
                     if (task && sub.dikumpulkanPada && task.deadline) {
                         const isLateOnSubmission = sub.dikumpulkanPada.toDate() > task.deadline.toDate();
@@ -1073,7 +1181,14 @@
                             keteranganHtml = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-cyan-500/30 text-cyan-300">Tepat Waktu</span>`;
                         }
                     }
-                    // --- END KETERANGAN ---
+
+                    let waktuKumpulHtml = '<span class="text-xs text-gray-500">-</span>';
+                    if (sub.dikumpulkanPada && sub.dikumpulkanPada.toDate) {
+                        waktuKumpulHtml = sub.dikumpulkanPada.toDate().toLocaleString('id-ID', {
+                            year: '2-digit', month: 'short', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                        }).replace(/\./g, ':');
+                    }
 
                     const gradingFormHtml = `
                         <div class="grading-form-container ${isGraded ? 'hidden' : ''}" data-id="${sub.id}">
@@ -1105,6 +1220,7 @@
                         <td class="p-4">${task?.judul || 'Tugas Dihapus'}</td>
                         <td class="p-4 status-badge-cell">${statusBadge}</td>
                         <td class="p-4">${keteranganHtml}</td>
+                        <td class="p-4 text-xs text-gray-400">${waktuKumpulHtml}</td>
                         <td class="p-4">
                             <div class="flex items-start flex-col">
                                 <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
@@ -1202,21 +1318,36 @@
             const uniqueClasses = [...new Set(allStudents.map(s => s.kelas.toUpperCase()))].sort();
             const labels = [];
             const data = [];
+            const allTaskArray = Object.values(allTasks);
 
             uniqueClasses.forEach(kelas => {
-                const studentsInClass = allStudents.filter(s => s.kelas.toUpperCase() === kelas);
-                const totalStudentsInClass = studentsInClass.length;
+                const tasksForClass = allTaskArray
+                    .filter(t => t.targetKelas.map(k => k.toUpperCase()).includes(kelas))
+                    .sort((a, b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0));
 
-                // --- NEW FEATURE LOGIC: Calculate submission stats for the chart ---
-                const submissionsForClass = allSubmissions.filter(sub => sub.kelasSiswa.toUpperCase() === kelas);
-                const uniqueSubmitters = new Set(submissionsForClass.map(s => s.namaSiswa));
-                const submittedCount = uniqueSubmitters.size;
-                
-                const percentage = totalStudentsInClass > 0 ? (submittedCount / totalStudentsInClass) * 100 : 0;
-                
-                labels.push([kelas, `${submittedCount}/${totalStudentsInClass} Siswa`]); // Multi-line label
-                data.push(percentage.toFixed(1));
-                // --- END NEW FEATURE LOGIC ---
+                const latestTask = tasksForClass[0];
+
+                if (latestTask) {
+                    const studentsInClass = allStudents.filter(s => s.kelas.toUpperCase() === kelas);
+                    const totalStudentsInClass = studentsInClass.length;
+
+                    const submissionsForLatestTask = allSubmissions.filter(sub => 
+                        sub.tugasId === latestTask.id && sub.kelasSiswa.toUpperCase() === kelas
+                    );
+                    const submittedCount = submissionsForLatestTask.length;
+
+                    const percentage = totalStudentsInClass > 0 ? (submittedCount / totalStudentsInClass) * 100 : 0;
+                    
+                    labels.push([
+                        kelas, 
+                        `"${latestTask.judul.substring(0, 15)}..."`, 
+                        `${submittedCount} dari ${totalStudentsInClass} Siswa`
+                    ]);
+                    data.push(percentage.toFixed(1));
+                } else {
+                    labels.push([kelas, "Belum ada tugas", "0 Siswa"]);
+                    data.push(0);
+                }
             });
 
             const ctx = document.getElementById('submissionChart').getContext('2d');
@@ -1252,11 +1383,13 @@
                             bodyFont: { size: 12 },
                             callbacks: {
                                 title: function(context) {
-                                    // Show only the class name in the tooltip title
                                     return context[0].label.split(',')[0];
                                 },
                                 label: function(context) {
-                                    return `Terkumpul: ${context.raw}%`;
+                                    const labelLines = context.chart.data.labels[context.dataIndex];
+                                    const taskTitle = labelLines[1] || '';
+                                    const submissionCount = labelLines[2] || '';
+                                    return [`Tugas ${taskTitle}`, `${submissionCount}`, `${context.raw}% terkumpul`];
                                 }
                             }
                         }
@@ -1278,7 +1411,7 @@
                             ticks: { 
                                 color: '#d1d5db',
                                 font: {
-                                    size: 10 // Adjust font size for better fit
+                                    size: 9
                                 }
                             }
                         }
@@ -1287,8 +1420,29 @@
             });
         }
 
+        function renderClassFilterDropdown(classes) {
+            classFilterSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Kelas</option>';
+            classes.forEach(kelas => {
+                const option = document.createElement('option');
+                option.value = kelas;
+                option.textContent = kelas;
+                option.className = 'bg-gray-800';
+                classFilterSelect.appendChild(option);
+            });
+        }
+
+        function renderTaskFilterDropdown(tasks) {
+            taskFilterSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Tugas</option>';
+            tasks.sort((a,b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0)).forEach(task => {
+                const option = document.createElement('option');
+                option.value = task.id;
+                option.textContent = task.judul;
+                option.className = 'bg-gray-800';
+                taskFilterSelect.appendChild(option);
+            });
+        }
+
         monitoringTableBody.addEventListener('click', async (e) => {
-            // Handle Save Grade
             if (e.target.closest('.save-grade-btn')) {
                 const button = e.target.closest('.save-grade-btn');
                 const docId = button.dataset.id;
@@ -1315,7 +1469,6 @@
                 }
             }
             
-            // Handle Delete Submission
             if (e.target.classList.contains('delete-submission-btn')) {
                 itemToDelete = {
                     id: e.target.dataset.id,
@@ -1326,7 +1479,6 @@
                 deleteConfirmModal.classList.remove('hidden');
             }
 
-            // --- NEW FEATURE: Handle Revise Score Button Click ---
             if (e.target.classList.contains('revisi-skor-btn')) {
                 const button = e.target;
                 const submissionId = button.dataset.id;
@@ -1334,13 +1486,9 @@
 
                 const gradingForm = row.querySelector(`.grading-form-container[data-id="${submissionId}"]`);
                 
-                // Hide the revise button
                 button.classList.add('hidden');
-                
-                // Show the grading form
                 gradingForm.classList.remove('hidden');
 
-                // Pre-fill the score dropdown with the current score
                 const currentSubmission = allSubmissions.find(s => s.id === submissionId);
                 if (currentSubmission) {
                     gradingForm.querySelector('.grade-input').value = currentSubmission.nilai;
@@ -1410,7 +1558,7 @@
 
 
         document.getElementById('download-csv-btn').addEventListener('click', () => {
-            const submissionsToDownload = getFilteredSubmissions(); // Get currently filtered data
+            const submissionsToDownload = getFilteredSubmissions(); 
 
             if (submissionsToDownload.length === 0) {
                 showToast('Tidak ada data untuk diunduh sesuai filter.', 'error');
@@ -1429,7 +1577,51 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `rekapan_tugas_${currentFilter}.csv`); // Dynamic filename
+            link.setAttribute("download", `rekapan_tugas_${currentStatusFilter}_${currentClassFilter}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        downloadRekapCsvBtn.addEventListener('click', () => {
+            const sortedTasks = Object.values(allTasks).sort((a, b) => (a.dibuatPada?.seconds || 0) - (b.dibuatPada?.seconds || 0));
+            const sortedStudents = [...allStudents].sort((a, b) => {
+                if (a.kelas < b.kelas) return -1;
+                if (a.kelas > b.kelas) return 1;
+                if (a.nama < b.nama) return -1;
+                if (a.nama > b.nama) return 1;
+                return 0;
+            });
+
+            if (sortedStudents.length === 0 || sortedTasks.length === 0) {
+                showToast('Tidak ada data siswa atau tugas untuk membuat rekap.', 'error');
+                return;
+            }
+
+            const headers = ['Nama Siswa', 'Kelas', ...sortedTasks.map(t => `"${t.judul}"`)];
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\r\n';
+
+            sortedStudents.forEach(student => {
+                const row = [`"${student.nama}"`, `"${student.kelas}"`];
+                sortedTasks.forEach(task => {
+                    const submission = allSubmissions.find(s => s.namaSiswa === student.nama && s.tugasId === task.id);
+                    if (submission) {
+                        if (submission.status === 'Sudah Dinilai') {
+                            row.push(`"✓ ${submission.nilai}"`);
+                        } else {
+                            row.push('"✓"');
+                        }
+                    } else {
+                        row.push('"✗"');
+                    }
+                });
+                csvContent += row.join(',') + '\r\n';
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `rekap_kemajuan_siswa.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1438,7 +1630,7 @@
         daftarTugasContainer.addEventListener('click', (e) => {
             const button = e.target.closest('button[data-id]');
 
-            if (button) { // "Kerjakan Tugas" button
+            if (button) {
                 document.getElementById('submission-modal-title').textContent = button.dataset.judul;
                 document.getElementById('submission-modal-desc').textContent = button.dataset.deskripsi;
                 document.getElementById('submission-tugas-id').value = button.dataset.id;
@@ -1452,8 +1644,6 @@
                 submissionModal.classList.remove('hidden');
                 safeCreateIcons();
             }
-            // The <details> element now handles its own open/close state,
-            // so no specific JS is needed for the collapsible list anymore.
         });
         
         function populateStudentDropdown(targetKelasArray) {
@@ -1539,12 +1729,10 @@
             let fileToUpload = originalFile;
             let fileUrl = null;
 
-            // --- NEW FEATURE: IMAGE COMPRESSION LOGIC ---
             if (originalFile && originalFile.type.startsWith('image/')) {
                 let processedFile = originalFile;
                 const fileName = originalFile.name.toLowerCase();
 
-                // 1. Convert HEIC/HEIF to JPEG
                 if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
                     try {
                         uploadProgress.textContent = 'Mengonversi gambar...';
@@ -1560,12 +1748,11 @@
                     }
                 }
 
-                // 2. Compress the image (original or converted)
                 try {
                     uploadProgress.textContent = 'Mengompres gambar...';
                     uploadProgress.classList.remove('hidden');
                     const options = {
-                        maxSizeMB: 0.195, // Target di bawah 200KB
+                        maxSizeMB: 0.195,
                         maxWidthOrHeight: 1920,
                         useWebWorker: true,
                     };
@@ -1578,7 +1765,6 @@
                     return;
                 }
             }
-            // --- END NEW FEATURE ---
 
             if (fileToUpload) {
                 try {
@@ -1653,17 +1839,77 @@
             renderMonitoringTable();
         });
 
-        // --- NEW FEATURE: Filter button event listener ---
         filterContainer.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON') {
-                currentFilter = e.target.dataset.filter;
+                currentStatusFilter = e.target.dataset.filter;
                 
-                // Update active button style
                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
 
-                currentPage = 1; // Reset to first page on filter change
+                currentPage = 1;
                 renderMonitoringTable();
+            }
+        });
+
+        classFilterSelect.addEventListener('change', (e) => {
+            currentClassFilter = e.target.value;
+            currentPage = 1;
+            renderMonitoringTable();
+        });
+
+        taskFilterSelect.addEventListener('change', (e) => {
+            currentTaskFilter = e.target.value;
+            currentPage = 1;
+            renderMonitoringTable();
+        });
+
+        findOrphanedBtn.addEventListener('click', () => {
+            const orphanedSubmissions = allSubmissions.filter(sub => !allTasks[sub.tugasId]);
+            
+            orphanedResultsContainer.classList.remove('hidden');
+            if (orphanedSubmissions.length === 0) {
+                orphanedList.innerHTML = '<p class="text-gray-400 italic">Tidak ada data pengumpulan dari tugas yang terhapus ditemukan.</p>';
+                deleteSelectedOrphanedBtn.disabled = true;
+                return;
+            }
+
+            orphanedList.innerHTML = orphanedSubmissions.map(sub => `
+                <label class="flex items-center gap-3 p-2 rounded-md hover:bg-white/10 transition-colors cursor-pointer">
+                    <input type="checkbox" data-id="${sub.id}" class="orphaned-checkbox form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">
+                    <span class="text-sm">${sub.namaSiswa} (${sub.kelasSiswa}) - ID Tugas: ${sub.tugasId.substring(0, 5)}...</span>
+                </label>
+            `).join('');
+            deleteSelectedOrphanedBtn.disabled = false;
+        });
+
+        selectAllOrphanedCheckbox.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.orphaned-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        deleteSelectedOrphanedBtn.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('.orphaned-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                showToast('Pilih data yang akan dihapus.', 'error');
+                return;
+            }
+
+            const batch = writeBatch(db);
+            selectedCheckboxes.forEach(checkbox => {
+                const docId = checkbox.dataset.id;
+                const submissionRef = doc(db, 'pengumpulan', docId);
+                batch.delete(submissionRef);
+            });
+
+            try {
+                await batch.commit();
+                showToast(`Berhasil menghapus ${selectedCheckboxes.length} data.`, 'success');
+                findOrphanedBtn.click(); // Refresh the list
+            } catch (error) {
+                showToast('Gagal menghapus data.', 'error');
+                console.error("Orphaned data deletion failed:", error);
             }
         });
         
