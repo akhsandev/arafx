@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pengecek Tugas Siswa dengan AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #image-gallery:empty::before {
+            content: "Galeri Tugas Siswa Akan Muncul di Sini";
+            color: #9ca3af;
+            font-size: 1.125rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .processing-border {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { border-color: #a78bfa; } /* purple-400 */
+            50% { border-color: #6d28d9; } /* purple-700 */
+            100% { border-color: #a78bfa; } /* purple-400 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="w-full max-w-7xl mx-auto bg-white rounded-2xl shadow-lg my-8 p-8 md:p-12">
+        
+        <div class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">✅ Aplikasi Pengecek Tugas Siswa (AI)</h1>
+            <p class="text-gray-500 mb-8">Salin data dari Excel/Sheets (3 kolom: Nama, Kelas, Link) lalu tempelkan di bawah.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <div class="md:col-span-2">
+                <textarea id="data-textarea" rows="10" placeholder="Tempelkan data di sini...&#10;Contoh format per baris:&#10;Budi Santoso	XI-A	https://... (link Google Drive atau Supabase)" class="w-full p-4 text-base bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-300 outline-none"></textarea>
+            </div>
+            <div class="flex flex-col space-y-3">
+                 <button id="process-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Periksa Tugas
+                </button>
+                <button id="clear-btn" class="w-full bg-red-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-600 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-300">
+                    Bersihkan Semua
+                </button>
+            </div>
+        </div>
+        <div id="status-message" class="mt-4 h-6 text-sm text-center text-gray-600"></div>
+
+        <div id="main-viewer" class="mt-8 hidden">
+             <div class="flex justify-between items-center mb-4">
+                <button id="prev-btn" class="pagination-btn bg-gray-200 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300">Sebelumnya</button>
+                <button id="start-auto-ai-btn" class="action-btn bg-purple-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16"><path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.58 5.48l-.386 1.161a.217.217 0 0 1-.412 0l-.387-1.162A1.73 1.73 0 0 0 2.206 4.22l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.15 1.15 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.15 1.15 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/></svg>
+                    Mulai Penilaian AI Otomatis
+                </button>
+                <span id="page-info" class="font-semibold text-gray-700 text-lg"></span>
+                <button id="next-btn" class="pagination-btn bg-gray-200 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300">Selanjutnya</button>
+            </div>
+            <div id="image-gallery" class="mt-4 w-full min-h-[500px] bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            </div>
+        </div>
+        
+        <div id="summary-report" class="mt-12 w-full hidden">
+             <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Pesan untuk Grup Kelas</h2>
+             <div class="relative">
+                <textarea id="report-message" rows="12" class="w-full p-4 bg-gray-100 rounded-lg border font-mono text-sm" readonly></textarea>
+                <button id="copy-btn" class="absolute top-3 right-3 bg-gray-600 text-white text-xs font-bold py-1 px-3 rounded-md hover:bg-gray-700">SALIN</button>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        const dataTextarea = document.getElementById('data-textarea');
+        const imageGallery = document.getElementById('image-gallery');
+        const statusMessage = document.getElementById('status-message');
+        const processBtn = document.getElementById('process-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const summaryReport = document.getElementById('summary-report');
+        const reportMessage = document.getElementById('report-message');
+        const copyBtn = document.getElementById('copy-btn');
+        const mainViewer = document.getElementById('main-viewer');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pageInfo = document.getElementById('page-info');
+        const startAutoAiBtn = document.getElementById('start-auto-ai-btn');
+
+        let allStudents = [];
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let isAutoAiRunning = false;
+
+        function processPastedData() {
+            const textBlock = dataTextarea.value;
+            if (!textBlock.trim()) { return; }
+
+            currentPage = 1;
+            statusMessage.textContent = 'Memproses data...';
+
+            allStudents = textBlock.split('\n')
+                .map((line, index) => {
+                    const columns = line.split('\t');
+                    if (columns.length >= 3) {
+                        return { id: index, name: columns[0].trim(), class: columns[1].trim(), link: columns[2].trim(), status: 'pending', aiAnalysis: null };
+                    }
+                    return null;
+                })
+                .filter(student => student && student.link);
+
+            if (allStudents.length === 0) {
+                statusMessage.textContent = 'Tidak ada data siswa valid yang ditemukan.';
+                mainViewer.classList.add('hidden');
+                return;
+            }
+            
+            mainViewer.classList.remove('hidden');
+            renderCurrentPage();
+        }
+
+        function renderCurrentPage() {
+            imageGallery.innerHTML = '';
+            const totalPages = Math.ceil(allStudents.length / itemsPerPage);
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+            // **LOGIKA BARU: Nonaktifkan tombol AI saat memuat**
+            startAutoAiBtn.disabled = true;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageStudents = allStudents.slice(startIndex, endIndex);
+
+            // **LOGIKA BARU: Lacak gambar yang dimuat**
+            let imagesToLoad = 0;
+            let imagesSettled = 0;
+            
+            const onImageSettled = () => {
+                imagesSettled++;
+                if (imagesSettled === imagesToLoad) {
+                    startAutoAiBtn.disabled = false; // Aktifkan tombol jika semua gambar selesai
+                    statusMessage.textContent = `Halaman ${currentPage} siap dinilai.`;
+                }
+            };
+
+            pageStudents.forEach(student => {
+                let url = student.link;
+                let type = 'file';
+
+                if (student.link.includes('/folders/')) {
+                    type = 'folder';
+                } else if (student.link.includes('supabase.co/storage')) {
+                    type = 'file';
+                } else if (student.link.includes('/d/')) {
+                    const match = student.link.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                        url = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                    } else {
+                        type = 'invalid_link';
+                    }
+                } else {
+                    type = 'invalid_link';
+                }
+
+                if (type === 'file') {
+                    imagesToLoad++;
+                }
+                displaySubmission(student, url, type, onImageSettled);
+            });
+
+            if (imagesToLoad === 0) {
+                startAutoAiBtn.disabled = false; // Aktifkan jika tidak ada gambar untuk dimuat
+            }
+            statusMessage.textContent = `Memuat ${imagesToLoad} gambar...`;
+        }
+
+        async function startAutoAiGrading() {
+            if (isAutoAiRunning) return;
+            isAutoAiRunning = true;
+            startAutoAiBtn.disabled = true;
+            startAutoAiBtn.innerHTML = `<div class="loader"></div> <span class="ml-2">Sedang Berjalan...</span>`;
+
+            const submissionWrappers = document.querySelectorAll('#image-gallery .submission-wrapper');
+            for (const wrapper of submissionWrappers) {
+                const studentId = parseInt(wrapper.dataset.studentId, 10);
+                const student = allStudents.find(s => s.id === studentId);
+                const imageElement = wrapper.querySelector('img.submission-image');
+                
+                if (imageElement && imageElement.complete && !student.aiAnalysis) {
+                    await handleAiCheck(student, wrapper, imageElement);
+                }
+            }
+            
+            isAutoAiRunning = false;
+            startAutoAiBtn.disabled = false;
+            startAutoAiBtn.innerHTML = `Mulai Penilaian AI Otomatis`;
+        }
+
+        function displaySubmission(student, url, type, onImageSettledCallback) {
+            const submissionWrapper = document.createElement('div');
+            submissionWrapper.id = `student-${student.id}`;
+            submissionWrapper.dataset.studentId = student.id;
+            submissionWrapper.className = "submission-wrapper w-full p-4 bg-white border-2 rounded-xl shadow-md text-center transition-all flex flex-col";
+            imageGallery.appendChild(submissionWrapper);
+
+            const studentInfo = document.createElement('h3');
+            studentInfo.className = "text-md font-semibold text-gray-700 mb-2 truncate";
+            studentInfo.innerHTML = `${student.name} <span class="font-normal text-gray-500">- ${student.class}</span>`;
+            submissionWrapper.appendChild(studentInfo);
+
+            const contentContainer = document.createElement('div');
+            contentContainer.className = "min-h-[150px] flex-grow flex items-center justify-center flex-col bg-gray-50 rounded-md";
+            submissionWrapper.appendChild(contentContainer);
+            
+            if (type === 'file') {
+                const img = document.createElement('img');
+                img.crossOrigin = "Anonymous";
+                img.src = url;
+                img.className = "submission-image max-w-full max-h-[150px] object-contain hidden";
+                contentContainer.appendChild(img);
+                img.onload = () => {
+                    img.classList.remove('hidden');
+                    onImageSettledCallback(); // Panggil callback saat selesai
+                };
+                img.onerror = () => {
+                    contentContainer.innerHTML = `<p class="text-red-500 text-xs p-2">Gagal memuat gambar</p>`;
+                    onImageSettledCallback(); // Panggil callback meski gagal
+                };
+            } else {
+                 contentContainer.innerHTML = `<p class="text-orange-500 text-xs p-2">Folder atau Link Salah</p>`;
+            }
+
+            const aiResultDiv = document.createElement('div');
+            aiResultDiv.id = `ai-result-${student.id}`;
+            aiResultDiv.className = "ai-result-container mt-2 p-2 bg-gray-100 rounded-lg border text-xs text-left hidden";
+            submissionWrapper.appendChild(aiResultDiv);
+        }
+
+        async function handleAiCheck(student, wrapper, imageElement) {
+            const resultDiv = document.getElementById(`ai-result-${student.id}`);
+            
+            wrapper.classList.add('processing-border');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<p class="text-center text-purple-700">Menilai...</p>`;
+
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = imageElement.naturalWidth;
+                canvas.height = imageElement.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imageElement, 0, 0);
+                const base64ImageData = canvas.toDataURL('image/jpeg').split(',')[1];
+
+                const prompt = `Anda adalah seorang guru Fisika yang tegas dan berpengalaman. Tugas Anda adalah memberikan penilaian kuantitatif pada gambar jawaban siswa ini.
+
+Tugas Anda:
+1.  **Berikan Nilai Langsung**: Berikan skor numerik pada skala 85 hingga 95. Jangan memberikan nilai di luar rentang ini.
+2.  **Dasar Penilaian**: Gunakan pemikiran dan keahlian Anda untuk menilai berdasarkan beberapa aspek:
+    * **Kebenaran Materi (Bobot Tinggi)**: Akurasi rumus, kebenaran konsep fisika, dan ketepatan perhitungan.
+    * **Kerapian & Estetika (Bobot Sedang)**: Keterbacaan tulisan tangan, kejelasan diagram, dan tata letak jawaban yang terstruktur.
+    * **Kelengkapan Langkah (Bobot Sedang)**: Apakah semua langkah pengerjaan ditulis dengan jelas dari awal hingga akhir.
+3.  **Format Jawaban**:
+    * Mulai dengan format: "**Nilai: [skor antara 85-95]**"
+    * Di baris berikutnya, berikan "**Justifikasi Singkat:**"
+    * Jelaskan dalam 2-3 poin singkat mengapa Anda memberikan skor tersebut, mengacu pada aspek-aspek di atas.
+
+**PENTING**: Jangan gunakan kata-kata seperti "perlu diperbaiki" atau "saran". Anda hanya memberikan nilai akhir dan justifikasinya.`;
+
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inlineData: { mimeType: "image/jpeg", data: base64ImageData } }
+                        ]
+                    }]
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
+                    let analysisText = result.candidates[0].content.parts[0].text;
+                    student.aiAnalysis = analysisText;
+                    analysisText = analysisText.replace(/(Nilai: \d+)/, '<strong>$1</strong>');
+                    resultDiv.innerHTML = analysisText.replace(/\n/g, '<br>');
+                    wrapper.classList.remove('processing-border');
+                    wrapper.classList.add('border-green-500');
+                } else {
+                    throw new Error("Respons dari AI tidak memiliki format yang diharapkan.");
+                }
+
+            } catch (error) {
+                console.error("Error during AI check:", error);
+                resultDiv.innerHTML = `<p class="text-red-500 text-center">Gagal</p>`;
+                wrapper.classList.remove('processing-border');
+                wrapper.classList.add('border-red-500');
+            }
+        }
+
+        function updateSummaryReport() {
+            // Fungsi ini sekarang hanya untuk status, laporan teks akan dibuat saat dibutuhkan
+        }
+
+        // Event Listeners
+        prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderCurrentPage(); } });
+        nextBtn.addEventListener('click', () => { const totalPages = Math.ceil(allStudents.length / itemsPerPage); if (currentPage < totalPages) { currentPage++; renderCurrentPage(); } });
+        dataTextarea.addEventListener('paste', () => { setTimeout(processPastedData, 100); });
+        processBtn.addEventListener('click', processPastedData);
+        clearBtn.addEventListener('click', () => {
+            dataTextarea.value = '';
+            imageGallery.innerHTML = '';
+            mainViewer.classList.add('hidden');
+            summaryReport.classList.add('hidden');
+            reportMessage.value = '';
+            statusMessage.textContent = 'Semua data telah dibersihkan.';
+        });
+        copyBtn.addEventListener('click', () => { /* ... */ });
+        startAutoAiBtn.addEventListener('click', startAutoAiGrading);
+
+    </script>
+</body>
+</html>
