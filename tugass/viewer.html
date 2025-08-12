@@ -275,20 +275,27 @@
                 ctx.drawImage(imageElement, 0, 0);
                 const base64ImageData = canvas.toDataURL('image/jpeg').split(',')[1];
 
-                const prompt = `Anda adalah seorang guru Fisika yang tegas dan berpengalaman. Tugas Anda adalah memberikan penilaian kuantitatif pada gambar jawaban siswa ini.
+                const prompt = `Tugas Anda:
 
-Tugas Anda:
-1.  **Berikan Nilai Langsung**: Berikan skor numerik pada skala 85 hingga 95. Jangan memberikan nilai di luar rentang ini.
-2.  **Dasar Penilaian**: Gunakan pemikiran dan keahlian Anda untuk menilai berdasarkan beberapa aspek:
-    * **Kebenaran Materi (Bobot Tinggi)**: Akurasi rumus, kebenaran konsep fisika, dan ketepatan perhitungan.
-    * **Kerapian & Estetika (Bobot Sedang)**: Keterbacaan tulisan tangan, kejelasan diagram, dan tata letak jawaban yang terstruktur.
-    * **Kelengkapan Langkah (Bobot Sedang)**: Apakah semua langkah pengerjaan ditulis dengan jelas dari awal hingga akhir.
-3.  **Format Jawaban**:
-    * Mulai dengan format: "**Nilai: [skor antara 85-95]**"
-    * Di baris berikutnya, berikan "**Justifikasi Singkat:**"
-    * Jelaskan dalam 2-3 poin singkat mengapa Anda memberikan skor tersebut, mengacu pada aspek-aspek di atas.
+Berikan Nilai Langsung: Berikan skor numerik pada skala 80 hingga 100. Jangan memberikan nilai di luar rentang ini.
 
-**PENTING**: Jangan gunakan kata-kata seperti "perlu diperbaiki" atau "saran". Anda hanya memberikan nilai akhir dan justifikasinya.`;
+Dasar Penilaian: Gunakan keahlian Anda untuk menilai berdasarkan beberapa aspek:
+
+Struktur & Isi Teks (Bobot Tinggi): Akurasi struktur (Orientation, Events, Re-orientation), kejelasan alur, dan kedalaman cerita.
+
+Unsur Kebahasaan (Bobot Tinggi): Ketepatan penggunaan Past Tense, variasi kosa kata, dan keefektifan struktur kalimat.
+
+Mekanik & Kerapian (Bobot Sedang): Ketepatan ejaan, tanda baca, dan keterbacaan tulisan.
+
+Format Jawaban:
+
+Mulai dengan format: "Nilai: [skor antara 80-100]"
+
+Di baris berikutnya, berikan "Justifikasi Singkat:"
+
+Jelaskan dalam 2-3 poin singkat mengapa Anda memberikan skor tersebut, mengacu pada aspek-aspek di atas.
+
+PENTING: Jangan gunakan kata-kata seperti "perlu diperbaiki" atau "saran". Anda hanya memberikan nilai akhir dan justifikasinya secara lugas.`;
 
                 const apiKey = "AIzaSyAujsfwXZGSisISNjsvzi84_74vr8SK94g"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
