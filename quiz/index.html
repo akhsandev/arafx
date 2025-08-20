@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuis Numerasi Fisika - Neon</title>
+    <title>Kuis Fisika Dasar - Neon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,9 +196,9 @@
 
             <!-- Start Screen -->
             <div id="start-screen" class="glass-card p-8 text-center space-y-6">
-                <h1 id="main-header" class="font-orbitron font-bold">Kuis Numerasi Fisika</h1>
+                <h1 id="main-header" class="font-orbitron font-bold">Kuis Fisika Dasar</h1>
                 <p id="sub-header" class="font-orbitron font-semibold mt-2">Dibuat Oleh Pak Akhsan</p>
-                <p class="text-lg text-gray-300 mt-6">Uji kemampuan numerasi awal Anda sebelum masuk ke dunia pengukuran!</p>
+                <p class="text-lg text-gray-300 mt-6">Uji pemahaman Anda tentang Alat Ukur, Besaran, Satuan, dan Dimensi!</p>
                 <div class="space-y-4">
                     <input id="name-input" type="text" placeholder="Masukkan Nama Anda" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
                     <select id="class-input" class="w-full p-3 bg-transparent border-2 border-gray-500 rounded-lg text-center text-white focus:neon-border focus:outline-none transition-all">
@@ -323,21 +323,21 @@
 
         // --- Quiz Data (Plain JSON) ---
         const quizData = [
-            { question: "Perhatikan hasil pengukuran diameter sebuah kelereng menggunakan mikrometer sekrup. Skala utama menunjukkan 4,5 mm dan skala nonius yang segaris adalah angka 35. Berapakah hasil pengukurannya?", hint: "Hasil = Skala Utama + (Skala Nonius x 0,01 mm)", answers: [{ text: "4,85 mm", correct: true },{ text: "4,35 mm", correct: false },{ text: "8,0 mm", correct: false },{ text: "4,535 mm", correct: false }]},
-            { question: "Seorang pedagang memiliki 2,5 kg gula dan ia membeli lagi 750 gram gula. Berapakah total massa gula sekarang dalam kilogram (kg)?", hint: "1 kg = 1000 gram. Samakan satuan terlebih dahulu.", answers: [{ text: "2.750 kg", correct: false },{ text: "3.25 kg", correct: true },{ text: "752.5 kg", correct: false },{ text: "10.0 kg", correct: false }]},
-            { question: "Kereta api berangkat pukul 10:40 dan tiba pukul 13:15. Berapa lama durasi perjalanan kereta tersebut?", hint: "Hitung selisih waktu antara jam berangkat dan tiba.", answers: [{ text: "3 jam 25 menit", correct: false },{ text: "2 jam 75 menit", correct: false },{ text: "2 jam 35 menit", correct: true },{ text: "1 jam 35 menit", correct: false }]},
-            { question: "Pompa air mengisi tangki 500 liter dalam 20 menit. Berapa volume air yang diisi pompa selama 1 jam?", hint: "Cari laju pengisian per menit, lalu kalikan 60.", answers: [{ text: "2500 liter", correct: false },{ text: "500 liter", correct: false },{ text: "3000 liter", correct: false },{ text: "1500 liter", correct: true }]},
-            { question: "Lantai ruangan 8 m x 6 m akan dipasangi ubin 40 cm x 40 cm. Berapa jumlah ubin yang dibutuhkan?", hint: "Bagi luas lantai dengan luas satu ubin. Hati-hati dengan satuan!", answers: [{ text: "300 ubin", correct: true },{ text: "30 ubin", correct: false },{ text: "1200 ubin", correct: false },{ text: "75 ubin", correct: false }]},
-            { question: "Data waktu jatuh bola: 2,1 s; 2,3 s; 2,0 s; 2,2 s; dan 2,4 s. Berapakah waktu jatuh rata-ratanya?", hint: "Jumlahkan semua data lalu bagi dengan banyaknya data.", answers: [{ text: "2,1 s", correct: false },{ text: "2,2 s", correct: true },{ text: "2,4 s", correct: false },{ text: "11,0 s", correct: false }]},
-            { question: "Hasil perhitungan luas adalah 24,578 cm². Jika dibulatkan menjadi tiga angka penting, hasilnya adalah...", hint: "Lihat angka ke-4 untuk membulatkan angka ke-3.", answers: [{ text: "24,5 cm²", correct: false },{ text: "24,58 cm²", correct: false },{ text: "25,0 cm²", correct: false },{ text: "24,6 cm²", correct: true }]},
-            { question: "Pengukuran panjang tongkat dilaporkan sebagai (85,4 +/- 0,2) cm. Apa artinya?", hint: "Simbol +/- menunjukkan rentang ketidakpastian.", answers: [{ text: "Panjangnya pastilah 85,4 cm.", correct: false },{ text: "Pengukuran salah sebesar 0,2 cm.", correct: false },{ text: "Panjangnya 85,2 cm atau 85,6 cm.", correct: false },{ text: "Panjangnya antara 85,2 cm dan 85,6 cm.", correct: true }]},
-            { question: "Jika 'Massa Jenis' (kg/m³) dikalikan dengan 'Volume' (m³), akan menghasilkan besaran apa?", hint: "Perhatikan satuan akhirnya setelah dikalikan.", answers: [{ text: "Berat", correct: false },{ text: "Luas", correct: false },{ text: "Massa", correct: true },{ text: "Kecepatan", correct: false }]},
-            { question: "Manakah estimasi paling masuk akal untuk massa sebuah sepeda motor standar?", hint: "Bandingkan dengan massa benda yang Anda kenal.", answers: [{ text: "20 kg", correct: false },{ text: "120 kg", correct: true },{ text: "500 kg", correct: false },{ text: "1200 g", correct: false }]},
-            { question: "Seorang siswa menyambung dua utas tali. Panjang tali pertama adalah 2 1/2 meter dan tali kedua adalah 3/4 meter. Berapa total panjang kedua tali setelah disambung?", hint: "Samakan penyebut pecahan terlebih dahulu sebelum menjumlahkan.", answers: [{ text: "3 1/4 meter", correct: true },{ text: "2 4/6 meter", correct: false },{ text: "3 meter", correct: false },{ text: "2 3/8 meter", correct: false }]},
-            { question: "Sebuah papan kayu memiliki panjang total 4 1/2 meter. Jika papan tersebut dipotong sepanjang 1 3/4 meter, berapakah sisa panjang papan kayu tersebut?", hint: "Ubah pecahan campuran menjadi pecahan biasa untuk memudahkan pengurangan.", answers: [{ text: "3 1/4 meter", correct: false },{ text: "3 meter", correct: false },{ text: "2 3/4 meter", correct: true },{ text: "2 1/2 meter", correct: false }]},
-            { question: "Sebuah lantai keramik berbentuk persegi panjang memiliki ukuran panjang 1/2 meter dan lebar 1/4 meter. Berapakah luas satu buah keramik tersebut?", hint: "Luas = Panjang x Lebar. Ingat cara mengalikan pecahan.", answers: [{ text: "1/8 m²", correct: true },{ text: "2/6 m²", correct: false },{ text: "3/4 m²", correct: false },{ text: "1/6 m²", correct: false }]},
-            { question: "Sebuah mobil bergerak menempuh jarak 200 kilometer (km) dalam waktu 4 jam (jam). Jika kelajuan adalah hasil bagi antara 'jarak' dan 'waktu', maka satuan dari kelajuan mobil tersebut adalah...", hint: "Bagilah satuan jarak (km) dengan satuan waktu (jam).", answers: [{ text: "km", correct: false },{ text: "jam/km", correct: false },{ text: "km/jam", correct: true },{ text: "km.jam", correct: false }]},
-            { question: "Sebuah benda memiliki massa 600 gram (g) dan menempati ruang dengan volume 50 sentimeter kubik (cm³). Jika massa jenis adalah hasil bagi antara 'massa' dan 'volume', maka satuan dari massa jenis benda tersebut adalah...", hint: "Bagilah satuan massa (g) dengan satuan volume (cm³).", answers: [{ text: "g/cm³", correct: true },{ text: "g.cm³", correct: false },{ text: "cm³/g", correct: false },{ text: "g.cm", correct: false }]}
+            { question: "Perhatikan gambar pengukuran diameter koin menggunakan jangka sorong. Skala utama di angka 2,4 cm dan skala nonius yang berimpit di angka 7. Hasil pengukuran diameter koin tersebut adalah...", hint: "Hasil = Skala Utama + (Skala Nonius x 0,01 cm)", answers: [{ text: "2,47 cm", correct: true }, { text: "2,40 cm", correct: false }, { text: "2,77 cm", correct: false }, { text: "2,57 cm", correct: false }] },
+            { question: "Momentum didefinisikan sebagai hasil kali antara massa dan kecepatan. Dimensi dari momentum adalah...", hint: "Dimensi massa [M], dimensi kecepatan [L][T]⁻¹", answers: [{ text: "[M][L]²[T]⁻²", correct: false }, { text: "[M][L][T]⁻¹", correct: true }, { text: "[M][L][T]⁻²", correct: false }, { text: "[M][L]²[T]⁻¹", correct: false }] },
+            { question: "Di antara kelompok besaran berikut, yang seluruhnya merupakan besaran turunan adalah...", hint: "Besaran turunan adalah besaran yang diturunkan dari besaran pokok.", answers: [{ text: "Kecepatan, suhu, dan gaya", correct: false }, { text: "Massa, waktu, dan percepatan", correct: false }, { text: "Usaha, daya, dan tekanan", correct: true }, { text: "Panjang, kuat arus, dan energi", correct: false }] },
+            { question: "Sebuah sekrup diukur diameternya menggunakan mikrometer sekrup. Skala utama 4,5 mm dan skala putar di angka 38. Besar diameter sekrup tersebut adalah...", hint: "Hasil = Skala Utama + (Skala Putar x 0,01 mm)", answers: [{ text: "4,58 mm", correct: false }, { text: "4,38 mm", correct: false }, { text: "4,88 mm", correct: true }, { text: "4,50 mm", correct: false }] },
+            { question: "Besaran pokok kuat arus listrik memiliki satuan dalam Sistem Internasional (SI), yaitu...", hint: "Ingat 7 besaran pokok dalam fisika.", answers: [{ text: "Volt", correct: false }, { text: "Ohm", correct: false }, { text: "Coulomb", correct: false }, { text: "Ampere", correct: true }] },
+            { question: "Energi kinetik dirumuskan sebagai Eₖ = ½mv². Berdasarkan rumus tersebut, dimensi dari energi kinetik adalah...", hint: "Dimensi massa [M], dimensi kecepatan [L][T]⁻¹.", answers: [{ text: "[M][L]²[T]⁻²", correct: true }, { text: "[M][L][T]⁻¹", correct: false }, { text: "[M][L]⁻¹[T]²", correct: false }, { text: "[M][L]²[T]²", correct: false }] },
+            { question: "Dari besaran-besaran berikut: (1) Jarak, (2) Perpindahan, (3) Kelajuan, (4) Gaya. Yang termasuk besaran vektor adalah...", hint: "Besaran vektor adalah besaran yang memiliki nilai dan arah.", answers: [{ text: "(1) dan (3)", correct: false }, { text: "(2) dan (3)", correct: false }, { text: "(1) dan (4)", correct: false }, { text: "(2) dan (4)", correct: true }] },
+            { question: "Sebuah mobil bergerak dengan kecepatan 72 km/jam. Jika dinyatakan dalam satuan m/s, kecepatan mobil tersebut adalah...", hint: "1 km = 1000 m, dan 1 jam = 3600 s.", answers: [{ text: "10 m/s", correct: false }, { text: "36 m/s", correct: false }, { text: "20 m/s", correct: true }, { text: "25 m/s", correct: false }] },
+            { question: "Tekanan adalah gaya per satuan luas. Dimensi dari tekanan adalah...", hint: "Dimensi gaya [M][L][T]⁻², dimensi luas [L]².", answers: [{ text: "[M][L]⁻¹[T]⁻²", correct: true }, { text: "[M][L]²[T]⁻²", correct: false }, { text: "[M][L]⁻²[T]⁻²", correct: false }, { text: "[M][L][T]⁻¹", correct: false }] },
+            { question: "Untuk mengukur diameter dalam sebuah pipa kecil dengan ketelitian tinggi, alat ukur yang paling sesuai untuk digunakan adalah...", hint: "Alat ukur mana yang memiliki rahang untuk mengukur diameter dalam?", answers: [{ text: "Penggaris", correct: false }, { text: "Jangka sorong", correct: true }, { text: "Mikrometer sekrup", correct: false }, { text: "Meteran gulung", correct: false }] },
+            { question: "Seorang siswa mengukur panjang sebuah meja dan mendapatkan hasil 1,50 meter. Jumlah angka penting dari hasil pengukuran tersebut adalah...", hint: "Angka nol di akhir desimal termasuk angka penting.", answers: [{ text: "Dua", correct: false }, { text: "Empat", correct: false }, { text: "Satu", correct: false }, { text: "Tiga", correct: true }] },
+            { question: "Daya didefinisikan sebagai usaha yang dilakukan per satuan waktu. Dimensi dari daya adalah...", hint: "Dimensi usaha [M][L]²[T]⁻², dimensi waktu [T].", answers: [{ text: "[M][L]²[T]⁻²", correct: false }, { text: "[M][L]²[T]⁻³", correct: true }, { text: "[M][L][T]⁻²", correct: false }, { text: "[M][L]⁻¹[T]⁻²", correct: false }] },
+            { question: "Kelompok besaran di bawah ini yang merupakan kelompok besaran pokok sesuai Sistem Internasional (SI) adalah...", hint: "Ingat 7 besaran pokok: panjang, massa, waktu, suhu, kuat arus, intensitas cahaya, jumlah zat.", answers: [{ text: "Panjang, massa, dan volume", correct: false }, { text: "Waktu, suhu, dan kecepatan", correct: false }, { text: "Kuat arus, intensitas cahaya, dan jumlah zat", correct: true }, { text: "Massa, berat, dan waktu", correct: false }] },
+            { question: "Notasi ilmiah dari bilangan 0,0000852 adalah...", hint: "Geser koma ke kanan hingga di belakang angka bukan nol pertama.", answers: [{ text: "8,52 x 10⁻⁵", correct: true }, { text: "8,52 x 10⁵", correct: false }, { text: "85,2 x 10⁻⁶", correct: false }, { text: "0,852 x 10⁻⁴", correct: false }] },
+            { question: "Suatu besaran fisika dinyatakan dengan P = Q.R², dengan P memiliki satuan newton dan R memiliki satuan meter. Agar persamaan tersebut benar secara dimensi, maka Q harus merupakan besaran...", hint: "Dimensi Q = Dimensi P / Dimensi R².", answers: [{ text: "Percepatan", correct: false }, { text: "Tekanan", correct: true }, { text: "Massa jenis", correct: false }, { text: "Usaha", correct: false }] }
         ];
 
         // --- Game State ---
@@ -473,9 +473,9 @@
 
             let feedback = '';
             if (score >= 120) { // Disesuaikan untuk 15 soal (80%)
-                feedback = 'Luar biasa! Kemampuan numerasimu sangat baik!';
+                feedback = 'Luar biasa! Pemahaman Anda sangat baik!';
             } else if (score >= 90) { // 60%
-                feedback = 'Bagus! Kamu punya dasar yang kuat.';
+                feedback = 'Bagus! Anda punya dasar yang kuat.';
             } else if (score >= 60) { // 40%
                 feedback = 'Cukup baik! Terus berlatih ya.';
             } else {
