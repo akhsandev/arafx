@@ -288,7 +288,6 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Kategori</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Keterangan</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Guru</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -320,21 +319,6 @@
                 </button>
                 <h2 class="text-2xl font-semibold mb-6 text-slate-100">Input Pelanggaran Siswa</h2>
                 <form id="inputSiswaForm" class="space-y-6">
-                    <!-- NEW TEACHER INPUT FIELD -->
-                    <div id="teacherSearchWrapper">
-                        <label for="searchTeacherNameInput" class="block text-sm font-medium text-slate-300">Nama Guru</label>
-                        <div class="relative mt-1">
-                            <input type="text" id="searchTeacherNameInput" autocomplete="off"
-                                   class="block w-full py-3 px-4 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                   placeholder="Ketik untuk mencari nama guru...">
-                            <div id="teacherSuggestionsDropdown"
-                                 class="absolute z-20 w-full bg-slate-700 border border-slate-600 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg hidden">
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="selectedTeacherId" name="selectedTeacherId">
-                    <input type="hidden" id="selectedTeacherName" name="selectedTeacherName">
-
                     <div>
                         <label for="inputKelas" class="block text-sm font-medium text-slate-300">Kelas</label>
                         <select id="inputKelas" required class="mt-1 block w-full py-3 px-4 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -450,7 +434,7 @@
                 <div>
                     <h3 class="text-xl font-semibold mb-2 text-slate-100">Reset Aplikasi</h3>
                      <p class="text-sm text-slate-400 mb-4">Gunakan tombol di bawah untuk memulai tahun ajaran baru. Tindakan ini akan menghapus **semua data** (siswa, kelas, dan riwayat pelanggaran) dan tidak dapat diurungkan.</p>
-                    <button id="resetTahunAjaranButton" class="py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                    <button id="resetTahunAjaranButton" class="py-2 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
                         Reset Total Tahun Ajaran
                     </button>
                 </div>
@@ -516,13 +500,11 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // PERBAIKAN: Menggunakan projectId yang disediakan sebagai basePath
-        const currentAppId = firebaseConfig.projectId;
+        const currentAppId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId; 
         const basePath = `artifacts/${currentAppId}/public/data`;
         const classesPath = `${basePath}/classes`;
         const studentsPath = `${basePath}/students`;
-        const violationRecordsPath = `${basePath}/violationRecords`; 
-        const teachersPath = `${basePath}/teachers`; 
+        const violationRecordsPath = `${basePath}/violationRecords`; // Renamed for clarity
 
         // DOM Elements
         const authScreen = document.getElementById('authScreen');
@@ -583,13 +565,6 @@
         const studentSuggestionsDropdown = document.getElementById('studentSuggestionsDropdown');
         const inputNamaSiswa = document.getElementById('inputNamaSiswa'); 
         
-        const teacherSearchWrapper = document.getElementById('teacherSearchWrapper'); // NEW
-        const searchTeacherNameInput = document.getElementById('searchTeacherNameInput'); // NEW
-        const teacherSuggestionsDropdown = document.getElementById('teacherSuggestionsDropdown'); // NEW
-        const selectedTeacherId = document.getElementById('selectedTeacherId'); // NEW
-        const selectedTeacherName = document.getElementById('selectedTeacherName'); // NEW
-        let allTeachers = []; // NEW: Array untuk menyimpan data guru
-
         const inputKategori = document.getElementById('inputKategori'); // New category dropdown
         const inputKeterangan = document.getElementById('inputKeterangan'); // Formerly inputAlasan
 
@@ -621,25 +596,6 @@
         const rekapPageInfo = document.getElementById('rekapPageInfo');
         const rekapPrevButton = document.getElementById('rekapPrevButton');
         const rekapNextButton = document.getElementById('rekapNextButton');
-        
-        // NEW: Daftar nama guru yang akan diimport
-        const teacherNames = [
-            'A.Pattiroi', 'Ade Irmayanti H. S.Pd.', 'Ahlidin', 'Akhsan Rian Anugrah, S.Pd.', 'Amir, S.Pd.',
-            'Andi Muliyadi, S.Pd. M.M', 'Andi Sri Rahayu Purnamasari, S.Pd., M.Pd', 'Anida A. S.Pd.',
-            'Anida, S.Pd.', 'Ardiaman, S.Pd.I', 'Armisari, S.Pd., Gr.', 'Asaf', 'Asis Hola, S.Sos, M.Pd.',
-            'Aslinda Putri, S.Pd', 'Asma, S.Pd', 'Asmia Ramadani, S.Pd.', 'Asnintang, S.Pd.I, M.Pd.I',
-            'Dahlia, S.Pd.', 'Darwis', 'Dra. Hj. Hutbaya', 'Dra. Salma', 'Drs. Moch. Harun BR, M.Pd',
-            'Drs. Syamsi', 'Fudding', 'H. M. Tahir, S.Ag, M.Pd.I', 'H. Muh. Amin, S.Pd. M.Pd', 'H. Sulaeman, S.Pd.',
-            'Haerati, S.Pd. M.Pd.', 'Helmi, S.Pd', 'Heriani, S.Pd', 'Hisbullah Anas, S.Ag., M.Pd.I',
-            'Hj. Nurjannah, S.Pd.', 'Hj. Salmiah, S.Pd.', 'Indiarti, S.Pd, M.Pd', 'Jabriani, S.Pd, M.Pd',
-            'Juwidar Basri, S.Pd', 'Kamaruddin, S.Pd.', 'Kaslinda, S.Or., S.Pd.', 'Khairil', 'Luktfy Alam, S.Sos',
-            'Mardiah. S.Pd', 'Marhumi, S.Pd', 'Marlina, S.Pd.', 'Mas Muliana Ismail, S.Pd., M.M.',
-            'Muchtar, S.Pd. M.Pd.', 'Muh. Arifai, S.Pd.', 'Mukhardiaman, S.S., M.Si.', 'Naharuddin, S.Pd., M.Pd',
-            'Najma Aliyah, S.Pd', 'Nasrul, S.Pd.', 'Normawati, S.Pd., M.Si.', 'Nur Afni, S.Pd.',
-            'Nurmila, S.Pd', 'Satriadi, S.Pd', 'Satriani. S.Pd', 'Satriyani, S.Pd. M.Pd', 'Sohrah, S.Pd.',
-            'Sri Haslindah, S.Pd', 'Sriyanti, S.Pd', 'Sumarni, S.Pd.', 'Sylvia Aryani, S.Pd',
-            'Wahyuddin,S.S, S.Pd.', 'Yuliana, S.Pd., M.Pd.', 'Yuliani, S.Pd', 'Zainal M., S.Pd., M.M.'
-        ];
         
 
         // --- View Toggle ---
@@ -756,19 +712,7 @@
 
 
         // --- Authentication & App Initialization ---
-        onAuthStateChanged(auth, (user) => { 
-            if (user) { 
-                authScreen.classList.add('hidden'); 
-                appScreen.classList.remove('hidden'); 
-                userEmailDisplay.textContent = user.email; 
-                initializeAppData(); 
-            } else { 
-                authScreen.classList.remove('hidden'); 
-                appScreen.classList.add('hidden'); 
-                userEmailDisplay.textContent = ''; 
-                if (statusChartInstance) { statusChartInstance.destroy(); statusChartInstance = null; } 
-            } 
-        });
+        onAuthStateChanged(auth, (user) => { if (user) { authScreen.classList.add('hidden'); appScreen.classList.remove('hidden'); userEmailDisplay.textContent = user.email; initializeAppData(); } else { authScreen.classList.remove('hidden'); appScreen.classList.add('hidden'); userEmailDisplay.textContent = ''; if (statusChartInstance) { statusChartInstance.destroy(); statusChartInstance = null; } } });
         loginForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); authError.textContent = ''; const email = loginForm.loginEmail.value; const password = loginForm.loginPassword.value; try { await signInWithEmailAndPassword(auth, email, password); showMessage('Login berhasil!', 'success'); } catch (error) { console.error("Login error:", error); authError.textContent = `Error: ${error.message.replace('Firebase: ', '')}`; showMessage(`Login gagal: ${error.code}`, 'error'); } finally { showLoading(false); } });
         registerForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); authError.textContent = ''; const email = registerForm.registerEmail.value; const password = registerForm.registerPassword.value; if (password.length < 6) { authError.textContent = 'Password minimal 6 karakter.'; showLoading(false); return; } try { await createUserWithEmailAndPassword(auth, email, password); showMessage('Registrasi berhasil! Silakan login.', 'success'); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); loginForm.loginEmail.value = email; } catch (error) { console.error("Register error:", error); authError.textContent = `Error: ${error.message.replace('Firebase: ', '')}`; showMessage(`Registrasi gagal: ${error.code}`, 'error'); } finally { showLoading(false); } });
         showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authError.textContent = ''; });
@@ -826,92 +770,7 @@
             });
         });
 
-        // NEW: Fungsi untuk mengimpor data guru HANYA SEKALI
-        async function importTeachersOnce() {
-            showLoading(true);
-            try {
-                const teachersRef = ref(db, teachersPath);
-                const snapshot = await get(teachersRef);
-                // Jika database guru sudah ada, jangan impor lagi
-                if (snapshot.exists() && snapshot.hasChildren()) {
-                    console.log("Teacher data already exists. Skipping import.");
-                    return;
-                }
 
-                const updates = {};
-                teacherNames.forEach(name => {
-                    const newTeacherRef = push(teachersRef);
-                    updates[newTeacherRef.key] = { name: name };
-                });
-                
-                await update(teachersRef, updates);
-                showMessage("Daftar guru berhasil diimport.", "success");
-            } catch (error) {
-                console.error("Error importing teachers:", error);
-                showMessage("Gagal mengimport data guru.", "error");
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // NEW: Fungsi untuk memuat semua guru ke memori dan menyiapkan pencarian
-        function loadTeachers() {
-            const teachersRef = ref(db, teachersPath);
-            onValue(teachersRef, (snapshot) => {
-                const teachersData = snapshot.val() || {};
-                allTeachers = Object.entries(teachersData).map(([id, data]) => ({ id, name: data.name }));
-                console.log("Teachers loaded:", allTeachers);
-            });
-        }
-        
-        // NEW: Event listener untuk pencarian guru
-        searchTeacherNameInput.addEventListener('input', () => {
-            const searchTerm = searchTeacherNameInput.value.toLowerCase().trim();
-            teacherSuggestionsDropdown.innerHTML = '';
-            
-            if (searchTerm === '') {
-                teacherSuggestionsDropdown.classList.add('hidden');
-                selectedTeacherId.value = '';
-                selectedTeacherName.value = '';
-                return;
-            }
-
-            const filteredTeachers = allTeachers.filter(teacher => teacher.name.toLowerCase().includes(searchTerm));
-            
-            if (filteredTeachers.length > 0) {
-                filteredTeachers.forEach(teacher => {
-                    const item = document.createElement('div');
-                    item.textContent = teacher.name;
-                    item.dataset.id = teacher.id;
-                    item.dataset.name = teacher.name;
-                    item.className = 'p-2 cursor-pointer suggestion-item text-slate-200';
-                    item.addEventListener('click', () => {
-                        searchTeacherNameInput.value = teacher.name;
-                        selectedTeacherId.value = teacher.id;
-                        selectedTeacherName.value = teacher.name;
-                        teacherSuggestionsDropdown.classList.add('hidden');
-                    });
-                    teacherSuggestionsDropdown.appendChild(item);
-                });
-                teacherSuggestionsDropdown.classList.remove('hidden');
-            } else {
-                const noResultItem = document.createElement('div');
-                noResultItem.textContent = 'Tidak ada guru yang cocok';
-                noResultItem.className = 'p-2 text-slate-400';
-                teacherSuggestionsDropdown.appendChild(noResultItem);
-                teacherSuggestionsDropdown.classList.remove('hidden');
-                selectedTeacherId.value = '';
-                selectedTeacherName.value = '';
-            }
-        });
-
-        // NEW: Menyembunyikan dropdown saat klik di luar
-        document.addEventListener('click', function(event) {
-            if (!teacherSearchWrapper.contains(event.target)) {
-                teacherSuggestionsDropdown.classList.add('hidden');
-            }
-        });
-        
         function initializeAppData() {
             document.documentElement.classList.add('dark');
             const preferredView = localStorage.getItem('viewMode') || 'card';
@@ -920,12 +779,9 @@
             loadClassesForDropdowns();
             listenToViolationRecords(); 
             listenToClasses(); 
-            // NEW: Panggil fungsi untuk mengimpor dan memuat guru
-            importTeachersOnce();
-            loadTeachers();
         }
         
-        async function loadClassesForDropdowns() { const classesRef = ref(db, classesPath); onValue(classesRef, (snapshot) => { const classesData = snapshot.val() || {}; const options = ['<option value="">Semua Kelas</option>']; const inputOptions = ['<option value="">Pilih Kelas</option>']; if (classesData) { Object.entries(classesData).forEach(([classId, classObj]) => { options.push(`<option value="${classId}">${classObj.name}</option>`); inputOptions.push(`<option value="${classId}" data-classname="${classObj.name}">${classObj.name}</option>`); }); } rekapFilterKelas.innerHTML = options.join(''); inputKelas.innerHTML = inputOptions.join(''); }); }
+        async function loadClassesForDropdowns() { const classesRef = ref(db, classesPath); onValue(classesRef, (snapshot) => { const classesData = snapshot.val(); const options = ['<option value="">Semua Kelas</option>']; const inputOptions = ['<option value="">Pilih Kelas</option>']; if (classesData) { Object.entries(classesData).forEach(([classId, classObj]) => { options.push(`<option value="${classId}">${classObj.name}</option>`); inputOptions.push(`<option value="${classId}" data-classname="${classObj.name}">${classObj.name}</option>`); }); } rekapFilterKelas.innerHTML = options.join(''); inputKelas.innerHTML = inputOptions.join(''); }); }
         importDataSiswaButton.addEventListener('click', async () => { const dataToPaste = pasteDataSiswa.value.trim(); if (!dataToPaste) { showMessage('Area data kosong.', 'error'); return; } showLoading(true); importResult.textContent = ''; let importedCount = 0, errorCount = 0; const lines = dataToPaste.split('\n'); const classesRef = ref(db, classesPath); try { const existingClassesSnapshot = await get(classesRef); const existingClasses = existingClassesSnapshot.val() || {}; let classMap = {}; Object.entries(existingClasses).forEach(([id, data]) => { classMap[data.name.trim().toLowerCase()] = id; }); for (const line of lines) { const parts = line.split(','); if (parts.length === 2) { const studentName = parts[0].trim(); const className = parts[1].trim(); if (studentName && className) { let classId = classMap[className.toLowerCase()]; if (!classId) { const newClassRef = push(classesRef); classId = newClassRef.key; await set(newClassRef, { name: className }); classMap[className.toLowerCase()] = classId; } const classStudentsRef = ref(db, `${studentsPath}/${classId}`); const classStudentsSnapshot = await get(query(classStudentsRef, orderByChild('name'), equalTo(studentName))); if (!classStudentsSnapshot.exists()) { const newStudentRef = push(classStudentsRef); await set(newStudentRef, { name: studentName, classId: classId }); importedCount++; } } else { errorCount++; } } else if (line.trim() !== "") { errorCount++; } } importResult.textContent = `Impor selesai. ${importedCount} siswa berhasil ditambahkan. ${errorCount} baris bermasalah.`; showMessage(`Impor selesai: ${importedCount} siswa ditambahkan.`, 'success'); pasteDataSiswa.value = ''; } catch (error) { console.error("Error importing data:", error); importResult.textContent = `Error saat impor: ${error.message}`; showMessage('Impor gagal.', 'error'); } finally { showLoading(false); } });
         
         function listenToClasses() { 
@@ -1015,146 +871,15 @@
             }
         });
         
-        resetTahunAjaranButton.addEventListener('click', () => { showConfirmationModal( 'Reset Total Tahun Ajaran', 'Anda yakin ingin menghapus SEMUA data, termasuk daftar siswa, kelas, dan riwayat pelanggaran? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await Promise.all([ remove(ref(db, violationRecordsPath)), remove(ref(db, studentsPath)), remove(ref(db, classesPath)), remove(ref(db, teachersPath)) ]); showMessage('Semua data aplikasi berhasil direset.', 'success'); } catch (error) { console.error("Error resetting all data:", error); showMessage('Gagal mereset data aplikasi.', 'error'); } finally { showLoading(false); } } ); });
-        
-        // NEW: Fungsi untuk mereset inputSiswaForm
-        function resetInputSiswaPanel() { 
-            inputSiswaForm.reset(); 
-            inputTanggal.value = getCurrentDate(); 
-            inputJam.value = getCurrentTime(); 
-            studentSearchWrapper.classList.add('hidden'); 
-            searchStudentNameInput.value = ''; 
-            studentSuggestionsDropdown.innerHTML = ''; 
-            studentSuggestionsDropdown.classList.add('hidden'); 
-            originalStudentOptions = []; 
-            inputNamaSiswa.innerHTML = '<option value=""></option>'; 
-            inputNamaSiswa.value = ''; 
-            // NEW: Reset input guru
-            searchTeacherNameInput.value = '';
-            selectedTeacherId.value = '';
-            selectedTeacherName.value = '';
-            teacherSuggestionsDropdown.innerHTML = '';
-            teacherSuggestionsDropdown.classList.add('hidden');
-        }
-
-        inputKelas.addEventListener('change', async () => { const selectedClassId = inputKelas.value; originalStudentOptions = []; searchStudentNameInput.value = ''; studentSuggestionsDropdown.innerHTML = ''; studentSuggestionsDropdown.classList.add('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; if (!selectedClassId) { studentSearchWrapper.classList.add('hidden'); return; } studentSearchWrapper.classList.remove('hidden'); searchStudentNameInput.placeholder = "Memuat siswa..."; searchStudentNameInput.disabled = true; showLoading(true); try { const classStudentsRef = ref(db, `${studentsPath}/${selectedClassId}`); const snapshot = await get(classStudentsRef); const studentsData = snapshot.val() || {}; if (studentsData) { Object.entries(studentsData).forEach(([studentId, studentObj]) => { originalStudentOptions.push({ id: studentId, name: studentObj.name }); }); searchStudentNameInput.placeholder = "Ketik untuk mencari siswa..."; } else { searchStudentNameInput.placeholder = "Tidak ada siswa di kelas ini"; } } catch (error) { console.error("Error loading students for class:", error); searchStudentNameInput.placeholder = "Gagal memuat siswa"; showMessage('Gagal memuat daftar siswa.', 'error'); } finally { searchStudentNameInput.disabled = false; showLoading(false); } });
+        resetTahunAjaranButton.addEventListener('click', () => { showConfirmationModal( 'Reset Total Tahun Ajaran', 'Anda yakin ingin menghapus SEMUA data, termasuk daftar siswa, kelas, dan riwayat pelanggaran? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await Promise.all([ remove(ref(db, violationRecordsPath)), remove(ref(db, studentsPath)), remove(ref(db, classesPath)) ]); showMessage('Semua data aplikasi berhasil direset.', 'success'); } catch (error) { console.error("Error resetting all data:", error); showMessage('Gagal mereset data aplikasi.', 'error'); } finally { showLoading(false); } } ); });
+        function resetInputSiswaPanel() { inputSiswaForm.reset(); inputTanggal.value = getCurrentDate(); inputJam.value = getCurrentTime(); studentSearchWrapper.classList.add('hidden'); searchStudentNameInput.value = ''; studentSuggestionsDropdown.innerHTML = ''; studentSuggestionsDropdown.classList.add('hidden'); originalStudentOptions = []; inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; }
+        inputKelas.addEventListener('change', async () => { const selectedClassId = inputKelas.value; originalStudentOptions = []; searchStudentNameInput.value = ''; studentSuggestionsDropdown.innerHTML = ''; studentSuggestionsDropdown.classList.add('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; if (!selectedClassId) { studentSearchWrapper.classList.add('hidden'); return; } studentSearchWrapper.classList.remove('hidden'); searchStudentNameInput.placeholder = "Memuat siswa..."; searchStudentNameInput.disabled = true; showLoading(true); try { const classStudentsRef = ref(db, `${studentsPath}/${selectedClassId}`); const snapshot = await get(classStudentsRef); const studentsData = snapshot.val(); if (studentsData) { Object.entries(studentsData).forEach(([studentId, studentObj]) => { originalStudentOptions.push({ id: studentId, name: studentObj.name }); }); searchStudentNameInput.placeholder = "Ketik untuk mencari siswa..."; } else { searchStudentNameInput.placeholder = "Tidak ada siswa di kelas ini"; } } catch (error) { console.error("Error loading students for class:", error); searchStudentNameInput.placeholder = "Gagal memuat siswa"; showMessage('Gagal memuat daftar siswa.', 'error'); } finally { searchStudentNameInput.disabled = false; showLoading(false); } });
         searchStudentNameInput.addEventListener('input', () => { const searchTerm = searchStudentNameInput.value.toLowerCase().trim(); studentSuggestionsDropdown.innerHTML = ''; if (searchTerm === '' || !inputKelas.value) { studentSuggestionsDropdown.classList.add('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; return; } const filteredStudents = originalStudentOptions.filter(student => student.name.toLowerCase().includes(searchTerm) ); if (filteredStudents.length > 0) { filteredStudents.forEach(student => { const item = document.createElement('div'); item.textContent = student.name; item.dataset.id = student.id; item.dataset.name = student.name; item.className = 'p-2 cursor-pointer suggestion-item text-slate-200'; item.addEventListener('click', () => { searchStudentNameInput.value = student.name; inputNamaSiswa.innerHTML = `<option value="${student.id}">${student.name}</option>`; inputNamaSiswa.value = student.id; studentSuggestionsDropdown.classList.add('hidden'); }); studentSuggestionsDropdown.appendChild(item); }); studentSuggestionsDropdown.classList.remove('hidden'); } else { const noResultItem = document.createElement('div'); noResultItem.textContent = 'Tidak ada siswa cocok'; noResultItem.className = 'p-2 text-slate-400'; studentSuggestionsDropdown.appendChild(noResultItem); studentSuggestionsDropdown.classList.remove('hidden'); inputNamaSiswa.innerHTML = '<option value=""></option>'; inputNamaSiswa.value = ''; } });
         document.addEventListener('click', function(event) { if (!studentSearchWrapper.contains(event.target)) { studentSuggestionsDropdown.classList.add('hidden'); } });
         searchStudentNameInput.addEventListener('focus', () => { if (searchStudentNameInput.value.trim() !== '' && originalStudentOptions.length > 0) { searchStudentNameInput.dispatchEvent(new Event('input')); } });
-        inputSiswaForm.addEventListener('submit', async (e) => { 
-            e.preventDefault(); 
-            showLoading(true); 
-            
-            // NEW: Dapatkan data guru yang dipilih
-            const teacherId = selectedTeacherId.value;
-            const teacherName = selectedTeacherName.value;
-
-            // Pastikan guru sudah dipilih
-            if (!teacherId || !teacherName) {
-                showMessage('Harap pilih nama guru dari daftar.', 'error');
-                showLoading(false);
-                return;
-            }
-
-            const selectedClassOption = inputKelas.options[inputKelas.selectedIndex]; 
-            const studentIdFromHiddenSelect = inputNamaSiswa.value; 
-            const studentNameFromSearchInput = searchStudentNameInput.value; 
-
-            const record = { 
-                classId: inputKelas.value, 
-                className: selectedClassOption.dataset.classname, 
-                studentId: studentIdFromHiddenSelect, 
-                studentName: studentNameFromSearchInput, 
-                description: inputKeterangan.value.trim(), 
-                date: inputTanggal.value, 
-                time: inputJam.value, 
-                category: inputKategori.value, 
-                status: document.querySelector('input[name="statusPenanganan"]:checked').value, 
-                recordedAt: serverTimestamp(),
-                recordedByUserId: teacherId, // NEW: Simpan ID guru
-                recordedByUserName: teacherName // NEW: Simpan nama guru
-            }; 
-            
-            if (!record.classId || !record.studentId || !record.description || !record.category) { 
-                showMessage('Harap lengkapi semua field.', 'error'); 
-                showLoading(false); 
-                return; 
-            } 
-
-            let isDuplicate = false; 
-            const recordsCheckRef = ref(db, violationRecordsPath); 
-            try { 
-                const snapshot = await get(recordsCheckRef); 
-                const allRecords = snapshot.val() || {}; 
-                for (const key in allRecords) { 
-                    const existingRecord = allRecords[key]; 
-                    if (existingRecord.studentId === record.studentId && existingRecord.date === record.date && existingRecord.category === record.category) { 
-                        isDuplicate = true; 
-                        break; 
-                    } 
-                } 
-            } catch (error) { 
-                console.error("Error checking for duplicates:", error); 
-                showMessage("Gagal memeriksa duplikasi, coba lagi.", "error"); 
-                showLoading(false); 
-                return; 
-            } 
-            
-            if (isDuplicate) { 
-                showMessage('Pelanggaran kategori ini untuk siswa tersebut sudah didata hari ini.', 'error'); 
-                showLoading(false); 
-                return; 
-            } 
-
-            try { 
-                const newRecordRef = push(ref(db, violationRecordsPath)); 
-                await set(newRecordRef, record); 
-                showMessage('Data pelanggaran berhasil disimpan.', 'success'); 
-                resetInputSiswaPanel(); 
-            } catch (error) { 
-                console.error("Error saving violation record:", error); 
-                showMessage(`Gagal menyimpan data: ${error.message}`, 'error'); 
-            } finally { 
-                showLoading(false); 
-            } 
-        });
-
+        inputSiswaForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); const selectedClassOption = inputKelas.options[inputKelas.selectedIndex]; const studentIdFromHiddenSelect = inputNamaSiswa.value; const studentNameFromSearchInput = searchStudentNameInput.value; const record = { classId: inputKelas.value, className: selectedClassOption.dataset.classname, studentId: studentIdFromHiddenSelect, studentName: studentNameFromSearchInput, description: inputKeterangan.value.trim(), date: inputTanggal.value, time: inputJam.value, category: inputKategori.value, status: document.querySelector('input[name="statusPenanganan"]:checked').value, recordedAt: serverTimestamp() }; if (!record.classId || !record.studentId || !record.description || !record.category) { showMessage('Harap lengkapi semua field.', 'error'); showLoading(false); return; } let isDuplicate = false; const recordsCheckRef = ref(db, violationRecordsPath); try { const snapshot = await get(recordsCheckRef); const allRecords = snapshot.val() || {}; for (const key in allRecords) { const existingRecord = allRecords[key]; if (existingRecord.studentId === record.studentId && existingRecord.date === record.date && existingRecord.category === record.category) { isDuplicate = true; break; } } } catch (error) { console.error("Error checking for duplicates:", error); showMessage("Gagal memeriksa duplikasi, coba lagi.", "error"); showLoading(false); return; } if (isDuplicate) { showMessage('Pelanggaran kategori ini untuk siswa tersebut sudah didata hari ini.', 'error'); showLoading(false); return; } try { const newRecordRef = push(ref(db, violationRecordsPath)); await set(newRecordRef, record); showMessage('Data pelanggaran berhasil disimpan.', 'success'); resetInputSiswaPanel(); } catch (error) { console.error("Error saving violation record:", error); showMessage(`Gagal menyimpan data: ${error.message}`, 'error'); } finally { showLoading(false); } });
         cancelInputSiswa.addEventListener('click', () => { resetInputSiswaPanel(); });
-        function renderRekapTable(recordsToRender) { 
-            rekapTableBody.innerHTML = ''; 
-            if (recordsToRender.length === 0) { 
-                rekapTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-slate-400">Tidak ada data pelanggaran untuk filter ini.</td></tr>`; 
-                return; 
-            } 
-            recordsToRender.forEach(record => { 
-                const row = rekapTableBody.insertRow(); 
-                row.className = "hover:bg-slate-700/50 transition-colors duration-150"; 
-                const escapedDescription = (record.description || '').replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
-                
-                // NEW: Ambil nama guru dari record
-                const recordedBy = record.recordedByUserName || 'Tidak diketahui';
-
-                row.innerHTML = ` 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.date}</td> 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.time}</td> 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">${record.studentName}</td> 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.className}</td> 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300 font-semibold">${record.category || '-'}</td> 
-                    <td class="px-4 py-3 text-sm text-slate-300 max-w-xs truncate" title="${escapedDescription}">${escapedDescription}</td> 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm"> 
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.status === 'Sudah Ditangani' ?  'bg-green-700 text-green-100' :  'bg-yellow-700 text-yellow-100'}"> ${record.status} </span> 
-                    </td> 
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${recordedBy}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2"> 
-                        ${record.status === 'Belum Ditangani' ?   `<button data-id="${record.id}" class="mark-handled-button text-blue-400 hover:text-blue-300 transition duration-150">Tandai Sudah</button>` :   '<span class="text-green-400">Selesai</span>'} 
-                        <button data-id="${record.id}" data-description="${escapedDescription}" class="edit-description-button text-indigo-400 hover:text-indigo-300 transition duration-150">Edit</button> 
-                        <button data-id="${record.id}" class="delete-record-button text-red-400 hover:text-red-300 transition duration-150">Hapus</button> 
-                    </td> `; 
-            }); 
-            document.querySelectorAll('.mark-handled-button').forEach(button => { button.addEventListener('click', (e) => markAsHandled(e.target.dataset.id)); }); 
-            document.querySelectorAll('.edit-description-button').forEach(button => { button.addEventListener('click', (e) => { const recordId = e.target.dataset.id; const rawDescription = filteredRekapRecords.find(r => r.id === recordId)?.description || e.target.dataset.description; showEditDescriptionModal(recordId, rawDescription); }); }); 
-            document.querySelectorAll('.delete-record-button').forEach(button => { button.addEventListener('click', (e) => deleteViolationRecord(e.target.dataset.id)); }); 
-        }
+        function renderRekapTable(recordsToRender) { rekapTableBody.innerHTML = ''; if (recordsToRender.length === 0) { rekapTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400">Tidak ada data pelanggaran untuk filter ini.</td></tr>`; return; } recordsToRender.forEach(record => { const row = rekapTableBody.insertRow(); row.className = "hover:bg-slate-700/50 transition-colors duration-150"; const escapedDescription = record.description.replace(/</g, "&lt;").replace(/>/g, "&gt;"); row.innerHTML = ` <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.date}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.time}</td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">${record.studentName}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300">${record.className}</td> <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-300 font-semibold">${record.category || '-'}</td> <td class="px-4 py-3 text-sm text-slate-300 max-w-xs truncate" title="${escapedDescription}">${escapedDescription}</td> <td class="px-4 py-3 whitespace-nowrap text-sm"> <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.status === 'Sudah Ditangani' ?  'bg-green-700 text-green-100' :  'bg-yellow-700 text-yellow-100'}"> ${record.status} </span> </td> <td class="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2"> ${record.status === 'Belum Ditangani' ?   `<button data-id="${record.id}" class="mark-handled-button text-blue-400 hover:text-blue-300 transition duration-150">Tandai Sudah</button>` :   '<span class="text-green-400">Selesai</span>'} <button data-id="${record.id}" data-description="${escapedDescription}" class="edit-description-button text-indigo-400 hover:text-indigo-300 transition duration-150">Edit</button> <button data-id="${record.id}" class="delete-record-button text-red-400 hover:text-red-300 transition duration-150">Hapus</button> </td> `; }); document.querySelectorAll('.mark-handled-button').forEach(button => { button.addEventListener('click', (e) => markAsHandled(e.target.dataset.id)); }); document.querySelectorAll('.edit-description-button').forEach(button => { button.addEventListener('click', (e) => { const recordId = e.target.dataset.id; const rawDescription = filteredRekapRecords.find(r => r.id === recordId)?.description || e.target.dataset.description; showEditDescriptionModal(recordId, rawDescription); }); }); document.querySelectorAll('.delete-record-button').forEach(button => { button.addEventListener('click', (e) => deleteViolationRecord(e.target.dataset.id)); }); }
         async function markAsHandled(recordId) { showLoading(true); try { const recordRef = ref(db, `${violationRecordsPath}/${recordId}`); await update(recordRef, { status: "Sudah Ditangani" }); showMessage('Status berhasil diperbarui.', 'success'); } catch (error) { console.error("Error updating status:", error); showMessage('Gagal memperbarui status.', 'error'); } finally { showLoading(false); } }
         async function deleteViolationRecord(recordId) { showConfirmationModal( 'Hapus Data Pelanggaran', 'Anda yakin ingin menghapus data pelanggaran ini? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await remove(ref(db, `${violationRecordsPath}/${recordId}`)); showMessage('Data pelanggaran berhasil dihapus.', 'success'); } catch (error) { console.error("Error deleting record:", error); showMessage('Gagal menghapus data.', 'error'); } finally { showLoading(false); } } ); }
         
@@ -1284,6 +1009,7 @@
                 }
             }); 
         }
+
     </script>
 </body>
 </html>
