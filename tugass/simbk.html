@@ -94,7 +94,7 @@
 
     <!-- Login Screen -->
     <div id="login-screen" class="w-full max-w-md">
-        <div class="glass-panel p-8 text-center">
+       <div class="glass-panel p-8 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
                 <div class="w-12 h-12 bg-sky-500/20 rounded-lg flex items-center justify-center">
                     <i data-lucide="shield-check" class="text-sky-400 w-8 h-8"></i>
@@ -265,19 +265,18 @@
             </form>
         </div>
     </div>
-    <div id="import-profile-modal" class="modal-overlay">
+    <div id="import-profile-json-modal" class="modal-overlay">
         <div class="modal-content glass-panel w-full max-w-3xl p-8">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-white">Impor Profil Siswa (dari Wawancara)</h3>
-                <button id="close-profile-modal-btn" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+                <h3 class="text-2xl font-bold text-white">Impor Profil Siswa (dari JSON)</h3>
+                <button id="close-profile-json-modal-btn" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
             </div>
             <div>
-                <p class="text-slate-300 mb-2">Salin seluruh data dari file CSV Wawancara (termasuk header) dan tempel di bawah.</p>
-                <p class="text-xs text-amber-400 bg-amber-500/10 p-2 rounded-md mb-4">PENTING: Pastikan kolom ke-2 adalah <code class="font-mono">[NAMA SISWA]</code> dan nama siswa di file ini sama persis dengan nama di Data Siswa.</p>
-                <textarea id="import-profile-textarea" class="input-glass w-full h-64 p-3 rounded-lg text-sm font-mono" placeholder="Tempel data CSV Anda di sini..."></textarea>
+                <p class="text-slate-300 mb-2">Buka file <code class="font-mono bg-slate-700 px-1 rounded">profil_siswa.json.txt</code>, salin semua isinya, dan tempel di bawah.</p>
+                <textarea id="import-profile-json-textarea" class="input-glass w-full h-64 p-3 rounded-lg text-xs font-mono" placeholder="Tempel teks JSON Anda di sini..."></textarea>
                 <div class="flex justify-end gap-4 mt-6">
-                    <button id="cancel-profile-import-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-all">Batal</button>
-                    <button id="submit-profile-import-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-2">
+                    <button id="cancel-profile-json-import-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-all">Batal</button>
+                    <button id="submit-profile-json-import-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-2">
                         <i data-lucide="upload-cloud"></i> Impor Profil
                     </button>
                 </div>
@@ -313,7 +312,7 @@
         const addViolationModal = document.getElementById('add-violation-modal');
         const addCounselingModal = document.getElementById('add-counseling-modal');
         const addAppointmentModal = document.getElementById('add-appointment-modal');
-        const importProfileModal = document.getElementById('import-profile-modal');
+        const importProfileJsonModal = document.getElementById('import-profile-json-modal');
         let currentUser = null;
         let currentStudentId = null;
         let violationChart = null; 
@@ -381,8 +380,8 @@
                     <div class="flex justify-between items-center mb-8">
                         <h2 class="text-3xl font-bold text-white">Data Siswa</h2>
                         <div class="flex gap-4">
-                             <button id="open-import-profile-modal-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
-                                <i data-lucide="user-check"></i> Impor Profil
+                             <button id="open-import-profile-json-modal-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                                <i data-lucide="user-check"></i> Impor Profil (JSON)
                             </button>
                             <button id="open-import-modal-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
                                 <i data-lucide="upload"></i> Impor Data
@@ -1057,67 +1056,30 @@
             }
         };
         
-        const handleImportProfile = async () => {
-            const importButton = document.getElementById('submit-profile-import-btn');
+        const handleImportProfileJSON = async () => {
+            const importButton = document.getElementById('submit-profile-json-import-btn');
             const originalButtonHTML = importButton.innerHTML;
             importButton.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span><span class="ml-2">Memproses...</span>`;
             importButton.disabled = true;
 
-            const text = document.getElementById('import-profile-textarea').value.trim();
+            const text = document.getElementById('import-profile-json-textarea').value.trim();
             if (!text) {
                 showToast("Area teks kosong, tidak ada data untuk diimpor.", "error");
                 importButton.innerHTML = originalButtonHTML; lucide.createIcons(); importButton.disabled = false; return;
             }
 
-            const lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(line => line);
-            if (lines.length < 2) {
-                showToast("Data tidak valid. Minimal harus ada 1 baris header dan 1 baris data.", "error");
+            let profiles;
+            try {
+                profiles = JSON.parse(text);
+                if (!Array.isArray(profiles)) throw new Error("Format JSON harus berupa array.");
+            } catch (e) {
+                showToast("Format JSON tidak valid. Pastikan Anda menyalin semuanya.", "error");
                 importButton.innerHTML = originalButtonHTML; lucide.createIcons(); importButton.disabled = false; return;
             }
 
-            const parseCsvLine = (line) => {
-                const result = [];
-                let current = '';
-                let inQuotes = false;
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if (char === '"') { inQuotes = !inQuotes; continue; }
-                    if (char === ',' && !inQuotes) {
-                        result.push(current.trim());
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                result.push(current.trim());
-                return result;
-            };
-            
-            const headersRaw = parseCsvLine(lines[0]);
-            const headers = headersRaw.map(h => h.trim());
-            const studentNameIndex = headers.findIndex(h => h.toUpperCase().includes("NAMA SISWA"));
-
-            if (studentNameIndex === -1) {
-                showToast("Kolom [NAMA SISWA] tidak ditemukan di header CSV.", "error");
-                importButton.innerHTML = originalButtonHTML; lucide.createIcons(); importButton.disabled = false; return;
-            }
-
-            const profileMapping = {
-                riwayatPenyakit: "Apakah anak anda memiliki riwayat penyakit",
-                kebiasaanBaik: "Apa saja kebiasaan baik yang sering dilakukan",
-                perilakuPerluDiubah: "apakah ada kebiasaan atau perilaku anak anda yang perlu dirubah",
-                hubunganPertemanan: "bagaimana hubungan pertemanan anak anda",
-                motivasiSekolah: "alasan Anda memilih sekolah ini",
-                hobi: "Hoby",
-                bakat: "Bakat Murid",
-                citaCita: "Cita – Cita Murid",
-                infoKeluarga: "Ceritakan tentang diri anda dan keluarga",
-            };
-            
-            const dataRows = lines.slice(1);
             const notFoundStudents = [];
             let processedCount = 0;
-            
+
             try {
                 const batch = writeBatch(db);
                 const studentsSnapshot = await getDocs(collection(db, "students"));
@@ -1126,50 +1088,35 @@
                     studentsMap.set(doc.data().nama.toUpperCase().trim(), doc.id);
                 });
 
-                dataRows.forEach(line => {
-                    const values = parseCsvLine(line);
-                    const studentName = values[studentNameIndex];
-                    if (!studentName) return;
-
-                    const studentId = studentsMap.get(studentName.toUpperCase().trim());
-
-                    if (studentId) {
-                        const profileData = {};
-                        for (const key in profileMapping) {
-                            const headerPartial = profileMapping[key];
-                            const headerIndex = headers.findIndex(h => h.includes(headerPartial));
-                            if (headerIndex !== -1 && values[headerIndex]) {
-                                profileData[key] = values[headerIndex];
-                            }
+                profiles.forEach(profile => {
+                    if (profile.namaSiswa) {
+                        const studentId = studentsMap.get(profile.namaSiswa.toUpperCase().trim());
+                        if (studentId) {
+                            const profileRef = doc(db, `students/${studentId}/studentProfiles`, "wawancaraAwal");
+                            batch.set(profileRef, profile);
+                            processedCount++;
+                        } else {
+                            notFoundStudents.push(profile.namaSiswa);
                         }
-                        
-                        const profileRef = doc(db, `students/${studentId}/studentProfiles`, "wawancaraAwal");
-                        batch.set(profileRef, profileData);
-                        processedCount++;
-                    } else {
-                        notFoundStudents.push(studentName);
                     }
                 });
 
                 await batch.commit();
-                
-                if (processedCount > 0) {
-                    showToast(`${processedCount} profil siswa berhasil diimpor/diperbarui!`, "success");
-                }
+
+                if (processedCount > 0) showToast(`${processedCount} profil siswa berhasil diimpor!`, "success");
                 if (notFoundStudents.length > 0) {
                     const limitedNotFound = notFoundStudents.slice(0, 3).join(", ");
                     const moreCount = notFoundStudents.length > 3 ? ` dan ${notFoundStudents.length - 3} lainnya` : '';
                     showToast(`Gagal menemukan siswa: ${limitedNotFound}${moreCount}`, "error");
                 }
-                if (processedCount === 0 && notFoundStudents.length > 0) {
-                    showToast("Tidak ada nama siswa di file yang cocok dengan database.", "error");
-                }
+                if (processedCount === 0 && notFoundStudents.length > 0) showToast("Tidak ada nama siswa di file yang cocok.", "error");
                 
-                importProfileModal.classList.remove('visible');
-                document.getElementById('import-profile-textarea').value = '';
-            } catch(e) {
-                console.error("Error importing profiles:", e);
-                showToast("Terjadi kesalahan teknis saat mengimpor.", "error");
+                importProfileJsonModal.classList.remove('visible');
+                document.getElementById('import-profile-json-textarea').value = '';
+
+            } catch (e) {
+                console.error("Error importing profiles from JSON:", e);
+                showToast("Terjadi kesalahan teknis saat menyimpan data.", "error");
             } finally {
                 importButton.innerHTML = originalButtonHTML;
                 lucide.createIcons();
@@ -1179,7 +1126,7 @@
 
         document.body.addEventListener('click', async (e) => {
             if (e.target.closest('#open-import-modal-btn')) { importModal.classList.add('visible'); }
-            if (e.target.closest('#open-import-profile-modal-btn')) { importProfileModal.classList.add('visible'); }
+            if (e.target.closest('#open-import-profile-json-modal-btn')) { importProfileJsonModal.classList.add('visible'); }
             if (e.target.closest('#open-add-violation-modal')) {
                 const select = document.getElementById('violation-type');
                 select.innerHTML = '<option value="">Memuat...</option>';
@@ -1240,11 +1187,11 @@
         document.getElementById('close-appointment-modal-btn').addEventListener('click', () => addAppointmentModal.classList.remove('visible'));
         document.getElementById('cancel-appointment-btn').addEventListener('click', () => addAppointmentModal.classList.remove('visible'));
         document.getElementById('add-appointment-form').addEventListener('submit', handleAddAppointment);
-
-        document.getElementById('close-profile-modal-btn').addEventListener('click', () => importProfileModal.classList.remove('visible'));
-        document.getElementById('cancel-profile-import-btn').addEventListener('click', () => importProfileModal.classList.remove('visible'));
-        document.getElementById('submit-profile-import-btn').addEventListener('click', handleImportProfile);
-
+        
+        document.getElementById('close-profile-json-modal-btn').addEventListener('click', () => importProfileJsonModal.classList.remove('visible'));
+        document.getElementById('cancel-profile-json-import-btn').addEventListener('click', () => importProfileJsonModal.classList.remove('visible'));
+        document.getElementById('submit-profile-json-import-btn').addEventListener('click', handleImportProfileJSON);
+        
         window.addEventListener('hashchange', router);
         window.addEventListener('load', () => {
             lucide.createIcons();

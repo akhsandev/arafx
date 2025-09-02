@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konverter CSV Wawancara ke JSON</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { --bg-color: #0f172a; --primary-color: #38bdf8; --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1); --font-color: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--font-color); background-image: radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 0.1) 0px, transparent 50%), radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 0.1) 0px, transparent 50%), radial-gradient(at 52% 99%, hsla(355, 98%, 61%, 0.1) 0px, transparent 50%); }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 1.5rem; }
+        .input-glass { background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); transition: all 0.3s ease; }
+        .input-glass:focus { background: rgba(0,0,0,0.3); border-color: var(--primary-color); outline: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-4xl">
+        <div class="glass-panel p-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center gap-3 mb-2">
+                    <div class="w-12 h-12 bg-sky-500/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="file-json-2" class="text-sky-400 w-8 h-8"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold text-white">Konverter CSV ke JSON</h1>
+                </div>
+                <p class="text-slate-400 mb-8">Ubah file CSV Wawancara menjadi format JSON yang siap diimpor.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div>
+                    <h2 class="font-semibold text-lg text-white mb-2">1. Unggah File CSV</h2>
+                    <input type="file" id="csv-file-input" class="input-glass w-full p-3 rounded-lg text-sm" accept=".csv">
+                    <button id="convert-btn" class="w-full mt-4 bg-sky-500 hover:bg-sky-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                        <span>Konversi ke JSON</span>
+                    </button>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-lg text-white mb-2">2. Hasil JSON</h2>
+                    <textarea id="json-output" class="input-glass w-full h-48 p-3 rounded-lg text-xs font-mono" readonly placeholder="Hasil konversi akan muncul di sini..."></textarea>
+                    <button id="download-btn" class="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="download"></i> Download File (.txt)
+                    </button>
+                </div>
+            </div>
+            <div class="text-center mt-8 text-xs text-slate-500">
+                <p>Setelah di-download, buka file .txt, salin semua isinya, dan tempelkan di aplikasi SIM BK pada fitur "Impor Profil (JSON)".</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        const fileInput = document.getElementById('csv-file-input');
+        const convertBtn = document.getElementById('convert-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const jsonOutput = document.getElementById('json-output');
+
+        let csvContent = null;
+        convertBtn.disabled = true;
+        downloadBtn.disabled = true;
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    csvContent = event.target.result;
+                    convertBtn.disabled = false;
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+        });
+
+        const parseCsvLine = (line) => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') { inQuotes = !inQuotes; continue; }
+                if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        };
+
+        convertBtn.addEventListener('click', () => {
+            if (!csvContent) return;
+
+            try {
+                const lines = csvContent.split(/\r\n|\n|\r/).filter(Boolean);
+                if (lines.length < 2) {
+                    throw new Error("File CSV harus memiliki header dan setidaknya satu baris data.");
+                }
+
+                const headersRaw = parseCsvLine(lines[0]);
+                const headers = headersRaw.map(h => h.trim());
+
+                const profileMapping = {
+                    'NAMA SISWA': 'namaSiswa',
+                    'Apakah anak anda memiliki riwayat penyakit, alergi atau memiliki kondisi gangguan perkembangan/psikologis tertentu?': 'riwayatPenyakit',
+                    'Apa saja kebiasaan baik yang sering dilakukan anak anda di rumah ?': 'kebiasaanBaik',
+                    'Menurut anda apakah ada kebiasaan atau perilaku anak anda yang perlu dirubah ? jika ada tolong dijelaskan': 'perilakuPerluDiubah',
+                    'bagaimana hubungan pertemanan anak anda?': 'hubunganPertemanan',
+                    'alasan Anda memilih sekolah ini untuk anak Anda?': 'motivasiSekolah',
+                    'Hoby': 'hobi',
+                    'Bakat Murid': 'bakat',
+                    'Cita – Cita Murid': 'citaCita',
+                    'Ceritakan tentang diri anda dan keluarga ?': 'infoKeluarga'
+                };
+
+                const actualHeaderMap = {};
+                for (const key in profileMapping) {
+                    const headerIndex = headers.findIndex(h => h.includes(key));
+                    if (headerIndex !== -1) {
+                        actualHeaderMap[headerIndex] = profileMapping[key];
+                    }
+                }
+                
+                const dataRows = lines.slice(1);
+                const jsonData = dataRows.map(line => {
+                    const values = parseCsvLine(line);
+                    const studentProfile = {};
+                    for (const index in actualHeaderMap) {
+                        const jsonKey = actualHeaderMap[index];
+                        if (values[index]) {
+                            studentProfile[jsonKey] = values[index];
+                        }
+                    }
+                    return studentProfile;
+                }).filter(p => p.namaSiswa); // Hanya simpan jika ada nama siswa
+
+                jsonOutput.value = JSON.stringify(jsonData, null, 2);
+                downloadBtn.disabled = false;
+
+            } catch (e) {
+                jsonOutput.value = `Error: ${e.message}`;
+                downloadBtn.disabled = true;
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!jsonOutput.value) return;
+            const blob = new Blob([jsonOutput.value], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'profil_siswa.json.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
