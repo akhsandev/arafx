@@ -921,7 +921,7 @@
                 return;
             }
 
-            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const lines = text.split(/\r\n|\n|\r/).filter(line => line.trim() !== '');
             const studentsToImport = [];
 
             for (const line of lines) {
@@ -1069,13 +1069,12 @@
                 importButton.innerHTML = originalButtonHTML; lucide.createIcons(); importButton.disabled = false; return;
             }
 
-            const lines = text.split('\n').map(l => l.trim()).filter(line => line);
+            const lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(line => line);
             if (lines.length < 2) {
                 showToast("Data tidak valid. Minimal harus ada 1 baris header dan 1 baris data.", "error");
                 importButton.innerHTML = originalButtonHTML; lucide.createIcons(); importButton.disabled = false; return;
             }
 
-            // Simple CSV parser that handles quoted commas
             const parseCsvLine = (line) => {
                 const result = [];
                 let current = '';
@@ -1121,11 +1120,10 @@
             
             try {
                 const batch = writeBatch(db);
-                // Get all students once to match names locally
                 const studentsSnapshot = await getDocs(collection(db, "students"));
                 const studentsMap = new Map();
                 studentsSnapshot.forEach(doc => {
-                    studentsMap.set(doc.data().nama.toUpperCase(), doc.id);
+                    studentsMap.set(doc.data().nama.toUpperCase().trim(), doc.id);
                 });
 
                 dataRows.forEach(line => {
@@ -1133,7 +1131,7 @@
                     const studentName = values[studentNameIndex];
                     if (!studentName) return;
 
-                    const studentId = studentsMap.get(studentName.toUpperCase());
+                    const studentId = studentsMap.get(studentName.toUpperCase().trim());
 
                     if (studentId) {
                         const profileData = {};
@@ -1159,10 +1157,12 @@
                     showToast(`${processedCount} profil siswa berhasil diimpor/diperbarui!`, "success");
                 }
                 if (notFoundStudents.length > 0) {
-                    showToast(`Gagal menemukan ${notFoundStudents.length} siswa: ${notFoundStudents.join(", ")}`, "error");
+                    const limitedNotFound = notFoundStudents.slice(0, 3).join(", ");
+                    const moreCount = notFoundStudents.length > 3 ? ` dan ${notFoundStudents.length - 3} lainnya` : '';
+                    showToast(`Gagal menemukan siswa: ${limitedNotFound}${moreCount}`, "error");
                 }
-                if (processedCount === 0 && notFoundStudents.length === 0) {
-                    showToast("Tidak ada data yang cocok untuk diimpor.", "error");
+                if (processedCount === 0 && notFoundStudents.length > 0) {
+                    showToast("Tidak ada nama siswa di file yang cocok dengan database.", "error");
                 }
                 
                 importProfileModal.classList.remove('visible');
@@ -1240,7 +1240,7 @@
         document.getElementById('close-appointment-modal-btn').addEventListener('click', () => addAppointmentModal.classList.remove('visible'));
         document.getElementById('cancel-appointment-btn').addEventListener('click', () => addAppointmentModal.classList.remove('visible'));
         document.getElementById('add-appointment-form').addEventListener('submit', handleAddAppointment);
-        
+
         document.getElementById('close-profile-modal-btn').addEventListener('click', () => importProfileModal.classList.remove('visible'));
         document.getElementById('cancel-profile-import-btn').addEventListener('click', () => importProfileModal.classList.remove('visible'));
         document.getElementById('submit-profile-import-btn').addEventListener('click', handleImportProfile);
