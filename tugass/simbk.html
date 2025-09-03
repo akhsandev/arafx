@@ -145,7 +145,7 @@
             </div>
         </nav>
 
-        <main id="app-content" class="glass-panel flex-1 h-full overflow-y-auto p-8">
+        <main id="app-content" class="glass-panel flex-1 h-full p-8 flex flex-col">
             <!-- Dynamic content will be loaded here -->
         </main>
     </div>
@@ -315,7 +315,9 @@
         const importProfileJsonModal = document.getElementById('import-profile-json-modal');
         let currentUser = null;
         let currentStudentId = null;
-        let violationChart = null; 
+        let violationChart = null;
+        let allStudentsCache = []; // Cache for students data
+        let profileStatusCache = new Map(); // Cache for profile status
 
         // --- UTILITIES ---
         const showToast = (message, type = 'success') => {
@@ -376,8 +378,8 @@
                  </div>
             `,
             siswa: `
-                <div class="page-content">
-                    <div class="flex justify-between items-center mb-8">
+                <div class="page-content flex flex-col h-full">
+                    <div class="flex-shrink-0 flex justify-between items-center mb-6">
                         <h2 class="text-3xl font-bold text-white">Data Siswa</h2>
                         <div class="flex gap-4">
                              <button id="open-import-profile-json-modal-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
@@ -388,29 +390,43 @@
                             </button>
                         </div>
                     </div>
-                    <div class="glass-panel p-2">
-                        <table class="w-full text-left">
-                            <thead class="border-b border-slate-700">
-                                <tr>
-                                    <th class="p-4">Nama</th><th class="p-4">NISN</th><th class="p-4">Kelas</th><th class="p-4">Poin Pelanggaran</th><th class="p-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="student-list"></tbody>
-                        </table>
+                    <div class="flex-shrink-0 flex gap-4 mb-4">
+                        <div class="relative flex-1">
+                             <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                             <input type="text" id="search-student-input" class="input-glass w-full p-3 pl-10 rounded-lg" placeholder="Cari nama siswa...">
+                        </div>
+                        <select id="class-filter-select" class="input-glass p-3 rounded-lg bg-slate-800">
+                            <option value="all">Semua Kelas</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 overflow-y-auto">
+                        <div class="glass-panel p-2">
+                            <table class="w-full text-left">
+                                <thead class="sticky top-0 bg-slate-900/50 backdrop-blur-sm">
+                                    <tr>
+                                        <th class="p-4">Nama</th><th class="p-4">NISN</th><th class="p-4">Kelas</th>
+                                        <th class="p-4">Poin</th>
+                                        <th class="p-4">Status Profil</th>
+                                        <th class="p-4">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-list"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>`,
             siswaDetail: `
-                <div class="page-content">
-                    <div class="flex justify-between items-start">
-                         <a href="#/siswa" class="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 mb-6">
-                            <i data-lucide="arrow-left"></i> Kembali ke Daftar Siswa
-                        </a>
-                        <button id="open-add-appointment-modal" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-3 rounded-lg flex items-center gap-2 text-sm">
-                            <i data-lucide="calendar-plus"></i> Buat Janji Temu
-                        </button>
-                    </div>
-                    <div id="student-profile-header" class="flex items-center gap-6 mb-8"></div>
-                    <div class="mt-8">
+                <div class="page-content flex flex-col h-full">
+                    <div class="flex-shrink-0">
+                        <div class="flex justify-between items-start">
+                             <a href="#/siswa" class="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 mb-6">
+                                <i data-lucide="arrow-left"></i> Kembali ke Daftar Siswa
+                            </a>
+                            <button id="open-add-appointment-modal" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-3 rounded-lg flex items-center gap-2 text-sm">
+                                <i data-lucide="calendar-plus"></i> Buat Janji Temu
+                            </button>
+                        </div>
+                        <div id="student-profile-header" class="flex items-center gap-6 mb-8"></div>
                         <div class="border-b border-slate-700">
                             <nav class="-mb-px flex space-x-8" id="detail-tabs">
                                 <button data-tab="profil" class="tab-btn py-4 px-1 text-sm font-medium active">Profil Siswa</button>
@@ -418,20 +434,22 @@
                                 <button data-tab="konseling" class="tab-btn py-4 px-1 text-sm font-medium">Sesi Konseling</button>
                             </nav>
                         </div>
-                        <div id="tab-content" class="mt-6"></div>
                     </div>
+                    <div id="tab-content" class="mt-6 flex-1 overflow-y-auto"></div>
                 </div>`,
             pelanggaran: `
-                <div class="page-content">
-                    <h2 class="text-3xl font-bold text-white mb-8">Master Data Pelanggaran</h2>
-                     <p class="text-slate-400 mb-6">Di sini Anda dapat mengelola jenis pelanggaran dan poinnya.</p>
-                     <div class="glass-panel p-2">
-                        <table class="w-full text-left">
-                            <thead class="border-b border-slate-700">
-                                <tr><th class="p-4">Nama Pelanggaran</th><th class="p-4">Kategori</th><th class="p-4">Poin</th></tr>
-                            </thead>
-                            <tbody id="violation-types-list"></tbody>
-                        </table>
+                <div class="page-content flex flex-col h-full">
+                    <h2 class="text-3xl font-bold text-white mb-8 flex-shrink-0">Master Data Pelanggaran</h2>
+                     <p class="text-slate-400 mb-6 flex-shrink-0">Di sini Anda dapat mengelola jenis pelanggaran dan poinnya.</p>
+                     <div class="flex-1 overflow-y-auto">
+                        <div class="glass-panel p-2">
+                            <table class="w-full text-left">
+                                <thead class="sticky top-0 bg-slate-900/50 backdrop-blur-sm">
+                                    <tr><th class="p-4">Nama Pelanggaran</th><th class="p-4">Kategori</th><th class="p-4">Poin</th></tr>
+                                </thead>
+                                <tbody id="violation-types-list"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `,
@@ -621,17 +639,29 @@
             },
             siswa: () => {
                 content.innerHTML = templates.siswa;
-                lucide.createIcons();
-                const studentList = document.getElementById('student-list');
-                
-                onSnapshot(collection(db, "students"), (querySnapshot) => {
-                    studentList.innerHTML = '';
-                    if (querySnapshot.empty) {
-                        studentList.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada data siswa.</td></tr>`;
+                const studentListEl = document.getElementById('student-list');
+                const classFilterEl = document.getElementById('class-filter-select');
+                const searchInputEl = document.getElementById('search-student-input');
+                let unsubscribe = null;
+
+                const displayStudents = () => {
+                    const searchTerm = searchInputEl.value.toLowerCase();
+                    const selectedClass = classFilterEl.value;
+
+                    const filteredStudents = allStudentsCache.filter(student => {
+                        const nameMatch = student.nama.toLowerCase().includes(searchTerm);
+                        const classMatch = selectedClass === 'all' || student.kelas === selectedClass;
+                        return nameMatch && classMatch;
+                    });
+                    
+                    studentListEl.innerHTML = '';
+                    if (filteredStudents.length === 0) {
+                        studentListEl.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Tidak ada siswa yang cocok.</td></tr>`;
                         return;
                     }
-                    querySnapshot.forEach((doc) => {
-                        const student = doc.data();
+
+                    filteredStudents.forEach(student => {
+                        const hasProfile = profileStatusCache.get(student.id);
                         const row = document.createElement('tr');
                         row.className = 'border-b border-slate-800 hover:bg-white/5 transition-colors';
                         row.innerHTML = `
@@ -639,11 +669,51 @@
                             <td class="p-4">${student.nisn || '-'}</td>
                             <td class="p-4">${student.kelas || '-'}</td>
                             <td class="p-4 font-bold ${student.totalPoinPelanggaran > 0 ? 'text-red-400' : ''}">${student.totalPoinPelanggaran || 0}</td>
-                            <td class="p-4"><a href="#/siswa/${doc.id}" class="text-sky-400 hover:text-sky-300 font-semibold">Detail</a></td>
+                            <td class="p-4 text-center">
+                                ${hasProfile ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400" title="Profil Lengkap"></i>' : '<i data-lucide="x-circle" class="w-5 h-5 text-red-500" title="Profil Kosong"></i>'}
+                            </td>
+                            <td class="p-4"><a href="#/siswa/${student.id}" class="text-sky-400 hover:text-sky-300 font-semibold">Detail</a></td>
                         `;
-                        studentList.appendChild(row);
+                        studentListEl.appendChild(row);
                     });
+                    lucide.createIcons();
+                };
+
+                unsubscribe = onSnapshot(query(collection(db, "students"), orderBy("nama")), async (snapshot) => {
+                    studentListEl.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Memuat data siswa...</td></tr>`;
+                    allStudentsCache = [];
+                    const classSet = new Set();
+                    
+                    const profileChecks = [];
+                    snapshot.forEach(doc => {
+                        const studentData = { id: doc.id, ...doc.data()};
+                        allStudentsCache.push(studentData);
+                        if(studentData.kelas) classSet.add(studentData.kelas);
+                        profileChecks.push(
+                            getDocs(query(collection(db, `students/${doc.id}/studentProfiles`), limit(1)))
+                                .then(profileSnap => profileStatusCache.set(doc.id, !profileSnap.empty))
+                        );
+                    });
+
+                    await Promise.all(profileChecks);
+
+                    const currentClass = classFilterEl.value;
+                    const sortedClasses = Array.from(classSet).sort();
+                    classFilterEl.innerHTML = '<option value="all">Semua Kelas</option>';
+                    sortedClasses.forEach(className => {
+                        const option = document.createElement('option');
+                        option.value = className;
+                        option.textContent = className;
+                        if(className === currentClass) option.selected = true;
+                        classFilterEl.appendChild(option);
+                    });
+                    
+                    displayStudents();
                 });
+
+                classFilterEl.addEventListener('change', displayStudents);
+                searchInputEl.addEventListener('input', displayStudents);
+                lucide.createIcons();
             },
             siswaDetail: async (studentId) => {
                 currentStudentId = studentId;
