@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Cerdas v2.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* --- VARIABLE DEFINITIONS --- */
+        :root {
+            --bg-color: #000000;
+            --neon-cyan: #00f6ff;
+            --neon-pink: #ff00c1;
+            --neon-green: #39ff14;
+            --scanline-bg: rgba(0, 0, 0, 0.15);
+            --panel-bg: rgba(20, 150, 200, 0.1);
+        }
+
+        /* --- CORE STYLES --- */
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+            overflow: hidden;
+        }
+
+        /* --- BACKGROUND & OVERLAYS --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, var(--scanline-bg) 0px, var(--scanline-bg) 1px, transparent 1px, transparent 3px);
+            pointer-events: none;
+            animation: scanlines 5s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+        
+        /* --- SPLASH SCREEN EFFECT --- */
+        .glitch-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-color);
+            position: fixed;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+        
+        .typing-effect {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 0 8px var(--neon-green);
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: .15em solid var(--neon-green);
+            display: inline-block; /* Fix: Constrain width to content */
+            animation: typing 2s steps(20, end) forwards;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--neon-green); }
+        }
+
+        /* --- GLITCH EFFECT (for splash screen) --- */
+        .glitch {
+            position: relative;
+            animation: glitch-flicker 1.5s linear infinite alternate;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            overflow: hidden;
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--neon-pink);
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            animation: glitch-anim-1 1s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--neon-cyan), 2px 2px var(--neon-pink);
+            clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+            animation: glitch-anim-2 1.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-flicker {
+            0%, 100% { opacity: 1; text-shadow: 0 0 8px var(--neon-green); }
+            50.2% { opacity: 0.7; text-shadow: 0 0 8px var(--neon-pink); }
+            50.5% { opacity: 1; }
+            50.8% { opacity: 0.5; text-shadow: 0 0 8px var(--neon-cyan); }
+            51% { opacity: 1; }
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: polygon(0 2%, 100% 2%, 100% 33%, 0 33%); }
+            25% { clip-path: polygon(0 40%, 100% 40%, 100% 40%, 0 40%); }
+            50% { clip-path: polygon(0 80%, 100% 80%, 100% 15%, 0 15%); }
+            75% { clip-path: polygon(0 50%, 100% 50%, 100% 50%, 0 50%); }
+            100% { clip-path: polygon(0 70%, 100% 70%, 100% 98%, 0 98%); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: polygon(0 67%, 100% 67%, 100% 95%, 0 95%); }
+            20% { clip-path: polygon(0 5%, 100% 5%, 100% 5%, 0 5%); }
+            60% { clip-path: polygon(0 45%, 100% 45%, 100% 85%, 0 85%); }
+            80% { clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%); }
+            100% { clip-path: polygon(0 55%, 100% 55%, 100% 25%, 0 25%); }
+        }
+
+
+        /* --- UI ELEMENTS --- */
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 15px var(--neon-cyan) inset, 0 0 10px var(--neon-cyan);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 0;
+        }
+
+        .nav-link { transition: all 0.3s ease; border: 1px solid transparent; }
+        .nav-link.active, .nav-link:hover {
+            background-color: var(--panel-bg);
+            color: #fff;
+            border-color: var(--neon-cyan);
+            text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-cyan);
+        }
+
+        button, input, select, textarea {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        
+        input::placeholder, textarea::placeholder { color: rgba(0, 246, 255, 0.5); }
+        input:focus, select:focus, textarea:focus {
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 15px var(--neon-cyan) inset;
+        }
+
+        .btn-primary {
+            background: var(--neon-cyan);
+            color: var(--bg-color);
+            text-shadow: none;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background: #fff;
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+        
+        #login-error { color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); }
+        #logout-btn:hover { border-color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); color: var(--neon-pink); }
+
+        .loader {
+            border: 4px solid rgba(0, 246, 255, 0.2);
+            border-top: 4px solid var(--neon-cyan);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .modal { transition: opacity 0.3s ease; }
+        .student-profile-link { cursor: pointer; color: var(--neon-cyan); font-weight: bold; }
+        .student-profile-link:hover { color: #fff; }
+    </style>
+</head>
+<body class="bg-black text-gray-200 min-h-screen">
+    
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="glitch-wrapper">
+        <h1 id="splash-text" class="typing-effect" data-text="WELCOME, PAK AHSAN">WELCOME, PAK AHSAN</h1>
+    </div>
+
+    <!-- Login View -->
+    <div id="login-view" class="hidden items-center justify-center min-h-screen">
+        <div class="w-full max-w-md">
+            <form id="login-form" class="glass-panel p-8 space-y-6">
+                <div class="text-center">
+                    <i class="fas fa-atom fa-3x text-cyan-300"></i>
+                    <h1 class="text-3xl font-bold mt-4" style="color: white; text-shadow: 0 0 8px var(--neon-cyan);">ABSENSI [v2.2]</h1>
+                    <p class="text-gray-300">// Authenticate to continue</p>
+                </div>
+                <div>
+                    <label for="email" class="block mb-2 text-sm font-medium">EMAIL_ADDR:</label>
+                    <input type="email" id="email" placeholder="user@domain.net" required>
+                </div>
+                <div>
+                    <label for="password" class="block mb-2 text-sm font-medium">PASS_PHRASE:</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="w-full btn-primary font-bold py-3">LOGIN</button>
+                <p id="login-error" class="text-sm text-center h-4"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-app-view" class="hidden flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 glass-panel m-4 p-4 flex-shrink-0 flex flex-col">
+            <div>
+                <div class="flex items-center justify-center mb-8 p-2 border border-dashed border-cyan-500">
+                    <i class="fas fa-atom fa-2x text-cyan-300 mr-3 animate-pulse"></i>
+                    <h1 class="text-2xl font-bold" style="color:white;">SYS_ABSENSI</h1>
+                </div>
+                <nav class="space-y-2">
+                    <a href="#" id="nav-dashboard" class="nav-link active flex items-center p-3">
+                        <i class="fas fa-chart-pie w-6 mr-3"></i> DASHBOARD
+                    </a>
+                    <a href="#" id="nav-absensi" class="nav-link flex items-center p-3">
+                        <i class="fas fa-user-check w-6 mr-3"></i> ENTRY_LOG
+                    </a>
+                    <a href="#" id="nav-rekap" class="nav-link flex items-center p-3">
+                        <i class="fas fa-history w-6 mr-3"></i> REKAP_DATA
+                    </a>
+                    <a href="#" id="nav-siswa" class="nav-link flex items-center p-3">
+                        <i class="fas fa-users w-6 mr-3"></i> USER_MGMT
+                    </a>
+                    <a href="#" id="nav-analisis" class="nav-link flex items-center p-3">
+                        <i class="fas fa-brain w-6 mr-3"></i> AI_ANALYSIS
+                    </a>
+                </nav>
+            </div>
+            <div class="mt-auto">
+                 <a href="#" id="logout-btn" class="nav-link flex items-center p-3 text-red-400">
+                    <i class="fas fa-sign-out-alt w-6 mr-3"></i> LOGOUT
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <!-- All views are here, unchanged in structure -->
+            <div id="view-dashboard" class="space-y-8">
+                <h2 class="text-3xl font-bold" style="color:white;">// DASHBOARD</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-panel p-6"><h3 class="text-lg">TOTAL_SISWA</h3><p id="total-siswa" class="text-4xl font-bold text-cyan-300">0</p></div>
+                    <div class="glass-panel p-6"><h3 class="text-lg">TOTAL_KELAS</h3><p id="total-kelas" class="text-4xl font-bold text-green-300">0</p></div>
+                    <div class="glass-panel p-6"><h3 class="text-lg">KEHADIRAN [TODAY]</h3><p id="kehadiran-hari-ini" class="text-4xl font-bold text-yellow-300">N/A</p></div>
+                    <div class="glass-panel p-6"><h3 class="text-lg">SESSION_ID</h3><p id="user-id-display" class="text-xs break-all">Memuat...</p></div>
+                </div>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass-panel p-6">
+                        <h3 class="text-xl mb-4">// GRAFIK_HARIAN</h3>
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <input type="date" id="graph-date-picker">
+                            <select id="graph-class-filter"></select>
+                        </div>
+                        <div class="h-64 md:h-80"><canvas id="attendanceChart"></canvas></div>
+                    </div>
+                    <div class="glass-panel p-6">
+                        <h3 class="text-xl mb-4 flex items-center"><i class="fas fa-bell text-yellow-300 mr-3 animate-pulse"></i> // ALERT_SYSTEM</h3>
+                        <div id="dashboard-alerts-container" class="space-y-3 max-h-64 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="view-absensi" class="hidden space-y-4">
+                <h2 class="text-3xl font-bold" style="color:white;">// ENTRY_LOG</h2>
+                 <p id="absensi-info-tanggal" class="text-lg text-cyan-300 font-medium"></p>
+                <div class="glass-panel p-6">
+                    <div class="flex flex-col md:flex-row gap-4 mb-6"><input type="date" id="absensi-tanggal" class="flex-1"><select id="absensi-kelas" class="flex-1"></select></div>
+                    <div id="absensi-list-container" class="max-h-96 overflow-y-auto"></div>
+                    <button id="simpan-absensi" class="mt-6 w-full btn-primary font-bold py-3">SIMPAN_LOG</button>
+                </div>
+            </div>
+            <div id="view-rekap" class="hidden space-y-6">
+                <h2 class="text-3xl font-bold" style="color:white;">// REKAP_DATA</h2>
+                 <div class="glass-panel p-6">
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <input type="date" id="rekap-tanggal" class="flex-1"><select id="rekap-kelas" class="flex-1"></select>
+                        <div class="flex gap-2">
+                             <button id="tampilkan-rekap" class="btn-primary font-bold py-2 px-4 w-full md:w-auto">QUERY</button>
+                            <button id="export-csv-btn" class="bg-green-600 hover:bg-green-700 font-bold py-2 px-4 hidden w-full md:w-auto"><i class="fas fa-file-csv mr-2"></i> EXPORT</button>
+                             <button id="delete-attendance-btn" class="bg-red-600 hover:bg-red-700 font-bold py-2 px-4 hidden w-full md:w-auto"><i class="fas fa-trash-alt mr-2"></i> DELETE</button>
+                        </div>
+                    </div>
+                    <div id="rekap-table-container" class="overflow-x-auto"></div>
+                </div>
+            </div>
+            <div id="view-siswa" class="hidden space-y-6">
+                <h2 class="text-3xl font-bold" style="color:white;">// USER_MGMT</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel p-6">
+                        <h3 class="text-xl mb-4">// DATABASE_SISWA</h3>
+                        <div id="siswa-list-container" class="max-h-[30rem] overflow-y-auto"></div>
+                    </div>
+                    <div class="glass-panel p-6">
+                        <h3 class="text-xl mb-4">// IMPORT_JSON</h3>
+                        <p class="text-sm mb-2 text-gray-300">// Paste JSON data below</p>
+                        <textarea id="json-impor-siswa" rows="10"></textarea>
+                        <button id="impor-siswa-btn" class="mt-4 w-full btn-primary font-bold py-3">IMPORT_DATA</button>
+                    </div>
+                </div>
+            </div>
+            <div id="view-analisis" class="hidden space-y-6">
+                <h2 class="text-3xl font-bold" style="color:white;">// AI_ANALYSIS</h2>
+                <div class="glass-panel p-6">
+                    <button id="get-ai-analysis-btn" class="w-full btn-primary font-bold py-3 mb-6"><i class="fas fa-magic mr-2"></i> RUN_ANALYSIS</button>
+                    <div id="ai-result-container"><p class="text-center text-gray-400">// AI output will be displayed here.</p></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="note-modal" class="modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 hidden z-50">
+        <div class="glass-panel p-6 w-full max-w-md space-y-4"><h3 class="text-xl font-bold" style="color:white;" id="note-modal-title"></h3><textarea id="note-modal-textarea" rows="4"></textarea><div class="flex justify-end space-x-3"><button id="note-modal-cancel" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4">BATAL</button><button id="note-modal-save" class="btn-primary font-bold py-2 px-4">SIMPAN</button></div></div>
+    </div>
+    <div id="delete-confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 hidden z-50">
+        <div class="glass-panel p-6 w-full max-w-md space-y-4"><h3 class="text-xl font-bold" style="color:white;"><i class="fas fa-exclamation-triangle text-red-400 mr-3"></i>KONFIRMASI</h3><p id="delete-confirm-message" class="text-gray-300"></p><div class="flex justify-end space-x-3"><button id="delete-confirm-cancel" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4">BATAL</button><button id="delete-confirm-execute" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4">YA, HAPUS</button></div></div>
+    </div>
+    <div id="student-profile-modal" class="modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 hidden z-50">
+        <div class="glass-panel p-6 w-full max-w-3xl space-y-4 max-h-[90vh] flex flex-col"><div class="flex justify-between items-start"><div><h3 class="text-2xl font-bold" style="color:white;" id="student-profile-name"></h3><p class="text-gray-300" id="student-profile-details"></p></div><button id="student-profile-close" class="text-2xl text-gray-400 hover:text-white">&times;</button></div><div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto"><div class="flex flex-col"><h4 class="text-lg font-semibold mb-2">// STATS</h4><div class="relative flex-1 min-h-[250px]"><canvas id="student-profile-chart"></canvas></div></div><div class="flex flex-col"><h4 class="text-lg font-semibold mb-2">// HISTORY_LOG</h4><div id="student-profile-history" class="flex-1 overflow-y-auto bg-gray-800/30 p-2"></div></div></div></div>
+    </div>
+    
+    <script>
+        // --- PARTICLE BACKGROUND SCRIPT ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x; this.y = y; this.directionX = directionX;
+                this.directionY = directionY; this.size = size; this.color = color;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.4) - 0.2;
+                let directionY = (Math.random() * 0.4) - 0.2;
+                particles.push(new Particle(x, y, directionX, directionY, size, 'rgba(0, 246, 255, 0.5)'));
+            }
+        }
+
+        function connectParticles() {
+            let opacityValue = 1;
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a; b < particles.length; b++) {
+                    let distance = ((particles[a].x - particles[b].x) * (particles[a].x - particles[b].x))
+                                 + ((particles[a].y - particles[b].y) * (particles[a].y - particles[b].y));
+                    if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = `rgba(0, 246, 255, ${opacityValue})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+            for(let i = 0; i < particles.length; i++) {
+                particles[i].update();
+            }
+            connectParticles();
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+
+        resizeCanvas();
+        initParticles();
+        animateParticles();
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, writeBatch, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        // --- SPLASH SCREEN LOGIC ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const splashScreen = document.getElementById('splash-screen');
+            const splashText = document.getElementById('splash-text');
+            const loginView = document.getElementById('login-view');
+
+            // After typing animation (2s), start glitch and blinking phase
+            setTimeout(() => {
+                // Stop the typing animation, leaving the cursor blinking
+                splashText.style.animation = 'blink-caret .75s step-end infinite';
+                // Add the glitch class to start the glitch effect
+                splashText.classList.add('glitch');
+            }, 2000); // Trigger exactly when typing animation finishes
+
+            // After blinking phase (e.g., 2s), start fade out
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                splashScreen.addEventListener('transitionend', () => {
+                    splashScreen.style.display = 'none';
+                    if (!auth.currentUser) {
+                        loginView.classList.remove('hidden');
+                        loginView.classList.add('flex');
+                    }
+                }, { once: true });
+            }, 4000); // Total duration 4 seconds
+        });
+
+        // --- Firebase & App Logic (Functionality Unchanged) ---
+        const firebaseConfig = { apiKey: "AIzaSyAUWZ2EI5rvHU-G7aOPG5z2Bkvvzw2yMAw", authDomain: "absen-bd7ab.firebaseapp.com", projectId: "absen-bd7ab", storageBucket: "absen-bd7ab.firebasestorage.app", messagingSenderId: "754352050816", appId: "1:754352050816:web:c610681b3d60f491610c65", measurementId: "G-YNH406M5S4" };
+        const GOOGLE_AI_API_KEY = "AIzaSyCdRvRUU65pt9umiDR-YkZfQAbSI1PyYqc";
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GOOGLE_AI_API_KEY}`;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let currentUserId = null, students = [], classes = [], allAttendanceData = [], attendanceChart = null, studentProfileChart = null, currentAttendanceNotes = {};
+        const loginView = document.getElementById('login-view'), mainAppView = document.getElementById('main-app-view'), loginForm = document.getElementById('login-form'), loginError = document.getElementById('login-error'), logoutBtn = document.getElementById('logout-btn');
+        const views = ['dashboard', 'absensi', 'rekap', 'siswa', 'analisis'], navLinks = views.map(v => document.getElementById(`nav-${v}`));
+        function showView(viewId) { views.forEach(v => { document.getElementById(`view-${v}`).classList.add('hidden'); document.getElementById(`nav-${v}`).classList.remove('active'); }); document.getElementById(`view-${viewId}`).classList.remove('hidden'); document.getElementById(`nav-${viewId}`).classList.add('active'); }
+        navLinks.forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); const viewId = e.target.id.split('-')[1]; showView(viewId); }));
+        onAuthStateChanged(auth, async (user) => { if (user) { currentUserId = user.uid; document.getElementById('user-id-display').textContent = currentUserId; loginView.classList.add('hidden'); loginView.classList.remove('flex'); mainAppView.classList.remove('hidden'); mainAppView.classList.add('flex'); await loadInitialData(); } else { currentUserId = null; const splash = document.getElementById('splash-screen'); if (!splash || splash.style.display === 'none') { loginView.classList.remove('hidden'); loginView.classList.add('flex'); } mainAppView.classList.add('hidden'); mainAppView.classList.remove('flex'); document.getElementById('total-siswa').textContent = '0'; document.getElementById('total-kelas').textContent = '0'; document.getElementById('kehadiran-hari-ini').textContent = 'N/A'; document.getElementById('user-id-display').textContent = ''; if(attendanceChart) attendanceChart.destroy(); if(studentProfileChart) studentProfileChart.destroy(); } });
+        loginForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const loginButton = loginForm.querySelector('button'); loginError.textContent = ''; loginButton.disabled = true; loginButton.textContent = 'Authenticating...'; try { await signInWithEmailAndPassword(auth, email, password); } catch (error) { switch(error.code) { case 'auth/user-not-found': case 'auth/wrong-password': case 'auth/invalid-credential': loginError.textContent = 'err: invalid credentials'; break; default: loginError.textContent = 'err: authentication failed'; } } finally { loginButton.disabled = false; loginButton.textContent = 'LOGIN'; } });
+        logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await signOut(auth); });
+        async function loadInitialData() { if (!currentUserId) return; await Promise.all([ fetchStudents(), fetchAllAttendanceData() ]); populateClassFilters(); setupAbsensiView(); setupDashboardView(); await updateDashboard(); }
+        async function fetchStudents() { const studentsCol = collection(db, `artifacts/absen-bd7ab/users/${currentUserId}/students`); const studentSnapshot = await getDocs(studentsCol); students = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); students.sort((a, b) => { const classCompare = a.kelas.localeCompare(b.kelas, undefined, { numeric: true }); if (classCompare !== 0) return classCompare; return a.nama.localeCompare(b.nama); }); classes = [...new Set(students.map(s => s.kelas))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })); renderStudentList(); }
+        async function fetchAllAttendanceData() { const attendanceCol = collection(db, `artifacts/absen-bd7ab/users/${currentUserId}/attendance`); const snapshot = await getDocs(attendanceCol); allAttendanceData = snapshot.docs.map(doc => ({ date: doc.id, ...doc.data() })); }
+        function renderStudentList() { const container = document.getElementById('siswa-list-container'); if (students.length === 0) { container.innerHTML = `<p>// No user data found.</p>`; return; } container.innerHTML = `<table class="w-full text-left"><thead><tr class="border-b border-cyan-700"><th class="p-2">NAMA</th><th class="p-2">KELAS</th><th class="p-2">NISN</th></tr></thead><tbody>${students.map(s => `<tr class="border-b border-cyan-900"><td class="p-2"><button class="student-profile-link" data-nisn="${s.nisn}">${s.nama}</button></td><td class="p-2">${s.kelas}</td><td class="p-2">${s.nisn}</td></tr>`).join('')}</tbody></table>`; }
+        async function updateDashboard() { document.getElementById('total-siswa').textContent = students.length; document.getElementById('total-kelas').textContent = classes.length; const today = new Date().toISOString().split('T')[0]; const todayRecord = allAttendanceData.find(rec => rec.date === today); if (todayRecord) { const records = todayRecord.records || {}; const totalPresent = Object.values(records).filter(rec => getStatusFromRecord(rec) === 'Hadir').length; const totalStudentsInClass = Object.keys(records).length; const percentage = totalStudentsInClass > 0 ? ((totalPresent / totalStudentsInClass) * 100).toFixed(1) : 0; document.getElementById('kehadiran-hari-ini').textContent = `${percentage}%`; } else { document.getElementById('kehadiran-hari-ini').textContent = 'N/A'; } await renderDailyAttendanceChart(); await generateDashboardAlerts(); }
+        function populateClassFilters() { const selectors = [document.getElementById('absensi-kelas'), document.getElementById('rekap-kelas')]; const graphFilter = document.getElementById('graph-class-filter'); selectors.forEach(s => s.innerHTML = '<option value="">Pilih Kelas</option>'); graphFilter.innerHTML = '<option value="all">Semua Kelas</option>'; classes.forEach(c => { const option = `<option value="${c}">${c}</option>`; selectors.forEach(s => s.innerHTML += option); graphFilter.innerHTML += option; }); }
+        document.getElementById('impor-siswa-btn').addEventListener('click', async () => { const jsonInput = document.getElementById('json-impor-siswa').value; if (!jsonInput.trim()) return; try { const newStudents = JSON.parse(jsonInput); if (!Array.isArray(newStudents)) throw new Error("JSON must be an array."); const batch = writeBatch(db); newStudents.forEach(student => { if (student.nisn && student.nama && student.kelas) { const studentRef = doc(db, `artifacts/absen-bd7ab/users/${currentUserId}/students`, student.nisn); batch.set(studentRef, student); } }); await batch.commit(); alert("Import success!"); document.getElementById('json-impor-siswa').value = ''; await loadInitialData(); } catch (error) { alert("Import failed. Check JSON format.\nError: " + error.message); } });
+        function formatTanggalIndonesia(dateString) { const d = new Date(dateString + 'T00:00:00'); return d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); }
+        function setupAbsensiView() { const tgl = document.getElementById('absensi-tanggal'), kls = document.getElementById('absensi-kelas'), info = document.getElementById('absensi-info-tanggal'); function updateDisplay() { info.textContent = tgl.value ? formatTanggalIndonesia(tgl.value) : ''; } tgl.valueAsDate = new Date(); updateDisplay(); tgl.addEventListener('change', () => { updateDisplay(); renderAttendanceForm(); }); kls.addEventListener('change', renderAttendanceForm); }
+        function getStatusFromRecord(r) { return typeof r === 'object' ? r.status : r; }
+        function getNoteFromRecord(r) { return typeof r === 'object' ? (r.note || '') : ''; }
+        async function renderAttendanceForm() { const selClass = document.getElementById('absensi-kelas').value, container = document.getElementById('absensi-list-container'), date = document.getElementById('absensi-tanggal').value; currentAttendanceNotes = {}; if (!selClass) { container.innerHTML = `<p class="text-center">// Select class to begin.</p>`; return; } container.innerHTML = '<div class="flex justify-center"><div class="loader"></div></div>'; let existingRecords = {}; const recordForDate = allAttendanceData.find(rec => rec.date === date); if(recordForDate) existingRecords = recordForDate.records || {}; const filteredStudents = students.filter(s => s.kelas === selClass); if (filteredStudents.length === 0) { container.innerHTML = `<p class="text-center">// No users in this class.</p>`; return; } const statuses = ['Hadir', 'Sakit', 'Izin', 'Alpa', 'Terlambat']; container.innerHTML = filteredStudents.map(student => { const savedRecord = existingRecords[student.nisn], savedStatus = savedRecord ? getStatusFromRecord(savedRecord) : 'Hadir', savedNote = savedRecord ? getNoteFromRecord(savedRecord) : ''; currentAttendanceNotes[student.nisn] = savedNote; const noteIconClass = savedNote ? 'text-cyan-300' : 'text-gray-500'; return `<div class="flex items-center justify-between p-3 border-b border-cyan-900" data-nisn="${student.nisn}"><p class="flex-1">${student.nama}</p><div class="flex items-center space-x-2"><div class="flex space-x-1">${statuses.map(s => `<label class="cursor-pointer"><input type="radio" name="status-${student.nisn}" value="${s}" class="sr-only peer" ${s === savedStatus ? 'checked' : ''}><span class="px-2 py-1 text-xs rounded-full peer-checked:bg-cyan-500 peer-checked:text-black bg-gray-800">${s.charAt(0)}</span></label>`).join('')}</div><button class="note-btn ${noteIconClass} hover:text-cyan-400" data-nisn="${student.nisn}" data-nama="${student.nama}"><i class="fas fa-comment-dots"></i></button></div></div>`; }).join(''); container.querySelectorAll('.note-btn').forEach(btn => btn.addEventListener('click', () => openNoteModal(btn.dataset.nisn, btn.dataset.nama))); }
+        document.getElementById('simpan-absensi').addEventListener('click', async () => { const date = document.getElementById('absensi-tanggal').value, className = document.getElementById('absensi-kelas').value; if (!date || !className) return; const attendanceRecords = {}; const studentForms = document.querySelectorAll('#absensi-list-container > div[data-nisn]'); studentForms.forEach(form => { const nisn = form.dataset.nisn, checkedRadio = form.querySelector(`input[name="status-${nisn}"]:checked`); if (checkedRadio) attendanceRecords[nisn] = { status: checkedRadio.value, note: currentAttendanceNotes[nisn] || '' }; }); if (Object.keys(attendanceRecords).length !== studentForms.length) return; try { const attendanceRef = doc(db, `artifacts/absen-bd7ab/users/${currentUserId}/attendance`, date); await setDoc(attendanceRef, { kelas: className, records: attendanceRecords, timestamp: new Date() }, { merge: true }); alert("Log saved."); await fetchAllAttendanceData(); await updateDashboard(); } catch (error) { alert("Failed to save log."); } });
+        const noteModal = document.getElementById('note-modal'), noteModalTitle = document.getElementById('note-modal-title'), noteTextarea = document.getElementById('note-modal-textarea'), saveNoteBtn = document.getElementById('note-modal-save'), cancelNoteBtn = document.getElementById('note-modal-cancel'); let currentEditingNisn = null; function openNoteModal(nisn, studentName) { currentEditingNisn = nisn; noteModalTitle.textContent = `// Add note for ${studentName}`; noteTextarea.value = currentAttendanceNotes[nisn] || ''; noteModal.classList.remove('hidden'); } function closeNoteModal() { noteModal.classList.add('hidden'); currentEditingNisn = null; } saveNoteBtn.addEventListener('click', () => { if (currentEditingNisn) { currentAttendanceNotes[currentEditingNisn] = noteTextarea.value; const noteBtn = document.querySelector(`.note-btn[data-nisn="${currentEditingNisn}"]`); if (noteBtn) noteBtn.classList.toggle('text-cyan-300', !!noteTextarea.value); } closeNoteModal(); }); cancelNoteBtn.addEventListener('click', closeNoteModal);
+        const tampilkanRekapBtn = document.getElementById('tampilkan-rekap'), exportCsvBtn = document.getElementById('export-csv-btn'), deleteAttendanceBtn = document.getElementById('delete-attendance-btn');
+        tampilkanRekapBtn.addEventListener('click', () => { const date = document.getElementById('rekap-tanggal').value, className = document.getElementById('rekap-kelas').value, container = document.getElementById('rekap-table-container'); exportCsvBtn.classList.add('hidden'); deleteAttendanceBtn.classList.add('hidden'); if (!date) return; const attendanceRecord = allAttendanceData.find(rec => rec.date === date); if (attendanceRecord) { const studentRecords = attendanceRecord.records || {}; let filteredStudents = students.filter(s => Object.keys(studentRecords).includes(s.nisn)); if (className) filteredStudents = filteredStudents.filter(s => s.kelas === className); if (filteredStudents.length === 0) { container.innerHTML = `<p>// No data for this filter.</p>`; return; } container.innerHTML = `<table class="w-full text-left mt-4"><thead><tr class="border-b border-cyan-700"><th class="p-2">NAMA</th><th class="p-2">KELAS</th><th class="p-2">STATUS</th><th class="p-2">KETERANGAN</th></tr></thead><tbody>${filteredStudents.map(s => { const record = studentRecords[s.nisn], status = record ? getStatusFromRecord(record) : 'N/A', note = record ? getNoteFromRecord(record) : '-'; return `<tr class="border-b border-cyan-900"><td class="p-2"><button class="student-profile-link" data-nisn="${s.nisn}">${s.nama}</button></td><td class="p-2">${s.kelas}</td><td class="p-2">${status}</td><td class="p-2">${note}</td></tr>`; }).join('')}</tbody></table>`; exportCsvBtn.classList.remove('hidden'); deleteAttendanceBtn.classList.remove('hidden'); } else { container.innerHTML = `<p>// No attendance data for this date.</p>`; } });
+        function exportToCSV() { const table = document.querySelector('#rekap-table-container table'); if (!table) return; let csv = [Array.from(table.querySelectorAll('thead th')).map(th => th.innerText).join(',')]; table.querySelectorAll('tbody tr').forEach(row => { csv.push(Array.from(row.querySelectorAll('td')).map(td => `"${td.innerText.replace(/"/g, '""')}"`).join(',')); }); const csvContent = "data:text/csv;charset=utf-8," + csv.join('\n'); const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `rekap_kehadiran_${document.getElementById('rekap-tanggal').value}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+        exportCsvBtn.addEventListener('click', exportToCSV);
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal'), deleteConfirmMessage = document.getElementById('delete-confirm-message'), deleteConfirmCancelBtn = document.getElementById('delete-confirm-cancel'), deleteConfirmExecuteBtn = document.getElementById('delete-confirm-execute'); let dateToDelete = null; deleteAttendanceBtn.addEventListener('click', () => { const date = document.getElementById('rekap-tanggal').value; if (!date) return; dateToDelete = date; deleteConfirmMessage.innerHTML = `Hapus semua data absensi tanggal <strong>${formatTanggalIndonesia(date)}</strong>? Operasi ini tidak dapat dibatalkan.`; deleteConfirmModal.classList.remove('hidden'); }); deleteConfirmCancelBtn.addEventListener('click', () => { deleteConfirmModal.classList.add('hidden'); dateToDelete = null; }); deleteConfirmExecuteBtn.addEventListener('click', async () => { if (!dateToDelete) return; try { const attendanceRef = doc(db, `artifacts/absen-bd7ab/users/${currentUserId}/attendance`, dateToDelete); await deleteDoc(attendanceRef); alert(`Data log for ${dateToDelete} deleted.`); document.getElementById('rekap-table-container').innerHTML = ''; exportCsvBtn.classList.add('hidden'); deleteAttendanceBtn.classList.add('hidden'); deleteConfirmModal.classList.add('hidden'); dateToDelete = null; await fetchAllAttendanceData(); await updateDashboard(); } catch (error) { alert("Failed to delete data."); } });
+        const graphDatePicker = document.getElementById('graph-date-picker'), graphClassFilter = document.getElementById('graph-class-filter'); function setupDashboardView() { graphDatePicker.valueAsDate = new Date(); graphDatePicker.addEventListener('change', renderDailyAttendanceChart); graphClassFilter.addEventListener('change', renderDailyAttendanceChart); }
+        async function renderDailyAttendanceChart() { if (!currentUserId) return; const selectedDate = graphDatePicker.value, selectedClass = graphClassFilter.value; if (!selectedDate) return; const ctx = document.getElementById('attendanceChart').getContext('2d'); const attendanceData = { Hadir: 0, Sakit: 0, Izin: 0, Alpa: 0, Terlambat: 0 }; const statusColors = { Hadir: 'rgba(57, 255, 20, 0.7)', Sakit: 'rgba(255, 206, 86, 0.7)', Izin: 'rgba(54, 162, 235, 0.7)', Alpa: 'rgba(255, 0, 193, 0.7)', Terlambat: 'rgba(153, 102, 255, 0.7)' }; const studentMap = students.reduce((map, student) => (map[student.nisn] = student, map), {}); const recordForDate = allAttendanceData.find(rec => rec.date === selectedDate); if (recordForDate) { const records = recordForDate.records || {}; for (const nisn in records) { const student = studentMap[nisn]; if (student && (selectedClass === 'all' || student.kelas === selectedClass)) { const status = getStatusFromRecord(records[nisn]); if (attendanceData.hasOwnProperty(status)) attendanceData[status]++; } } } if (attendanceChart) attendanceChart.destroy(); attendanceChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(attendanceData), datasets: [{ label: 'Jumlah Siswa', data: Object.values(attendanceData), backgroundColor: Object.values(statusColors), borderColor: '#000', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#FFFFFF' } }, title: { display: true, text: `Kehadiran: ${selectedClass === 'all' ? 'Semua Kelas' : selectedClass}`, color: '#FFFFFF', font: { size: 16 } } } } }); }
+        async function generateDashboardAlerts() { if (!currentUserId) return; const container = document.getElementById('dashboard-alerts-container'); container.innerHTML = '<div class="flex justify-center"><div class="loader !w-6 !h-6 !border-2"></div></div>'; const alerts = []; const studentMap = students.reduce((map, student) => ({ ...map, [student.nisn]: student.nama }), {}); const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); const absenceCounts = {}; allAttendanceData.forEach(doc => { if (new Date(doc.date) >= thirtyDaysAgo) { const records = doc.records || {}; for (const nisn in records) { if (!absenceCounts[nisn]) absenceCounts[nisn] = { Alpa: 0, Sakit: 0, Terlambat: 0 }; const status = getStatusFromRecord(records[nisn]); if (absenceCounts[nisn].hasOwnProperty(status)) absenceCounts[nisn][status]++; } } }); for (const nisn in absenceCounts) { const studentName = studentMap[nisn] || `NISN ${nisn}`; if (absenceCounts[nisn].Alpa >= 3) alerts.push({ type: 'danger', message: `<strong>${studentName}</strong>: ${absenceCounts[nisn].Alpa}x ALPA in 30 days.` }); if (absenceCounts[nisn].Sakit >= 5) alerts.push({ type: 'warning', message: `<strong>${studentName}</strong>: ${absenceCounts[nisn].Sakit}x SAKIT in 30 days.` }); } const todayRecord = allAttendanceData.find(rec => rec.date === new Date().toISOString().split('T')[0]); const now = new Date(); if (now.getHours() >= 8 && now.getHours() < 16 && now.getDay() > 0 && now.getDay() < 6 && !todayRecord) alerts.push({ type: 'info', message: `Log for today not yet submitted.` }); if (alerts.length > 0) { container.innerHTML = alerts.map(alert => { const icons = { danger: 'fa-exclamation-triangle', warning: 'fa-exclamation-circle', info: 'fa-info-circle' }, colors = { danger: 'text-red-400', warning: 'text-yellow-400', info: 'text-blue-300' }; return `<div class="flex items-start p-3 bg-black/30"><i class="fas ${icons[alert.type]} ${colors[alert.type]} mt-1 mr-3"></i><p class="text-sm">${alert.message}</p></div>`; }).join(''); } else { container.innerHTML = `<p class="text-center text-sm text-gray-500">// System clear. No alerts.</p>`; } }
+        async function fetchWithRetry(url, options, retries = 4) { let delay = 1000; for (let i = 0; i < retries; i++) { try { const response = await fetch(url, options); if (response.status < 500) return response; } catch (error) { if (i === retries - 1) throw error; } await new Promise(resolve => setTimeout(resolve, delay)); delay *= 2; } }
+        document.getElementById('get-ai-analysis-btn').addEventListener('click', async () => { const resultContainer = document.getElementById('ai-result-container'); resultContainer.innerHTML = '<div class="flex justify-center"><div class="loader"></div></div>'; try { const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); const recentAttendance = allAttendanceData.filter(rec => new Date(rec.date) >= thirtyDaysAgo); if (recentAttendance.length === 0 || students.length === 0) { resultContainer.innerHTML = `<p class="text-center text-yellow-400">// Insufficient data for analysis.</p>`; return; } const studentMap = students.reduce((map, student) => (map[student.nisn] = student, map), {}); let promptData = "Attendance data (last 30 days):\n"; recentAttendance.forEach(rec => { promptData += `Date: ${rec.date}\n`; for(const [nisn, record] of Object.entries(rec.records || {})){ const s = studentMap[nisn]; promptData += `- ${s ? s.nama : nisn} (${s ? s.kelas : 'N/A'}): ${getStatusFromRecord(record)}${getNoteFromRecord(record) ? ` (Note: ${getNoteFromRecord(record)})` : ''}\n`; } }); const systemPrompt = "You are a smart AI assistant for a high school physics teacher. Analyze student attendance data. Provide a brief summary, identify students with problematic attendance (frequent Alpha, Late, or Sick), and give concrete, proactive advice for the teacher. Use Markdown for clean formatting. Respond in Indonesian."; const userQuery = `Analyze this attendance data:\n\n${promptData}`; const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, }; const response = await fetchWithRetry(GEMINI_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`API call failed: ${response.status}`); const result = await response.json(); const text = result.candidates?.[0]?.content?.parts?.[0]?.text; if (text) { let htmlResult = text.replace(/### (.*)/g, '<h3 class="text-xl font-bold mt-4 mb-2 text-cyan-300">$1</h3>').replace(/## (.*)/g, '<h2 class="text-2xl font-bold mt-6 mb-3 text-cyan-300">$1</h2>').replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>').replace(/\* (.*)/g, '<li class="ml-5 list-disc">$1</li>').replace(/\n/g, '<br>'); resultContainer.innerHTML = `<div class="prose prose-invert max-w-none text-gray-300">${htmlResult}</div>`; } else { throw new Error("No text in AI response."); } } catch (error) { resultContainer.innerHTML = `<p class="text-center text-red-400">// AI connection failed. Please try again later.</p>`; } });
+        const studentProfileModal = document.getElementById('student-profile-modal');
+        function showStudentProfile(nisn) { const student = students.find(s => s.nisn === nisn); if (!student) return; document.getElementById('student-profile-name').textContent = student.nama; document.getElementById('student-profile-details').textContent = `Kelas: ${student.kelas} | NISN: ${student.nisn}`; const stats = { Hadir: 0, Sakit: 0, Izin: 0, Alpa: 0, Terlambat: 0 }; const history = []; let totalDaysRecorded = 0; allAttendanceData.forEach(day => { const record = day.records[nisn]; if (record) { totalDaysRecorded++; const status = getStatusFromRecord(record); if (stats.hasOwnProperty(status)) stats[status]++; if (status !== 'Hadir') history.push({ date: day.date, status: status, note: getNoteFromRecord(record) }); } }); stats.Hadir = totalDaysRecorded - (stats.Sakit + stats.Izin + stats.Alpa + stats.Terlambat); const historyContainer = document.getElementById('student-profile-history'); if (history.length > 0) { history.sort((a,b) => new Date(b.date) - new Date(a.date)); historyContainer.innerHTML = `<table class="w-full text-left text-sm"><thead><tr class="border-b border-cyan-700"><th class="p-2">TANGGAL</th><th class="p-2">STATUS</th><th class="p-2">NOTE</th></tr></thead><tbody>${history.map(h => `<tr class="border-b border-cyan-900"><td class="p-2 whitespace-nowrap">${formatTanggalIndonesia(h.date)}</td><td class="p-2">${h.status}</td><td class="p-2">${h.note || '-'}</td></tr>`).join('')}</tbody></table>`; } else { historyContainer.innerHTML = `<p class="text-center text-gray-400 p-4">// No non-present history.</p>`; } const ctx = document.getElementById('student-profile-chart').getContext('2d'); const statusColors = { Hadir: 'rgba(57, 255, 20, 0.7)', Sakit: 'rgba(255, 206, 86, 0.7)', Izin: 'rgba(54, 162, 235, 0.7)', Alpa: 'rgba(255, 0, 193, 0.7)', Terlambat: 'rgba(153, 102, 255, 0.7)' }; if (studentProfileChart) studentProfileChart.destroy(); studentProfileChart = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(stats), datasets: [{ label: 'Jumlah Hari', data: Object.values(stats), backgroundColor: Object.values(statusColors), borderColor: '#000', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#FFFFFF' } } } } }); studentProfileModal.classList.remove('hidden'); }
+        mainAppView.addEventListener('click', (e) => { const link = e.target.closest('.student-profile-link'); if(link) { e.preventDefault(); showStudentProfile(link.dataset.nisn); } });
+        document.getElementById('student-profile-close').addEventListener('click', () => { studentProfileModal.classList.add('hidden'); });
+        showView('dashboard');
+    </script>
+</body>
+</html>
+
