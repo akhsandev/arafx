@@ -175,6 +175,10 @@
                         <span id="notification-badge" class="notification-badge bg-red-600 text-white rounded-full hidden">0</span>
                     </button>
                 </div>
+                <a href="https://arafx.vercel.app/absen" target="_blank" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all">
+                    <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                    <span>Absen Siswa</span>
+                </a>
                 <button id="login-guru-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all">
                     <i data-lucide="log-in" class="w-4 h-4"></i>
                     <span id="auth-btn-text">Login Guru</span>
@@ -1226,7 +1230,7 @@
                                 <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
                                     ${sub.linkGdrive ? `<a href="${sub.linkGdrive}" target="_blank" class="text-blue-400 hover:underline">Lihat Link</a>` : ''}
                                     ${sub.fileUrl ? `<a href="${sub.fileUrl}" target="_blank" class="text-green-400 hover:underline">Lihat File</a>` : ''}
-                                    <button data-id="${sub.id}" class="delete-submission-btn text-red-400 hover:underline">Hapus</button>
+                                    <button data-id="${sub.id}" data-type="submission" class="delete-btn text-red-400 hover:underline">Hapus</button>
                                     ${reviseButtonHtml}
                                 </div>
                                 ${gradingFormHtml}
@@ -2077,3 +2081,5 @@
     </script>
 </body>
 </html>
+
+
