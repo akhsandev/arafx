@@ -1,0 +1,2875 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pengumpul Tugas</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- NEW LIBRARIES FOR IMAGE COMPRESSION -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    
+    <!-- NOTE: Lucide Icons script moved to the end of the body to prevent loading errors -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-200 */
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            outline: none;
+        }
+        /* Style for date picker icon */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+            cursor: pointer;
+        }
+        /* Remove default arrow from select */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* bg-blue-600 */
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* bg-blue-700 */
+        }
+        .btn-secondary {
+            background-color: #4f46e5; /* bg-indigo-600 */
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #4338ca; /* bg-indigo-700 */
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Glow effect for title and quotes */
+        .text-glow {
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        /* Animation */
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-4000 { animation-delay: -4s; }
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 8px rgba(59, 130, 246, 0.6), 0 0 20px rgba(79, 70, 229, 0.4);
+            }
+            50% {
+                text-shadow: 0 0 16px rgba(59, 130, 246, 0.8), 0 0 40px rgba(79, 70, 229, 0.6);
+            }
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            height: 18px;
+            width: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        /* Hapus elemen particle */
+        #particle-canvas {
+            display: none;
+        }
+        /* Remove default marker from summary */
+        summary {
+            list-style: none;
+        }
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        /* Filter button styling */
+        .filter-btn {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .filter-btn.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+
+    <!-- Background Gradient Blobs -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute top-[-20%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full opacity-30 filter blur-3xl animate-blob"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-600 rounded-full opacity-30 filter blur-3xl animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <!-- Pre-header -->
+        <div class="text-center mb-4 text-gray-400 text-xs">
+            <p class="font-bold text-sm text-gray-300">SMAN 1 SOPPENG</p>
+            <p>Dibuat dengan penuh cinta oleh Akhsan Rian Anugrah., S.Pd., Gr.</p>
+        </div>
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-4">
+                <img src="https://arafx.vercel.app/logo.png" alt="Logo Sekolah" class="w-12 h-12 bg-white p-1 rounded-lg">
+                <h1 class="text-2xl md:text-3xl font-bold text-white text-glow">Portal Tugas Siswa</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="notification-bell-container" class="relative hidden">
+                    <button id="notification-bell" class="p-2 rounded-full glass-card hover:bg-white/10">
+                        <i data-lucide="bell" class="w-5 h-5 text-yellow-400"></i>
+                        <span id="notification-badge" class="notification-badge bg-red-600 text-white rounded-full hidden">0</span>
+                    </button>
+                </div>
+                <button id="login-guru-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span id="auth-btn-text">Login Guru</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Inspirational Quote Section -->
+        <section id="quote-section" class="my-8 text-center">
+            <p id="inspirational-quote" class="text-lg md:text-xl font-medium text-cyan-300 text-glow italic">"Memuat kutipan inspiratif..."</p>
+        </section>
+
+        <!-- Statistics Section -->
+        <section id="statistik-section" class="mb-12">
+            <div class="glass-card p-6 rounded-2xl">
+                <h2 class="text-2xl font-bold mb-6 text-white flex items-center gap-3"><i data-lucide="bar-chart-3" class="text-green-400"></i> Statistik Umum</h2>
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Chart Container for Submission Chart -->
+                    <div id="submissionChartContainer" class="glass-card p-4 rounded-lg relative h-80 md:h-96">
+                         <h3 class="text-sm font-medium text-gray-400 mb-2">
+                             <span id="chart-title">Tingkat Pengumpulan Tugas Terbaru per Kelas</span>
+                         </h3>
+                         <canvas id="submissionChart" class="w-full h-full"></canvas>
+                    </div>
+
+                    <!-- Chart Container for Attendance Chart -->
+                    <div id="attendanceChartContainer" class="glass-card p-4 rounded-lg relative h-[450px] md:h-96">
+                         <h3 class="text-sm font-medium text-gray-400 mb-2">
+                             <span id="attendance-chart-title">Statistik Kehadiran</span>
+                         </h3>
+                         <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <div class="relative w-full">
+                                <select id="absensi-chart-kelas-select" class="w-full p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                    <option value="semua" class="bg-gray-800">Semua Kelas</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 top-0 flex items-center px-2 text-gray-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="relative w-full">
+                                <select id="absensi-chart-month-select" class="w-full p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                    <!-- Options populated by JS -->
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 top-0 flex items-center px-2 text-gray-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="relative w-full">
+                                <select id="absensi-chart-year-select" class="w-full p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                    <!-- Options populated by JS -->
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 top-0 flex items-center px-2 text-gray-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                         </div>
+                         <canvas id="attendanceChart" class="w-full h-full"></canvas>
+                    </div>
+                    <!-- Nested Grid for Key Metrics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-sm font-medium text-gray-400">Total Tugas Aktif</h3>
+                            <p id="total-tugas-stat" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-lg">
+                            <h3 class="text-sm font-medium text-gray-400">Total Siswa</h3>
+                            <p id="total-siswa-stat" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Materials Section -->
+        <section id="materi-section" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-white flex items-center gap-3"><i data-lucide="library" class="text-purple-400"></i> Materi Pembelajaran</h2>
+            <div id="materi-container" class="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4">
+                <!-- Materi cards will be injected here -->
+                <p id="loading-materi-text" class="text-gray-400">Memuat materi...</p>
+            </div>
+        </section>
+
+        <!-- Teacher Dashboard (Hidden by default) -->
+        <div id="guru-dashboard" class="hidden mb-8 p-6 rounded-2xl glass-card space-y-4">
+            <h2 class="text-2xl font-bold text-white flex items-center gap-3"><i data-lucide="user-cog" class="text-indigo-400"></i> Panel Kontrol Guru</h2>
+            
+            <!-- Collapsible: Create New Task -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Buat Tugas Baru</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10">
+                        <form id="form-tugas-baru" class="space-y-4">
+                            <input id="judul-tugas" type="text" placeholder="Judul Tugas" class="w-full p-3 rounded-lg glass-input text-white" required>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Pilih Kelas Target</label>
+                                <div id="kelas-checkbox-container" class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-lg glass-input min-h-[6rem]">
+                                    <p class="text-gray-400 col-span-full">Daftar siswa perlu diisi untuk menampilkan kelas.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="deadline-tugas" class="block text-sm font-medium text-gray-300 mb-2">Tenggat Waktu</label>
+                                <input id="deadline-tugas" type="date" class="w-full p-3 rounded-lg glass-input text-white" required>
+                            </div>
+                            <textarea id="deskripsi-tugas" placeholder="Deskripsi Tugas" class="w-full p-3 rounded-lg glass-input text-white h-24" required></textarea>
+                            <button type="submit" class="w-full btn-secondary text-white font-bold py-3 rounded-lg">Buat Tugas</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible: Manage Students -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Kelola Daftar Siswa</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10">
+                        <form id="form-daftar-siswa" class="space-y-4">
+                            <textarea id="daftar-siswa-input" placeholder="Masukkan satu siswa per baris. Format: Nama Siswa, Kelas. Contoh: Budi, X1" class="w-full p-3 rounded-lg glass-input text-white h-36"></textarea>
+                            <button type="submit" class="w-full btn-secondary text-white font-bold py-3 rounded-lg">Update Daftar Siswa</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible: Manage Content -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Kelola Konten</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10 grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-lg font-semibold mb-3 text-white">Tugas yang Ada</h4>
+                            <div id="manage-tasks-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                                <p class="text-gray-400">Memuat tugas...</p>
+                            </div>
+                        </div>
+                        <div>
+                             <h4 class="text-lg font-semibold mb-3 text-white">Materi Pembelajaran</h4>
+                             <form id="form-materi-baru" class="space-y-4 mb-4">
+                                <input id="judul-materi" type="text" placeholder="Judul Materi" class="w-full p-3 rounded-lg glass-input text-white" required>
+                                <input id="link-pdf" type="url" placeholder="Link Google Drive PDF" class="w-full p-3 rounded-lg glass-input text-white" required>
+                                <button type="submit" class="w-full btn-secondary text-white font-bold py-3 rounded-lg">Tambah Materi</button>
+                            </form>
+                            <div id="manage-materi-list" class="space-y-3">
+                                <p class="text-gray-400">Belum ada materi.</p>
+                            </div>
+                            <!-- Materi Pagination Controls -->
+                            <div class="mt-4 flex justify-between items-center hidden" id="materi-pagination-controls">
+                                <button id="prev-materi-page-btn" class="p-2 rounded-md glass-card hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </button>
+                                <span id="materi-page-info" class="text-xs text-gray-400"></span>
+                                <button id="next-materi-page-btn" class="p-2 rounded-md glass-card hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW FEATURE: Daily Attendance Input -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Input Kehadiran</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10 space-y-4">
+                        <div class="flex flex-col md:flex-row gap-4 items-end">
+                            <div class="relative w-full">
+                                <label for="absensi-tanggal-input" class="block text-sm font-medium text-gray-300 mb-1">Pilih Tanggal</label>
+                                <input id="absensi-tanggal-input" type="date" class="w-full p-2 rounded-lg glass-input text-white" required>
+                            </div>
+                            <div class="relative w-full md:w-auto">
+                                <label for="absensi-kelas-select" class="block text-sm font-medium text-gray-300 mb-1">Pilih Kelas</label>
+                                <select id="absensi-kelas-select" class="w-full p-2 rounded-lg glass-input text-white pr-8">
+                                    <option value="" class="bg-gray-800">-- Pilih Kelas --</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 top-6 flex items-center px-2 text-gray-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="absensi-siswa-list" class="hidden space-y-3 max-h-60 overflow-y-auto pr-2">
+                            <p class="text-gray-400 text-sm p-4 text-center">Pilih kelas untuk menampilkan daftar siswa.</p>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-4 items-center hidden" id="absensi-controls">
+                            <button id="save-attendance-btn" class="w-full btn-secondary text-white font-bold py-3 rounded-lg">Simpan Absensi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NEW FEATURE: Delete Attendance by Class and Date -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Hapus Riwayat Absensi</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10 space-y-4">
+                        <p class="text-sm text-gray-400">Pilih kelas dan tanggal untuk menghapus data absensi.</p>
+                        <div class="flex flex-col md:flex-row gap-4 items-end">
+                            <div class="relative w-full">
+                                <label for="hapus-kelas-select" class="block text-sm font-medium text-gray-300 mb-1">Pilih Kelas</label>
+                                <select id="hapus-kelas-select" class="w-full p-2 rounded-lg glass-input text-white pr-8">
+                                    <option value="" class="bg-gray-800">-- Pilih Kelas --</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 top-6 flex items-center px-2 text-gray-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div class="relative w-full">
+                                <label for="hapus-tanggal-select" class="block text-sm font-medium text-gray-300 mb-1">Pilih Tanggal</label>
+                                <select id="hapus-tanggal-select" class="w-full p-2 rounded-lg glass-input text-white pr-8" disabled>
+                                    <option value="" class="bg-gray-800">-- Pilih Tanggal --</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 top-6 flex items-center px-2 text-gray-400">
+                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <button id="refresh-hapus-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-all">
+                                <i data-lucide="refresh-ccw" class="w-4 h-4"></i>
+                                Refresh Tanggal
+                            </button>
+                            <button id="hapus-riwayat-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-700 transition-all" disabled>
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                Hapus Riwayat Ini
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW FEATURE: Attendance Report -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Rekap Absensi</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10">
+                         <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+                            <h4 class="text-lg font-semibold text-white">Data Kehadiran</h4>
+                            <div class="flex flex-wrap gap-4 items-center">
+                                <div class="relative">
+                                    <select id="rekap-kelas-select" class="w-full md:w-auto p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                        <option value="semua" class="bg-gray-800">Semua Kelas</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <input id="rekap-tanggal-input" type="date" class="p-2 rounded-lg glass-input text-white">
+                                </div>
+                                <button id="filter-rekap-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-all">
+                                    <i data-lucide="filter" class="w-4 h-4"></i>
+                                    Filter
+                                </button>
+                                <button id="download-absensi-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-green-700 transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Unduh Data Filter
+                                </button>
+                                <button id="download-all-absensi-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-green-700 transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Unduh Semua Data
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Pagination Controls for Rekap -->
+                        <div class="mt-4 flex justify-between items-center hidden" id="rekap-pagination-controls">
+                            <button id="prev-rekap-page-btn" class="px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Sebelumnya</span>
+                            </button>
+                            <span id="rekap-page-info" class="text-sm text-gray-400"></span>
+                            <button id="next-rekap-page-btn" class="px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <span>Selanjutnya</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="border-b border-white/10">
+                                    <tr>
+                                        <th class="p-4">Tanggal</th>
+                                        <th class="p-4">Jam</th>
+                                        <th class="p-4">Nama Siswa</th>
+                                        <th class="p-4">Kelas</th>
+                                        <th class="p-4">Status</th>
+                                        <th class="p-4">Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rekap-table-body">
+                                   <tr><td colspan="6" class="text-center p-8 text-gray-400">Pilih kelas dan tanggal untuk melihat rekap.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible: Monitoring -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Monitoring Tugas</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div id="monitoring-section" class="p-4 border-t border-white/10">
+                        <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+                            <h4 class="text-lg font-semibold text-white">Data Pengumpulan</h4>
+                            <div class="flex flex-wrap gap-4 items-center">
+                                <!-- NEW FEATURE: Class and Task Filter Dropdowns -->
+                                <div class="relative">
+                                    <select id="class-filter-select" class="w-full md:w-auto p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                        <option value="semua" class="bg-gray-800">Semua Kelas</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <select id="task-filter-select" class="w-full md:w-auto p-2 rounded-lg glass-input text-white text-sm pr-8">
+                                        <option value="semua" class="bg-gray-800">Semua Tugas</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <input id="search-submission-input" type="text" placeholder="Cari nama siswa..." class="p-2 rounded-lg glass-input text-white">
+                            </div>
+                        </div>
+
+                        <!-- Status Filter Buttons -->
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <div id="filter-container" class="flex flex-wrap gap-2">
+                                <button data-filter="semua" class="filter-btn active px-3 py-1.5 text-sm rounded-lg transition-colors">Semua</button>
+                                <button data-filter="belum_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Belum Diperiksa</button>
+                                <button data-filter="sudah_diperiksa" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Sudah Diperiksa</button>
+                                <button data-filter="terlambat" class="filter-btn px-3 py-1.5 text-sm rounded-lg transition-colors">Terlambat</button>
+                            </div>
+                            <div class="flex-grow"></div>
+                            <!-- NEW FEATURE: Download Buttons -->
+                            <div class="flex flex-wrap gap-2">
+                                <button id="download-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-green-700 transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Unduh Data Filter
+                                </button>
+                                <button id="download-rekap-csv-btn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-purple-600 hover:bg-purple-700 transition-all">
+                                    <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                                    Unduh Rekap Kemajuan
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Bulk Grading Section -->
+                        <div id="bulk-grade-section" class="mb-6 p-4 rounded-lg glass-card space-y-3">
+                            <h5 class="font-semibold text-white">Mode Penilaian Cepat</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                <div class="relative">
+                                    <label for="bulk-score-select" class="block text-sm font-medium text-gray-300 mb-1">Pilih Skor</label>
+                                    <select id="bulk-score-select" class="w-full p-2 rounded-lg glass-input text-white"></select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="bulk-feedback-input" class="block text-sm font-medium text-gray-300 mb-1">Umpan Balik</label>
+                                    <textarea id="bulk-feedback-input" placeholder="Umpan balik untuk semua..." class="w-full p-2 rounded-lg glass-input text-white h-10 text-sm"></textarea>
+                                </div>
+                                <button id="apply-bulk-grade-btn" class="w-full md:w-auto btn-secondary text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    <span>Terapkan ke yang Dipilih</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="border-b border-white/10">
+                                    <tr>
+                                        <th class="p-4 w-10">
+                                            <input type="checkbox" id="select-all-checkbox" class="form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">
+                                        </th>
+                                        <th class="p-4">Siswa</th>
+                                        <th class="p-4">Kelas</th>
+                                        <th class="p-4">Tugas</th>
+                                        <th class="p-4">Status / Nilai</th>
+                                        <th class="p-4">Keterangan</th>
+                                        <th class="p-4">Waktu Kumpul</th>
+                                        <th class="p-4">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="monitoring-table-body">
+                                   <tr><td colspan="8" class="text-center p-8 text-gray-400">Belum ada tugas yang dikumpulkan.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination Controls -->
+                        <div class="mt-6 flex justify-between items-center hidden" id="pagination-controls">
+                            <button id="prev-page-btn" class="px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Sebelumnya</span>
+                            </button>
+                            <span id="page-info" class="text-sm text-gray-400"></span>
+                            <button id="next-page-btn" class="px-4 py-2 text-sm font-medium text-white rounded-lg glass-card hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <span>Selanjutnya</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW FEATURE: Data Cleanup Section -->
+            <div class="glass-card rounded-lg">
+                <div class="collapsible-header flex justify-between items-center p-4 cursor-pointer">
+                    <h3 class="font-semibold text-white">Pembersihan Data</h3>
+                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="p-4 border-t border-white/10 space-y-4">
+                        <p class="text-sm text-gray-400">Gunakan fitur ini untuk mencari dan menghapus data pengumpulan siswa yang tugasnya sudah tidak ada lagi (terhapus).</p>
+                        <button id="find-orphaned-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-blue-600 hover:bg-blue-700 transition-all">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            Cari Data Pengumpulan Terhapus
+                        </button>
+                        <div id="orphaned-results-container" class="hidden">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-md font-semibold text-white">Hasil Pencarian:</h4>
+                                <button id="delete-selected-orphaned-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white rounded-lg bg-red-600 hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    Hapus yang Dipilih
+                                </button>
+                            </div>
+                            <div class="p-3 rounded-lg glass-input">
+                                <label class="flex items-center gap-3 pb-2 mb-2 border-b border-white/10">
+                                    <input type="checkbox" id="select-all-orphaned-checkbox" class="form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">
+                                    <span class="text-sm font-semibold">Pilih Semua</span>
+                                </label>
+                                <div id="orphaned-list" class="space-y-2 max-h-60 overflow-y-auto">
+                                    <!-- Orphaned data will be listed here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Student Task List -->
+        <div>
+            <h2 class="text-2xl font-bold mb-6 text-white flex items-center gap-3"><i data-lucide="list-checks" class="text-blue-400"></i> Daftar Tugas Tersedia</h2>
+            <div id="daftar-tugas-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Task cards and expired dropdown will be injected here -->
+                <p class="text-gray-400 col-span-full">Memuat tugas...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="w-full max-w-md p-8 rounded-2xl glass-card relative">
+            <button id="close-login-modal" class="absolute top-4 right-4 bg-red-500/30 hover:bg-red-500/50 transition-colors p-1.5 rounded-full">
+                <i data-lucide="x" class="w-5 h-5 text-red-400"></i>
+            </button>
+            <h2 class="text-2xl font-bold text-center text-white mb-6">Login Guru</h2>
+            <form id="login-form" class="space-y-4">
+                <input id="email-input" type="email" placeholder="Email" class="w-full p-3 rounded-lg glass-input text-white" required>
+                <input id="password-input" type="password" placeholder="Password" class="w-full p-3 rounded-lg glass-input text-white" required>
+                <button type="submit" class="w-full btn-primary text-white font-bold py-3 rounded-lg">Login</button>
+                <p id="login-error" class="text-red-400 text-sm text-center h-4"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Submission Modal -->
+    <div id="submission-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="w-full max-w-lg p-8 rounded-2xl glass-card relative">
+            <button id="close-submission-modal" class="absolute top-4 right-4 bg-red-500/30 hover:bg-red-500/50 transition-colors p-1.5 rounded-full">
+                <i data-lucide="x" class="w-5 h-5 text-red-400"></i>
+            </button>
+            <h2 id="submission-modal-title" class="text-2xl font-bold text-white mb-2"></h2>
+            <p id="submission-modal-desc" class="text-gray-300 mb-6"></p>
+            
+            <form id="submission-form" class="space-y-4">
+                <input type="hidden" id="submission-tugas-id">
+                
+                <div>
+                    <label for="student-select" class="block text-sm font-medium text-gray-300 mb-2">Pilih Nama Anda</label>
+                    <div class="relative">
+                        <select id="student-select" class="w-full p-3 rounded-lg glass-input text-white" required>
+                            <option value="" class="bg-gray-800">-- Pilih Nama --</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="submission-details" class="hidden">
+                     <div id="submission-status-container" class="p-4 rounded-lg text-center my-4">
+                        <p id="submission-status-text" class="font-medium"></p>
+                        <p id="submission-feedback-text" class="text-sm text-gray-300 mt-2 italic"></p>
+                     </div>
+                    <div id="submission-input-container">
+                        <label for="gdrive-link" class="block text-sm font-medium text-gray-300 mb-2">Link Google Drive Tugas (Opsional)</label>
+                        <input id="gdrive-link" type="url" placeholder="https://docs.google.com/..." class="w-full p-3 rounded-lg glass-input text-white">
+                        
+                        <label for="file-upload" class="block text-sm font-medium text-gray-300 mb-2 mt-4">Unggah File (Foto/Dokumen)</label>
+                        <input id="file-upload" type="file" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-300 hover:file:bg-indigo-500/30">
+                        
+                        <div id="upload-progress" class="hidden mt-2 text-center text-sm text-yellow-400"></div>
+
+                        <button type="submit" id="submit-assignment-btn" class="w-full btn-primary text-white font-bold py-3 rounded-lg mt-4">Kirim Tugas</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="w-full max-w-md p-8 rounded-2xl glass-card relative text-center">
+             <h2 id="delete-modal-title" class="text-xl font-bold text-white mb-2">Konfirmasi Hapus</h2>
+             <p id="delete-modal-text" class="text-gray-300 mb-6">Apakah Anda yakin ingin menghapus item ini? Aksi ini tidak dapat dibatalkan.</p>
+             <div class="flex justify-center gap-4">
+                <button id="cancel-delete-btn" class="px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 transition-colors">Batal</button>
+                <button id="confirm-delete-btn" class="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors">Ya, Hapus</button>
+             </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 p-4 rounded-lg text-white transition-transform translate-x-[120%] z-50">
+        <p id="toast-message"></p>
+    </div>
+
+    <!-- Load Lucide Icons Script -->
+    <script src="https://unpkg.com/lucide-icons@latest/dist/lucide.min.js"></script>
+
+    <!-- Firebase SDK & Main App Logic -->
+    <script type="module">
+        // --- KONFIGURASI FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAi1FScYEP9X7BQlFJdmMM_waiTQjvs42I",
+            authDomain: "aplikasi-pengumpul-tugas.firebaseapp.com",
+            projectId: "aplikasi-pengumpul-tugas",
+            storageBucket: "aplikasi-pengumpul-tugas.appspot.com",
+            messagingSenderId: "443916292573",
+            appId: "1:443916292573:web:a598120326fca0b47b6634",
+            measurementId: "G-N8EL3KMRBR"
+        };
+
+        // --- KONFIGURASI SUPABASE ---
+        const supabaseUrl = 'https://ggzbopqnncapbrhszagn.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnemJvcHFubmNhcGJyaHN6YWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTA4NzEsImV4cCI6MjA2OTQyNjg3MX0.NFfanxR8cMzhLNAQFvGQgArkmyxecD8rQZowCbHsgkQ';
+
+        // Import fungsi yang diperlukan dari SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, serverTimestamp, query, orderBy, where, updateDoc, deleteDoc, Timestamp, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Inisialisasi Supabase
+        let supabaseClient = null;
+        if (supabaseUrl && supabaseAnonKey && window.supabase) {
+            const { createClient } = window.supabase; 
+            supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+        } else {
+            console.warn("Supabase belum dikonfigurasi. Fitur unggah file tidak akan berfungsi.");
+        }
+
+
+        // Referensi Koleksi
+        const tugasCollection = collection(db, 'tugas');
+        const siswaDocRef = doc(db, 'siswa', 'daftarSiswa');
+        const pengumpulanCollection = collection(db, 'pengumpulan');
+        const materiCollection = collection(db, 'materi');
+        const absensiCollection = collection(db, 'absensi');
+
+        // Elemen UI
+        const guruDashboard = document.getElementById('guru-dashboard');
+        const loginGuruBtn = document.getElementById('login-guru-btn');
+        const authBtnText = document.getElementById('auth-btn-text');
+        const loginModal = document.getElementById('login-modal');
+        const submissionModal = document.getElementById('submission-modal');
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const daftarTugasContainer = document.getElementById('daftar-tugas-container');
+        const loadingText = document.getElementById('loading-text');
+        const monitoringTableBody = document.getElementById('monitoring-table-body');
+        const manageTasksList = document.getElementById('manage-tasks-list');
+        const manageMateriList = document.getElementById('manage-materi-list');
+        const materiContainer = document.getElementById('materi-container');
+        const loadingMateriText = document.getElementById('loading-materi-text');
+        const notificationBellContainer = document.getElementById('notification-bell-container');
+        const notificationBadge = document.getElementById('notification-badge');
+        const searchSubmissionInput = document.getElementById('search-submission-input');
+        const filterContainer = document.getElementById('filter-container');
+        const classFilterSelect = document.getElementById('class-filter-select');
+        const taskFilterSelect = document.getElementById('task-filter-select');
+        const findOrphanedBtn = document.getElementById('find-orphaned-btn');
+        const orphanedResultsContainer = document.getElementById('orphaned-results-container');
+        const orphanedList = document.getElementById('orphaned-list');
+        const deleteSelectedOrphanedBtn = document.getElementById('delete-selected-orphaned-btn');
+        const selectAllOrphanedCheckbox = document.getElementById('select-all-orphaned-checkbox');
+        const downloadRekapCsvBtn = document.getElementById('download-rekap-csv-btn');
+        
+        // New UI Elements
+        const absensiKelasSelect = document.getElementById('absensi-kelas-select');
+        const absensiSiswaList = document.getElementById('absensi-siswa-list');
+        const absensiTanggalInput = document.getElementById('absensi-tanggal-input');
+        const rekapKelasSelect = document.getElementById('rekap-kelas-select');
+        const rekapTanggalInput = document.getElementById('rekap-tanggal-input');
+        const rekapTableBody = document.getElementById('rekap-table-body');
+        const filterRekapBtn = document.getElementById('filter-rekap-btn');
+        const downloadAbsensiCsvBtn = document.getElementById('download-absensi-csv-btn');
+        const downloadAllAbsensiCsvBtn = document.getElementById('download-all-absensi-csv-btn');
+        const submissionChartContainer = document.getElementById('submissionChartContainer');
+        const attendanceChartContainer = document.getElementById('attendanceChartContainer');
+        const submissionChart = document.getElementById('submissionChart');
+        const attendanceChart = document.getElementById('attendanceChart');
+        const absensiChartKelasSelect = document.getElementById('absensi-chart-kelas-select');
+        const absensiChartMonthSelect = document.getElementById('absensi-chart-month-select');
+        const absensiChartYearSelect = document.getElementById('absensi-chart-year-select');
+        const saveAttendanceBtn = document.getElementById('save-attendance-btn');
+        const absensiControls = document.getElementById('absensi-controls');
+        
+        // Delete Attendance UI
+        const hapusKelasSelect = document.getElementById('hapus-kelas-select');
+        const hapusTanggalSelect = document.getElementById('hapus-tanggal-select');
+        const hapusRiwayatBtn = document.getElementById('hapus-riwayat-btn');
+        const refreshHapusBtn = document.getElementById('refresh-hapus-btn');
+
+        // State Cache
+        let allTasks = {};
+        let allSubmissions = [];
+        let allStudents = [];
+        let allMaterials = [];
+        let allAttendance = [];
+        let itemToDelete = null;
+        let submissionChartInstance = null;
+        let attendanceChartInstance = null;
+        let seenSubmissions = new Set();
+        let newSubmissionCount = 0;
+        let unsavedAttendance = {}; // Temporary cache for unsaved attendance
+
+        // Pagination & Filter State
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let materiCurrentPage = 1;
+        const materiItemsPerPage = 5;
+        let currentStatusFilter = 'semua';
+        let currentClassFilter = 'semua';
+        let currentTaskFilter = 'semua';
+        let currentAttendanceChartClass = 'semua';
+        let currentAttendanceChartMonth = new Date().getMonth();
+        let currentAttendanceChartYear = new Date().getFullYear();
+        let rekapCurrentPage = 1;
+        const rekapItemsPerPage = 20;
+
+
+        function safeCreateIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.className = `fixed bottom-5 right-5 p-4 rounded-lg text-white transition-transform z-50 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} transform translate-x-0`;
+            setTimeout(() => {
+                toast.style.transform = 'translateX(120%)';
+            }, 3000);
+        }
+
+        function formatDeadline(deadline) {
+            if (!deadline || !deadline.toDate) return '';
+
+            const now = new Date();
+            const deadlineDate = deadline.toDate();
+            now.setHours(0, 0, 0, 0);
+            deadlineDate.setHours(0, 0, 0, 0);
+
+            const diffTime = deadlineDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) {
+                return `<span class="text-red-400">Tenggat terlewat</span>`;
+            } else if (diffDays === 0) {
+                return `<span class="text-yellow-400">Tenggat hari ini</span>`;
+            } else if (diffDays === 1) {
+                return `<span class="text-green-400">Tinggal besok</span>`;
+            } else {
+                return `<span class="text-green-400">Tinggal ${diffDays} hari lagi</span>`;
+            }
+        }
+        
+        function getEmbedUrl(url) {
+            let fileId = null;
+            try {
+                if (url.includes('drive.google.com')) {
+                    const match = url.match(/d\/(.+?)\//);
+                    if (match && match[1]) {
+                        fileId = match[1];
+                    }
+                }
+            } catch (e) {
+                console.error("Invalid URL for embedding:", url);
+                return null;
+            }
+            return fileId ? `https://drive.google.com/file/d/${fileId}/preview` : null;
+        }
+
+        // Function to fetch an inspirational quote with exponential backoff
+        async function fetchInspirationalQuote() {
+            const quoteElement = document.getElementById('inspirational-quote');
+            const prompt = "buat quotes keren yang membahas tentang pendidikan, 10-20 kata, langsung tulis saja tampa embel-embel, tulis langsung disini 1 pilihan yang menurut anda terbaik";
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const apiKey = ""; // API key is handled by the environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            let response;
+            let retries = 5;
+            let delay = 1000; // start with 1 second
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.candidates && result.candidates[0].content.parts[0].text) {
+                            const text = result.candidates[0].content.parts[0].text.replace(/"/g, ''); // Remove quotes
+                            quoteElement.textContent = `"${text}"`;
+                        } else {
+                            // Fallback if the API response structure is unexpected
+                            quoteElement.textContent = '"Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia." - Nelson Mandela';
+                        }
+                        return; // Success, exit the function
+                    } else if (response.status === 503) {
+                        // If service is unavailable, wait and retry
+                        console.warn(`API service unavailable (503). Retrying in ${delay / 1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Double the delay for the next retry
+                    } else {
+                        // For other errors, throw to be caught by the outer catch block
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (error) {
+                    // This catches network errors or errors thrown from the else block
+                    if (i === retries - 1) { // If it's the last retry, handle the final error
+                        console.error("Error fetching quote after multiple retries:", error);
+                        quoteElement.textContent = '"Ilmu tanpa amal adalah omong kosong, amal tanpa ilmu adalah kesesatan."';
+                        break; // Exit loop after final attempt
+                    } else {
+                         console.warn(`Fetch failed. Retrying in ${delay / 1000}s...`);
+                         await new Promise(resolve => setTimeout(resolve, delay));
+                         delay *= 2;
+                    }
+                }
+            }
+            
+            // This part is reached if all retries fail and the loop is exited
+            if (!response || !response.ok) {
+                 console.error("Error fetching quote: All retries failed.");
+                 quoteElement.textContent = '"Ilmu tanpa amal adalah omong kosong, amal tanpa ilmu adalah kesesatan."';
+            }
+        }
+
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                guruDashboard.classList.remove('hidden');
+                notificationBellContainer.classList.remove('hidden');
+                authBtnText.textContent = 'Logout';
+                loginGuruBtn.onclick = () => signOut(auth);
+                loginModal.classList.add('hidden');
+            } else {
+                guruDashboard.classList.add('hidden');
+                notificationBellContainer.classList.add('hidden');
+                authBtnText.textContent = 'Login Guru';
+                loginGuruBtn.onclick = () => loginModal.classList.remove('hidden');
+            }
+            renderMonitoringTable();
+            renderStatistics();
+            safeCreateIcons();
+        });
+
+        // --- FUNGSI GURU ---
+        document.getElementById('login-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            const loginError = document.getElementById('login-error');
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                loginError.textContent = '';
+                showToast('Login berhasil!', 'success');
+            } catch (error) {
+                loginError.textContent = 'Email atau password salah.';
+            }
+        });
+
+        document.getElementById('form-tugas-baru').addEventListener('submit', async e => {
+            e.preventDefault();
+            const judul = document.getElementById('judul-tugas').value;
+            const deskripsi = document.getElementById('deskripsi-tugas').value;
+            const deadlineValue = document.getElementById('deadline-tugas').value;
+            const selectedKelas = Array.from(document.querySelectorAll('#kelas-checkbox-container input:checked')).map(cb => cb.value);
+
+            if (selectedKelas.length === 0) {
+                showToast('Pilih setidaknya satu kelas.', 'error');
+                return;
+            }
+            
+            const deadlineDate = new Date(deadlineValue);
+            deadlineDate.setHours(23, 59, 59, 999);
+
+            try {
+                await addDoc(tugasCollection, {
+                    judul,
+                    targetKelas: selectedKelas,
+                    deskripsi,
+                    deadline: Timestamp.fromDate(deadlineDate),
+                    dibuatPada: serverTimestamp()
+                });
+                showToast('Tugas baru berhasil dibuat.', 'success');
+                e.target.reset();
+                document.querySelectorAll('#kelas-checkbox-container input:checked').forEach(cb => cb.checked = false);
+            } catch (error) {
+                showToast('Gagal membuat tugas.', 'error');
+            }
+        });
+        
+        document.getElementById('form-materi-baru').addEventListener('submit', async e => {
+            e.preventDefault();
+            const judul = document.getElementById('judul-materi').value;
+            const linkPdf = document.getElementById('link-pdf').value;
+
+            try {
+                await addDoc(materiCollection, {
+                    judul,
+                    linkPdf,
+                    dibuatPada: serverTimestamp()
+                });
+                showToast('Materi berhasil ditambahkan.', 'success');
+                e.target.reset();
+            } catch (error) {
+                showToast('Gagal menambahkan materi.', 'error');
+            }
+        });
+
+        document.getElementById('form-daftar-siswa').addEventListener('submit', async e => {
+            e.preventDefault();
+            const siswaInput = document.getElementById('daftar-siswa-input').value;
+            const daftarSiswa = siswaInput.split('\n')
+                .map(line => {
+                    const [nama, kelas] = line.split(',').map(s => s.trim());
+                    return nama && kelas ? { nama, kelas: kelas.toUpperCase() } : null;
+                })
+                .filter(Boolean);
+            try {
+                await setDoc(siswaDocRef, { daftar: daftarSiswa });
+                showToast('Daftar siswa berhasil diperbarui.', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error("Gagal update daftar siswa:", error);
+                showToast(`Gagal memperbarui daftar siswa: ${error.message}`, 'error');
+            }
+        });
+
+        function renderKelasCheckboxes(classes) {
+            const container = document.getElementById('kelas-checkbox-container');
+            if (classes.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-full">Tidak ada kelas ditemukan di daftar siswa.</p>';
+                return;
+            }
+            container.innerHTML = classes.map(kelas => `
+                <label class="flex items-center gap-2 text-sm cursor-pointer hover:text-white transition-colors">
+                    <input type="checkbox" value="${kelas}" class="form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">
+                    <span>${kelas}</span>
+                </label>
+            `).join('');
+        }
+        
+        function getMonthName(monthIndex) {
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            return months[monthIndex];
+        }
+
+        function populateClassDropdowns(classes) {
+            const absensiSelect = document.getElementById('absensi-kelas-select');
+            const rekapSelect = document.getElementById('rekap-kelas-select');
+            const taskFilterSelect = document.getElementById('class-filter-select');
+            const absensiChartKelasSelect = document.getElementById('absensi-chart-kelas-select');
+            const hapusKelasSelect = document.getElementById('hapus-kelas-select');
+            
+            absensiSelect.innerHTML = '<option value="" class="bg-gray-800">-- Pilih Kelas --</option>';
+            rekapSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Kelas</option>';
+            taskFilterSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Kelas</option>';
+            absensiChartKelasSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Kelas</option>';
+            hapusKelasSelect.innerHTML = '<option value="" class="bg-gray-800">-- Pilih Kelas --</option>';
+
+            classes.forEach(kelas => {
+                const option1 = document.createElement('option');
+                option1.value = kelas;
+                option1.textContent = kelas;
+                option1.className = 'bg-gray-800';
+                absensiSelect.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = kelas;
+                option2.textContent = kelas;
+                option2.className = 'bg-gray-800';
+                rekapSelect.appendChild(option2);
+                
+                const option3 = document.createElement('option');
+                option3.value = kelas;
+                option3.textContent = kelas;
+                option3.className = 'bg-gray-800';
+                taskFilterSelect.appendChild(option3);
+
+                const option4 = document.createElement('option');
+                option4.value = kelas;
+                option4.textContent = kelas;
+                option4.className = 'bg-gray-800';
+                absensiChartKelasSelect.appendChild(option4);
+                
+                const option5 = document.createElement('option');
+                option5.value = kelas;
+                option5.textContent = kelas;
+                option5.className = 'bg-gray-800';
+                hapusKelasSelect.appendChild(option5);
+            });
+        }
+        
+        function populateMonthYearDropdowns() {
+            const monthSelect = document.getElementById('absensi-chart-month-select');
+            const yearSelect = document.getElementById('absensi-chart-year-select');
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth();
+
+            monthSelect.innerHTML = '';
+            yearSelect.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = getMonthName(i);
+                option.className = 'bg-gray-800';
+                if (i === currentMonth) {
+                    option.selected = true;
+                }
+                monthSelect.appendChild(option);
+            }
+
+            for (let i = currentYear - 2; i <= currentYear; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                option.className = 'bg-gray-800';
+                if (i === currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
+        
+        // --- RENDER FUNCTIONS ---
+        
+        function createTaskCardHtml(tugas) {
+            const deadlineText = formatDeadline(tugas.deadline);
+            const kelasList = tugas.targetKelas || [];
+
+            const targetKelasUpper = kelasList.map(k => k.toUpperCase());
+            const studentsForTask = allStudents.filter(s => targetKelasUpper.includes(s.kelas.toUpperCase()));
+            const submittedStudentNames = allSubmissions
+                .filter(s => s.tugasId === tugas.id)
+                .map(s => s.namaSiswa);
+            const unsubmittedStudents = studentsForTask
+                .filter(s => !submittedStudentNames.includes(s.nama))
+                .map(s => s.nama)
+                .sort();
+            
+            let unsubmittedListHtml = '';
+            if (unsubmittedStudents.length > 0) {
+                unsubmittedListHtml = unsubmittedStudents.map(nama => `<li class="px-3 py-1 text-gray-300">${nama}</li>`).join('');
+            } else {
+                unsubmittedListHtml = '<li class="px-3 py-1 text-gray-400 italic">Semua siswa telah mengumpulkan.</li>';
+            }
+
+            return `
+                <div class="p-6 rounded-2xl glass-card flex flex-col">
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="inline-block bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full">${kelasList.join(', ')}</span>
+                            <span class="text-xs font-medium">${deadlineText}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">${tugas.judul}</h3>
+                        <p class="text-gray-300 text-sm mb-4">${tugas.deskripsi}</p>
+                    </div>
+                    
+                    <div class="mt-4 border-t border-white/10 pt-4">
+                        <details class="group">
+                            <summary class="flex justify-between items-center cursor-pointer text-sm text-gray-400 hover:text-white list-none">
+                                <span class="font-medium">${unsubmittedStudents.length} Siswa Belum Mengumpulkan</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <ul class="mt-2 text-sm max-h-32 overflow-y-auto pr-2">
+                                ${unsubmittedListHtml}
+                            </ul>
+                        </details>
+                    </div>
+
+                    <button data-id="${tugas.id}" data-judul="${tugas.judul}" data-deskripsi="${tugas.deskripsi}" data-kelas="${kelasList.join(',')}" class="mt-4 w-full btn-primary text-white font-semibold py-2 rounded-lg">Kerjakan Tugas</button>
+                </div>
+            `;
+        }
+
+        function renderTugasList() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            const allTaskArray = Object.values(allTasks).sort((a, b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0));
+
+            const activeTasks = [];
+            const expiredTasks = [];
+
+            allTaskArray.forEach(tugas => {
+                if (tugas.deadline && tugas.deadline.toDate() < now) {
+                    expiredTasks.push(tugas);
+                } else {
+                    activeTasks.push(tugas);
+                }
+            });
+
+            daftarTugasContainer.innerHTML = '';
+
+            if (activeTasks.length === 0 && expiredTasks.length === 0) {
+                daftarTugasContainer.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada tugas yang tersedia.</p>';
+                return;
+            }
+
+            if (activeTasks.length > 0) {
+                activeTasks.forEach(tugas => {
+                    const cardHtml = createTaskCardHtml(tugas);
+                    daftarTugasContainer.innerHTML += cardHtml;
+                });
+            } else {
+                 daftarTugasContainer.innerHTML = '<p class="text-gray-400 col-span-full">Tidak ada tugas aktif.</p>';
+            }
+
+            if (expiredTasks.length > 0) {
+                const expiredContainer = document.createElement('div');
+                expiredContainer.className = 'col-span-1 md:col-span-2 lg:col-span-3';
+
+                const expiredTasksHtml = expiredTasks.map(tugas => createTaskCardHtml(tugas)).join('');
+
+                expiredContainer.innerHTML = `
+                    <details class="group glass-card rounded-2xl mt-6">
+                        <summary class="flex justify-between items-center cursor-pointer list-none p-6">
+                            <span class="text-lg font-bold text-white">Tugas yang Sudah Terlewat (${expiredTasks.length})</span>
+                            <i data-lucide="chevron-down" class="w-5 h-5 transition-transform group-open:rotate-180"></i>
+                        </summary>
+                        <div class="p-6 border-t border-white/10">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${expiredTasksHtml}
+                            </div>
+                        </div>
+                    </details>
+                `;
+                daftarTugasContainer.appendChild(expiredContainer);
+            }
+
+            safeCreateIcons();
+        }
+
+        // --- DATA LISTENERS (for all users) ---
+        onSnapshot(siswaDocRef, (doc) => {
+            if (doc.exists()) {
+                allStudents = doc.data().daftar || [];
+                const uniqueClasses = [...new Set(allStudents.map(s => s.kelas.toUpperCase()))].sort();
+                renderKelasCheckboxes(uniqueClasses);
+                populateClassDropdowns(uniqueClasses);
+                renderTugasList(); 
+                renderStatistics();
+            }
+        }, (error) => {
+            console.error("Error fetching student list:", error);
+        });
+
+        const qTugas = query(tugasCollection, orderBy('dibuatPada', 'desc'));
+        onSnapshot(qTugas, (snapshot) => {
+            allTasks = {};
+            snapshot.docs.forEach(doc => allTasks[doc.id] = { id: doc.id, ...doc.data() });
+            
+            renderTugasList();
+            renderTaskFilterDropdown(Object.values(allTasks));
+
+            const taskDocs = snapshot.docs;
+            if (taskDocs.length === 0) {
+                 manageTasksList.innerHTML = '<p class="text-gray-400">Memuat tugas...</p>';
+            } else {
+                manageTasksList.innerHTML = '';
+                taskDocs.forEach(doc => {
+                    const tugas = { id: doc.id, ...doc.data() };
+                    const kelasList = tugas.targetKelas || [];
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'flex justify-between items-center bg-white/5 p-3 rounded-lg';
+                    taskItem.innerHTML = `
+                        <div>
+                            <p class="font-semibold">${tugas.judul}</p>
+                            <p class="text-sm text-gray-400">${kelasList.join(', ')}</p>
+                        </div>
+                        <button data-id="${tugas.id}" data-type="task" class="delete-btn p-2 rounded-md bg-red-500/20 hover:bg-red-500/40 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i>
+                        </button>
+                    `;
+                    manageTasksList.appendChild(taskItem);
+                });
+            }
+            renderStatistics();
+            safeCreateIcons();
+        });
+        
+        const qPengumpulan = query(pengumpulanCollection, orderBy('dikumpulkanPada', 'desc'));
+        onSnapshot(qPengumpulan, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const newSubmissionId = change.doc.id;
+                    if (!seenSubmissions.has(newSubmissionId)) {
+                        newSubmissionCount++;
+                        seenSubmissions.add(newSubmissionId);
+                    }
+                }
+                 if (change.type === "removed") {
+                    seenSubmissions.delete(change.doc.id);
+                }
+            });
+
+            allSubmissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            renderTugasList(); 
+            updateNotificationBadge();
+            renderMonitoringTable();
+            renderStatistics();
+            
+            if (!submissionModal.classList.contains('hidden')) {
+                const tugasId = document.getElementById('submission-tugas-id').value;
+                const [namaSiswa] = (document.getElementById('student-select').value || '').split('||');
+                if (tugasId && namaSiswa) {
+                    const submission = allSubmissions.find(s => s.tugasId === tugasId && s.namaSiswa === namaSiswa);
+                    checkSubmissionStatus(submission);
+                }
+            }
+        });
+
+        const qAbsensi = query(absensiCollection, orderBy('timestamp', 'desc'));
+        onSnapshot(qAbsensi, (snapshot) => {
+            allAttendance = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderAttendanceChart();
+            renderRekapTable();
+            populateHapusTanggalSelect();
+        }, (error) => {
+            console.error("Error fetching attendance data:", error);
+        });
+        
+        const qMateri = query(materiCollection, orderBy('dibuatPada', 'desc'));
+        onSnapshot(qMateri, (snapshot) => {
+            if (snapshot.empty) {
+                loadingMateriText.textContent = 'Belum ada materi yang tersedia.';
+                materiContainer.innerHTML = '<p class="text-gray-400">Belum ada materi yang tersedia.</p>';
+            } else {
+                loadingMateriText.classList.add('hidden');
+                materiContainer.innerHTML = '';
+                snapshot.docs.forEach(doc => {
+                    const materi = { id: doc.id, ...doc.data() };
+                    const embedUrl = getEmbedUrl(materi.linkPdf);
+                    const card = document.createElement('div');
+                    card.className = 'flex-shrink-0 w-72 h-96 glass-card rounded-2xl flex flex-col';
+                    card.innerHTML = `
+                        <div class="flex-grow rounded-t-2xl overflow-hidden">
+                            ${embedUrl ? `<iframe src="${embedUrl}" class="w-full h-full border-0"></iframe>` : '<div class="w-full h-full bg-gray-800 flex items-center justify-center text-center p-4"><p class="text-gray-400">Pratinjau tidak tersedia.</p></div>'}
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-bold text-white truncate">${materi.judul}</h4>
+                            <a href="${materi.linkPdf}" target="_blank" class="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-all">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                Unduh
+                            </a>
+                        </div>
+                    `;
+                    materiContainer.appendChild(card);
+                });
+            }
+            
+            allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderManageMateriList();
+            safeCreateIcons();
+        });
+
+        function generateScoreOptions() {
+            let options = '';
+            for (let i = 99; i >= 85; i--) {
+                options += `<option value="${i}" class="bg-gray-800">${i}</option>`;
+            }
+            return options;
+        }
+
+        function getFilteredSubmissions() {
+            let filtered = allSubmissions;
+
+            if (currentClassFilter !== 'semua') {
+                filtered = filtered.filter(sub => sub.kelasSiswa.toUpperCase() === currentClassFilter);
+            }
+
+            if (currentTaskFilter !== 'semua') {
+                filtered = filtered.filter(sub => sub.tugasId === currentTaskFilter);
+            }
+
+            if (currentStatusFilter === 'belum_diperiksa') {
+                filtered = filtered.filter(sub => sub.status !== 'Sudah Dinilai');
+            } else if (currentStatusFilter === 'sudah_diperiksa') {
+                filtered = filtered.filter(sub => sub.status === 'Sudah Dinilai');
+            } else if (currentStatusFilter === 'terlambat') {
+                filtered = filtered.filter(sub => {
+                    const task = allTasks[sub.tugasId];
+                    return task && sub.dikumpulkanPada && task.deadline && sub.dikumpulkanPada.toDate() > task.deadline.toDate();
+                });
+            }
+
+            const searchTerm = searchSubmissionInput.value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(sub =>
+                    sub.namaSiswa.toLowerCase().includes(searchTerm)
+                );
+            }
+            return filtered;
+        }
+
+        function renderMonitoringTable() {
+            if (!auth.currentUser) {
+                monitoringTableBody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-400">Silakan login untuk melihat data.</td></tr>';
+                return;
+            }
+            
+            const filteredSubmissions = getFilteredSubmissions();
+
+            const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+            } else if (totalPages === 0) {
+                currentPage = 1;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedSubmissions = filteredSubmissions.slice(startIndex, endIndex);
+
+            if (paginatedSubmissions.length === 0) {
+                 monitoringTableBody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-400">Tidak ada data yang cocok.</td></tr>';
+            } else {
+                monitoringTableBody.innerHTML = '';
+                const scoreOptions = generateScoreOptions();
+                paginatedSubmissions.forEach(sub => {
+                    const task = allTasks[sub.tugasId];
+                    const isGraded = sub.status === 'Sudah Dinilai';
+                    
+                    let statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-500/30 text-yellow-300">Terkumpul</span>`;
+                    if (isGraded) {
+                        statusBadge = `<span class="px-2 py-1 text-lg font-bold rounded-full bg-green-500/30 text-green-300">${sub.nilai}</span>`;
+                    } else if (task && sub.dikumpulkanPada && task.deadline && sub.dikumpulkanPada.toDate() > task.deadline.toDate()) {
+                        statusBadge = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-500/30 text-orange-300">Terlambat</span>`;
+                    }
+
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-white/10';
+                    
+                    let keteranganHtml = '<span class="text-xs text-gray-500">-</span>';
+                    if (task && sub.dikumpulkanPada && task.deadline) {
+                        const isLateOnSubmission = sub.dikumpulkanPada.toDate() > task.deadline.toDate();
+                        if (isLateOnSubmission) {
+                            keteranganHtml = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-500/30 text-orange-300">Terlambat</span>`;
+                        } else {
+                            keteranganHtml = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-cyan-500/30 text-cyan-300">Tepat Waktu</span>`;
+                        }
+                    }
+
+                    let waktuKumpulHtml = '<span class="text-xs text-gray-500">-</span>';
+                    if (sub.dikumpulkanPada && sub.dikumpulkanPada.toDate) {
+                        waktuKumpulHtml = sub.dikumpulkanPada.toDate().toLocaleString('id-ID', {
+                            year: '2-digit', month: 'short', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                        }).replace(/\./g, ':');
+                    }
+
+                    const gradingFormHtml = `
+                        <div class="grading-form-container ${isGraded ? 'hidden' : ''}" data-id="${sub.id}">
+                            <div class="flex items-center gap-2 mt-2 w-full">
+                                <div class="relative">
+                                    <select class="grade-input w-24 p-1 rounded-md glass-input text-white text-sm">${scoreOptions}</select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
+                                <textarea placeholder="Umpan balik..." class="feedback-input flex-grow p-1 rounded-md glass-input text-white text-xs h-10">${sub.komentar || ''}</textarea>
+                                <button data-id="${sub.id}" class="save-grade-btn p-2 rounded-md bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                                    <i data-lucide="save" class="w-4 h-4 text-white pointer-events-none"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    const reviseButtonHtml = isGraded ? `
+                        <button data-id="${sub.id}" class="revisi-skor-btn text-yellow-400 hover:underline text-sm ml-2">Revisi</button>
+                    ` : '';
+
+                    row.innerHTML = `
+                        <td class="p-4">
+                            ${!isGraded ? `<input type="checkbox" data-id="${sub.id}" class="student-checkbox form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">` : ''}
+                        </td>
+                        <td class="p-4">${sub.namaSiswa}</td>
+                        <td class="p-4">${sub.kelasSiswa}</td>
+                        <td class="p-4">${task?.judul || 'Tugas Dihapus'}</td>
+                        <td class="p-4 status-badge-cell">${statusBadge}</td>
+                        <td class="p-4">${keteranganHtml}</td>
+                        <td class="p-4 text-xs text-gray-400">${waktuKumpulHtml}</td>
+                        <td class="p-4">
+                            <div class="flex items-start flex-col">
+                                <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
+                                    ${sub.linkGdrive ? `<a href="${sub.linkGdrive}" target="_blank" class="text-blue-400 hover:underline">Lihat Link</a>` : ''}
+                                    ${sub.fileUrl ? `<a href="${sub.fileUrl}" target="_blank" class="text-green-400 hover:underline">Lihat File</a>` : ''}
+                                    <button data-id="${sub.id}" class="delete-submission-btn text-red-400 hover:underline">Hapus</button>
+                                    ${reviseButtonHtml}
+                                </div>
+                                ${gradingFormHtml}
+                            </div>
+                        </td>
+                    `;
+                    monitoringTableBody.appendChild(row);
+                });
+            }
+            
+            renderPaginationControls(totalPages, filteredSubmissions.length);
+            document.getElementById('select-all-checkbox').checked = false;
+            safeCreateIcons();
+            updateOpenCollapsibles();
+        }
+        
+        function renderPaginationControls(totalPages, totalItems) {
+            const pageInfo = document.getElementById('page-info');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+            const paginationContainer = document.getElementById('pagination-controls');
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            paginationContainer.classList.remove('hidden');
+
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages} (${totalItems} data)`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        function renderManageMateriList() {
+            const totalPages = Math.ceil(allMaterials.length / materiItemsPerPage);
+            if (materiCurrentPage > totalPages && totalPages > 0) {
+                materiCurrentPage = totalPages;
+            } else if (totalPages === 0) {
+                materiCurrentPage = 1;
+            }
+
+            const startIndex = (materiCurrentPage - 1) * materiItemsPerPage;
+            const endIndex = startIndex + materiItemsPerPage;
+            const paginatedMaterials = allMaterials.slice(startIndex, endIndex);
+
+            if (paginatedMaterials.length === 0) {
+                manageMateriList.innerHTML = '<p class="text-gray-400">Belum ada materi.</p>';
+            } else {
+                manageMateriList.innerHTML = '';
+                paginatedMaterials.forEach(materi => {
+                    const materiItem = document.createElement('div');
+                    materiItem.className = 'flex justify-between items-center bg-white/5 p-3 rounded-lg';
+                    materiItem.innerHTML = `
+                        <p class="font-semibold truncate w-4/5">${materi.judul}</p>
+                        <button data-id="${materi.id}" data-type="materi" class="delete-btn p-2 rounded-md bg-red-500/20 hover:bg-red-500/40 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4 text-red-400 pointer-events-none"></i>
+                        </button>
+                    `;
+                    manageMateriList.appendChild(materiItem);
+                });
+            }
+            renderMateriPaginationControls(totalPages);
+            updateOpenCollapsibles();
+        }
+
+        function renderMateriPaginationControls(totalPages) {
+            const pageInfo = document.getElementById('materi-page-info');
+            const prevBtn = document.getElementById('prev-materi-page-btn');
+            const nextBtn = document.getElementById('next-materi-page-btn');
+            const paginationContainer = document.getElementById('materi-pagination-controls');
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            paginationContainer.classList.remove('hidden');
+
+            pageInfo.textContent = `${materiCurrentPage} / ${totalPages}`;
+            prevBtn.disabled = materiCurrentPage === 1;
+            nextBtn.disabled = materiCurrentPage === totalPages;
+        }
+        
+        function renderStatistics() {
+            document.getElementById('total-tugas-stat').textContent = Object.keys(allTasks).length;
+            document.getElementById('total-siswa-stat').textContent = allStudents.length;
+            renderSubmissionChart();
+            renderAttendanceChart();
+        }
+        
+        function renderSubmissionChart() {
+            const uniqueClasses = [...new Set(allStudents.map(s => s.kelas.toUpperCase()))].sort();
+            const labels = [];
+            const data = [];
+            const allTaskArray = Object.values(allTasks);
+
+            uniqueClasses.forEach(kelas => {
+                const tasksForClass = allTaskArray
+                    .filter(t => t.targetKelas.map(k => k.toUpperCase()).includes(kelas))
+                    .sort((a, b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0));
+
+                const latestTask = tasksForClass[0];
+
+                if (latestTask) {
+                    const studentsInClass = allStudents.filter(s => s.kelas.toUpperCase() === kelas);
+                    const totalStudentsInClass = studentsInClass.length;
+
+                    const submissionsForLatestTask = allSubmissions.filter(sub => 
+                        sub.tugasId === latestTask.id && sub.kelasSiswa.toUpperCase() === kelas
+                    );
+                    const submittedCount = submissionsForLatestTask.length;
+
+                    const percentage = totalStudentsInClass > 0 ? (submittedCount / totalStudentsInClass) * 100 : 0;
+                    
+                    labels.push([
+                        kelas, 
+                        `"${latestTask.judul.substring(0, 15)}..."`, 
+                        `${submittedCount} dari ${totalStudentsInClass} Siswa`
+                    ]);
+                    data.push(percentage.toFixed(1));
+                } else {
+                    labels.push([kelas, "Belum ada tugas", "0 Siswa"]);
+                    data.push(0);
+                }
+            });
+
+            const ctx = submissionChart.getContext('2d');
+            if (submissionChartInstance) {
+                submissionChartInstance.destroy();
+            }
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.8)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.5)');
+
+            submissionChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '% Pengumpulan',
+                        data: data,
+                        backgroundColor: gradient,
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label.split(',')[0];
+                                },
+                                label: function(context) {
+                                    const labelLines = context.chart.data.labels[context.dataIndex];
+                                    const taskTitle = labelLines[1] || '';
+                                    const submissionCount = labelLines[2] || '';
+                                    return [`Tugas ${taskTitle}`, `${submissionCount}`, `${context.raw}% terkumpul`];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { 
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { 
+                                color: '#d1d5db',
+                                font: {
+                                    size: 9
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderAttendanceChart() {
+            const classFilter = absensiChartKelasSelect.value;
+            const monthFilter = parseInt(absensiChartMonthSelect.value);
+            const yearFilter = parseInt(absensiChartYearSelect.value);
+            
+            const filteredAttendance = allAttendance.filter(att => {
+                // Safely handle potential null timestamps
+                if (!att.timestamp || typeof att.timestamp.toDate !== 'function') return false;
+
+                const attDate = att.timestamp.toDate();
+                const attMonth = attDate.getMonth();
+                const attYear = attDate.getFullYear();
+                
+                const isClassMatch = classFilter === 'semua' || att.kelas.toUpperCase() === classFilter.toUpperCase();
+                const isMonthMatch = attMonth === monthFilter;
+                const isYearMatch = attYear === yearFilter;
+                
+                return isClassMatch && isMonthMatch && isYearMatch;
+            });
+            
+            const hadirCount = filteredAttendance.filter(a => a.status === 'Hadir').length;
+            const izinCount = filteredAttendance.filter(a => a.status === 'Izin').length;
+            const alfaCount = filteredAttendance.filter(a => a.status === 'Alfa').length;
+            const terlambatCount = filteredAttendance.filter(a => a.status === 'Terlambat').length;
+
+            const labels = ['Hadir', 'Izin', 'Alfa', 'Terlambat'];
+            const data = [hadirCount, izinCount, alfaCount, terlambatCount];
+            const colors = ['#4ade80', '#fbbf24', '#f87171', '#38bdf8'];
+            
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            if (attendanceChartInstance) {
+                attendanceChartInstance.destroy();
+            }
+
+            const isMobile = window.innerWidth < 768;
+
+            attendanceChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Siswa',
+                        data: data,
+                        backgroundColor: colors,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#d1d5db'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Kehadiran Bulan ${getMonthName(monthFilter)} ${yearFilter}`,
+                            color: '#e5e7eb',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                           top: 0,
+                           bottom: 200, // Mengatur padding bottom untuk semua ukuran layar
+                           left: 20,
+                           right: 20
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderClassFilterDropdown(classes) {
+            classFilterSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Kelas</option>';
+            classes.forEach(kelas => {
+                const option = document.createElement('option');
+                option.value = kelas;
+                option.textContent = kelas;
+                option.className = 'bg-gray-800';
+                classFilterSelect.appendChild(option);
+            });
+        }
+
+        function renderTaskFilterDropdown(tasks) {
+            taskFilterSelect.innerHTML = '<option value="semua" class="bg-gray-800">Semua Tugas</option>';
+            tasks.sort((a,b) => (b.dibuatPada?.seconds || 0) - (a.dibuatPada?.seconds || 0)).forEach(task => {
+                const option = document.createElement('option');
+                option.value = task.id;
+                option.textContent = task.judul;
+                option.className = 'bg-gray-800';
+                taskFilterSelect.appendChild(option);
+            });
+        }
+
+        monitoringTableBody.addEventListener('click', async (e) => {
+            if (e.target.closest('.save-grade-btn')) {
+                const button = e.target.closest('.save-grade-btn');
+                const docId = button.dataset.id;
+                const gradeInput = button.closest('.grading-form-container').querySelector('.grade-input');
+                const feedbackInput = button.closest('.grading-form-container').querySelector('.feedback-input');
+                const nilai = gradeInput.value;
+                const komentar = feedbackInput.value;
+
+                if (!nilai) {
+                    showToast('Pilih nilai terlebih dahulu.', 'error');
+                    return;
+                }
+
+                const submissionRef = doc(db, 'pengumpulan', docId);
+                try {
+                    await updateDoc(submissionRef, { 
+                        status: 'Sudah Dinilai',
+                        nilai: Number(nilai),
+                        komentar: komentar || ""
+                    });
+                    showToast('Nilai berhasil disimpan.', 'success');
+                } catch (error) {
+                    showToast('Gagal menyimpan nilai.', 'error');
+                }
+            }
+            
+            if (e.target.classList.contains('delete-submission-btn')) {
+                itemToDelete = {
+                    id: e.target.dataset.id,
+                    type: 'submission'
+                };
+                document.getElementById('delete-modal-title').textContent = `Konfirmasi Hapus Pengumpulan`;
+                document.getElementById('delete-modal-text').textContent = `Apakah Anda yakin ingin menghapus data pengumpulan ini? Siswa akan dapat mengumpulkan ulang tugasnya.`;
+                deleteConfirmModal.classList.remove('hidden');
+            }
+
+            if (e.target.classList.contains('revisi-skor-btn')) {
+                const button = e.target;
+                const submissionId = button.dataset.id;
+                const row = button.closest('tr');
+
+                const gradingForm = row.querySelector(`.grading-form-container[data-id="${submissionId}"]`);
+                
+                button.classList.add('hidden');
+                gradingForm.classList.remove('hidden');
+
+                const currentSubmission = allSubmissions.find(s => s.id === submissionId);
+                if (currentSubmission) {
+                    gradingForm.querySelector('.grade-input').value = currentSubmission.nilai;
+                }
+            }
+        });
+        
+        function setupDeleteListener(containerId) {
+             document.getElementById(containerId).addEventListener('click', (e) => {
+                const deleteButton = e.target.closest('.delete-btn');
+                if (deleteButton) {
+                    itemToDelete = {
+                        id: deleteButton.dataset.id,
+                        type: deleteButton.dataset.type
+                    };
+                    document.getElementById('delete-modal-title').textContent = `Konfirmasi Hapus ${itemToDelete.type === 'task' ? 'Tugas' : 'Materi'}`;
+                    document.getElementById('delete-modal-text').textContent = `Apakah Anda yakin ingin menghapus ${itemToDelete.type === 'task' ? 'tugas' : 'materi'} ini? Aksi ini tidak dapat dibatalkan.`;
+                    deleteConfirmModal.classList.remove('hidden');
+                }
+            });
+        }
+        setupDeleteListener('manage-tasks-list');
+        setupDeleteListener('manage-materi-list');
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if (!itemToDelete) return;
+
+            let collectionName;
+            let successMessage;
+
+            switch (itemToDelete.type) {
+                case 'task':
+                    collectionName = 'tugas';
+                    successMessage = 'Tugas berhasil dihapus.';
+                    break;
+                case 'materi':
+                    collectionName = 'materi';
+                    successMessage = 'Materi berhasil dihapus.';
+                    break;
+                case 'submission':
+                    collectionName = 'pengumpulan';
+                    successMessage = 'Data pengumpulan siswa berhasil dihapus.';
+                    break;
+                default:
+                    console.error('Unknown delete type:', itemToDelete.type);
+                    itemToDelete = null;
+                    deleteConfirmModal.classList.add('hidden');
+                    return;
+            }
+
+            try {
+                await deleteDoc(doc(db, collectionName, itemToDelete.id));
+                showToast(successMessage, 'success');
+            } catch (error) {
+                console.error(`Gagal menghapus ${collectionName}:`, error);
+                showToast(`Gagal menghapus: ${error.message}`, 'error');
+            } finally {
+                itemToDelete = null;
+                deleteConfirmModal.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+             itemToDelete = null;
+             deleteConfirmModal.classList.add('hidden');
+        });
+
+
+        document.getElementById('download-csv-btn').addEventListener('click', () => {
+            const submissionsToDownload = getFilteredSubmissions(); 
+
+            if (submissionsToDownload.length === 0) {
+                showToast('Tidak ada data untuk diunduh sesuai filter.', 'error');
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Nama Siswa,Kelas,Judul Tugas,Status,Nilai,Keterangan,Link,File URL,Tanggal Kumpul\r\n";
+
+            submissionsToDownload.forEach(sub => {
+                const task = allTasks[sub.tugasId] || { judul: 'N/A' };
+                const date = sub.dikumpulkanPada ? sub.dikumpulkanPada.toDate().toLocaleString('id-ID') : 'N/A';
+                const row = [sub.namaSiswa, sub.kelasSiswa, `"${task.judul}"`, sub.status, sub.nilai || '', `"${sub.komentar || ''}"`, sub.linkGdrive || '', sub.fileUrl || '', `"${date}"`].join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `rekapan_tugas_${currentStatusFilter}_${currentClassFilter}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        downloadRekapCsvBtn.addEventListener('click', () => {
+            const sortedTasks = Object.values(allTasks).sort((a, b) => (a.dibuatPada?.seconds || 0) - (b.dibuatPada?.seconds || 0));
+            const sortedStudents = [...allStudents].sort((a, b) => {
+                if (a.kelas < b.kelas) return -1;
+                if (a.kelas > b.kelas) return 1;
+                if (a.nama < b.nama) return -1;
+                if (a.nama > b.nama) return 1;
+                return 0;
+            });
+
+            if (sortedStudents.length === 0 || sortedTasks.length === 0) {
+                showToast('Tidak ada data siswa atau tugas untuk membuat rekap.', 'error');
+                return;
+            }
+
+            const headers = ['Nama Siswa', 'Kelas', ...sortedTasks.map(t => `"${t.judul}"`)];
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\r\n';
+
+            sortedStudents.forEach(student => {
+                const row = [`"${student.nama}"`, `"${student.kelas}"`];
+                sortedTasks.forEach(task => {
+                    const submission = allSubmissions.find(s => s.namaSiswa === student.nama && s.tugasId === task.id);
+                    if (submission) {
+                        if (submission.status === 'Sudah Dinilai') {
+                            row.push(`"✓ ${submission.nilai}"`);
+                        } else {
+                            row.push('"✓"');
+                        }
+                    } else {
+                        row.push('"✗"');
+                    }
+                });
+                csvContent += row.join(',') + '\r\n';
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `rekap_kemajuan_siswa.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        daftarTugasContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('button[data-id]');
+
+            if (button) {
+                document.getElementById('submission-modal-title').textContent = button.dataset.judul;
+                document.getElementById('submission-modal-desc').textContent = button.dataset.deskripsi;
+                document.getElementById('submission-tugas-id').value = button.dataset.id;
+                
+                document.getElementById('submission-form').reset();
+                document.getElementById('submission-details').classList.add('hidden');
+                
+                const targetKelas = button.dataset.kelas.split(',');
+                populateStudentDropdown(targetKelas);
+                
+                submissionModal.classList.remove('hidden');
+                safeCreateIcons();
+            }
+        });
+        
+        function populateStudentDropdown(targetKelasArray) {
+            const select = document.getElementById('student-select');
+            select.innerHTML = '<option value="" class="bg-gray-800">-- Pilih Nama --</option>';
+            
+            const filteredStudents = allStudents.filter(s => targetKelasArray.includes(s.kelas.toUpperCase()));
+
+            if (filteredStudents.length === 0) {
+                 select.innerHTML = '<option value="" class="bg-gray-800" disabled>Tidak ada siswa di kelas ini</option>';
+                 return;
+            }
+
+            filteredStudents.forEach(siswa => {
+                const option = document.createElement('option');
+                option.value = `${siswa.nama}||${siswa.kelas}`;
+                option.textContent = siswa.nama;
+                option.className = 'bg-gray-800';
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('student-select').addEventListener('change', (e) => {
+            const selectedValue = e.target.value;
+            const tugasId = document.getElementById('submission-tugas-id').value;
+            if (selectedValue && tugasId) {
+                document.getElementById('submission-details').classList.remove('hidden');
+                const [nama] = selectedValue.split('||');
+                const submission = allSubmissions.find(s => s.tugasId === tugasId && s.namaSiswa === nama);
+                checkSubmissionStatus(submission);
+            } else {
+                document.getElementById('submission-details').classList.add('hidden');
+            }
+        });
+
+        function checkSubmissionStatus(submission) {
+            const statusContainer = document.getElementById('submission-status-container');
+            const statusText = document.getElementById('submission-status-text');
+            const feedbackText = document.getElementById('submission-feedback-text');
+            const inputContainer = document.getElementById('submission-input-container');
+
+            feedbackText.textContent = '';
+            if (submission) {
+                if (submission.status === 'Sudah Dinilai') {
+                    statusText.innerHTML = `Tugas Anda sudah dinilai. <br> <span class="text-2xl font-bold mt-2 block">Nilai: ${submission.nilai}</span>`;
+                    if (submission.komentar) {
+                        feedbackText.textContent = `Umpan Balik: "${submission.komentar}"`;
+                    }
+                } else {
+                    statusText.textContent = `Anda sudah mengumpulkan tugas ini. Status: ${submission.status}`;
+                }
+                statusContainer.className = `p-4 rounded-lg text-center my-4 ${submission.status === 'Sudah Dinilai' ? 'bg-green-500/30 text-green-300' : 'bg-yellow-500/30 text-yellow-300'}`;
+                inputContainer.classList.add('hidden');
+            } else {
+                statusText.textContent = "Anda belum mengumpulkan tugas ini.";
+                statusContainer.className = 'p-4 rounded-lg text-center my-4 bg-blue-500/30 text-blue-300';
+                inputContainer.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('submission-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-assignment-btn');
+            const uploadProgress = document.getElementById('upload-progress');
+            
+            const tugasId = document.getElementById('submission-tugas-id').value;
+            const [namaSiswa, kelasSiswa] = document.getElementById('student-select').value.split('||');
+            const linkGdrive = document.getElementById('gdrive-link').value;
+            const fileInput = document.getElementById('file-upload');
+            const originalFile = fileInput.files[0];
+
+            if (!linkGdrive && !originalFile) {
+                showToast('Harap berikan link Google Drive atau unggah file.', 'error');
+                return;
+            }
+            if (!supabaseClient && originalFile) {
+                showToast('Fitur unggah file belum dikonfigurasi oleh admin.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            let fileToUpload = originalFile;
+            let fileUrl = null;
+
+            if (originalFile && originalFile.type.startsWith('image/')) {
+                let processedFile = originalFile;
+                const fileName = originalFile.name.toLowerCase();
+
+                if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
+                    try {
+                        uploadProgress.textContent = 'Mengonversi gambar...';
+                        uploadProgress.classList.remove('hidden');
+                        const convertedBlob = await heic2any({ blob: originalFile, toType: "image/jpeg" });
+                        processedFile = new File([convertedBlob], fileName.split('.')[0] + '.jpeg', { type: "image/jpeg" });
+                    } catch (error) {
+                        showToast('Gagal mengonversi file HEIC/HEIF.', 'error');
+                        console.error("HEIC conversion error:", error);
+                        submitBtn.disabled = false;
+                        uploadProgress.classList.add('hidden');
+                        return;
+                    }
+                }
+
+                try {
+                    uploadProgress.textContent = 'Mengompres gambar...';
+                    uploadProgress.classList.remove('hidden');
+                    const options = {
+                        maxSizeMB: 0.195,
+                        maxWidthOrHeight: 1920,
+                        useWebWorker: true,
+                    };
+                    fileToUpload = await imageCompression(processedFile, options);
+                } catch (error) {
+                    showToast('Gagal mengompres gambar.', 'error');
+                    console.error("Image compression error:", error);
+                    submitBtn.disabled = false;
+                    uploadProgress.classList.add('hidden');
+                    return;
+                }
+            }
+
+            if (fileToUpload) {
+                try {
+                    uploadProgress.textContent = 'Mengunggah file...';
+                    uploadProgress.classList.remove('hidden');
+                    const filePath = `submissions/${tugasId}-${namaSiswa.replace(/\s+/g, '_')}-${Date.now()}`;
+                    const { data, error } = await supabaseClient.storage.from('tugas-uploads').upload(filePath, fileToUpload);
+
+                    if (error) throw error;
+                    
+                    const { data: urlData } = supabaseClient.storage.from('tugas-uploads').getPublicUrl(data.path);
+                    fileUrl = urlData.publicUrl;
+                } catch (error) {
+                    showToast('Gagal mengunggah file.', 'error');
+                    console.error("Supabase upload error:", error);
+                    submitBtn.disabled = false;
+                    uploadProgress.classList.add('hidden');
+                    return;
+                } finally {
+                    uploadProgress.classList.add('hidden');
+                }
+            }
+
+            const task = allTasks[tugasId];
+            const now = Timestamp.now();
+            const deadline = task.deadline;
+            const status = now > deadline ? "Terkumpul (Terlambat)" : "Terkumpul";
+
+            try {
+                const docId = `${tugasId}_${namaSiswa.replace(/\s+/g, '-')}`;
+                const submissionRef = doc(db, 'pengumpulan', docId);
+                await setDoc(submissionRef, {
+                    tugasId,
+                    namaSiswa,
+                    kelasSiswa,
+                    linkGdrive: linkGdrive || null,
+                    fileUrl: fileUrl || null,
+                    status,
+                    nilai: null,
+                    komentar: "",
+                    dikumpulkanPada: serverTimestamp()
+                });
+                showToast('Tugas berhasil dikirim!', 'success');
+                submissionModal.classList.add('hidden');
+            } catch (error) {
+                showToast('Gagal mengirim tugas.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+        
+        function updateNotificationBadge() {
+            if (newSubmissionCount > 0) {
+                notificationBadge.textContent = newSubmissionCount > 9 ? '9+' : newSubmissionCount;
+                notificationBadge.classList.remove('hidden');
+            } else {
+                notificationBadge.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('notification-bell').addEventListener('click', () => {
+            newSubmissionCount = 0;
+            updateNotificationBadge();
+            const monitoringSection = document.getElementById('monitoring-section');
+            if (monitoringSection) {
+                monitoringSection.scroll-into-view({ behavior: 'smooth' });
+            }
+        });
+
+        searchSubmissionInput.addEventListener('input', () => {
+            currentPage = 1; 
+            renderMonitoringTable();
+        });
+
+        filterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                currentStatusFilter = e.target.dataset.filter;
+                
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+
+                currentPage = 1;
+                renderMonitoringTable();
+            }
+        });
+        
+        
+        absensiChartKelasSelect.addEventListener('change', (e) => {
+            currentAttendanceChartClass = e.target.value;
+            renderAttendanceChart();
+        });
+        absensiChartMonthSelect.addEventListener('change', (e) => {
+            currentAttendanceChartMonth = parseInt(e.target.value);
+            renderAttendanceChart();
+        });
+        absensiChartYearSelect.addEventListener('change', (e) => {
+            currentAttendanceChartYear = parseInt(e.target.value);
+            renderAttendanceChart();
+        });
+
+        classFilterSelect.addEventListener('change', (e) => {
+            currentClassFilter = e.target.value;
+            currentPage = 1;
+            renderMonitoringTable();
+        });
+
+        taskFilterSelect.addEventListener('change', (e) => {
+            currentTaskFilter = e.target.value;
+            currentPage = 1;
+            renderMonitoringTable();
+        });
+
+        findOrphanedBtn.addEventListener('click', () => {
+            const orphanedSubmissions = allSubmissions.filter(sub => !allTasks[sub.tugasId]);
+            
+            orphanedResultsContainer.classList.remove('hidden');
+            if (orphanedSubmissions.length === 0) {
+                orphanedList.innerHTML = '<p class="text-gray-400 italic">Tidak ada data pengumpulan dari tugas yang terhapus ditemukan.</p>';
+                deleteSelectedOrphanedBtn.disabled = true;
+                return;
+            }
+
+            orphanedList.innerHTML = orphanedSubmissions.map(sub => `
+                <label class="flex items-center gap-3 p-2 rounded-md hover:bg-white/10 transition-colors cursor-pointer">
+                    <input type="checkbox" data-id="${sub.id}" class="orphaned-checkbox form-checkbox bg-transparent border-gray-500 text-indigo-500 focus:ring-indigo-500 rounded-sm">
+                    <span class="text-sm">${sub.namaSiswa} (${sub.kelasSiswa}) - ID Tugas: ${sub.tugasId.substring(0, 5)}...</span>
+                </label>
+            `).join('');
+            deleteSelectedOrphanedBtn.disabled = false;
+        });
+
+        selectAllOrphanedCheckbox.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.orphaned-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        deleteSelectedOrphanedBtn.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('.orphaned-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                showToast('Pilih data yang akan dihapus.', 'error');
+                return;
+            }
+
+            const batch = writeBatch(db);
+            selectedCheckboxes.forEach(checkbox => {
+                const docId = checkbox.dataset.id;
+                const submissionRef = doc(db, 'pengumpulan', docId);
+                batch.delete(submissionRef);
+            });
+
+            try {
+                await batch.commit();
+                showToast(`Berhasil menghapus ${selectedCheckboxes.length} data.`, 'success');
+                findOrphanedBtn.click(); // Refresh the list
+            } catch (error) {
+                showToast('Gagal menghapus data.', 'error');
+                console.error("Orphaned data deletion failed:", error);
+            }
+        });
+        
+        document.getElementById('prev-page-btn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderMonitoringTable();
+            }
+        });
+
+        document.getElementById('next-page-btn').addEventListener('click', () => {
+            currentPage++;
+            renderMonitoringTable();
+        });
+
+        document.getElementById('prev-materi-page-btn').addEventListener('click', () => {
+            if (materiCurrentPage > 1) {
+                materiCurrentPage--;
+                renderManageMateriList();
+            }
+        });
+
+        document.getElementById('next-materi-page-btn').addEventListener('click', () => {
+            materiCurrentPage++;
+            renderManageMateriList();
+        });
+
+        document.getElementById('select-all-checkbox').addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        document.getElementById('apply-bulk-grade-btn').addEventListener('click', async () => {
+            const score = document.getElementById('bulk-score-select').value;
+            const feedback = document.getElementById('bulk-feedback-input').value;
+            const selectedCheckboxes = document.querySelectorAll('.student-checkbox:checked');
+
+            if (selectedCheckboxes.length === 0) {
+                showToast('Pilih setidaknya satu siswa.', 'error');
+                return;
+            }
+
+            const batch = writeBatch(db);
+            selectedCheckboxes.forEach(checkbox => {
+                const docId = checkbox.dataset.id;
+                const submissionRef = doc(db, 'pengumpulan', docId);
+                batch.update(submissionRef, {
+                    status: 'Sudah Dinilai',
+                    nilai: Number(score),
+                    komentar: feedback || ""
+                });
+            });
+
+            try {
+                await batch.commit();
+                showToast(`Berhasil menilai ${selectedCheckboxes.length} siswa.`, 'success');
+            } catch (error) {
+                showToast('Gagal melakukan penilaian massal.', 'error');
+                console.error("Bulk grading failed:", error);
+            }
+        });
+
+        function updateOpenCollapsibles() {
+            document.querySelectorAll('.collapsible-content').forEach(content => {
+                if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        }
+
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('i');
+                
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+
+        // Modal Controls
+        document.getElementById('close-login-modal').onclick = () => loginModal.classList.add('hidden');
+        document.getElementById('close-submission-modal').onclick = () => submissionModal.classList.add('hidden');
+        
+        // Initial setup
+        fetchInspirationalQuote();
+        document.getElementById('bulk-score-select').innerHTML = generateScoreOptions();
+        populateMonthYearDropdowns();
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('rekap-tanggal-input').value = today;
+        document.getElementById('absensi-tanggal-input').value = today;
+
+        // --- NEW ATTENDANCE LOGIC ---
+        absensiKelasSelect.addEventListener('change', (e) => {
+            const selectedClass = e.target.value;
+            const studentListContainer = document.getElementById('absensi-siswa-list');
+            unsavedAttendance = {}; // Clear temporary cache
+
+            if (selectedClass) {
+                studentListContainer.classList.remove('hidden');
+                absensiControls.classList.remove('hidden');
+                const studentsInClass = allStudents.filter(s => s.kelas.toUpperCase() === selectedClass);
+                
+                studentListContainer.innerHTML = studentsInClass.map(s => `
+                    <div class="flex items-center justify-between p-3 rounded-lg glass-card" data-student-name="${s.nama}" data-student-class="${s.kelas}">
+                        <span class="font-medium">${s.nama}</span>
+                        <div class="flex items-center gap-2">
+                            <button data-status="Hadir" class="status-btn px-3 py-1 text-sm rounded-lg transition-colors bg-green-600 text-white">Hadir</button>
+                            <button data-status="Izin" class="status-btn px-3 py-1 text-sm rounded-lg transition-colors bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-300">Izin</button>
+                            <button data-status="Alfa" class="status-btn px-3 py-1 text-sm rounded-lg transition-colors bg-red-500/20 hover:bg-red-500/40 text-red-300">Alfa</button>
+                            <button data-status="Terlambat" class="status-btn px-3 py-1 text-sm rounded-lg transition-colors bg-orange-500/20 hover:bg-orange-500/40 text-orange-300">Terlambat</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                showAttendanceForSelectedDate(); // Check for existing records to override defaults
+
+            } else {
+                studentListContainer.classList.add('hidden');
+                absensiControls.classList.add('hidden');
+                studentListContainer.innerHTML = '<p class="text-gray-400 text-sm p-4 text-center">Pilih kelas untuk menampilkan daftar siswa.</p>';
+            }
+            safeCreateIcons();
+        });
+        
+        async function showAttendanceForSelectedDate() {
+            const selectedClass = absensiKelasSelect.value;
+            const selectedDate = absensiTanggalInput.value;
+            const studentListContainer = document.getElementById('absensi-siswa-list');
+            
+            if (!selectedClass || !selectedDate) {
+                return;
+            }
+
+            unsavedAttendance = {};
+            const studentsInClass = allStudents.filter(s => s.kelas.toUpperCase() === selectedClass);
+            
+            // Set default attendance to "Hadir" for all students first
+            studentsInClass.forEach(s => {
+                unsavedAttendance[s.nama] = {
+                    namaSiswa: s.nama,
+                    kelas: s.kelas,
+                    status: 'Hadir',
+                    keterangan: ''
+                };
+            });
+            
+            // Query for existing attendance data for the selected date
+            const q = query(absensiCollection, where('kelas', '==', selectedClass));
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                
+                querySnapshot.docs.forEach(docSnapshot => {
+                    const data = docSnapshot.data();
+                    if (data.timestamp && data.timestamp.toDate) {
+                        const absensiDate = data.timestamp.toDate().toISOString().split('T')[0];
+                        if (absensiDate === selectedDate) {
+                             unsavedAttendance[data.namaSiswa] = {
+                                namaSiswa: data.namaSiswa,
+                                kelas: data.kelas,
+                                status: data.status,
+                                keterangan: data.keterangan || ''
+                            };
+                        }
+                    }
+                });
+                
+                // Now, render the UI based on the `unsavedAttendance` cache
+                const studentDivs = studentListContainer.querySelectorAll('[data-student-name]');
+                studentDivs.forEach(studentDiv => {
+                    const studentName = studentDiv.dataset.studentName;
+                    const attendanceData = unsavedAttendance[studentName];
+                    
+                    studentDiv.querySelectorAll('.status-btn').forEach(btn => {
+                        btn.classList.remove('active', 'bg-green-600', 'bg-yellow-600', 'bg-red-600', 'bg-orange-600');
+                        const originalClass = btn.dataset.status === 'Hadir' ? 'bg-green-500/20' : btn.dataset.status === 'Izin' ? 'bg-yellow-500/20' : btn.dataset.status === 'Alfa' ? 'bg-red-500/20' : 'bg-orange-500/20';
+                        btn.classList.add(originalClass);
+                    });
+                    
+                    if (attendanceData && attendanceData.status) {
+                        const activeBtn = studentDiv.querySelector(`.status-btn[data-status="${attendanceData.status}"]`);
+                        if (activeBtn) {
+                            activeBtn.classList.remove(...Array.from(activeBtn.classList).filter(cls => cls.includes('bg-')));
+                            activeBtn.classList.add('active', `bg-${attendanceData.status === 'Hadir' ? 'green' : attendanceData.status === 'Izin' ? 'yellow' : attendanceData.status === 'Alfa' ? 'red' : 'orange'}-600`, 'text-white');
+                        }
+                    }
+                });
+            } catch (error) {
+                showToast('Gagal memuat absensi hari ini.', 'error');
+                console.error("Error fetching today's attendance:", error);
+            }
+        }
+        
+        absensiTanggalInput.addEventListener('change', () => {
+            const selectedClass = absensiKelasSelect.value;
+            if (selectedClass) {
+                showAttendanceForSelectedDate();
+            }
+        });
+
+        absensiSiswaList.addEventListener('click', async (e) => {
+            const statusBtn = e.target.closest('.status-btn');
+            if (statusBtn) {
+                const status = statusBtn.dataset.status;
+                const studentDiv = statusBtn.closest('[data-student-name]');
+                const studentName = studentDiv.dataset.studentName;
+                const studentClass = studentDiv.dataset.studentClass;
+                
+                let keterangan = (unsavedAttendance[studentName] && unsavedAttendance[studentName].keterangan) ? unsavedAttendance[studentName].keterangan : '';
+                
+                // Reset all buttons for this student
+                studentDiv.querySelectorAll('.status-btn').forEach(btn => {
+                    btn.classList.remove('active', 'bg-green-600', 'bg-yellow-600', 'bg-red-600', 'bg-orange-600');
+                    const originalClass = btn.dataset.status === 'Hadir' ? 'bg-green-500/20' : btn.dataset.status === 'Izin' ? 'bg-yellow-500/20' : btn.dataset.status === 'Alfa' ? 'bg-red-500/20' : 'bg-orange-500/20';
+                    btn.classList.add(originalClass);
+                });
+
+                if (status === 'Izin') {
+                    const newKeterangan = prompt("Masukkan keterangan untuk izin:", keterangan);
+                    if (newKeterangan === null || newKeterangan.trim() === "") {
+                        showToast("Keterangan diperlukan untuk status Izin. Status diubah kembali menjadi Hadir.", "error");
+                        unsavedAttendance[studentName] = {
+                            namaSiswa: studentName,
+                            kelas: studentClass,
+                            status: 'Hadir',
+                            keterangan: ''
+                        };
+                         const hadirBtn = studentDiv.querySelector('.status-btn[data-status="Hadir"]');
+                         if(hadirBtn) {
+                            hadirBtn.classList.remove('bg-green-500/20');
+                            hadirBtn.classList.add('active', 'bg-green-600', 'text-white');
+                         }
+                        return;
+                    }
+                    keterangan = newKeterangan;
+                } else {
+                    keterangan = ''; // Clear keterangan for other statuses
+                }
+
+                // Set active class for the clicked button
+                statusBtn.classList.remove(...Array.from(statusBtn.classList).filter(cls => cls.includes('bg-')));
+                statusBtn.classList.add('active', `bg-${status === 'Hadir' ? 'green' : status === 'Izin' ? 'yellow' : status === 'Alfa' ? 'red' : 'orange'}-600`, 'text-white');
+
+                // Update temporary cache
+                if (!unsavedAttendance[studentName]) {
+                     unsavedAttendance[studentName] = {
+                        namaSiswa: studentName,
+                        kelas: studentClass
+                     };
+                }
+                unsavedAttendance[studentName].status = status;
+                unsavedAttendance[studentName].keterangan = keterangan;
+
+                showToast(`Absensi ${studentName} diubah ke ${status} (belum disimpan).`, 'success');
+            }
+        });
+
+        saveAttendanceBtn.addEventListener('click', async () => {
+            const batch = writeBatch(db);
+            const selectedDate = absensiTanggalInput.value;
+            const selectedClass = absensiKelasSelect.value;
+            let hasError = false;
+
+            if (!selectedClass) {
+                showToast("Pilih kelas terlebih dahulu.", "error");
+                return;
+            }
+            
+            // Check for empty attendance data
+            if (Object.keys(unsavedAttendance).length === 0) {
+                 showToast("Tidak ada data absensi untuk disimpan.", "error");
+                 return;
+            }
+
+
+            for (const studentName in unsavedAttendance) {
+                if (unsavedAttendance.hasOwnProperty(studentName)) {
+                    const att = unsavedAttendance[studentName];
+                    if (att.status === 'Izin' && !att.keterangan) {
+                        showToast(`Gagal: Keterangan untuk status Izin pada siswa ${studentName} diperlukan.`, 'error');
+                        hasError = true;
+                        break;
+                    }
+                    const docId = `${att.kelas}_${att.namaSiswa.replace(/\s/g, '_')}_${selectedDate.replace(/-/g, '')}`;
+                    const absensiRef = doc(db, 'absensi', docId);
+
+                    batch.set(absensiRef, {
+                        namaSiswa: att.namaSiswa,
+                        kelas: att.kelas,
+                        status: att.status,
+                        keterangan: att.keterangan,
+                        timestamp: Timestamp.fromDate(new Date(selectedDate))
+                    }, { merge: true });
+                }
+            }
+
+            if (!hasError) {
+                try {
+                    await batch.commit();
+                    showToast('Absensi berhasil disimpan!', 'success');
+                    showAttendanceForSelectedDate(); // Refresh UI to reflect changes
+                } catch (error) {
+                    showToast('Gagal menyimpan absensi.', 'error');
+                    console.error("Batch write failed:", error);
+                }
+            }
+        });
+        
+        hapusRiwayatBtn.addEventListener('click', async () => {
+            const selectedClass = hapusKelasSelect.value;
+            const selectedDate = hapusTanggalSelect.value;
+
+            if (!selectedClass || !selectedDate) {
+                showToast('Pilih kelas dan tanggal terlebih dahulu.', 'error');
+                return;
+            }
+
+            const confirmation = window.confirm(`Apakah Anda yakin ingin menghapus semua data absensi untuk kelas ${selectedClass} pada tanggal ${selectedDate}?`);
+            if (!confirmation) {
+                return;
+            }
+
+            // Get the IDs of the documents to be deleted from the client-side cache
+            const docsToDelete = allAttendance.filter(att => {
+                if (!att.timestamp || !att.timestamp.toDate) return false;
+                const attDate = att.timestamp.toDate().toISOString().split('T')[0];
+                return att.kelas === selectedClass && attDate === selectedDate;
+            });
+
+            if (docsToDelete.length === 0) {
+                showToast('Tidak ada data yang cocok untuk dihapus.', 'error');
+                return;
+            }
+            
+            const batch = writeBatch(db);
+            docsToDelete.forEach(docToDelete => {
+                batch.delete(doc(db, 'absensi', docToDelete.id));
+            });
+
+            try {
+                await batch.commit();
+                showToast(`${docsToDelete.length} data absensi berhasil dihapus.`, 'success');
+                console.log(`${docsToDelete.length} data absensi berhasil dihapus untuk kelas ${selectedClass} pada tanggal ${selectedDate}`);
+            } catch (error) {
+                showToast('Gagal menghapus absensi.', 'error');
+                console.error("Delete batch failed:", error);
+            }
+        });
+        
+        absensiTanggalInput.addEventListener('change', () => {
+            const selectedClass = absensiKelasSelect.value;
+            if (selectedClass) {
+                showAttendanceForSelectedDate();
+            }
+        });
+        
+        // --- NEW DELETE ATTENDANCE LOGIC ---
+        hapusKelasSelect.addEventListener('change', () => {
+            populateHapusTanggalSelect();
+        });
+        
+        function populateHapusTanggalSelect() {
+            const selectedClass = hapusKelasSelect.value;
+            const tanggalSelect = hapusTanggalSelect;
+            tanggalSelect.innerHTML = '<option value="" class="bg-gray-800">-- Pilih Tanggal --</option>';
+            tanggalSelect.disabled = true;
+            hapusRiwayatBtn.disabled = true;
+
+            if (selectedClass) {
+                const datesInClass = allAttendance
+                    .filter(a => a.kelas === selectedClass)
+                    .map(a => a.timestamp.toDate().toISOString().split('T')[0]);
+                
+                const uniqueDates = [...new Set(datesInClass)].sort().reverse();
+
+                uniqueDates.forEach(date => {
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.textContent = date;
+                    option.className = 'bg-gray-800';
+                    tanggalSelect.appendChild(option);
+                });
+                
+                if (uniqueDates.length > 0) {
+                    tanggalSelect.disabled = false;
+                    hapusRiwayatBtn.disabled = false;
+                }
+            }
+        }
+        
+        refreshHapusBtn.addEventListener('click', () => {
+             populateHapusTanggalSelect();
+        });
+
+
+        filterRekapBtn.addEventListener('click', () => {
+             rekapCurrentPage = 1;
+             renderRekapTable();
+        });
+
+        function renderRekapTable() {
+            const selectedClass = rekapKelasSelect.value;
+            const selectedDate = rekapTanggalInput.value;
+            let filteredAttendance = allAttendance;
+
+            if (selectedClass !== 'semua') {
+                filteredAttendance = filteredAttendance.filter(a => a.kelas === selectedClass);
+            }
+
+            if (selectedDate) {
+                filteredAttendance = filteredAttendance.filter(a => {
+                    // Safely check if timestamp exists and has a toDate method
+                    if (!a.timestamp || !a.timestamp.toDate) return false;
+                    const absensiDate = a.timestamp.toDate().toISOString().split('T')[0];
+                    return absensiDate === selectedDate;
+                });
+            }
+            
+            const totalPages = Math.ceil(filteredAttendance.length / rekapItemsPerPage);
+            if (rekapCurrentPage > totalPages && totalPages > 0) {
+                rekapCurrentPage = totalPages;
+            } else if (totalPages === 0) {
+                rekapCurrentPage = 1;
+            }
+
+            const startIndex = (rekapCurrentPage - 1) * rekapItemsPerPage;
+            const endIndex = startIndex + rekapItemsPerPage;
+            const paginatedAttendance = filteredAttendance.slice(startIndex, endIndex);
+
+            rekapTableBody.innerHTML = '';
+            if (paginatedAttendance.length === 0) {
+                 rekapTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-400">Tidak ada data yang cocok.</td></tr>';
+                 renderRekapPaginationControls(0, 0);
+                 return;
+            }
+
+            paginatedAttendance.forEach(att => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-white/10';
+                const date = att.timestamp.toDate().toLocaleDateString('id-ID');
+                const time = att.timestamp.toDate().toLocaleTimeString('id-ID');
+                row.innerHTML = `
+                    <td class="p-4">${date}</td>
+                    <td class="p-4">${time}</td>
+                    <td class="p-4">${att.namaSiswa}</td>
+                    <td class="p-4">${att.kelas}</td>
+                    <td class="p-4">${att.status}</td>
+                    <td class="p-4">${att.keterangan || '-'}</td>
+                `;
+                rekapTableBody.appendChild(row);
+            });
+            renderRekapPaginationControls(totalPages, filteredAttendance.length);
+            safeCreateIcons();
+        }
+
+        function renderRekapPaginationControls(totalPages, totalItems) {
+            const pageInfo = document.getElementById('rekap-page-info');
+            const prevBtn = document.getElementById('prev-rekap-page-btn');
+            const nextBtn = document.getElementById('next-rekap-page-btn');
+            const paginationContainer = document.getElementById('rekap-pagination-controls');
+
+            if (totalPages <= 1) {
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            paginationContainer.classList.remove('hidden');
+
+            pageInfo.textContent = `Halaman ${rekapCurrentPage} dari ${totalPages} (${totalItems} data)`;
+            prevBtn.disabled = rekapCurrentPage === 1;
+            nextBtn.disabled = rekapCurrentPage === totalPages;
+        }
+
+        document.getElementById('prev-rekap-page-btn').addEventListener('click', () => {
+            if (rekapCurrentPage > 1) {
+                rekapCurrentPage--;
+                renderRekapTable();
+            }
+        });
+
+        document.getElementById('next-rekap-page-btn').addEventListener('click', () => {
+            rekapCurrentPage++;
+            renderRekapTable();
+        });
+
+        downloadAbsensiCsvBtn.addEventListener('click', () => {
+            const selectedClass = rekapKelasSelect.value;
+            const selectedDate = rekapTanggalInput.value;
+            let filteredAttendance = allAttendance;
+
+            if (selectedClass !== 'semua') {
+                filteredAttendance = filteredAttendance.filter(a => a.kelas === selectedClass);
+            }
+
+            if (selectedDate) {
+                filteredAttendance = filteredAttendance.filter(a => {
+                    if (!a.timestamp || !a.timestamp.toDate) return false;
+                    const absensiDate = a.timestamp.toDate().toISOString().split('T')[0];
+                    return absensiDate === selectedDate;
+                });
+            }
+
+            if (filteredAttendance.length === 0) {
+                showToast('Tidak ada data absensi untuk diunduh.', 'error');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Tanggal,Jam,Nama Siswa,Kelas,Status,Keterangan\r\n";
+            
+            filteredAttendance.forEach(att => {
+                const date = att.timestamp.toDate().toLocaleDateString('id-ID');
+                const time = att.timestamp.toDate().toLocaleTimeString('id-ID');
+                const row = [date, time, `"${att.namaSiswa}"`, att.kelas, att.status, `"${att.keterangan || ''}"`].join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `rekap_absensi_${selectedClass}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        downloadAllAbsensiCsvBtn.addEventListener('click', () => {
+            if (allAttendance.length === 0) {
+                showToast('Tidak ada data absensi untuk diunduh.', 'error');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Tanggal,Jam,Nama Siswa,Kelas,Status,Keterangan\r\n";
+            
+            allAttendance.forEach(att => {
+                const date = att.timestamp.toDate().toLocaleDateString('id-ID');
+                const time = att.timestamp.toDate().toLocaleTimeString('id-ID');
+                const row = [date, time, `"${att.namaSiswa}"`, att.kelas, att.status, `"${att.keterangan || ''}"`].join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `rekap_absensi_semua_data.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        // Final icon render on initial load
+        safeCreateIcons();
+    </script>
+</body>
+</html>
