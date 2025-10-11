@@ -101,7 +101,7 @@
                     Akhsan Rian Anugrah, S.Pd., Gr.
                 </p>
                 <p class="text-lg text-gray-400">
-                    Untuk Siswa-siswi Hebat <strong>Peserta Digital CAMP Pandu Digital</strong>
+                    Untuk Siswa-siswi Hebat <strong>SMA Negeri 1 Soppeng</strong>
                 </p>
             </div>
         </div>
@@ -116,7 +116,7 @@
 
             <div class="grid md:grid-cols-2 gap-12 items-center">
                 <div class="js-animate-on-scroll delay-100">
-                    <img src="https://arafx.vercel.app/gambar/mikrokontroller.png" onerror="this.src='https://placehold.co/600x400/0f0f0f/e0e0e0?text=Arduino+Uno'" alt="" class="w-full h-auto rounded-xl shadow-2xl border-2 border-gray-700 object-cover">
+                    <img src="https://arafx.vercel.app/gambar/mikrokontroller.png" onerror="this.src='https://placehold.co/600x400/0f0f0f/e0e0e0?text=Arduino+Uno'" alt="[Image of Arduino Uno]" class="w-full h-auto rounded-xl shadow-2xl border-2 border-gray-700 object-cover">
                 </div>
                 <div class="space-y-6 js-animate-on-scroll delay-200">
                     <p class="text-2xl font-light leading-relaxed">
@@ -136,8 +136,56 @@
         </div>
     </section>
 
-    <!-- 3. DASAR-DASAR PEMROGRAMAN -->
+    <!-- 3. DASAR-DASAR LISTRIK & PIN -->
     <section class="py-20 md:py-32">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold mb-12 text-white text-center js-animate-on-scroll">
+                Dasar Kelistrikan: VCC, GND, dan Pin
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8 lg:grid-cols-4 mt-8">
+                <!-- VCC & GND -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-xl space-y-3 component-card js-animate-on-scroll">
+                    <i data-lucide="zap" class="w-8 h-8 text-green-400 mb-2"></i>
+                    <h3 class="text-xl font-semibold text-white">VCC & GND</h3>
+                    <p class="text-sm text-gray-300">
+                        <strong>VCC (Voltage Common Collector)</strong> adalah jalur <strong>Power/Daya Positif</strong> (+). Sedangkan <strong>GND (Ground)</strong> adalah jalur <strong>Netral/Negatif</strong> (-) sebagai titik acuan 0 Volt. Setiap komponen butuh VCC dan GND untuk menyala.
+                    </p>
+                </div>
+                <!-- Pin Digital -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-xl space-y-3 component-card js-animate-on-scroll delay-100">
+                    <i data-lucide="toggle-right" class="w-8 h-8 text-blue-400 mb-2"></i>
+                    <h3 class="text-xl font-semibold text-white">Pin Digital</h3>
+                    <p class="text-sm text-gray-300">
+                        Hanya mengenal dua kondisi: <strong>HIGH (1)</strong>, yang berarti ON (biasanya 3.3V/5V), atau <strong>LOW (0)</strong>, yang berarti OFF (0V). Digunakan untuk menyalakan LED atau membaca tombol tekan.
+                    </p>
+                </div>
+                <!-- Pin Analog -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-xl space-y-3 component-card js-animate-on-scroll delay-200">
+                    <i data-lucide="gauge" class="w-8 h-8 text-yellow-400 mb-2"></i>
+                    <h3 class="text-xl font-semibold text-white">Pin Analog</h3>
+                    <p class="text-sm text-gray-300">
+                        Dapat membaca rentang nilai yang lebih luas, seperti nilai tegangan antara 0V sampai 5V. Penting untuk sensor yang menghasilkan data berkelanjutan, seperti sensor cahaya atau potensiometer.
+                    </p>
+                </div>
+                <!-- LED Kaki -->
+                 <div class="bg-gray-800 p-6 rounded-xl shadow-xl space-y-3 component-card js-animate-on-scroll delay-300">
+                    <i data-lucide="lightbulb" class="w-8 h-8 text-red-400 mb-2"></i>
+                    <h3 class="text-xl font-semibold text-white">Anoda & Katoda (LED)</h3>
+                    <p class="text-sm text-gray-300">
+                        Kaki LED yang <strong>lebih panjang</strong> adalah <strong>Anoda</strong> (+) atau kaki positif. Kaki yang <strong>lebih pendek</strong> adalah <strong>Katoda</strong> (-) atau kaki negatif, yang terhubung ke GND.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-12 text-center js-animate-on-scroll delay-400">
+                <p class="text-xl text-yellow-300 font-medium bg-gray-800 p-4 rounded-lg inline-block">
+                    CATATAN PENTING: Untuk melindungi LED dari kerusakan akibat kelebihan arus, <strong>selalu gunakan Resistor</strong> (sekitar 220 Ohm) pada kaki positifnya!
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 4. DASAR-DASAR PEMROGRAMAN -->
+    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
         <div class="max-w-6xl mx-auto px-6">
             <h2 class="text-5xl font-bold mb-16 text-white text-center js-animate-on-scroll">
                 Memahami Bahasa dan Senjata Pemrograman
@@ -183,8 +231,9 @@
         </div>
     </section>
 
-    <!-- 4. GALERI HARDWARE -->
-    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
+
+    <!-- 5. GALERI HARDWARE -->
+    <section class="py-20 md:py-32">
         <div class="max-w-6xl mx-auto px-6">
             <h2 class="text-5xl font-bold mb-16 text-blue-400 text-center js-animate-on-scroll">
                 Galeri Komponen: Senjata Para Maker
@@ -193,7 +242,7 @@
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Komponen 1: Arduino Uno -->
                 <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll">
-                    <img src="https://arafx.vercel.app/gambar/mikrokontroller.png" onerror="this.src='https://placehold.co/400x200/222/ddd?text=Arduino+Uno'" alt="[Image of Arduino Uno]" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <img src="https://arafx.vercel.app/gambar/mikrokontroller.png" onerror="this.src='https://placehold.co/400x200/222/ddd?text=Arduino+Uno'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
                     <h4 class="text-xl font-bold text-white mb-2">Arduino Uno</h4>
                     <p class="text-sm text-gray-400">Pahlawan klasik. Mudah dipelajari, sempurna untuk pemula.</p>
                 </div>
@@ -256,8 +305,8 @@
         </div>
     </section>
     
-    <!-- 5. KETERKAITAN DALAM KEHIDUPAN SEHARI-HARI -->
-    <section class="py-20 md:py-32">
+    <!-- 6. KETERKAITAN DALAM KEHIDUPAN SEHARI-HARI -->
+    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
         <div class="max-w-6xl mx-auto px-6">
             <h2 class="text-5xl font-bold mb-16 text-white text-center js-animate-on-scroll">
                 Mikrokontroler: Ada di Sekeliling Kita
@@ -283,8 +332,8 @@
         </div>
     </section>
 
-    <!-- 6. KETERKAITAN DENGAN AI & PENTINGNYA MEMPELAJARI -->
-    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
+    <!-- 7. KETERKAITAN DENGAN AI & PENTINGNYA MEMPELAJARI -->
+    <section class="py-20 md:py-32">
         <div class="max-w-6xl mx-auto px-6">
             <h2 class="text-5xl font-bold mb-16 text-blue-400 text-center js-animate-on-scroll">
                 Hubungan Mikrokontroler dengan Kecerdasan Buatan (AI)
@@ -316,7 +365,7 @@
         </div>
     </section>
 
-    <!-- 7. RENUNGAN & PENUTUP -->
+    <!-- 8. RENUNGAN & PENUTUP -->
     <section class="py-20 md:py-32 bg-gray-950/90">
         <div class="max-w-4xl mx-auto px-6 text-center">
             <h2 class="text-5xl font-bold mb-8 text-blue-400 js-animate-on-scroll">
