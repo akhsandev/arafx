@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mikrokontroler & Masa Depan - SMA 1 Soppeng</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Icon library (Lucide Icons) -->
+    <script type="module" src="https://unpkg.com/lucide@latest"></script>
+    <!-- Konfigurasi Tema & Font Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        :root {
+            --primary-color: #3b82f6; /* blue-500 */
+            --dark-bg: #0a0a0a; /* neutral-950 */
+            --dark-card: #1f2937; /* gray-800 */
+            --dark-text: #f3f4f6; /* gray-100 */
+            --blur-strength: 10px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+            overflow-x: hidden;
+        }
+
+        /* Styling untuk background utama dengan gambar dan blur */
+        .main-bg {
+            background-image: url('https://arafx.vercel.app/gambar/background.jpg');
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+            z-index: 0;
+        }
+
+        /* Overlay untuk efek dark dan blur */
+        .main-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85); /* Dark overlay */
+            backdrop-filter: blur(var(--blur-strength)); /* Blur effect */
+            z-index: 1;
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 2; /* Pastikan konten di atas overlay */
+        }
+
+        /* Gaya untuk kartu komponen */
+        .component-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Animasi default untuk elemen yang akan di-scroll-reveal */
+        .js-animate-on-scroll {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        /* Kelas yang ditambahkan saat elemen terlihat */
+        .js-animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="main-bg">
+
+<div class="content-container">
+
+    <!-- 1. HEADER & INTRO SECTION -->
+    <section class="min-h-screen flex items-center justify-center p-8">
+        <div class="max-w-4xl text-center space-y-8 js-animate-on-scroll">
+            <h1 class="text-7xl md:text-8xl font-extrabold tracking-tight text-white leading-tight">
+                DUNIA DI TANGAN KITA
+            </h1>
+            <p class="text-3xl font-light text-gray-300">
+                Mengeksplorasi <strong>Mikrokontroler</strong> dan Masa Depan Otomasi
+            </p>
+            <div class="pt-6">
+                <p class="text-xl font-medium text-blue-400">
+                    Disampaikan oleh:
+                </p>
+                <p class="text-2xl font-semibold text-white">
+                    Akhsan Rian Anugrah, S.Pd., Gr.
+                </p>
+                <p class="text-lg text-gray-400">
+                    Untuk Siswa-siswi Hebat <strong>SMA Negeri 1 Soppeng</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. APA ITU MIKROKONTROLER? -->
+    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400 text-center js-animate-on-scroll">
+                Apa Itu Mikrokontroler?
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="js-animate-on-scroll delay-100">
+                    <img src="https://arafx.vercel.app/gambar/mikrokontroller.png" onerror="this.src='https://placehold.co/600x400/0f0f0f/e0e0e0?text=Arduino+Uno'" alt="" class="w-full h-auto rounded-xl shadow-2xl border-2 border-gray-700 object-cover">
+                </div>
+                <div class="space-y-6 js-animate-on-scroll delay-200">
+                    <p class="text-2xl font-light leading-relaxed">
+                        Bayangkan <strong>Mikrokontroler</strong> sebagai otak mini yang sangat pintar.
+                        Ini adalah komputer kecil yang terintegrasi dalam satu chip, dirancang untuk mengendalikan fungsi tertentu dalam perangkat elektronik.
+                    </p>
+                    <ul class="space-y-3 text-lg list-disc list-inside ml-4 text-gray-300">
+                        <li>Mengambil <strong>input</strong> dari sensor (suhu, jarak).</li>
+                        <li>Memproses data (berpikir).</li>
+                        <li>Memberikan <strong>output</strong> ke komponen lain (menyalakan lampu, menggerakkan motor).</li>
+                    </ul>
+                    <p class="text-xl text-blue-300 font-medium">
+                        Contoh paling populer adalah <strong>Arduino</strong> dan <strong>ESP32</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. DASAR-DASAR PEMROGRAMAN -->
+    <section class="py-20 md:py-32">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold mb-16 text-white text-center js-animate-on-scroll">
+                Memahami Bahasa dan Senjata Pemrograman
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Bahasa Pemrograman -->
+                <div class="bg-gray-800 p-8 rounded-xl shadow-xl space-y-4 component-card js-animate-on-scroll">
+                    <i data-lucide="code" class="w-10 h-10 text-blue-400 mb-3"></i>
+                    <h3 class="text-3xl font-semibold text-white">Bahasa Apa?</h3>
+                    <p class="text-lg text-gray-300">
+                        Arduino menggunakan bahasa pemrograman berbasis <strong>C/C++</strong>. Ini adalah bahasa yang kuat dan efisien.
+                    </p>
+                    <p class="text-blue-300 font-mono text-sm">
+                        *Setup() dan Loop() adalah dua fungsi utama yang wajib ada.*
+                    </p>
+                </div>
+
+                <!-- Library -->
+                <div class="bg-gray-800 p-8 rounded-xl shadow-xl space-y-4 component-card js-animate-on-scroll delay-100">
+                    <i data-lucide="book-open-text" class="w-10 h-10 text-blue-400 mb-3"></i>
+                    <h3 class="text-3xl font-semibold text-white">Apa itu Library?</h3>
+                    <p class="text-lg text-gray-300">
+                        <strong>Library</strong> adalah kumpulan kode (fungsi) siap pakai. Tanpanya, Anda harus menulis kode yang rumit hanya untuk menyalakan sensor.
+                    </p>
+                    <p class="text-blue-300 font-mono text-sm">
+                        Contoh: Library <strong>DHT</strong> memudahkan kita membaca sensor suhu dan kelembaban tanpa menulis kode kalkulasi fisika.
+                    </p>
+                </div>
+
+                <!-- Fungsi -->
+                <div class="bg-gray-800 p-8 rounded-xl shadow-xl space-y-4 component-card js-animate-on-scroll delay-200">
+                    <i data-lucide="function" class="w-10 h-10 text-blue-400 mb-3"></i>
+                    <h3 class="text-3xl font-semibold text-white">Fungsi Dasar</h3>
+                    <p class="text-lg text-gray-300">
+                        Fungsi adalah blok kode yang melakukan tugas tertentu. Ini membantu kode Anda menjadi rapi dan mudah digunakan kembali.
+                    </p>
+                    <p class="text-blue-300 font-mono text-sm">
+                        Contoh: <code>digitalWrite(pin, HIGH)</code> adalah fungsi untuk memberi tegangan pada pin tertentu.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. GALERI HARDWARE -->
+    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold mb-16 text-blue-400 text-center js-animate-on-scroll">
+                Galeri Komponen: Senjata Para Maker
+            </h2>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Komponen 1: Arduino Uno -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll">
+                    <img src="https://arafx.vercel.app/gambar/mikrokontroller.png" onerror="this.src='https://placehold.co/400x200/222/ddd?text=Arduino+Uno'" alt="[Image of Arduino Uno]" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">Arduino Uno</h4>
+                    <p class="text-sm text-gray-400">Pahlawan klasik. Mudah dipelajari, sempurna untuk pemula.</p>
+                </div>
+                <!-- Komponen 2: ESP32 -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll delay-100">
+                    <img src="https://arafx.vercel.app/gambar/esp32.jpeg" onerror="this.src='https://placehold.co/400x200/222/ddd?text=ESP32'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">ESP32</h4>
+                    <p class="text-sm text-gray-400">Mikrokontroler dengan <strong>Wi-Fi</strong> dan <strong>Bluetooth</strong> terintegrasi. Untuk proyek IoT.</p>
+                </div>
+                <!-- Komponen 3: ESP32 C3 Mini -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll delay-200">
+                    <img src="https://arafx.vercel.app/gambar/esp32mini.webp" onerror="this.src='https://placehold.co/400x200/222/ddd?text=ESP32+C3+Mini'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">ESP32 C3 Mini</h4>
+                    <p class="text-sm text-gray-400">Versi yang lebih kecil dan hemat energi, tetap memiliki fitur Wi-Fi.</p>
+                </div>
+                <!-- Komponen 4: Sensor Ultrasonik -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll">
+                    <img src="https://arafx.vercel.app/gambar/ultrasonic.jpg" onerror="this.src='https://placehold.co/400x200/222/ddd?text=Ultrasonic+Sensor'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">Sensor Ultrasonik (HC-SR04)</h4>
+                    <p class="text-sm text-gray-400">Mengukur jarak menggunakan gelombang suara. Cocok untuk robot penghindar rintangan.</p>
+                </div>
+                <!-- Komponen 5: Servo Motor -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll delay-100">
+                    <img src="https://arafx.vercel.app/gambar/servo.jpg" onerror="this.src='https://placehold.co/400x200/222/ddd?text=Servo+Motor'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">Servo Motor</h4>
+                    <p class="text-sm text-gray-400">Motor yang dapat berputar pada sudut yang tepat. Digunakan untuk lengan robot atau kunci otomatis.</p>
+                </div>
+                <!-- Komponen 6: Sensor DHT11 -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll delay-200">
+                    <img src="https://arafx.vercel.app/gambar/dht11.jpeg" onerror="this.src='https://placehold.co/400x200/222/ddd?text=DHT11+Sensor'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">Sensor DHT11</h4>
+                    <p class="text-sm text-gray-400">Membaca data suhu dan kelembaban udara. Dasar dari stasiun cuaca mini.</p>
+                </div>
+                <!-- Komponen 7: Relay -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll">
+                    <img src="https://arafx.vercel.app/gambar/relay1ch.jpeg" onerror="this.src='https://placehold.co/400x200/222/ddd?text=Relay+Module'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">Relay</h4>
+                    <p class="text-sm text-gray-400">Sakelar elektronik yang memungkinkan mikrokontroler mengontrol perangkat listrik bertegangan tinggi (seperti lampu rumah).</p>
+                </div>
+                <!-- Komponen 8: RFID RC522 -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll delay-100">
+                    <img src="https://arafx.vercel.app/gambar/rfid.jpeg" onerror="this.src='https://placehold.co/400x200/222/ddd?text=RFID+RC522'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">RFID RC522</h4>
+                    <p class="text-sm text-gray-400">Membaca kartu atau tag nirkabel. Digunakan untuk kunci pintu digital atau sistem absensi.</p>
+                </div>
+                <!-- Komponen 9: LCD SSD 1306 -->
+                <div class="bg-gray-800 p-6 rounded-xl component-card js-animate-on-scroll delay-200">
+                    <img src="https://arafx.vercel.app/gambar/oledssd1306.webp" onerror="this.src='https://placehold.co/400x200/222/ddd?text=SSD+1306+OLED'" alt="" class="w-full h-40 object-contain mb-4 rounded-lg bg-gray-700/50 p-2">
+                    <h4 class="text-xl font-bold text-white mb-2">LCD SSD 1306 (OLED)</h4>
+                    <p class="text-sm text-gray-400">Layar mini yang sangat jernih untuk menampilkan teks atau ikon. Sempurna untuk perangkat kecil.</p>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-center js-animate-on-scroll">
+                <p class="text-2xl text-blue-300 font-medium">
+                    Semua komponen ini dihubungkan dengan <strong>Kabel Penghubung</strong> dan dipasang di <strong>Breadboard</strong>!
+                </p>
+                <img src="https://arafx.vercel.app/gambar/sensorkit.jpg" onerror="this.src='https://placehold.co/800x200/222/ddd?text=Sensors+and+Components'" alt="" class="mt-8 w-3/4 md:w-1/2 mx-auto rounded-xl shadow-2xl border-2 border-gray-700 object-cover">
+            </div>
+        </div>
+    </section>
+    
+    <!-- 5. KETERKAITAN DALAM KEHIDUPAN SEHARI-HARI -->
+    <section class="py-20 md:py-32">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold mb-16 text-white text-center js-animate-on-scroll">
+                Mikrokontroler: Ada di Sekeliling Kita
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 js-animate-on-scroll">
+                    <h3 class="text-3xl font-semibold text-blue-400">Dimana Mereka Bersembunyi?</h3>
+                    <ul class="space-y-4 text-xl list-disc list-inside ml-4 text-gray-300">
+                        <li><strong>Peralatan Rumah Tangga:</strong> Mesin cuci, kulkas pintar, AC dengan pengaturan otomatis.</li>
+                        <li><strong>Otomotif:</strong> Sistem pengereman ABS (Anti-lock Braking System) dan kontrol mesin.</li>
+                        <li><strong>Perangkat Pribadi:</strong> Smartwatch, Power Bank dengan sistem cut-off otomatis.</li>
+                        <li><strong>Sistem Keamanan:</strong> CCTV, sensor gerak, kunci pintu otomatis.</li>
+                    </ul>
+                    <p class="text-xl font-medium text-white">
+                        Mereka adalah pahlawan tanpa tanda jasa yang membuat hidup kita lebih mudah dan efisien.
+                    </p>
+                </div>
+                <div class="js-animate-on-scroll delay-100">
+                    <img src="https://arafx.vercel.app/gambar/penerapanmikrokontroller.jpg" onerror="this.src='https://placehold.co/600x400/1e293b/94a3b8?text=Contoh+Penerapan+Sehari-hari'" alt="" class="w-full h-auto rounded-xl shadow-2xl border-2 border-gray-700 object-cover">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. KETERKAITAN DENGAN AI & PENTINGNYA MEMPELAJARI -->
+    <section class="py-20 md:py-32 bg-gray-900/90 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-5xl font-bold mb-16 text-blue-400 text-center js-animate-on-scroll">
+                Hubungan Mikrokontroler dengan Kecerdasan Buatan (AI)
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="js-animate-on-scroll">
+                    <img src="https://arafx.vercel.app/gambar/artificialintellegence.jpg" onerror="this.src='https://placehold.co/600x400/222/ddd?text=Artificial+Intelligence'" alt="[Image of Artificial Intelligence]" class="w-full h-auto rounded-xl shadow-2xl border-2 border-gray-700 object-cover">
+                </div>
+                <div class="space-y-8 js-animate-on-scroll delay-100">
+                    <div>
+                        <h3 class="text-3xl font-semibold text-white mb-3">Mempermudah Pengembangan Kode AI</h3>
+                        <p class="text-xl text-gray-300 leading-relaxed">
+                            Mikrokontroler modern seperti <strong>ESP32</strong> memiliki kemampuan yang cukup untuk menjalankan model <strong>TinyML (Tiny Machine Learning)</strong>.
+                            Anda bisa melatih model AI untuk mengenali suara atau gerakan, dan menjalankan model tersebut langsung di perangkat Anda!
+                        </p>
+                    </div>
+
+                    <hr class="border-gray-700">
+
+                    <div>
+                        <h3 class="text-3xl font-semibold text-white mb-3">Mengapa Ini Penting?</h3>
+                        <p class="text-xl text-yellow-400 font-semibold leading-relaxed">
+                            Mempelajari mikrokontroler adalah gerbang Anda menuju <strong>Revolusi Industri 4.0</strong> dan <strong>Internet of Things (IoT)</strong>. Ini adalah keterampilan masa depan yang dicari di berbagai bidang: teknik, robotika, pertanian pintar, hingga kesehatan.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. RENUNGAN & PENUTUP -->
+    <section class="py-20 md:py-32 bg-gray-950/90">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-5xl font-bold mb-8 text-blue-400 js-animate-on-scroll">
+                Renungan: Wujudkan Ide
+            </h2>
+
+            <div class="space-y-8 text-gray-300 js-animate-on-scroll delay-100">
+                <p class="text-2xl font-light leading-relaxed">
+                    Mikrokontroler bukan hanya tentang resistor atau kabel, tetapi tentang <strong>mewujudkan imajinasi</strong> Anda menjadi kenyataan yang berfungsi.
+                </p>
+                <p class="text-3xl font-semibold italic text-white leading-relaxed">
+                    "Setiap perangkat di sekitar Anda dimulai dari sebuah ide dan sepotong mikrokontroler."
+                </p>
+                <p class="text-2xl font-light leading-relaxed">
+                    Jangan hanya menjadi pengguna teknologi, jadilah <strong>pencipta teknologi</strong>. Pelajari dasar-dasarnya, dan Anda akan memiliki kekuatan untuk memecahkan masalah di lingkungan Anda, mulai dari irigasi otomatis di kebun hingga sistem peringatan dini bencana.
+                </p>
+            </div>
+
+            <div class="mt-16 pt-8 border-t border-gray-700 js-animate-on-scroll delay-200">
+                <p class="text-xl text-white font-medium">
+                    Mari kita mulai coding dan berkarya!
+                </p>
+                <p class="text-lg text-blue-300 mt-2">
+                    Akhsan Rian Anugrah, S.Pd., Gr.
+                </p>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- JAVASCRIPT FOR SCROLL ANIMATION -->
+<script type="module">
+    // Inisialisasi Lucide Icons
+    lucide.createIcons();
+
+    const animateOnScrollElements = document.querySelectorAll('.js-animate-on-scroll');
+
+    const observerOptions = {
+        root: null, // Menggunakan viewport sebagai root
+        rootMargin: '0px',
+        threshold: 0.2 // Trigger saat 20% elemen terlihat
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Elemen terlihat, tambahkan kelas animasi
+                entry.target.classList.add('is-visible');
+                // Hentikan observasi setelah animasi selesai agar tidak berulang
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Mulai mengamati semua elemen yang memiliki kelas 'js-animate-on-scroll'
+    animateOnScrollElements.forEach(el => {
+        observer.observe(el);
+    });
+</script>
+
+</body>
+</html>
