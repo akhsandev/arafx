@@ -3,364 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akhsan Rian Anugrah - Guru Fisika & Pegiat Teknologi</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Pilah Energi - Game Edukasi</title>
+    <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Leaflet CSS for Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
-    <!-- Custom CSS for animations and glassmorphism -->
+    <!-- Memuat Tone.js untuk efek suara -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
+        /* Font kustom untuk tampilan yang lebih menarik */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
-            color: #e5e7eb;
-            overflow-x: hidden;
-            scroll-behavior: smooth;
         }
-
-        /* Animated Gradient Background */
-        .gradient-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(45deg, #0c0a3e, #7f0756, #0a3b3d, #5d0938);
-            background-size: 400% 400%;
-            animation: gradientAnimation 25s ease infinite;
+        /* Style kustom untuk item yang sedang diseret */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Style untuk zona drop saat item di atasnya */
+        .drag-over {
+            border-style: solid;
+            transform: scale(1.02);
         }
-
-        /* Glassmorphism Effect */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            -webkit-backdrop-filter: blur(15px);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+        /* Style untuk item yang sudah benar */
+        .sorted {
+            opacity: 0.7;
+            cursor: not-allowed !important;
+            filter: grayscale(50%);
         }
-
-        .glass-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transform: translateY(-5px);
+        /* Style baru untuk item yang "terbang" saat disentuh */
+        .touch-dragging {
+            position: fixed; /* Mengeluarkannya dari alur dokumen */
+            z-index: 1000; /* Memastikannya di atas segalanya */
+            pointer-events: none; /* Membiarkan kita mendeteksi apa yang di bawahnya */
         }
-
-        /* Scroll Animation Setup */
-        .fade-in-section {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-
-        .fade-in-section.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .nav-link {
-            position: relative;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #38bdf8;
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover::after, .nav-link.active::after {
-            width: 100%;
-        }
-
-        .profile-img-glow {
-            box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), 0 0 50px rgba(56, 189, 248, 0.3);
-        }
-        
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 selection:bg-blue-200">
 
-    <div class="gradient-bg"></div>
+    <div id="game-container" class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-10 transition-all duration-300">
+        
+        <!-- Judul dan Instruksi -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">Pilah Energi!</h1>
+            <p class="text-lg text-gray-600">Seret setiap sumber energi ke kotak yang tepat.</p>
+        </div>
 
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 p-4 glass-card md:m-4 md:rounded-xl">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold text-white">
-                <a href="#">Akhsan Rian Anugrah</a>
-            </h1>
-            <nav class="hidden md:flex space-x-6">
-                <a href="#about" class="nav-link text-gray-300 hover:text-sky-400">Tentang</a>
-                <a href="#philosophy" class="nav-link text-gray-300 hover:text-sky-400">Filosofi</a>
-                <a href="#masterpiece" class="nav-link text-gray-300 hover:text-sky-400">Masterpiece</a>
-                <a href="#hobbies" class="nav-link text-gray-300 hover:text-sky-400">Hobi</a>
-                <a href="#contact" class="nav-link text-gray-300 hover:text-sky-400">Kontak</a>
-                <a href="#location" class="nav-link text-gray-300 hover:text-sky-400">Lokasi</a>
-            </nav>
-            <button id="mobile-menu-button" class="md:hidden text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
+        <!-- Bank Item (Sumber Energi) -->
+        <div id="item-bank" class="w-full bg-gray-50 p-4 rounded-xl shadow-inner min-h-[150px] flex flex-wrap justify-center items-center gap-4 mb-8">
+            <!-- Setiap item akan dibuat oleh JavaScript -->
+        </div>
+
+        <!-- Zona Drop (Kotak Kategori) -->
+        <div class="flex flex-col md:flex-row gap-6">
+            
+            <!-- Kotak Energi Terbarukan (Si Baik) -->
+            <div id="renewable-bin" class="drop-zone flex-1 bg-green-50 border-4 border-dashed border-green-300 rounded-2xl p-6 min-h-[300px] transition-all duration-300" data-type="renewable">
+                <h2 class="text-2xl font-bold text-green-700 text-center mb-4">Energi Terbarukan (Si Baik)</h2>
+                <div class="item-slot-container flex flex-wrap justify-center gap-4">
+                    <!-- Item yang benar akan masuk ke sini -->
+                </div>
+            </div>
+
+            <!-- Kotak Energi Tak Terbarukan (Si Buruk) -->
+            <div id="non-renewable-bin" class="drop-zone flex-1 bg-red-50 border-4 border-dashed border-red-300 rounded-2xl p-6 min-h-[300px] transition-all duration-300" data-type="non-renewable">
+                <h2 class="text-2xl font-bold text-red-700 text-center mb-4">Energi Tak Terbarukan (Si Buruk)</h2>
+                <div class="item-slot-container flex flex-wrap justify-center gap-4">
+                    <!-- Item yang benar akan masuk ke sini -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Umpan Balik dan Tombol Kontrol -->
+        <div class="mt-8 text-center">
+            <div id="feedback-message" class="text-xl font-semibold h-8 mb-4 transition-all duration-300"></div>
+            <button id="reset-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all duration-200">
+                Ulangi Permainan
             </button>
         </div>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden mt-4">
-             <a href="#about" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Tentang</a>
-             <a href="#philosophy" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Filosofi</a>
-             <a href="#masterpiece" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Masterpiece</a>
-             <a href="#hobbies" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Hobi</a>
-             <a href="#contact" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Kontak</a>
-             <a href="#location" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700 rounded">Lokasi</a>
+
+    </div>
+
+    <!-- Modal Kemenangan (Awalnya Tersembunyi) -->
+    <div id="win-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-10 text-center transform scale-95 transition-transform duration-300">
+            <svg class="w-20 h-20 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Hebat!</h2>
+            <p class="text-lg text-gray-600 mb-6">Kamu berhasil memilah semua sumber energi dengan benar!</p>
+            <button id="play-again-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all duration-200">
+                Main Lagi
+            </button>
         </div>
-    </header>
+    </div>
 
-    <main class="container mx-auto px-4 pt-32 pb-16">
-
-        <!-- Hero Section -->
-        <section id="home" class="min-h-screen flex flex-col md:flex-row items-center justify-center text-center md:text-left">
-            <div class="md:w-1/2 mb-10 md:mb-0 fade-in-section is-visible">
-                <h2 class="text-4xl md:text-6xl font-extrabold text-white leading-tight">
-                    Menjembatani <span class="text-sky-400">Fisika</span> & <span class="text-fuchsia-500">Teknologi</span>.
-                </h2>
-                <p class="mt-4 text-lg md:text-xl text-gray-300 max-w-xl mx-auto md:mx-0">
-                    Seorang pendidik Fisika yang bersemangat mengintegrasikan AI, Lab Virtual, dan Proyek Maker untuk menciptakan pengalaman belajar yang tak terlupakan.
-                </p>
-                <div class="mt-8 flex justify-center md:justify-start space-x-4">
-                    <a href="#masterpiece" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Lihat Karya Saya</a>
-                    <a href="#contact" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Hubungi Saya</a>
-                </div>
-            </div>
-            <div class="md:w-1/2 flex justify-center fade-in-section is-visible" style="animation-delay: 0.2s;">
-                <img src="https://arafx.vercel.app/profil.png" 
-                     alt="Foto Profil Akhsan Rian Anugrah"
-                     class="w-64 h-64 md:w-80 md:h-80 rounded-full object-cover border-4 border-sky-500/50 profile-img-glow">
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section id="about" class="py-20 fade-in-section">
-            <h3 class="text-3xl font-bold text-center mb-2 text-white">Tentang Saya</h3>
-            <p class="text-sky-400 text-center mb-12">Perjalanan dari TIK ke Fisika</p>
-            <div class="glass-card rounded-2xl p-8 md:p-12">
-                <p class="text-gray-300 text-lg leading-relaxed mb-4">
-                    Halo! Saya <strong>Akhsan Rian Anugrah</strong>, seorang guru P3K yang diangkat pada tahun 2024 di <strong class="text-white">SMA Negeri 1 Soppeng</strong>. Berasal dari Kabupaten Soppeng, saya membawa semangat lokal ke dalam kelas. Meskipun latar belakang formal saya adalah di bidang Teknologi Informasi dan Komunikasi (TIK), takdir memberikan saya kesempatan luar biasa untuk mengajar Fisika.
-                </p>
-                <p class="text-gray-300 text-lg leading-relaxed mb-4">
-                    Bagi saya, ini bukan halangan, melainkan sebuah peluang emas. Saya melihatnya sebagai kesempatan untuk menggabungkan dua dunia yang saya cintai: logika dan keindahan alam semesta dalam Fisika, serta kekuatan inovasi dari Teknologi.
-                </p>
-                <p class="text-gray-300 text-lg leading-relaxed">
-                    Setiap hari di kelas, saya berusaha membuktikan bahwa Fisika tidak harus menakutkan. Dengan sentuhan teknologi, konsep-konsep yang rumit bisa menjadi lebih mudah dipahami, interaktif, dan yang terpenting, menyenangkan!
-                </p>
-            </div>
-        </section>
-
-        <!-- Philosophy Section -->
-        <section id="philosophy" class="py-20 fade-in-section">
-            <h3 class="text-3xl font-bold text-center mb-2 text-white">Filosofi Mengajar Saya</h3>
-            <p class="text-sky-400 text-center mb-12">Belajar Fisika di Era Digital</p>
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Card 1: AI -->
-                <div class="glass-card rounded-2xl p-8 text-center">
-                    <div class="flex justify-center mb-4"><i class="fa-solid fa-robot text-5xl text-sky-400"></i></div>
-                    <h4 class="text-xl font-bold mb-2 text-white">Pembelajaran Berbasis AI</h4>
-                    <p class="text-gray-400">Memanfaatkan kecerdasan buatan untuk personalisasi materi, menjawab pertanyaan siswa, dan membuat media ajar yang inovatif.</p>
-                </div>
-                <!-- Card 2: Virtual Lab -->
-                <div class="glass-card rounded-2xl p-8 text-center">
-                    <div class="flex justify-center mb-4"><i class="fa-solid fa-flask-vial text-5xl text-sky-400"></i></div>
-                    <h4 class="text-xl font-bold mb-2 text-white">Laboratorium Virtual</h4>
-                    <p class="text-gray-400">Melakukan eksperimen fisika yang kompleks dan berbahaya dengan aman melalui simulasi interaktif, membuka pintu ke dunia imajinasi ilmiah.</p>
-                </div>
-                <!-- Card 3: Maker Culture -->
-                <div class="glass-card rounded-2xl p-8 text-center">
-                    <div class="flex justify-center mb-4"><i class="fa-solid fa-microchip text-5xl text-sky-400"></i></div>
-                    <h4 class="text-xl font-bold mb-2 text-white">Pendekatan Proyek Maker</h4>
-                    <p class="text-gray-400">Mendorong siswa untuk menerapkan konsep fisika dalam proyek nyata menggunakan mikrokontroler, mengubah teori menjadi karya nyata.</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Masterpiece Projects Section -->
-        <section id="masterpiece" class="py-20 fade-in-section">
-            <h3 class="text-3xl font-bold text-center mb-2 text-white">Proyek Masterpiece</h3>
-            <p class="text-sky-400 text-center mb-12">Karya Unggulan yang Menggabungkan Teknologi dan Pendidikan</p>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Masterpiece 1 -->
-                <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
-                    <a href="https://arafx.vercel.app/EnergiTerbarukan.pdf" target="_blank" rel="noopener noreferrer" class="block group">
-                        <img src="https://arafx.vercel.app/thumbnail1.png" alt="Thumbnail Presentasi AI" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
-                    </a>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <h4 class="text-xl font-bold text-white">Presentasi Materi dengan AI</h4>
-                        <p class="text-gray-400 mt-2 flex-grow">Media ajar inovatif tentang energi terbarukan yang sepenuhnya dirancang dan disusun menggunakan teknologi kecerdasan buatan.</p>
-                        <a href="https://arafx.vercel.app/EnergiTerbarukan.pdf" target="_blank" rel="noopener noreferrer" class="mt-4 text-sky-400 font-semibold hover:text-sky-300 self-start">Lihat PDF <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>
-                    </div>
-                </div>
-                <!-- Masterpiece 2 -->
-                <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
-                    <a href="https://arafx.vercel.app/" target="_blank" rel="noopener noreferrer" class="block group">
-                        <img src="https://arafx.vercel.app/thumbnail2.png" alt="Thumbnail Website Pribadi" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
-                    </a>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <h4 class="text-xl font-bold text-white">Website Personal Branding</h4>
-                        <p class="text-gray-400 mt-2 flex-grow">Sebuah etalase digital yang Anda lihat sekarang, dirancang untuk menampilkan perjalanan, filosofi, dan karya saya sebagai pendidik modern.</p>
-                        <a href="https://arafx.vercel.app/" target="_blank" rel="noopener noreferrer" class="mt-4 text-sky-400 font-semibold hover:text-sky-300 self-start">Kunjungi Situs <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>
-                    </div>
-                </div>
-                <!-- Masterpiece 3 -->
-                <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
-                    <a href="https://arafx.vercel.app/idongiri" target="_blank" rel="noopener noreferrer" class="block group">
-                        <img src="https://arafx.vercel.app/thumbnail3.png" alt="Thumbnail Aplikasi IDONGIRI" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
-                    </a>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <h4 class="text-xl font-bold text-white">Aplikasi IDONGIRI (100% AI)</h4>
-                        <p class="text-gray-400 mt-2 flex-grow">Aplikasi untuk implementasi disiplin positif siswa. Sebuah bukti konsep bahwa AI dapat digunakan untuk membangun solusi pendidikan dari awal.</p>
-                        <a href="https://arafx.vercel.app/idongiri" target="_blank" rel="noopener noreferrer" class="mt-4 text-sky-400 font-semibold hover:text-sky-300 self-start">Coba Aplikasi <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Hobbies & Exploration Section -->
-        <section id="hobbies" class="py-20 fade-in-section">
-            <h3 class="text-3xl font-bold text-center mb-2 text-white">Hobi & Eksplorasi</h3>
-            <p class="text-sky-400 text-center mb-12">Ketika Fisika, Kode, dan Musik Bersatu</p>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Hobby Card 1 -->
-                <div class="glass-card rounded-2xl overflow-hidden">
-                    <img src="https://placehold.co/600x400/0f172a/38bdf8?text=Proyek+Arduino" alt="Proyek Mikrokontroler" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e5e7eb?text=Gambar+Error';">
-                    <div class="p-6">
-                        <h4 class="text-xl font-bold text-white">Proyek Mikrokontroler</h4>
-                        <p class="text-gray-400 mt-2">Membuat alat peraga fisika interaktif menggunakan Arduino/ESP32. Sebuah hobi yang selalu memicu kreativitas.</p>
-                    </div>
-                </div>
-                <!-- Hobby Card 2 -->
-                <div class="glass-card rounded-2xl overflow-hidden">
-                    <img src="https://placehold.co/600x400/0f172a/a855f7?text=Simulasi+Fisika" alt="Simulasi Fisika" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e5e7eb?text=Gambar+Error';">
-                    <div class="p-6">
-                        <h4 class="text-xl font-bold text-white">Eksplorasi Simulasi</h4>
-                        <p class="text-gray-400 mt-2">Merancang simulasi untuk memvisualisasikan konsep seperti gerak parabola atau hukum Ohm.</p>
-                    </div>
-                </div>
-                <!-- Hobby Card 3 -->
-                <div class="glass-card rounded-2xl overflow-hidden">
-                     <img src="https://placehold.co/600x400/0f172a/ec4899?text=Playlist+Favorit" alt="Mendengarkan Musik" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e5e7eb?text=Gambar+Error';">
-                    <div class="p-6">
-                        <h4 class="text-xl font-bold text-white">Mendengarkan Musik</h4>
-                        <p class="text-gray-400 mt-2">Musik adalah pelarian. Dari rock klasik hingga lofi, musik menemani saat merancang pelajaran atau proyek.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Contact Section -->
-        <section id="contact" class="py-20 fade-in-section">
-            <h3 class="text-3xl font-bold text-center mb-2 text-white">Mari Terhubung</h3>
-            <p class="text-sky-400 text-center mb-12">Saya terbuka untuk kolaborasi, diskusi, atau sekadar bertukar pikiran.</p>
-            <div class="glass-card rounded-2xl p-8 md:p-12 max-w-2xl mx-auto text-center">
-                <p class="text-lg text-gray-300 mb-6">
-                    Apakah Anda seorang guru, siswa, atau pegiat teknologi? Jangan ragu untuk menghubungi saya melalui email atau media sosial di bawah ini.
-                </p>
-                <a href="mailto:akhsan.rian5@guru.sma.belajar.id" class="inline-block bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-lg transition duration-300 text-lg">
-                    Kirim Email
-                </a>
-                <div class="flex justify-center items-center space-x-6 mt-8">
-                    <!-- WhatsApp -->
-                    <a href="https://wa.me/6287717416198" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition duration-300" title="WhatsApp">
-                        <i class="fa-brands fa-whatsapp text-3xl"></i>
-                    </a>
-                    <!-- Instagram -->
-                    <a href="https://www.instagram.com/_ara.v2/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition duration-300" title="Instagram">
-                         <i class="fa-brands fa-instagram text-3xl"></i>
-                    </a>
-                    <!-- Ganti # dengan link sosial media Anda yang lain -->
-                    <a href="#" class="text-gray-400 hover:text-white transition duration-300" title="GitHub">
-                        <i class="fa-brands fa-github text-3xl"></i>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Map Section -->
-        <section id="location" class="py-20 fade-in-section">
-            <h3 class="text-3xl font-bold text-center mb-2 text-white">Lokasi Saya</h3>
-            <p class="text-sky-400 text-center mb-12">Temukan saya di Soppeng</p>
-            <div class="glass-card rounded-2xl p-2 md:p-4">
-                <div id="map" class="w-full h-96 md:h-[500px] rounded-lg z-10"></div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="text-center py-8 px-4 border-t border-white/10">
-        <p class="text-gray-400">Didesain dan dikembangkan dengan ❤️ dan sedikit `code`.</p>
-        <p class="text-gray-500 text-sm mt-2">© 2024 Akhsan Rian Anugrah. Semua Hak Cipta Dilindungi.</p>
-    </footer>
-
-    <!-- Leaflet JS for Map -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // Simple script for mobile menu toggle
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
+        document.addEventListener('DOMContentLoaded', () => {
 
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-        
-        // On-scroll animations
-        const sections = document.querySelectorAll('.fade-in-section');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
+            // --- A. DEFINISI DATA DAN ASET ---
+
+            // Data sumber energi (Nama, Tipe, dan SVG)
+            const energySources = [
+                { 
+                    id: 'sun', 
+                    name: 'Matahari', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-1.414a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4.95 14.536L4.243 15.243a1 1 0 11-1.415-1.415l.707-.707a1 1 0 011.415 1.415zM3.536 15.243a1 1 0 01-1.415-1.415l.707-.707a1 1 0 011.415 1.415l-.707.707zM1 10a1 1 0 011-1h1a1 1 0 110 2H2a1 1 0 01-1-1zM15 11a1 1 0 110-2h1a1 1 0 110 2h-1zM4.95 3.536a1 1 0 010 1.414L4.243 5.657A1 1 0 012.828 4.243l.707-.707a1 1 0 011.415 0zm11.314 0a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM10 5a1 1 0 011 1v1a1 1 0 11-2 0V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>`
+                },
+                { 
+                    id: 'coal', 
+                    name: 'Batu Bara', 
+                    type: 'non-renewable', 
+                    svg: `<svg class="w-16 h-16 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7.746 16.741L11 10.456L14.07 15.42L17.5 12.35L14.735 8.135L17.5 4.5H4.5L7.746 16.741ZM19.5 2.5C20.881 2.5 22 3.619 22 5V19C22 20.381 20.881 21.5 19.5 21.5H4.5C3.119 21.5 2 20.381 2 19V5C2 3.619 3.119 2.5 4.5 2.5H19.5Z"/></svg>`
+                },
+                { 
+                    id: 'wind', 
+                    name: 'Angin', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.125 1.125 0 010 2.25H5.625a1.125 1.125 0 010-2.25z"></path></svg>`
+                },
+                { 
+                    id: 'oil', 
+                    name: 'Minyak Bumi', 
+                    type: 'non-renewable', 
+                    svg: `<svg class="w-16 h-16 text-black" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path><path d="M10 13a3 3 0 100-6 3 3 0 000 6z"></path></svg>`
+                },
+                { 
+                    id: 'water', 
+                    name: 'Air (PLTA)', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>`
+                },
+                { 
+                    id: 'geothermal', 
+                    name: 'Panas Bumi', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657L13.414 20.414a2 2 0 01-1.414 0l-4.243-1.757M10 3v5.657A2.25 2.25 0 019.13 11.21l-4.715 2.15-2.11-2.109 2.15-4.715A2.25 2.25 0 016.343 3H10zm11 0v5.657A2.25 2.25 0 0019.13 11.21l-4.715 2.15-2.11-2.109 2.15-4.715A2.25 2.25 0 0014.657 3H21z"></path></svg>`
                 }
+            ];
+
+            // --- B. VARIABEL DOM & STATE ---
+
+            const itemBank = document.getElementById('item-bank');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const resetButton = document.getElementById('reset-button');
+            const winModal = document.getElementById('win-modal');
+            const playAgainButton = document.getElementById('play-again-button');
+            let draggedItem = null;
+            let correctCount = 0;
+            let totalItems = energySources.length;
+            let currentOverZone = null; // Melacak zona drop yang sedang 'di-hover' oleh sentuhan
+
+            // --- C. EFEK SUARA (Tone.js) ---
+
+            // Inisialisasi audio setelah interaksi pengguna pertama (best practice)
+            let audioInitialized = false;
+            let correctSound, wrongSound, winSound;
+
+            function initAudio() {
+                if (audioInitialized) return;
+                Tone.start();
+                // Suara benar: nada C5
+                correctSound = new Tone.Synth().toDestination();
+                // Suara salah: suara noise pendek
+                wrongSound = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                // Suara menang: akord C mayor
+                winSound = new Tone.PolySynth(Tone.Synth).toDestination();
+                audioInitialized = true;
+            }
+            
+            // Event listener untuk menginisialisasi audio saat ada klik
+            document.body.addEventListener('click', initAudio, { once: true });
+            document.body.addEventListener('dragstart', initAudio, { once: true });
+
+
+            // --- D. FUNGSI UTAMA ---
+
+            // Fungsi untuk membuat elemen item energi
+            function createEnergyItem(source) {
+                const item = document.createElement('div');
+                item.id = source.id;
+                item.className = 'draggable-item p-4 m-2 bg-white rounded-lg shadow-md cursor-grab active:cursor-grabbing transform transition-all duration-200 hover:scale-105 flex flex-col items-center w-32';
+                item.draggable = true;
+                item.dataset.type = source.type;
+
+                item.innerHTML = `
+                    ${source.svg}
+                    <span class="mt-2 font-semibold text-gray-700 text-center">${source.name}</span>
+                `;
+
+                // Menambahkan event listener untuk drag
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                // Menambahkan event listener untuk TOUCH
+                item.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+                return item;
+            }
+
+            // Fungsi untuk mengacak urutan array (Fisher-Yates shuffle)
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            // Fungsi untuk memulai/mengatur ulang permainan
+            function setupGame() {
+                // Mengosongkan bank item dan zona drop
+                itemBank.innerHTML = '';
+                dropZones.forEach(zone => {
+                    zone.querySelector('.item-slot-container').innerHTML = '';
+                });
+
+                // Mengacak dan membuat item baru
+                shuffleArray(energySources);
+                energySources.forEach(source => {
+                    itemBank.appendChild(createEnergyItem(source));
+                });
+
+                // Reset state
+                correctCount = 0;
+                feedbackMessage.textContent = '';
+                feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 transition-all duration-300';
+                winModal.classList.add('hidden', 'opacity-0');
+                winModal.querySelector('div').classList.add('scale-95');
+                currentOverZone = null; // Reset pelacak zona hover
+            }
+
+            // --- E. EVENT HANDLER DRAG & DROP ---
+
+            function handleDragStart(e) {
+                initAudio(); // Panggil inisialisasi audio di sini
+                draggedItem = e.target;
+                e.dataTransfer.setData('text/plain', e.target.id);
+                // Menunggu sejenak sebelum menambahkan kelas .dragging
+                setTimeout(() => {
+                    e.target.classList.add('dragging');
+                }, 0);
+            }
+
+            function handleDragEnd(e) {
+                e.target.classList.remove('dragging');
+                draggedItem = null;
+                // Pastikan semua state hover 'drag-over' bersih
+                dropZones.forEach(zone => zone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100'));
+                currentOverZone = null;
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault(); // Diperlukan agar event drop bisa di-trigger
+                const dropZone = e.currentTarget;
+                dropZone.classList.add('drag-over', dropZone.dataset.type === 'renewable' ? 'bg-green-100' : 'bg-red-100');
+                currentOverZone = dropZone; // Set zona hover
+            }
+
+            function handleDragLeave(e) {
+                const dropZone = e.currentTarget;
+                dropZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                currentOverZone = null; // Hapus zona hover
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                const dropZone = e.currentTarget;
+                processDropLogic(dropZone, draggedItem); // Panggil fungsi logika terpusat
+                dropZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                currentOverZone = null;
+            }
+
+            // --- Event Handler untuk TOUCH ---
+
+            function handleTouchStart(e) {
+                // Mencegah scrolling halaman saat memulai drag
+                e.preventDefault();
+                initAudio(); // Panggil inisialisasi audio di sini
+                
+                draggedItem = e.currentTarget;
+                
+                // Tambahkan kelas visual (opacity, scale)
+                draggedItem.classList.add('dragging');
+                // Tambahkan kelas "terbang" (position: fixed)
+                draggedItem.classList.add('touch-dragging');
+
+                // Posisikan item tepat di bawah jari (ditengah)
+                const touch = e.touches[0];
+                updateItemPosition(touch.clientX, touch.clientY);
+            }
+
+            function handleTouchMove(e) {
+                if (!draggedItem) return;
+
+                // Mencegah scrolling saat drag
+                e.preventDefault();
+
+                // Dapatkan info sentuhan
+                const touch = e.touches[0];
+                const clientX = touch.clientX;
+                const clientY = touch.clientY;
+
+                // --- LOGIKA MELAYANG BARU ---
+                // Perbarui posisi item agar mengikuti jari
+                updateItemPosition(clientX, clientY);
+                // -------------------------
+
+                // Sembunyikan item yang di-drag sejenak agar elementFromPoint bisa mendeteksi apa yang di bawahnya
+                // (Ini sekarang ditangani oleh CSS .touch-dragging { pointer-events: none; })
+                // draggedItem.style.pointerEvents = 'none'; 
+                const elementUnder = document.elementFromPoint(clientX, clientY);
+                // draggedItem.style.pointerEvents = 'auto';
+
+                const dropZone = elementUnder ? elementUnder.closest('.drop-zone') : null;
+
+                // Bersihkan 'drag-over' dari zona sebelumnya jika beda
+                if (currentOverZone && currentOverZone !== dropZone) {
+                    currentOverZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                }
+
+                // Tambahkan 'drag-over' ke zona baru
+                if (dropZone) {
+                    dropZone.classList.add('drag-over', dropZone.dataset.type === 'renewable' ? 'bg-green-100' : 'bg-red-100');
+                    currentOverZone = dropZone;
+                } else {
+                    currentOverZone = null;
+                }
+            }
+
+            function handleTouchEnd(e) {
+                if (!draggedItem) return;
+
+                // Hapus semua kelas drag dan style inline
+                draggedItem.classList.remove('dragging');
+                draggedItem.classList.remove('touch-dragging');
+                draggedItem.style.top = '';
+                draggedItem.style.left = '';
+
+                if (currentOverZone) {
+                    // Jika sentuhan berakhir di atas zona drop yang valid
+                    processDropLogic(currentOverZone, draggedItem);
+                    currentOverZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                }
+
+                // Reset state
+                draggedItem = null;
+                currentOverZone = null;
+            }
+
+            // --- Fungsi baru untuk memposisikan item (TOUCH) ---
+            function updateItemPosition(x, y) {
+                if (!draggedItem) return;
+                // Kita atur agar jari berada di tengah item
+                const itemWidth = draggedItem.offsetWidth;
+                const itemHeight = draggedItem.offsetHeight;
+                draggedItem.style.left = `${x - itemWidth / 2}px`;
+                draggedItem.style.top = `${y - itemHeight / 2}px`;
+            }
+
+            // --- Logika Inti untuk Drop (Dipakai oleh Mouse & Touch) ---
+
+            function processDropLogic(dropZone, item) {
+                if (!item || !dropZone) return; // Keamanan jika item atau zona null
+
+                const dropType = dropZone.dataset.type;
+                const itemType = item.dataset.type;
+
+                // Cek apakah jawaban benar
+                if (dropType === itemType) {
+                    // Benar
+                    dropZone.querySelector('.item-slot-container').appendChild(item);
+                    item.draggable = false;
+                    item.classList.add('sorted');
+                    item.classList.remove('cursor-grab', 'active:cursor-grabbing', 'hover:scale-105');
+                    // Hapus event listener touch agar tidak bisa di-drag lagi
+                    item.removeEventListener('touchstart', handleTouchStart, { passive: false });
+                    // Pastikan style "melayang" dibersihkan jika ada
+                    item.classList.remove('touch-dragging');
+                    item.style.top = '';
+                    item.style.left = '';
+
+                    showFeedback('Benar! ' + item.querySelector('span').textContent + ' adalah energi ' + (dropType === 'renewable' ? 'terbarukan.' : 'tak terbarukan.'), 'green');
+                    
+                    if (audioInitialized) correctSound.triggerAttackRelease("C5", "8n");
+
+                    correctCount++;
+                    checkWinCondition();
+                } else {
+                    // Salah
+                    showFeedback('Ups! Coba lagi. ' + item.querySelector('span').textContent + ' bukan di situ tempatnya.', 'red');
+                    if (audioInitialized) wrongSound.triggerAttackRelease("4n");
+                }
+            }
+
+
+            // --- F. FUNGSI BANTUAN & KONDISI MENANG ---
+
+            function showFeedback(message, type) {
+                feedbackMessage.textContent = message;
+                if (type === 'green') {
+                    feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 text-green-600';
+                } else {
+                    feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 text-red-600';
+                }
+
+                // Menghilangkan pesan setelah 2 detik
+                setTimeout(() => {
+                    if (feedbackMessage.textContent === message) {
+                        feedbackMessage.textContent = '';
+                        feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 transition-all duration-300';
+                    }
+                }, 2500);
+            }
+
+            function checkWinCondition() {
+                if (correctCount === totalItems) {
+                    // Tampilkan modal kemenangan
+                    winModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        winModal.classList.remove('opacity-0');
+                        winModal.querySelector('div').classList.remove('scale-95');
+                    }, 10); // sedikit delay untuk transisi
+
+                    if (audioInitialized) winSound.triggerAttackRelease(["C4", "E4", "G4"], "1n");
+                }
+            }
+
+            // --- G. INISIALISASI & EVENT LISTENER TOMBOL ---
+
+            // Menambahkan event listener ke zona drop
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
             });
-        }, { threshold: 0.1 });
-        sections.forEach(section => observer.observe(section));
 
-        // Close mobile menu on link click
-        const mobileNavLinks = document.querySelectorAll('#mobile-menu a');
-        mobileNavLinks.forEach(link => {
-            link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+            // Event listener untuk tombol reset
+            resetButton.addEventListener('click', setupGame);
+            playAgainButton.addEventListener('click', setupGame);
+
+            // Menambahkan listener global untuk touch move dan touch end
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+
+            // Memulai permainan saat halaman dimuat
+            setupGame();
         });
-
-        // Map Initialization
-        const map = L.map('map').setView([-4.348218, 119.895914], 16);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        L.marker([-4.348218, 119.895914]).addTo(map)
-            .bindPopup('<b>Lokasi Saya</b><br>BTN Malaka Raya, Soppeng.')
-            .openPopup();
     </script>
-
 </body>
 </html>
+
+
