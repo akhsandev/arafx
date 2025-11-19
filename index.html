@@ -15,11 +15,6 @@
             background-color: #f8fafc;
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        .gradient-text {
-            background: linear-gradient(to right, #1e3a8a, #2563eb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
         .card-hover {
             transition: all 0.3s ease;
         }
@@ -27,20 +22,21 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        /* Custom Timeline CSS */
+        /* Custom Timeline CSS - Memastikan garis benar-benar di tengah */
         .timeline-line::before {
             content: '';
             position: absolute;
-            left: 20px; /* Adjust for mobile */
+            left: 20px; /* Posisi garis di Mobile (Kiri) */
             top: 0;
             bottom: 0;
             width: 4px;
-            background: #e2e8f0;
+            background: #cbd5e1; /* Warna garis abu-abu */
             border-radius: 2px;
+            z-index: 0;
         }
         @media (min-width: 768px) {
             .timeline-line::before {
-                left: 50%;
+                left: 50%; /* Posisi garis di Desktop (Tengah Persis) */
                 margin-left: -2px;
             }
         }
@@ -104,80 +100,61 @@
             </div>
         </div>
 
-        <!-- Activities Grid -->
+        <!-- Highlights -->
         <div class="flex items-center justify-center mb-10">
             <div class="h-1 w-12 bg-blue-600 rounded mr-4"></div>
             <h3 class="text-3xl font-bold text-slate-800">Highlight Kegiatan</h3>
             <div class="h-1 w-12 bg-blue-600 rounded ml-4"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
              <!-- Card 1: Inovasi -->
-             <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover border border-slate-100">
-                <div class="h-2 bg-purple-500"></div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-purple-100 text-purple-600 p-3 rounded-lg">
-                            <i class="fas fa-lightbulb text-2xl"></i>
-                        </div>
-                        <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded">29-30 Nov</span>
-                    </div>
-                    <h4 class="text-xl font-bold mb-2 text-slate-800">Inovasi Guru</h4>
-                    <p class="text-slate-600 text-sm mb-4">Pameran & penghargaan karya inovasi: Media digital, STEM, Literasi, dan Metode Kreatif.</p>
+             <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500 card-hover">
+                <div class="flex items-center mb-4">
+                    <div class="bg-purple-100 text-purple-600 p-3 rounded-lg mr-4"><i class="fas fa-lightbulb text-xl"></i></div>
+                    <h4 class="font-bold text-lg">Inovasi Guru</h4>
                 </div>
+                <p class="text-sm text-slate-600">Pameran karya inovasi media digital & STEM.</p>
             </div>
-
             <!-- Card 2: Cerdas Cermat -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover border border-slate-100">
-                <div class="h-2 bg-blue-500"></div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-blue-100 text-blue-600 p-3 rounded-lg">
-                            <i class="fas fa-brain text-2xl"></i>
-                        </div>
-                        <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded">3 Babak</span>
-                    </div>
-                    <h4 class="text-xl font-bold mb-2 text-slate-800">Cerdas Cermat Guru</h4>
-                    <p class="text-slate-600 text-sm mb-4">Kompetisi multi-tahap dari Ranking 1 Online hingga Family 100 Offline.</p>
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500 card-hover">
+                <div class="flex items-center mb-4">
+                    <div class="bg-blue-100 text-blue-600 p-3 rounded-lg mr-4"><i class="fas fa-brain text-xl"></i></div>
+                    <h4 class="font-bold text-lg">Cerdas Cermat</h4>
                 </div>
+                <p class="text-sm text-slate-600">Kompetisi Ranking 1, Metaverse & Family 100.</p>
             </div>
-
-            <!-- Card 3: Bhakti & Mengaji -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover border border-slate-100">
-                <div class="h-2 bg-red-500"></div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="bg-red-100 text-red-600 p-3 rounded-lg">
-                            <i class="fas fa-heart text-2xl"></i>
-                        </div>
-                        <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded">25 Nov</span>
-                    </div>
-                    <h4 class="text-xl font-bold mb-2 text-slate-800">Spiritual & Sosial</h4>
-                    <p class="text-slate-600 text-sm mb-4">Gerakan mengaji serentak, donor darah, cek kesehatan, dan penghargaan purna bakti.</p>
+            <!-- Card 3: Mengaji -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500 card-hover">
+                <div class="flex items-center mb-4">
+                    <div class="bg-green-100 text-green-600 p-3 rounded-lg mr-4"><i class="fas fa-quran text-xl"></i></div>
+                    <h4 class="font-bold text-lg">Mengaji Serentak</h4>
                 </div>
+                <p class="text-sm text-slate-600">Gerakan membaca 1 Juz Al-Qur'an serentak.</p>
             </div>
         </div>
 
-        <!-- DETAILED TIMELINE SECTION (MODIFIED: CENTERED AND TIGHTER) -->
-        <!-- Added max-w-4xl to limit width, making it more centered -->
-        <div class="bg-white p-4 md:p-10 rounded-3xl shadow-2xl border border-slate-200 max-w-4xl mx-auto">
-            <div class="text-center mb-12">
+        <!-- DETAILED TIMELINE SECTION (FIXED ALIGNMENT) -->
+        <div class="bg-white p-4 md:p-12 rounded-3xl shadow-2xl border border-slate-200 max-w-5xl mx-auto">
+            <div class="text-center mb-16">
                 <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Lini Masa Lengkap</span>
-                <h3 class="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Rangkaian Perjalanan HGN 2025</h3>
-                <p class="text-slate-500 mt-2">Simak jadwal lengkap dari persiapan hingga malam puncak.</p>
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3">Rangkaian Perjalanan HGN 2025</h3>
             </div>
 
             <div class="relative timeline-line">
                 
-                <!-- Fase 1 -->
+                <!-- FASE 1 (KANAN) -->
                 <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full">
-                    <!-- Increased width to 45% to tighten gap to center -->
-                    <div class="order-1 md:w-[45%]"></div>
-                    <div class="z-20 flex items-center order-1 bg-blue-600 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center">
+                    <!-- Spacer Kiri (Kosong) -->
+                    <div class="order-1 md:w-5/12"></div>
+                    
+                    <!-- Lingkaran Tengah -->
+                    <div class="z-20 flex items-center order-1 bg-blue-600 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center border-4 border-white">
                         <span class="text-white font-bold text-sm">01</span>
                     </div>
-                    <!-- Increased width to 45% to tighten gap to center -->
-                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-blue-500 px-6 py-6 md:w-[45%] ml-8 md:ml-0">
+                    
+                    <!-- KARTU KANAN (Digeser sedikit ke Kanan dengan ml-8) -->
+                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-blue-500 px-6 py-6 md:w-5/12 ml-12 md:ml-8">
                         <h3 class="mb-3 font-bold text-slate-800 text-xl">Fase 1: Persiapan & Pendaftaran</h3>
                         <div class="space-y-3">
                             <div class="flex items-start">
@@ -191,126 +168,82 @@
                                 <div class="w-24 flex-shrink-0 text-xs font-bold text-blue-600 mt-1">21-22 Nov</div>
                                 <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
                                     <span class="font-bold block text-slate-700">Pendaftaran Cerdas Cermat</span>
-                                    <ul class="text-xs list-disc list-inside mt-1 space-y-1 text-slate-500">
-                                        <li><b>21 Nov:</b> Wilayah 1, 2, 3, 6, 9</li>
-                                        <li><b>22 Nov:</b> Wilayah 4, 5, 7, 8, 10, 11, 12</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-blue-600 mt-1">20-24 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Persiapan Bhakti Guru</span>
-                                    <span class="text-xs">Koordinasi Cek Kesehatan & Pengumpulan Mushaf</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Fase 2 -->
+                <!-- FASE 2 (KIRI) - DIBERIKAN JARAK (MARGIN-RIGHT) AGAR LEBIH KIRI -->
                 <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full flex-row-reverse">
-                    <div class="order-1 md:w-[45%]"></div>
-                    <div class="z-20 flex items-center order-1 bg-indigo-600 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center">
+                    <!-- Spacer Kanan (Kosong) -->
+                    <div class="order-1 md:w-5/12"></div>
+                    
+                    <!-- Lingkaran Tengah -->
+                    <div class="z-20 flex items-center order-1 bg-indigo-600 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center border-4 border-white">
                         <span class="text-white font-bold text-sm">02</span>
                     </div>
-                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-indigo-500 px-6 py-6 md:w-[45%] ml-8 md:mr-0 md:ml-auto">
+                    
+                    <!-- KARTU KIRI (Digeser sedikit ke Kiri dengan mr-8) -->
+                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-indigo-500 px-6 py-6 md:w-5/12 ml-12 md:mr-8 md:ml-0">
                         <h3 class="mb-3 font-bold text-slate-800 text-xl">Fase 2: Kompetisi Penyisihan</h3>
                         <div class="space-y-4">
                             <div class="flex items-start">
                                 <div class="w-24 flex-shrink-0 text-xs font-bold text-indigo-600 mt-1">23 Nov</div>
                                 <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Babak I: Smart Ranking Battle (Online)</span>
-                                    <div class="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-xs bg-white p-2 rounded border border-slate-100">
-                                        <span>08:30: Wil 1</span>
-                                        <span>10:00: Wil 2,6</span>
-                                        <span>13:00: Wil 3,4,9</span>
-                                        <span>15:30: Wil 5,7</span>
-                                        <span>18:30: Wil 8,10</span>
-                                        <span>20:00: Wil 11,12</span>
-                                    </div>
+                                    <span class="font-bold block text-slate-700">Babak I: Smart Ranking Battle</span>
+                                    <span class="text-xs text-slate-500">Kompetisi Online (Zoom & App)</span>
                                 </div>
                             </div>
                             <div class="flex items-start">
                                 <div class="w-24 flex-shrink-0 text-xs font-bold text-indigo-600 mt-1">27 Nov</div>
                                 <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
                                     <span class="font-bold block text-slate-700">Babak II: Virtual Adventure</span>
-                                    <span class="text-xs block mb-1">Konsep Metaverse / VR</span>
-                                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">Peserta: 48 Tim Pemenang Kab/Kota</span>
+                                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">Konsep Metaverse / VR</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Fase 3 (HARI H) -->
+                <!-- FASE 3 (HARI H - TENGAH/KANAN) -->
                 <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full">
-                    <div class="order-1 md:w-[45%]"></div>
+                    <div class="order-1 md:w-5/12"></div>
                     <div class="z-20 flex items-center order-1 bg-red-600 shadow-xl w-14 h-14 border-4 border-white rounded-full absolute left-[-8px] md:left-1/2 md:-translate-x-1/2 justify-center">
                         <i class="fas fa-calendar-check text-white"></i>
                     </div>
-                    <div class="order-1 bg-red-50 rounded-xl shadow-lg border-l-4 border-red-500 px-6 py-6 md:w-[45%] ml-8 md:ml-0">
+                    <div class="order-1 bg-red-50 rounded-xl shadow-lg border-l-4 border-red-500 px-6 py-6 md:w-5/12 ml-12 md:ml-8">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-red-700 text-xl">SELASA, 25 NOVEMBER</h3>
-                            <span class="bg-red-200 text-red-800 text-[10px] font-bold px-2 py-1 rounded uppercase">HARI H</span>
+                            <h3 class="font-bold text-red-700 text-xl">25 NOVEMBER (HARI H)</h3>
                         </div>
-                        <div class="space-y-3">
-                            <div class="flex items-center p-2 bg-white rounded-lg shadow-sm border border-red-100">
-                                <div class="bg-red-100 p-2 rounded-full text-red-600 mr-3"><i class="fas fa-flag"></i></div>
-                                <div>
-                                    <p class="font-bold text-sm text-slate-800">Upacara Bendera</p>
-                                    <p class="text-xs text-slate-500">Serentak Pemprov & Sekolah</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center p-2 bg-white rounded-lg shadow-sm border border-red-100">
-                                <div class="bg-green-100 p-2 rounded-full text-green-600 mr-3"><i class="fas fa-quran"></i></div>
-                                <div>
-                                    <p class="font-bold text-sm text-slate-800">Guru Sulsel Mengaji</p>
-                                    <p class="text-xs text-slate-500">10.00 WITA (1 Juz Serentak)</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center p-2 bg-white rounded-lg shadow-sm border border-red-100">
-                                <div class="bg-pink-100 p-2 rounded-full text-pink-600 mr-3"><i class="fas fa-hand-holding-heart"></i></div>
-                                <div>
-                                    <p class="font-bold text-sm text-slate-800">Bhakti Guru</p>
-                                    <p class="text-xs text-slate-500">Cek Kesehatan, Donor Darah, Penghargaan</p>
-                                </div>
-                            </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center"><i class="fas fa-flag text-red-500 w-6"></i> Upacara Bendera</div>
+                            <div class="flex items-center"><i class="fas fa-quran text-green-500 w-6"></i> Mengaji Serentak (10.00 WITA)</div>
+                            <div class="flex items-center"><i class="fas fa-heart text-pink-500 w-6"></i> Bhakti Guru (Donor Darah)</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Fase 4 -->
+                <!-- FASE 4 (KIRI) - DIBERIKAN JARAK -->
                 <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full flex-row-reverse">
-                    <div class="order-1 md:w-[45%]"></div>
-                    <div class="z-20 flex items-center order-1 bg-yellow-500 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center">
+                    <div class="order-1 md:w-5/12"></div>
+                    <div class="z-20 flex items-center order-1 bg-yellow-500 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center border-4 border-white">
                         <span class="text-white font-bold text-sm">04</span>
                     </div>
-                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-yellow-500 px-6 py-6 md:w-[45%] ml-8 md:mr-0 md:ml-auto">
+                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-yellow-500 px-6 py-6 md:w-5/12 ml-12 md:mr-8 md:ml-0">
                         <h3 class="mb-3 font-bold text-slate-800 text-xl">Fase 4: Acara Puncak</h3>
-                        <div class="mb-3 flex items-center text-sm text-slate-500">
-                            <i class="fas fa-map-marker-alt text-yellow-500 mr-2"></i> Lokasi: Makassar (Offline)
-                        </div>
                         <div class="space-y-3">
                             <div class="flex items-start">
                                 <div class="w-24 flex-shrink-0 text-xs font-bold text-yellow-600 mt-1">29-30 Nov</div>
                                 <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
                                     <span class="font-bold block text-slate-700">Pameran Inovasi Guru</span>
-                                    <span class="text-xs">Karya Digital, STEM, Literasi</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-yellow-600 mt-1">29 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Final Cerdas Cermat</span>
-                                    <span class="text-xs">Family 100 Challenge (4 Tim Terbaik)</span>
+                                    <span class="text-xs">Offline di Makassar</span>
                                 </div>
                             </div>
                             <div class="flex items-start">
                                 <div class="w-24 flex-shrink-0 text-xs font-bold text-yellow-600 mt-1">30 Nov</div>
                                 <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
                                     <span class="font-bold block text-slate-700">Malam Puncak & Tabligh Akbar</span>
-                                    <span class="text-xs">Penyerahan Hadiah & Apresiasi MGMP</span>
                                 </div>
                             </div>
                         </div>
@@ -320,19 +253,13 @@
             </div>
             
             <div class="text-center mt-8">
-                <p class="text-slate-400 text-xs italic">*Jadwal dapat berubah sewaktu-waktu menyesuaikan kondisi di lapangan.</p>
+                <p class="text-slate-400 text-xs italic">*Jadwal dapat berubah sewaktu-waktu menyesuaikan kondisi.</p>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="text-center mt-12 text-slate-500 text-sm">
-            <p class="mb-2">Informasi lebih lanjut & Pendaftaran:</p>
-            <a href="https://s.id/HGNSulSel2025" class="inline-block bg-blue-900 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-800 transition shadow-lg">
-                Kunjungi Microsite Resmi
-            </a>
-            <div class="mt-8 text-xs border-t border-slate-200 pt-4">
-                <p>© 2025 Panitia Hari Guru Nasional Provinsi Sulawesi Selatan</p>
-            </div>
+            <p>© 2025 Panitia Hari Guru Nasional Provinsi Sulawesi Selatan</p>
         </div>
 
     </main>
