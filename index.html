@@ -3,266 +3,456 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infografis HGN 2025 Sulawesi Selatan</title>
+    <title>Pilah Energi - Game Edukasi</title>
+    <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Memuat Tone.js untuk efek suara -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
+        /* Font kustom untuk tampilan yang lebih menarik */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
-        .pattern-bg {
-            background-color: #f8fafc;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        /* Style kustom untuk item yang sedang diseret */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-        .card-hover {
-            transition: all 0.3s ease;
+        /* Style untuk zona drop saat item di atasnya */
+        .drag-over {
+            border-style: solid;
+            transform: scale(1.02);
         }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        /* Style untuk item yang sudah benar */
+        .sorted {
+            opacity: 0.7;
+            cursor: not-allowed !important;
+            filter: grayscale(50%);
         }
-        /* Custom Timeline CSS - Memastikan garis benar-benar di tengah */
-        .timeline-line::before {
-            content: '';
-            position: absolute;
-            left: 20px; /* Posisi garis di Mobile (Kiri) */
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: #cbd5e1; /* Warna garis abu-abu */
-            border-radius: 2px;
-            z-index: 0;
-        }
-        @media (min-width: 768px) {
-            .timeline-line::before {
-                left: 50%; /* Posisi garis di Desktop (Tengah Persis) */
-                margin-left: -2px;
-            }
+        /* Style baru untuk item yang "terbang" saat disentuh */
+        .touch-dragging {
+            position: fixed; /* Mengeluarkannya dari alur dokumen */
+            z-index: 1000; /* Memastikannya di atas segalanya */
+            pointer-events: none; /* Membiarkan kita mendeteksi apa yang di bawahnya */
         }
     </style>
 </head>
-<body class="pattern-bg text-slate-800">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 selection:bg-blue-200">
 
-    <!-- Header Section -->
-    <header class="bg-gradient-to-r from-blue-900 to-blue-800 text-white pt-12 pb-24 px-4 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-full opacity-10">
-            <i class="fas fa-shapes text-9xl absolute -top-10 -left-10"></i>
-            <i class="fas fa-book-open text-9xl absolute bottom-10 right-10"></i>
-        </div>
+    <div id="game-container" class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-10 transition-all duration-300">
         
-        <div class="max-w-5xl mx-auto text-center relative z-10">
-            <div class="inline-block bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-semibold mb-4 border border-white/30">
-                PROVINSI SULAWESI SELATAN
-            </div>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-2 tracking-tight">HARI GURU NASIONAL</h1>
-            <div class="text-6xl md:text-8xl font-black text-yellow-400 leading-none mb-4" style="text-shadow: 2px 2px 0px rgba(0,0,0,0.2);">2025</div>
+        <!-- Judul dan Instruksi -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">Pilah Energi!</h1>
+            <p class="text-lg text-gray-600">Seret setiap sumber energi ke kotak yang tepat.</p>
+        </div>
+
+        <!-- Bank Item (Sumber Energi) -->
+        <div id="item-bank" class="w-full bg-gray-50 p-4 rounded-xl shadow-inner min-h-[150px] flex flex-wrap justify-center items-center gap-4 mb-8">
+            <!-- Setiap item akan dibuat oleh JavaScript -->
+        </div>
+
+        <!-- Zona Drop (Kotak Kategori) -->
+        <div class="flex flex-col md:flex-row gap-6">
             
-            <!-- Theme Box -->
-            <div class="bg-white text-blue-900 max-w-3xl mx-auto p-6 rounded-2xl shadow-xl mt-6 transform translate-y-4">
-                <p class="text-sm uppercase tracking-widest text-slate-500 font-bold mb-1">TEMA KEGIATAN</p>
-                <h2 class="text-2xl md:text-4xl font-bold italic">"Guru Hebat, Sul Sel Maju dan Berkarakter"</h2>
+            <!-- Kotak Energi Terbarukan (Si Baik) -->
+            <div id="renewable-bin" class="drop-zone flex-1 bg-green-50 border-4 border-dashed border-green-300 rounded-2xl p-6 min-h-[300px] transition-all duration-300" data-type="renewable">
+                <h2 class="text-2xl font-bold text-green-700 text-center mb-4">Energi Terbarukan (Si Baik)</h2>
+                <div class="item-slot-container flex flex-wrap justify-center gap-4">
+                    <!-- Item yang benar akan masuk ke sini -->
+                </div>
             </div>
-        </div>
-    </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-6xl mx-auto px-4 -mt-12 pb-20 relative z-20">
-        
-        <!-- Info Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-600 flex items-center">
-                <div class="bg-blue-100 p-3 rounded-full mr-4 text-blue-600">
-                    <i class="far fa-calendar-alt text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-500 font-bold uppercase">Waktu Pelaksanaan</p>
-                    <p class="font-bold text-lg">20 - 30 November 2025</p>
+            <!-- Kotak Energi Tak Terbarukan (Si Buruk) -->
+            <div id="non-renewable-bin" class="drop-zone flex-1 bg-red-50 border-4 border-dashed border-red-300 rounded-2xl p-6 min-h-[300px] transition-all duration-300" data-type="non-renewable">
+                <h2 class="text-2xl font-bold text-red-700 text-center mb-4">Energi Tak Terbarukan (Si Buruk)</h2>
+                <div class="item-slot-container flex flex-wrap justify-center gap-4">
+                    <!-- Item yang benar akan masuk ke sini -->
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-yellow-500 flex items-center">
-                <div class="bg-yellow-100 p-3 rounded-full mr-4 text-yellow-600">
-                    <i class="fas fa-wifi text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-500 font-bold uppercase">Metode</p>
-                    <p class="font-bold text-lg">Hybrid (Offline & Online)</p>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center">
-                <div class="bg-green-100 p-3 rounded-full mr-4 text-green-600">
-                    <i class="fas fa-users text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-500 font-bold uppercase">Sasaran</p>
-                    <p class="font-bold text-lg">Guru SMA/SMK/SLB Sulsel</p>
-                </div>
-            </div>
+
         </div>
 
-        <!-- Highlights -->
-        <div class="flex items-center justify-center mb-10">
-            <div class="h-1 w-12 bg-blue-600 rounded mr-4"></div>
-            <h3 class="text-3xl font-bold text-slate-800">Highlight Kegiatan</h3>
-            <div class="h-1 w-12 bg-blue-600 rounded ml-4"></div>
+        <!-- Umpan Balik dan Tombol Kontrol -->
+        <div class="mt-8 text-center">
+            <div id="feedback-message" class="text-xl font-semibold h-8 mb-4 transition-all duration-300"></div>
+            <button id="reset-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all duration-200">
+                Ulangi Permainan
+            </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-             <!-- Card 1: Inovasi -->
-             <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500 card-hover">
-                <div class="flex items-center mb-4">
-                    <div class="bg-purple-100 text-purple-600 p-3 rounded-lg mr-4"><i class="fas fa-lightbulb text-xl"></i></div>
-                    <h4 class="font-bold text-lg">Inovasi Guru</h4>
-                </div>
-                <p class="text-sm text-slate-600">Pameran karya inovasi media digital & STEM.</p>
-            </div>
-            <!-- Card 2: Cerdas Cermat -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500 card-hover">
-                <div class="flex items-center mb-4">
-                    <div class="bg-blue-100 text-blue-600 p-3 rounded-lg mr-4"><i class="fas fa-brain text-xl"></i></div>
-                    <h4 class="font-bold text-lg">Cerdas Cermat</h4>
-                </div>
-                <p class="text-sm text-slate-600">Kompetisi Ranking 1, Metaverse & Family 100.</p>
-            </div>
-            <!-- Card 3: Mengaji -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500 card-hover">
-                <div class="flex items-center mb-4">
-                    <div class="bg-green-100 text-green-600 p-3 rounded-lg mr-4"><i class="fas fa-quran text-xl"></i></div>
-                    <h4 class="font-bold text-lg">Mengaji Serentak</h4>
-                </div>
-                <p class="text-sm text-slate-600">Gerakan membaca 1 Juz Al-Qur'an serentak.</p>
-            </div>
+    </div>
+
+    <!-- Modal Kemenangan (Awalnya Tersembunyi) -->
+    <div id="win-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-10 text-center transform scale-95 transition-transform duration-300">
+            <svg class="w-20 h-20 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Hebat!</h2>
+            <p class="text-lg text-gray-600 mb-6">Kamu berhasil memilah semua sumber energi dengan benar!</p>
+            <button id="play-again-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all duration-200">
+                Main Lagi
+            </button>
         </div>
+    </div>
 
-        <!-- DETAILED TIMELINE SECTION (FIXED ALIGNMENT) -->
-        <div class="bg-white p-4 md:p-12 rounded-3xl shadow-2xl border border-slate-200 max-w-5xl mx-auto">
-            <div class="text-center mb-16">
-                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Lini Masa Lengkap</span>
-                <h3 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3">Rangkaian Perjalanan HGN 2025</h3>
-            </div>
 
-            <div class="relative timeline-line">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- A. DEFINISI DATA DAN ASET ---
+
+            // Data sumber energi (Nama, Tipe, dan SVG)
+            const energySources = [
+                { 
+                    id: 'sun', 
+                    name: 'Matahari', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-1.414a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4.95 14.536L4.243 15.243a1 1 0 11-1.415-1.415l.707-.707a1 1 0 011.415 1.415zM3.536 15.243a1 1 0 01-1.415-1.415l.707-.707a1 1 0 011.415 1.415l-.707.707zM1 10a1 1 0 011-1h1a1 1 0 110 2H2a1 1 0 01-1-1zM15 11a1 1 0 110-2h1a1 1 0 110 2h-1zM4.95 3.536a1 1 0 010 1.414L4.243 5.657A1 1 0 012.828 4.243l.707-.707a1 1 0 011.415 0zm11.314 0a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM10 5a1 1 0 011 1v1a1 1 0 11-2 0V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>`
+                },
+                { 
+                    id: 'coal', 
+                    name: 'Batu Bara', 
+                    type: 'non-renewable', 
+                    svg: `<svg class="w-16 h-16 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7.746 16.741L11 10.456L14.07 15.42L17.5 12.35L14.735 8.135L17.5 4.5H4.5L7.746 16.741ZM19.5 2.5C20.881 2.5 22 3.619 22 5V19C22 20.381 20.881 21.5 19.5 21.5H4.5C3.119 21.5 2 20.381 2 19V5C2 3.619 3.119 2.5 4.5 2.5H19.5Z"/></svg>`
+                },
+                { 
+                    id: 'wind', 
+                    name: 'Angin', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.125 1.125 0 010 2.25H5.625a1.125 1.125 0 010-2.25z"></path></svg>`
+                },
+                { 
+                    id: 'oil', 
+                    name: 'Minyak Bumi', 
+                    type: 'non-renewable', 
+                    svg: `<svg class="w-16 h-16 text-black" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path><path d="M10 13a3 3 0 100-6 3 3 0 000 6z"></path></svg>`
+                },
+                { 
+                    id: 'water', 
+                    name: 'Air (PLTA)', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>`
+                },
+                { 
+                    id: 'geothermal', 
+                    name: 'Panas Bumi', 
+                    type: 'renewable', 
+                    svg: `<svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657L13.414 20.414a2 2 0 01-1.414 0l-4.243-1.757M10 3v5.657A2.25 2.25 0 019.13 11.21l-4.715 2.15-2.11-2.109 2.15-4.715A2.25 2.25 0 016.343 3H10zm11 0v5.657A2.25 2.25 0 0019.13 11.21l-4.715 2.15-2.11-2.109 2.15-4.715A2.25 2.25 0 0014.657 3H21z"></path></svg>`
+                }
+            ];
+
+            // --- B. VARIABEL DOM & STATE ---
+
+            const itemBank = document.getElementById('item-bank');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const resetButton = document.getElementById('reset-button');
+            const winModal = document.getElementById('win-modal');
+            const playAgainButton = document.getElementById('play-again-button');
+            let draggedItem = null;
+            let correctCount = 0;
+            let totalItems = energySources.length;
+            let currentOverZone = null; // Melacak zona drop yang sedang 'di-hover' oleh sentuhan
+
+            // --- C. EFEK SUARA (Tone.js) ---
+
+            // Inisialisasi audio setelah interaksi pengguna pertama (best practice)
+            let audioInitialized = false;
+            let correctSound, wrongSound, winSound;
+
+            function initAudio() {
+                if (audioInitialized) return;
+                Tone.start();
+                // Suara benar: nada C5
+                correctSound = new Tone.Synth().toDestination();
+                // Suara salah: suara noise pendek
+                wrongSound = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                // Suara menang: akord C mayor
+                winSound = new Tone.PolySynth(Tone.Synth).toDestination();
+                audioInitialized = true;
+            }
+            
+            // Event listener untuk menginisialisasi audio saat ada klik
+            document.body.addEventListener('click', initAudio, { once: true });
+            document.body.addEventListener('dragstart', initAudio, { once: true });
+
+
+            // --- D. FUNGSI UTAMA ---
+
+            // Fungsi untuk membuat elemen item energi
+            function createEnergyItem(source) {
+                const item = document.createElement('div');
+                item.id = source.id;
+                item.className = 'draggable-item p-4 m-2 bg-white rounded-lg shadow-md cursor-grab active:cursor-grabbing transform transition-all duration-200 hover:scale-105 flex flex-col items-center w-32';
+                item.draggable = true;
+                item.dataset.type = source.type;
+
+                item.innerHTML = `
+                    ${source.svg}
+                    <span class="mt-2 font-semibold text-gray-700 text-center">${source.name}</span>
+                `;
+
+                // Menambahkan event listener untuk drag
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                // Menambahkan event listener untuk TOUCH
+                item.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+                return item;
+            }
+
+            // Fungsi untuk mengacak urutan array (Fisher-Yates shuffle)
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            // Fungsi untuk memulai/mengatur ulang permainan
+            function setupGame() {
+                // Mengosongkan bank item dan zona drop
+                itemBank.innerHTML = '';
+                dropZones.forEach(zone => {
+                    zone.querySelector('.item-slot-container').innerHTML = '';
+                });
+
+                // Mengacak dan membuat item baru
+                shuffleArray(energySources);
+                energySources.forEach(source => {
+                    itemBank.appendChild(createEnergyItem(source));
+                });
+
+                // Reset state
+                correctCount = 0;
+                feedbackMessage.textContent = '';
+                feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 transition-all duration-300';
+                winModal.classList.add('hidden', 'opacity-0');
+                winModal.querySelector('div').classList.add('scale-95');
+                currentOverZone = null; // Reset pelacak zona hover
+            }
+
+            // --- E. EVENT HANDLER DRAG & DROP ---
+
+            function handleDragStart(e) {
+                initAudio(); // Panggil inisialisasi audio di sini
+                draggedItem = e.target;
+                e.dataTransfer.setData('text/plain', e.target.id);
+                // Menunggu sejenak sebelum menambahkan kelas .dragging
+                setTimeout(() => {
+                    e.target.classList.add('dragging');
+                }, 0);
+            }
+
+            function handleDragEnd(e) {
+                e.target.classList.remove('dragging');
+                draggedItem = null;
+                // Pastikan semua state hover 'drag-over' bersih
+                dropZones.forEach(zone => zone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100'));
+                currentOverZone = null;
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault(); // Diperlukan agar event drop bisa di-trigger
+                const dropZone = e.currentTarget;
+                dropZone.classList.add('drag-over', dropZone.dataset.type === 'renewable' ? 'bg-green-100' : 'bg-red-100');
+                currentOverZone = dropZone; // Set zona hover
+            }
+
+            function handleDragLeave(e) {
+                const dropZone = e.currentTarget;
+                dropZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                currentOverZone = null; // Hapus zona hover
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                const dropZone = e.currentTarget;
+                processDropLogic(dropZone, draggedItem); // Panggil fungsi logika terpusat
+                dropZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                currentOverZone = null;
+            }
+
+            // --- Event Handler untuk TOUCH ---
+
+            function handleTouchStart(e) {
+                // Mencegah scrolling halaman saat memulai drag
+                e.preventDefault();
+                initAudio(); // Panggil inisialisasi audio di sini
                 
-                <!-- FASE 1 (KANAN) -->
-                <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full">
-                    <!-- Spacer Kiri (Kosong) -->
-                    <div class="order-1 md:w-5/12"></div>
+                draggedItem = e.currentTarget;
+                
+                // Tambahkan kelas visual (opacity, scale)
+                draggedItem.classList.add('dragging');
+                // Tambahkan kelas "terbang" (position: fixed)
+                draggedItem.classList.add('touch-dragging');
+
+                // Posisikan item tepat di bawah jari (ditengah)
+                const touch = e.touches[0];
+                updateItemPosition(touch.clientX, touch.clientY);
+            }
+
+            function handleTouchMove(e) {
+                if (!draggedItem) return;
+
+                // Mencegah scrolling saat drag
+                e.preventDefault();
+
+                // Dapatkan info sentuhan
+                const touch = e.touches[0];
+                const clientX = touch.clientX;
+                const clientY = touch.clientY;
+
+                // --- LOGIKA MELAYANG BARU ---
+                // Perbarui posisi item agar mengikuti jari
+                updateItemPosition(clientX, clientY);
+                // -------------------------
+
+                // Sembunyikan item yang di-drag sejenak agar elementFromPoint bisa mendeteksi apa yang di bawahnya
+                // (Ini sekarang ditangani oleh CSS .touch-dragging { pointer-events: none; })
+                // draggedItem.style.pointerEvents = 'none'; 
+                const elementUnder = document.elementFromPoint(clientX, clientY);
+                // draggedItem.style.pointerEvents = 'auto';
+
+                const dropZone = elementUnder ? elementUnder.closest('.drop-zone') : null;
+
+                // Bersihkan 'drag-over' dari zona sebelumnya jika beda
+                if (currentOverZone && currentOverZone !== dropZone) {
+                    currentOverZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                }
+
+                // Tambahkan 'drag-over' ke zona baru
+                if (dropZone) {
+                    dropZone.classList.add('drag-over', dropZone.dataset.type === 'renewable' ? 'bg-green-100' : 'bg-red-100');
+                    currentOverZone = dropZone;
+                } else {
+                    currentOverZone = null;
+                }
+            }
+
+            function handleTouchEnd(e) {
+                if (!draggedItem) return;
+
+                // Hapus semua kelas drag dan style inline
+                draggedItem.classList.remove('dragging');
+                draggedItem.classList.remove('touch-dragging');
+                draggedItem.style.top = '';
+                draggedItem.style.left = '';
+
+                if (currentOverZone) {
+                    // Jika sentuhan berakhir di atas zona drop yang valid
+                    processDropLogic(currentOverZone, draggedItem);
+                    currentOverZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
+                }
+
+                // Reset state
+                draggedItem = null;
+                currentOverZone = null;
+            }
+
+            // --- Fungsi baru untuk memposisikan item (TOUCH) ---
+            function updateItemPosition(x, y) {
+                if (!draggedItem) return;
+                // Kita atur agar jari berada di tengah item
+                const itemWidth = draggedItem.offsetWidth;
+                const itemHeight = draggedItem.offsetHeight;
+                draggedItem.style.left = `${x - itemWidth / 2}px`;
+                draggedItem.style.top = `${y - itemHeight / 2}px`;
+            }
+
+            // --- Logika Inti untuk Drop (Dipakai oleh Mouse & Touch) ---
+
+            function processDropLogic(dropZone, item) {
+                if (!item || !dropZone) return; // Keamanan jika item atau zona null
+
+                const dropType = dropZone.dataset.type;
+                const itemType = item.dataset.type;
+
+                // Cek apakah jawaban benar
+                if (dropType === itemType) {
+                    // Benar
+                    dropZone.querySelector('.item-slot-container').appendChild(item);
+                    item.draggable = false;
+                    item.classList.add('sorted');
+                    item.classList.remove('cursor-grab', 'active:cursor-grabbing', 'hover:scale-105');
+                    // Hapus event listener touch agar tidak bisa di-drag lagi
+                    item.removeEventListener('touchstart', handleTouchStart, { passive: false });
+                    // Pastikan style "melayang" dibersihkan jika ada
+                    item.classList.remove('touch-dragging');
+                    item.style.top = '';
+                    item.style.left = '';
+
+                    showFeedback('Benar! ' + item.querySelector('span').textContent + ' adalah energi ' + (dropType === 'renewable' ? 'terbarukan.' : 'tak terbarukan.'), 'green');
                     
-                    <!-- Lingkaran Tengah -->
-                    <div class="z-20 flex items-center order-1 bg-blue-600 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center border-4 border-white">
-                        <span class="text-white font-bold text-sm">01</span>
-                    </div>
-                    
-                    <!-- KARTU KANAN (Digeser sedikit ke Kanan dengan ml-8) -->
-                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-blue-500 px-6 py-6 md:w-5/12 ml-12 md:ml-8">
-                        <h3 class="mb-3 font-bold text-slate-800 text-xl">Fase 1: Persiapan & Pendaftaran</h3>
-                        <div class="space-y-3">
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-blue-600 mt-1">17-22 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Pendaftaran Inovasi</span>
-                                    <span class="text-xs">Via: lapor.gtkandalanacademy.center</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-blue-600 mt-1">21-22 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Pendaftaran Cerdas Cermat</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    if (audioInitialized) correctSound.triggerAttackRelease("C5", "8n");
 
-                <!-- FASE 2 (KIRI) - DIBERIKAN JARAK (MARGIN-RIGHT) AGAR LEBIH KIRI -->
-                <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full flex-row-reverse">
-                    <!-- Spacer Kanan (Kosong) -->
-                    <div class="order-1 md:w-5/12"></div>
-                    
-                    <!-- Lingkaran Tengah -->
-                    <div class="z-20 flex items-center order-1 bg-indigo-600 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center border-4 border-white">
-                        <span class="text-white font-bold text-sm">02</span>
-                    </div>
-                    
-                    <!-- KARTU KIRI (Digeser sedikit ke Kiri dengan mr-8) -->
-                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-indigo-500 px-6 py-6 md:w-5/12 ml-12 md:mr-8 md:ml-0">
-                        <h3 class="mb-3 font-bold text-slate-800 text-xl">Fase 2: Kompetisi Penyisihan</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-indigo-600 mt-1">23 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Babak I: Smart Ranking Battle</span>
-                                    <span class="text-xs text-slate-500">Kompetisi Online (Zoom & App)</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-indigo-600 mt-1">27 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Babak II: Virtual Adventure</span>
-                                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">Konsep Metaverse / VR</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    correctCount++;
+                    checkWinCondition();
+                } else {
+                    // Salah
+                    showFeedback('Ups! Coba lagi. ' + item.querySelector('span').textContent + ' bukan di situ tempatnya.', 'red');
+                    if (audioInitialized) wrongSound.triggerAttackRelease("4n");
+                }
+            }
 
-                <!-- FASE 3 (HARI H - TENGAH/KANAN) -->
-                <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full">
-                    <div class="order-1 md:w-5/12"></div>
-                    <div class="z-20 flex items-center order-1 bg-red-600 shadow-xl w-14 h-14 border-4 border-white rounded-full absolute left-[-8px] md:left-1/2 md:-translate-x-1/2 justify-center">
-                        <i class="fas fa-calendar-check text-white"></i>
-                    </div>
-                    <div class="order-1 bg-red-50 rounded-xl shadow-lg border-l-4 border-red-500 px-6 py-6 md:w-5/12 ml-12 md:ml-8">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-red-700 text-xl">25 NOVEMBER (HARI H)</h3>
-                        </div>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex items-center"><i class="fas fa-flag text-red-500 w-6"></i> Upacara Bendera</div>
-                            <div class="flex items-center"><i class="fas fa-quran text-green-500 w-6"></i> Mengaji Serentak (10.00 WITA)</div>
-                            <div class="flex items-center"><i class="fas fa-heart text-pink-500 w-6"></i> Bhakti Guru (Donor Darah)</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- FASE 4 (KIRI) - DIBERIKAN JARAK -->
-                <div class="relative z-10 mb-12 md:flex md:justify-between items-center w-full flex-row-reverse">
-                    <div class="order-1 md:w-5/12"></div>
-                    <div class="z-20 flex items-center order-1 bg-yellow-500 shadow-xl w-10 h-10 rounded-full absolute left-[0px] md:left-1/2 md:-translate-x-1/2 justify-center border-4 border-white">
-                        <span class="text-white font-bold text-sm">04</span>
-                    </div>
-                    <div class="order-1 bg-slate-50 rounded-xl shadow-md border-l-4 border-yellow-500 px-6 py-6 md:w-5/12 ml-12 md:mr-8 md:ml-0">
-                        <h3 class="mb-3 font-bold text-slate-800 text-xl">Fase 4: Acara Puncak</h3>
-                        <div class="space-y-3">
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-yellow-600 mt-1">29-30 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Pameran Inovasi Guru</span>
-                                    <span class="text-xs">Offline di Makassar</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start">
-                                <div class="w-24 flex-shrink-0 text-xs font-bold text-yellow-600 mt-1">30 Nov</div>
-                                <div class="text-sm text-slate-600 border-l border-slate-200 pl-3">
-                                    <span class="font-bold block text-slate-700">Malam Puncak & Tabligh Akbar</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            // --- F. FUNGSI BANTUAN & KONDISI MENANG ---
 
-            </div>
-            
-            <div class="text-center mt-8">
-                <p class="text-slate-400 text-xs italic">*Jadwal dapat berubah sewaktu-waktu menyesuaikan kondisi.</p>
-            </div>
-        </div>
+            function showFeedback(message, type) {
+                feedbackMessage.textContent = message;
+                if (type === 'green') {
+                    feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 text-green-600';
+                } else {
+                    feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 text-red-600';
+                }
 
-        <!-- Footer -->
-        <div class="text-center mt-12 text-slate-500 text-sm">
-            <p>© 2025 Panitia Hari Guru Nasional Provinsi Sulawesi Selatan</p>
-        </div>
+                // Menghilangkan pesan setelah 2 detik
+                setTimeout(() => {
+                    if (feedbackMessage.textContent === message) {
+                        feedbackMessage.textContent = '';
+                        feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 transition-all duration-300';
+                    }
+                }, 2500);
+            }
 
-    </main>
+            function checkWinCondition() {
+                if (correctCount === totalItems) {
+                    // Tampilkan modal kemenangan
+                    winModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        winModal.classList.remove('opacity-0');
+                        winModal.querySelector('div').classList.remove('scale-95');
+                    }, 10); // sedikit delay untuk transisi
 
+                    if (audioInitialized) winSound.triggerAttackRelease(["C4", "E4", "G4"], "1n");
+                }
+            }
+
+            // --- G. INISIALISASI & EVENT LISTENER TOMBOL ---
+
+            // Menambahkan event listener ke zona drop
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+
+            // Event listener untuk tombol reset
+            resetButton.addEventListener('click', setupGame);
+            playAgainButton.addEventListener('click', setupGame);
+
+            // Menambahkan listener global untuk touch move dan touch end
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
+
+            // Memulai permainan saat halaman dimuat
+            setupGame();
+        });
+    </script>
 </body>
 </html>
