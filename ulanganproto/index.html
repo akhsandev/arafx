@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Input Nilai Suara (Local Processing)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Markdown Parser untuk log jika perlu -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .mic-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .ai-thinking {
+            animation: pulse-blue 1.5s infinite;
+        }
+        @keyframes pulse-blue {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        /* Modal Transitions */
+        .modal { transition: opacity 0.3s ease-in-out; }
+        .hidden-modal { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+    <!-- Login Modal Overlay -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full text-indigo-600 text-3xl mb-4">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h2 id="modal-title" class="text-2xl font-bold text-slate-800">Selamat Datang</h2>
+                <p id="modal-desc" class="text-slate-500 text-sm">Kelola nilai siswa dengan suara.</p>
+            </div>
+
+            <!-- Tab Switcher Login/Register -->
+            <div class="flex justify-center mb-6 border-b border-slate-100">
+                <button type="button" id="tab-login" class="w-1/2 pb-2 text-indigo-600 border-b-2 border-indigo-600 font-bold text-sm transition focus:outline-none">MASUK</button>
+                <button type="button" id="tab-register" class="w-1/2 pb-2 text-slate-400 font-medium text-sm hover:text-indigo-500 transition focus:outline-none">DAFTAR BARU</button>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
+                    <input type="email" id="email" placeholder="nama@email.com" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
+                    <input type="password" id="password" placeholder="********" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                </div>
+                <div id="login-error" class="text-red-500 text-sm text-center hidden bg-red-50 p-2 rounded border border-red-100"></div>
+                <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg transform active:scale-95">
+                    Masuk Akun
+                </button>
+            </form>
+            <p class="text-center text-xs text-slate-400 mt-6">
+                <i class="fas fa-lock mr-1"></i> Data Anda tersimpan aman di database pribadi.
+            </p>
+        </div>
+    </div>
+
+    <!-- Import Modal Overlay -->
+    <div id="import-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 flex items-center justify-center p-4 hidden hidden-modal modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-slate-800"><i class="fas fa-file-import mr-2 text-green-600"></i>Import Data Siswa</h3>
+                <button onclick="toggleImportModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4 text-sm text-slate-600">
+                <p class="mb-2">Salin data dari Excel/Spreadsheet dan tempel di bawah ini.</p>
+                <div class="bg-slate-100 p-3 rounded border border-slate-200 text-xs font-mono text-slate-500 mb-2">
+                    Format Kolom: <strong>[Nama Siswa]</strong> [TAB] <strong>[Kelas]</strong>
+                </div>
+            </div>
+
+            <textarea id="import-area" rows="10" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm" placeholder="Contoh:
+Budi Santoso    10-A
+Siti Aminah     10-B
+Rudi Hartono    10-A"></textarea>
+
+            <div class="mt-4 flex justify-end gap-3">
+                <button onclick="toggleImportModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition">Batal</button>
+                <button onclick="processImport()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow transition">
+                    Proses Import
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 text-white p-4 shadow-lg sticky top-0 z-10">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fas fa-bolt mr-2 text-yellow-300"></i>AI Grader <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded ml-2">Fast Local Mode</span></h1>
+            <div class="flex items-center gap-3">
+                <div id="user-info" class="text-xs bg-indigo-800 px-3 py-1 rounded-full hidden md:block">
+                    <!-- Email user will appear here -->
+                </div>
+                <button id="btn-logout" class="text-sm bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded text-white transition hidden">
+                    <i class="fas fa-sign-out-alt"></i> Keluar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 max-w-4xl">
+        
+        <!-- Main Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Input Manual Siswa -->
+            <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-lg text-indigo-700">Tambah Siswa</h2>
+                    <button onclick="toggleImportModal()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition" title="Paste dari Excel">
+                        <i class="fas fa-file-import mr-1"></i> Import
+                    </button>
+                </div>
+                <form id="add-student-form" class="space-y-3">
+                    <input type="text" id="student-name" placeholder="Nama Siswa" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input type="text" id="student-class" placeholder="Kelas (Opsional)" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded transition shadow">
+                        <i class="fas fa-plus mr-2"></i>Tambah
+                    </button>
+                </form>
+            </div>
+
+            <!-- Voice Control Center -->
+            <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <h2 class="font-bold text-lg mb-2 text-indigo-700">Input Suara</h2>
+                <p class="text-sm text-slate-500 mb-6">Klik mikrofon <b>atau tekan SPASI</b> dan sebut: <b>"Nama Siswa [spasi] Nilai"</b><br>Contoh: <i>"Ahsan Rian sembilan puluh"</i></p>
+                
+                <button id="btn-mic" class="w-20 h-20 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-3xl transition duration-300 flex items-center justify-center border-4 border-slate-200 shadow-inner" title="Tekan SPASI untuk mulai/stop">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                
+                <!-- Status Indicators -->
+                <div id="listening-indicator" class="mt-4 hidden">
+                    <span class="text-red-500 font-semibold animate-pulse">● Mendengarkan... (Tekan Spasi untuk Stop)</span>
+                    <p id="transcript-preview" class="text-slate-400 text-sm mt-1 italic min-h-[1.5rem]">...</p>
+                </div>
+
+                <div id="ai-processing-indicator" class="mt-4 hidden ai-thinking">
+                    <span class="text-blue-600 font-semibold"><i class="fas fa-microchip"></i> Memproses secara lokal...</span>
+                </div>
+
+                <!-- Log Transkrip -->
+                <div id="action-log" class="absolute bottom-0 w-full bg-slate-50 text-xs py-2 px-4 border-t text-slate-500 truncate hidden">
+                    Menunggu perintah...
+                </div>
+            </div>
+        </div>
+
+        <!-- Student List -->
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                <h3 class="font-bold text-slate-700">Daftar Nilai Siswa (<span id="student-count">0</span>)</h3>
+                <div>
+                    <button onclick="deleteAllStudents()" class="text-sm text-red-500 hover:text-red-700 mr-3 transition" title="Hapus Semua Data">
+                        <i class="fas fa-trash mr-1"></i> Reset
+                    </button>
+                    <button onclick="copyTable()" class="text-sm text-indigo-600 hover:text-indigo-800 transition">
+                        <i class="far fa-copy mr-1"></i> Salin Data
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
+                            <th class="p-4 border-b">Nama Siswa</th>
+                            <th class="p-4 border-b w-32">Kelas</th>
+                            <th class="p-4 border-b text-center w-32">Nilai</th>
+                            <th class="p-4 border-b text-center w-20">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-list" class="divide-y divide-slate-100">
+                        <!-- Data akan muncul di sini -->
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-slate-400">
+                                Memuat data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal (Simple Toast) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-2xl transform translate-y-20 opacity-0 transition duration-300 z-50 flex items-center">
+        <i id="toast-icon" class="fas fa-check-circle text-green-400 mr-3 text-xl"></i>
+        <div>
+            <h4 id="toast-title" class="font-bold text-sm">Berhasil</h4>
+            <p id="toast-message" class="text-xs text-slate-300">Data disimpan.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- KONFIGURASI FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyopuyvzjIXIZT-LE8_7bVP8vxVIlcQtU",
+            authDomain: "apps-f1563.firebaseapp.com",
+            projectId: "apps-f1563",
+            storageBucket: "apps-f1563.firebasestorage.app",
+            messagingSenderId: "330620144262",
+            appId: "1:330620144262:web:8ad8a32685b352ec0edf07",
+            measurementId: "G-TRS9JGPPX0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // FIX: Menggunakan Satu Pintu ID (Hardcoded) agar data konsisten antar sesi/perangkat
+        // Sebelumnya menggunakan dynamic __app_id yang berubah-ubah.
+        const appId = 'sekolah-ai-v1'; 
+
+        let currentUser = null;
+        let studentsData = [];
+        let unsubscribeSnapshot = null;
+
+        // --- AUTH LOGIC (MODIFIED FOR SAFER LOGIN) ---
+        const loginModal = document.getElementById('login-modal');
+        const userInfo = document.getElementById('user-info');
+        const btnLogout = document.getElementById('btn-logout');
+        const loginError = document.getElementById('login-error');
+        const btnLogin = document.getElementById('btn-login');
+        
+        // Tabs
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        let isLoginMode = true; // Default to Login
+
+        function setAuthMode(login) {
+            isLoginMode = login;
+            loginError.classList.add('hidden');
+            if (isLoginMode) {
+                // Style Login Active
+                tabLogin.className = "w-1/2 pb-2 text-indigo-600 border-b-2 border-indigo-600 font-bold text-sm transition focus:outline-none";
+                tabRegister.className = "w-1/2 pb-2 text-slate-400 font-medium text-sm hover:text-indigo-500 transition focus:outline-none";
+                
+                btnLogin.innerText = "Masuk Akun";
+                document.getElementById('modal-title').innerText = "Selamat Datang";
+                document.getElementById('modal-desc').innerText = "Masuk untuk melihat data nilai Anda.";
+            } else {
+                // Style Register Active
+                tabLogin.className = "w-1/2 pb-2 text-slate-400 font-medium text-sm hover:text-indigo-500 transition focus:outline-none";
+                tabRegister.className = "w-1/2 pb-2 text-indigo-600 border-b-2 border-indigo-600 font-bold text-sm transition focus:outline-none";
+                
+                btnLogin.innerText = "Buat Akun Baru";
+                document.getElementById('modal-title').innerText = "Buat Akun Guru";
+                document.getElementById('modal-desc').innerText = "Mulai database baru yang masih kosong.";
+            }
+        }
+
+        tabLogin.addEventListener('click', () => setAuthMode(true));
+        tabRegister.addEventListener('click', () => setAuthMode(false));
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch (e) { console.log("Custom token skip"); }
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loginModal.classList.add('hidden-modal');
+                setTimeout(() => loginModal.classList.add('hidden'), 300);
+                userInfo.innerText = user.email;
+                userInfo.classList.remove('hidden');
+                btnLogout.classList.remove('hidden');
+                loadStudents();
+                showToast("Login Berhasil", `Halo, ${user.email}`);
+            } else {
+                currentUser = null;
+                loginModal.classList.remove('hidden');
+                loginModal.classList.remove('hidden-modal');
+                userInfo.classList.add('hidden');
+                btnLogout.classList.add('hidden');
+                if(unsubscribeSnapshot) unsubscribeSnapshot();
+                document.getElementById('student-list').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400">Silakan login terlebih dahulu.</td></tr>`;
+                document.getElementById('student-count').innerText = "0";
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btnLogin.disabled = true;
+            loginError.classList.add('hidden');
+            
+            try {
+                if (isLoginMode) {
+                    // MODE LOGIN: Hanya login, error jika tidak ada
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    // MODE DAFTAR: Buat akun baru
+                    await createUserWithEmailAndPassword(auth, email, password);
+                }
+            } catch (error) {
+                let msg = "Terjadi kesalahan.";
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    msg = isLoginMode ? "Email atau password salah. Cek ejaan atau daftar baru." : "Gagal mendaftar.";
+                } else if (error.code === 'auth/email-already-in-use') {
+                    msg = "Email sudah terdaftar. Silakan login.";
+                } else {
+                    msg = "Error: " + error.message;
+                }
+                
+                loginError.innerText = msg;
+                loginError.classList.remove('hidden');
+            } finally {
+                btnLogin.innerText = isLoginMode ? 'Masuk Akun' : 'Buat Akun Baru';
+                btnLogin.disabled = false;
+            }
+        });
+
+        btnLogout.addEventListener('click', () => signOut(auth));
+
+        // --- IMPORT LOGIC ---
+        window.toggleImportModal = () => {
+            const modal = document.getElementById('import-modal');
+            if (modal.classList.contains('hidden-modal')) {
+                modal.classList.remove('hidden', 'hidden-modal');
+            } else {
+                modal.classList.add('hidden-modal');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        };
+
+        window.processImport = async () => {
+            if (!currentUser) return;
+            const rawText = document.getElementById('import-area').value;
+            if (!rawText.trim()) return showToast("Kosong", "Tidak ada data untuk diimport.", "error");
+
+            const rows = rawText.split(/\r?\n/);
+            const batchLimit = 500; // Firestore batch limit
+            let count = 0;
+
+            try {
+                // Sederhana: Loop satu per satu agar mudah
+                // Untuk production scale besar sebaiknya pakai batch, tapi untuk UX real-time sederhana ini cukup
+                for (let row of rows) {
+                    if (!row.trim()) continue;
+                    
+                    // Split by tab (Excel default) or comma
+                    // Logic: Jika ada tab, pakai tab. Jika tidak, pakai koma.
+                    let parts = row.includes('\t') ? row.split('\t') : row.split(',');
+                    
+                    const name = parts[0] ? parts[0].trim() : '';
+                    const className = parts[1] ? parts[1].trim() : '';
+                    
+                    if (name) {
+                        await addStudent(name, className);
+                        count++;
+                    }
+                }
+                
+                showToast("Import Sukses", `${count} siswa berhasil ditambahkan.`);
+                document.getElementById('import-area').value = '';
+                toggleImportModal();
+
+            } catch (e) {
+                console.error(e);
+                showToast("Import Gagal", "Terjadi kesalahan saat memproses data.", "error");
+            }
+        };
+
+        // --- FIRESTORE LOGIC ---
+        function loadStudents() {
+            if (!currentUser) return;
+            const studentsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'students');
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            unsubscribeSnapshot = onSnapshot(studentsRef, (snapshot) => {
+                const listContainer = document.getElementById('student-list');
+                const countEl = document.getElementById('student-count');
+                studentsData = [];
+                let html = '';
+
+                snapshot.forEach((doc) => {
+                    studentsData.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort: Nama, lalu Kelas
+                studentsData.sort((a, b) => a.name.localeCompare(b.name));
+                countEl.innerText = studentsData.length;
+
+                if (studentsData.length === 0) {
+                    listContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400">Belum ada data. Tambahkan siswa dulu.</td></tr>`;
+                    return;
+                }
+
+                studentsData.forEach(student => {
+                    const scoreDisplay = student.score !== undefined && student.score !== null ? student.score : '-';
+                    const scoreClass = (student.score !== undefined && student.score !== null)
+                        ? (parseInt(student.score) < 75 ? 'text-red-600 font-bold' : 'text-green-600 font-bold') 
+                        : 'text-slate-400';
+                    const className = student.className || '-';
+
+                    html += `
+                        <tr class="hover:bg-slate-50 transition group border-b border-slate-100">
+                            <td class="p-4 font-medium text-slate-700">${student.name}</td>
+                            <td class="p-4 text-slate-500">${className}</td>
+                            <td class="p-4 text-center text-lg ${scoreClass}">${scoreDisplay}</td>
+                            <td class="p-4 text-center">
+                                <button onclick="window.deleteStudent('${student.id}')" class="text-slate-300 hover:text-red-500 transition">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            }, (error) => {
+                if(currentUser) showToast("Error", "Gagal memuat data.", "error");
+            });
+        }
+
+        async function addStudent(name, className = '') {
+            if (!currentUser) return;
+            try {
+                const studentsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'students');
+                await addDoc(studentsRef, { 
+                    name: name, 
+                    className: className,
+                    score: null, 
+                    createdAt: serverTimestamp() 
+                });
+                // Toast hanya jika ditambah manual satu per satu, agar import massal tidak spam toast
+                if(!document.getElementById('import-modal').classList.contains('hidden')) {
+                    // silent for import loop
+                } else {
+                    showToast("Sukses", `Siswa ${name} ditambahkan.`);
+                }
+            } catch (e) { 
+                console.error(e);
+                // showToast("Gagal", "Error database.", "error"); 
+            }
+        }
+
+        window.deleteStudent = async (id) => {
+            if (!confirm("Hapus siswa ini?")) return;
+            if (!currentUser) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'students', id));
+                showToast("Dihapus", "Data siswa dihapus.");
+            } catch (e) { showToast("Gagal", "Gagal menghapus.", "error"); }
+        };
+
+        // NEW: Function to delete all students
+        window.deleteAllStudents = async () => {
+            if (!currentUser) return;
+            if (!confirm("PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data siswa?\n\nTindakan ini tidak dapat dibatalkan.")) return;
+            if (!confirm("Konfirmasi terakhir: Hapus semua?")) return;
+            
+            try {
+                const batch = writeBatch(db);
+                // Batas writeBatch adalah 500, jika lebih dari itu perlu loop chunk.
+                // Untuk app sederhana ini, kita asumsikan < 500, atau delete sebagian.
+                // Menggunakan studentsData yang sudah ada di memory
+                
+                if (studentsData.length === 0) {
+                     showToast("Info", "Data sudah kosong.");
+                     return;
+                }
+
+                // Ambil 500 data pertama (limitasi firestore batch)
+                const deleteQueue = studentsData.slice(0, 500);
+                
+                deleteQueue.forEach(student => {
+                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'students', student.id);
+                    batch.delete(docRef);
+                });
+
+                await batch.commit();
+                showToast("Dihapus", `${deleteQueue.length} data siswa berhasil dihapus.`);
+            } catch (e) {
+                console.error(e);
+                showToast("Gagal", "Gagal menghapus data.", "error");
+            }
+        };
+
+        async function updateScore(studentId, score) {
+            if (!currentUser) return;
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'students', studentId), { score: parseInt(score) });
+                return true;
+            } catch (e) { return false; }
+        }
+
+        document.getElementById('add-student-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputName = document.getElementById('student-name');
+            const inputClass = document.getElementById('student-class');
+            const name = inputName.value.trim();
+            const className = inputClass.value.trim();
+            
+            if (name) { 
+                addStudent(name, className); 
+                inputName.value = '';
+                inputClass.value = '';
+            }
+        });
+
+        // --- SPEECH & AI LOGIC ---
+        const btnMic = document.getElementById('btn-mic');
+        const listeningIndicator = document.getElementById('listening-indicator');
+        const aiIndicator = document.getElementById('ai-processing-indicator');
+        const transcriptPreview = document.getElementById('transcript-preview');
+        const actionLog = document.getElementById('action-log');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'id-ID';
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                btnMic.classList.replace('bg-slate-100', 'bg-red-500');
+                btnMic.classList.replace('text-slate-600', 'text-white');
+                btnMic.classList.add('mic-pulse');
+                listeningIndicator.classList.remove('hidden');
+                aiIndicator.classList.add('hidden');
+                transcriptPreview.innerText = "...";
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                btnMic.classList.replace('bg-red-500', 'bg-slate-100');
+                btnMic.classList.replace('text-white', 'text-slate-600');
+                btnMic.classList.remove('mic-pulse');
+                listeningIndicator.classList.add('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                        handleSpeechResult(finalTranscript);
+                    } else {
+                        transcriptPreview.innerText = event.results[i][0].transcript;
+                    }
+                }
+            };
+
+            btnMic.addEventListener('click', () => {
+                if (!currentUser) return showToast("Login Dulu", "Silakan login.", "error");
+                isListening ? recognition.stop() : recognition.start();
+            });
+
+            // --- KEYBOARD SHORTCUT (SPACEBAR) ---
+            document.addEventListener('keydown', (e) => {
+                // Ignore if user is typing in input or textarea
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+                if (e.code === 'Space') {
+                    e.preventDefault(); // Prevent page scroll
+                    
+                    if (!currentUser) {
+                        showToast("Login Dulu", "Silakan login.", "error");
+                        return;
+                    }
+
+                    if (!recognition) return;
+
+                    if (isListening) {
+                        recognition.stop(); // Stop recording -> Triggers analysis via onresult/onend logic (if results present)
+                    } else {
+                        try {
+                            recognition.start(); // Start recording
+                        } catch(err) {
+                            // Ignore if already started
+                        }
+                    }
+                }
+            });
+
+        } else {
+            btnMic.disabled = true;
+            transcriptPreview.innerText = "Browser tidak support voice.";
+        }
+
+        async function handleSpeechResult(text) {
+            text = text.trim();
+            transcriptPreview.innerText = text;
+            aiIndicator.classList.remove('hidden');
+            actionLog.innerText = `AI Menganalisa: "${text}"`;
+            actionLog.classList.remove('hidden');
+
+            try {
+                // Gunakan algoritma lokal, bukan AI Gemini
+                const result = await matchStudentLocally(text, studentsData);
+                aiIndicator.classList.add('hidden');
+
+                if (result && result.studentId && result.score !== null) {
+                    const student = studentsData.find(s => s.id === result.studentId);
+                    if (student) {
+                        await updateScore(result.studentId, result.score);
+                        showToast("Match", `${student.name}: ${result.score}`, "success");
+                        if ('speechSynthesis' in window) {
+                             const utterance = new SpeechSynthesisUtterance(`Nilai ${student.name} disimpan ${result.score}`);
+                             utterance.lang = 'id-ID';
+                             window.speechSynthesis.speak(utterance);
+                        }
+                    }
+                } else {
+                    showToast("Bingung", "Tidak menemukan nama atau nilai yang cocok.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                aiIndicator.classList.add('hidden');
+                showToast("Error", err.message, "error");
+            }
+        }
+
+        // --- LOCAL MATCHING ALGORITHM (No AI) ---
+        async function matchStudentLocally(text, students) {
+            text = text.toLowerCase();
+            
+            // 1. Ekstrak Score
+            const scoreResult = parseScoreFromText(text);
+            if (scoreResult.score === null) return { studentId: null, score: null };
+            
+            const score = scoreResult.score;
+            let nameQuery = scoreResult.remainingText.trim();
+            
+            // Hapus kata sambung umum
+            const stopWords = ['nilai', 'untuk', 'siswa', 'bernama', 'kelas', 'absen', 'nomor'];
+            stopWords.forEach(w => {
+                 nameQuery = nameQuery.replace(new RegExp(`\\b${w}\\b`, 'gi'), '');
+            });
+            nameQuery = nameQuery.trim();
+
+            if (nameQuery.length < 3) return { studentId: null, score: null };
+
+            // 2. Fuzzy Matching (Levenshtein Distance)
+            let bestMatch = null;
+            let bestDistance = Infinity;
+            // Threshold: Semakin kecil semakin ketat. 
+            // Untuk nama panjang, toleransi typo lebih besar.
+            
+            students.forEach(student => {
+                const sName = student.name.toLowerCase();
+                const dist = levenshteinDistance(nameQuery, sName);
+                
+                // Normalisasi distance berdasarkan panjang string terpanjang
+                // Agar "Siti" (typo "Site") punya skor mirip dengan "Siti Aminah" (typo "Site Aminah")
+                // Tapi kita prefer exact substring match juga.
+                
+                // Strategi Sederhana:
+                // Jika query adalah substring persis dari nama siswa (contoh: "budi" match "budi santoso")
+                if (sName.includes(nameQuery)) {
+                    // Prioritas tertinggi, distance dianggap negatif (sangat dekat)
+                    // Dikurangi panjang selisih agar "Budi" lebih match ke "Budi" daripada "Budiarto"
+                    const diff = sName.length - nameQuery.length;
+                    const adjustedDist = -100 + diff; 
+                    
+                    if (adjustedDist < bestDistance) {
+                        bestDistance = adjustedDist;
+                        bestMatch = student;
+                    }
+                } else {
+                    // Jika bukan substring, pakai Levenshtein biasa
+                    if (dist < bestDistance) {
+                        bestDistance = dist;
+                        bestMatch = student;
+                    }
+                }
+            });
+
+            // Ambang batas toleransi (threshold)
+            // Jika distance > 5 (tergantung panjang nama), mungkin salah.
+            // Kita set threshold dinamis: Max 40% perbedaan.
+            if (bestMatch) {
+                // Cek threshold jika bukan substring match (bestDistance >= 0)
+                if (bestDistance >= 0) {
+                     const threshold = Math.max(3, bestMatch.name.length * 0.4);
+                     if (bestDistance > threshold) return { studentId: null, score: null };
+                }
+                
+                return { studentId: bestMatch.id, score: score };
+            }
+
+            return { studentId: null, score: null };
+        }
+
+        // Fungsi Levenshtein Distance (Standard implementation)
+        function levenshteinDistance(a, b) {
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
+
+            const matrix = [];
+
+            // increment along the first column of each row
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+
+            // increment each column in the first row
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+
+            // Fill in the rest of the matrix
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) == a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1, // substitution
+                            Math.min(
+                                matrix[i][j - 1] + 1, // insertion
+                                matrix[i - 1][j] + 1 // deletion
+                            )
+                        );
+                    }
+                }
+            }
+
+            return matrix[b.length][a.length];
+        }
+
+        function parseScoreFromText(text) {
+            // Mapping kata ke angka
+            const textToNum = {
+                'nol': 0, 'kosong': 0,
+                'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5,
+                'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10,
+                'sebelas': 11, 'seratus': 100,
+                'belas': 10, // Special logic needed usually, simplified here
+                'puluh': 0, // Placeholder logic
+                'lima puluh': 50, 'enam puluh': 60, 'tujuh puluh': 70, 
+                'delapan puluh': 80, 'sembilan puluh': 90
+            };
+
+            // 1. Coba regex angka langsung (e.g. "90")
+            let match = text.match(/(\d+)/);
+            if (match) {
+                return {
+                    score: parseInt(match[0]),
+                    remainingText: text.replace(match[0], '')
+                };
+            }
+
+            // 2. Parsing Text (Sederhana untuk bahasa Indonesia)
+            // Pola: [Puluhan] [Satuan]
+            // Contoh: "Sembilan Puluh Lima" -> 90 + 5
+            
+            let words = text.split(' ');
+            let foundScore = null;
+            let scoreWordsIndices = [];
+
+            // Cek frasa "puluh"
+            for (let i = 0; i < words.length; i++) {
+                if (words[i] === 'puluh' && i > 0) {
+                    const prevWord = words[i-1];
+                    const nextWord = words[i+1]; // optional
+                    
+                    if (textToNum[prevWord] !== undefined) {
+                        let base = textToNum[prevWord] * 10;
+                        scoreWordsIndices.push(i-1, i);
+                        
+                        // Cek satuan setelah puluh (e.g. "lima" in "sembilan puluh lima")
+                        if (nextWord && textToNum[nextWord] !== undefined && textToNum[nextWord] < 10) {
+                            base += textToNum[nextWord];
+                            scoreWordsIndices.push(i+1);
+                        }
+                        
+                        foundScore = base;
+                        break; // Ambil angka pertama yg ketemu
+                    }
+                }
+                // Cek angka tunggal/belasan jika belum ketemu puluh
+                else if (textToNum[words[i]] !== undefined) {
+                     // Logic sederhana: ambil angka terakhir yg disebut jika tidak ada 'puluh'
+                     // Risiko: "Kelas dua nilai lima" -> ambil 5
+                     if (!foundScore) {
+                        // Cek "seratus"
+                        if (words[i] === 'seratus') {
+                            foundScore = 100;
+                            scoreWordsIndices.push(i);
+                        }
+                     }
+                }
+            }
+            
+            // Fallback sederhana jika loop complex gagal tapi ada kata angka satuan/belasan
+            if (foundScore === null) {
+                // Reverse loop untuk cari angka di akhir kalimat (biasanya nilai di akhir)
+                for (let i = words.length - 1; i >= 0; i--) {
+                    if (textToNum[words[i]] !== undefined) {
+                        foundScore = textToNum[words[i]];
+                        scoreWordsIndices.push(i);
+                        break;
+                    }
+                }
+            }
+
+            if (foundScore !== null) {
+                // Remove identified score words from text
+                let remaining = words.filter((_, idx) => !scoreWordsIndices.includes(idx)).join(' ');
+                return { score: foundScore, remainingText: remaining };
+            }
+
+            return { score: null, remainingText: text };
+        }
+
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-message').innerText = message;
+            const icon = document.getElementById('toast-icon');
+            icon.className = type === 'error' ? 'fas fa-times-circle text-red-400 mr-3 text-xl' : 'fas fa-check-circle text-green-400 mr-3 text-xl';
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        window.copyTable = () => {
+            let text = "Nama\tKelas\tNilai\n";
+            studentsData.forEach(s => text += `${s.name}\t${s.className || '-'}\t${s.score || 0}\n`);
+            navigator.clipboard.writeText(text).then(() => showToast("Disalin", "Data siap dipaste ke Excel."));
+        };
+
+    </script>
+</body>
+</html>
