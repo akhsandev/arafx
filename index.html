@@ -3,455 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilah Energi - Game Edukasi</title>
-    <!-- Memuat Tailwind CSS -->
+    <title>Daftar Siswa & Tautan Survei</title>
+    <!-- Memuat Tailwind CSS untuk styling cepat dan responsif -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memuat Tone.js untuk efek suara -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
-        /* Font kustom untuk tampilan yang lebih menarik */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        /* Menggunakan font Inter secara default */
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            min-height: 100vh;
         }
-        /* Style kustom untuk item yang sedang diseret */
-        .dragging {
-            opacity: 0.5;
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        /* Custom scrollbar untuk tabel */
+        .scroll-container::-webkit-scrollbar {
+            height: 8px;
         }
-        /* Style untuk zona drop saat item di atasnya */
-        .drag-over {
-            border-style: solid;
-            transform: scale(1.02);
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 4px;
         }
-        /* Style untuk item yang sudah benar */
-        .sorted {
-            opacity: 0.7;
-            cursor: not-allowed !important;
-            filter: grayscale(50%);
+        .scroll-container::-webkit-scrollbar-track {
+            background: #e5e7eb;
         }
-        /* Style baru untuk item yang "terbang" saat disentuh */
-        .touch-dragging {
-            position: fixed; /* Mengeluarkannya dari alur dokumen */
-            z-index: 1000; /* Memastikannya di atas segalanya */
-            pointer-events: none; /* Membiarkan kita mendeteksi apa yang di bawahnya */
+        /* Style untuk tombol tautan */
+        .link-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .link-button:hover {
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+        /* Responsiveness for table layout */
+        @media (max-width: 768px) {
+            .table-cell-name {
+                min-width: 150px; /* Memastikan kolom nama cukup lebar di mobile */
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 selection:bg-blue-200">
+<body class="p-4 md:p-8 bg-gray-50">
 
-    <div id="game-container" class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-10 transition-all duration-300">
-        
-        <!-- Judul dan Instruksi -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">Pilah Energi!</h1>
-            <p class="text-lg text-gray-600">Seret setiap sumber energi ke kotak yang tepat.</p>
-        </div>
+    <!-- Kontainer Utama -->
+    <div class="max-w-6xl mx-auto">
 
-        <!-- Bank Item (Sumber Energi) -->
-        <div id="item-bank" class="w-full bg-gray-50 p-4 rounded-xl shadow-inner min-h-[150px] flex flex-wrap justify-center items-center gap-4 mb-8">
-            <!-- Setiap item akan dibuat oleh JavaScript -->
-        </div>
+        <!-- Judul Tabel - Diperbarui untuk menjadi fokus utama -->
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 border-b-4 border-indigo-500 pb-3 text-center">
+            Daftar Siswa dan Tautan Pengisian Survei Akhir Tahun
+        </h2>
+        <p class="text-center text-lg text-gray-600 mb-8">
+            Daftar ini memuat nama siswa yang wajib mengisi formulir Survei Penguatan Karakter.
+        </p>
 
-        <!-- Zona Drop (Kotak Kategori) -->
-        <div class="flex flex-col md:flex-row gap-6">
-            
-            <!-- Kotak Energi Terbarukan (Si Baik) -->
-            <div id="renewable-bin" class="drop-zone flex-1 bg-green-50 border-4 border-dashed border-green-300 rounded-2xl p-6 min-h-[300px] transition-all duration-300" data-type="renewable">
-                <h2 class="text-2xl font-bold text-green-700 text-center mb-4">Energi Terbarukan (Si Baik)</h2>
-                <div class="item-slot-container flex flex-wrap justify-center gap-4">
-                    <!-- Item yang benar akan masuk ke sini -->
-                </div>
-            </div>
-
-            <!-- Kotak Energi Tak Terbarukan (Si Buruk) -->
-            <div id="non-renewable-bin" class="drop-zone flex-1 bg-red-50 border-4 border-dashed border-red-300 rounded-2xl p-6 min-h-[300px] transition-all duration-300" data-type="non-renewable">
-                <h2 class="text-2xl font-bold text-red-700 text-center mb-4">Energi Tak Terbarukan (Si Buruk)</h2>
-                <div class="item-slot-container flex flex-wrap justify-center gap-4">
-                    <!-- Item yang benar akan masuk ke sini -->
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Umpan Balik dan Tombol Kontrol -->
-        <div class="mt-8 text-center">
-            <div id="feedback-message" class="text-xl font-semibold h-8 mb-4 transition-all duration-300"></div>
-            <button id="reset-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all duration-200">
-                Ulangi Permainan
-            </button>
-        </div>
-
-    </div>
-
-    <!-- Modal Kemenangan (Awalnya Tersembunyi) -->
-    <div id="win-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl p-10 text-center transform scale-95 transition-transform duration-300">
-            <svg class="w-20 h-20 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">Hebat!</h2>
-            <p class="text-lg text-gray-600 mb-6">Kamu berhasil memilah semua sumber energi dengan benar!</p>
-            <button id="play-again-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition-all duration-200">
-                Main Lagi
-            </button>
+        <!-- Kontainer Tabel Responsif -->
+        <div class="overflow-x-auto scroll-container bg-white p-4 rounded-xl shadow-2xl">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-indigo-600 text-white sticky top-0 shadow-md">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-sm font-semibold uppercase tracking-wider rounded-tl-xl">NO</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider table-cell-name">NAMA LENGKAP</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider">KELAS</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider rounded-tr-xl">TAUTAN PENGISIAN</th>
+                    </tr>
+                </thead>
+                <tbody id="student-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Data siswa akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
-
 
     <script>
+        // Data Siswa Lengkap
+        const students = [
+            { NO: 1, NAMA: 'A. Fachril Nugrah Ramadhan', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=A.+Fachril+Nugrah+Ramadhan&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0102311412&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 2, NAMA: 'ADITYA RIFAIROS PRATAMA', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ADITYA+RIFAIROS+PRATAMA&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0102437415&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 3, NAMA: 'ALISYA ZAHRA', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ALISYA+ZAHRA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0108366299&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 4, NAMA: 'ANDI ALIFA RAMADANI PAMMUSURENG', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ANDI+ALIFA+RAMADANI+PAMMUSURENG&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0101457195&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 5, NAMA: 'ANDI ANNISA', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ANDI+ANNISA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0107703915&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 6, NAMA: 'FAAN RAMADHAN', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=FAAN+RAMADHAN&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0093968198&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 7, NAMA: 'NATAYA', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=NATAYA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0101450419&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 8, NAMA: 'NUR INAYAH', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=NUR+INAYAH&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0097606378&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 9, NAMA: 'SHEERA RAHMA SAFHIRA', KELAS: 'Kelas 10', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=SHEERA+RAHMA+SAFHIRA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0097803378&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 10, NAMA: 'A. ADITHYA ABDI PRAWIRA', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=A.+ADITHYA+ABDI+PRAWIRA&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0094825029&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 11, NAMA: 'A. AINUN NAJWA HIDAYANI', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=A.+AINUN+NAJWA+HIDAYANI&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0088857876&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 12, NAMA: 'AINUN SALSABILA', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=AINUN+SALSABILA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0083368652&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 13, NAMA: 'Aliyah Tul Mu Adzah', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Aliyah+Tul+Mu+Adzah&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0082034497&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 14, NAMA: 'Ananda Mahardika Pertiwi', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Ananda+Mahardika+Pertiwi&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0088701645&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 15, NAMA: 'ARDY NUGRAHA SYAHLAMAT BADAR', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ARDY+NUGRAHA+SYAHLAMAT+BADAR&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0082747236&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 16, NAMA: 'AYU ANDIRA RESTU PUTRI', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=AYU+ANDIRA+RESTU+PUTRI&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0085695538&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 17, NAMA: 'FA IQ RESKY', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=FA+IQ+RESKY&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0097969120&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 18, NAMA: 'INTAN NUR JUHRAH', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=INTAN+NUR+JUHRAH&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0085625686&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 19, NAMA: 'Khaerul Mubiin', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Khaerul+Mubiin&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0088223003&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 20, NAMA: 'MARYO PASSHALAENG', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=MARYO+PASSHALAENG&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0084661920&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 21, NAMA: 'MUHAMMAD IRYAN NURFADILAH', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=MUHAMMAD+IRYAN+NURFADILAH&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0083907733&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 22, NAMA: 'MUHAMMAD MUBDY DWY FAREL', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=MUHAMMAD+MUBDY+DWY+FAREL&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0084107312&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 23, NAMA: 'NUR ADILIA FAUZIAH', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=NUR+ADILIA+FAUZIAH&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0099211652&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 24, NAMA: 'NUR WAQIAH AZISAH', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=NUR+WAQIAH+AZISAH&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0096243197&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 25, NAMA: 'NURHIDAYA', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=NURHIDAYA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0084615030&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 26, NAMA: 'PUTRI TIRTA PERTIWI ASHARI', KELAS: 'Kelas 11', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=PUTRI+TIRTA+PERTIWI+ASHARI&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0088562532&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 27, NAMA: 'A. AINY SYAHRUNI', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=A.+AINY+SYAHRUNI&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0074866936&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 28, NAMA: 'A. MUH. AKBAR SYAFAAD', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=A.+MUH.+AKBAR+SYAFAAD&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0072202737&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 29, NAMA: 'Ainul', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Ainul&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0079921592&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 30, NAMA: 'ANDI LATENRI GAU MALLINGKAAN', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ANDI+LATENRI+GAU+MALLINGKAAN&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0071344957&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 31, NAMA: 'Annisa Magfirah', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Annisa+Magfirah&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0089945671&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 32, NAMA: 'ARGA', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=ARGA&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0082178753&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 33, NAMA: 'DHEA AURA', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=DHEA+AURA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0073524064&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 34, NAMA: 'Dzakiyah Salsabila', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Dzakiyah+Salsabila&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0071899361&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 35, NAMA: 'HILDAYANTI', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=HILDAYANTI&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0083547091&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 36, NAMA: 'MUH. ABY PRATAMA RAMADHAN', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=MUH.+ABY+PRATAMA+RAMADHAN&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0076915446&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 37, NAMA: 'Muh.Fatur Fadillah Malik', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Muh.Fatur+Fadillah+Malik&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0072425367&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 38, NAMA: 'MUH.JALIL MAPPAWARE', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=MUH.JALIL+MAPPAWARE&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0079582353&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 39, NAMA: 'Muhammad Faizan', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Muhammad+Faizan&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0083837950&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 40, NAMA: 'MUHAMMAD HISYAM ZHAFRAN', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=MUHAMMAD+HISYAM+ZHAFRAN&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0078751055&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 41, NAMA: 'Nur Aulia Amelia', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Nur+Aulia+Amelia&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0089297317&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 42, NAMA: 'NUR AZIZAH MASANGKA', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=NUR+AZIZAH+MASANGKA&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0078673610&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 43, NAMA: 'Nur Tria Putri', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Nur+Tria+Putri&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0073558085&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 44, NAMA: 'SETYA AYU BUDIMAN', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=SETYA+AYU+BUDIMAN&entry.851575806=40303663&entry.664715575=Perempuan&entry.1823044574=Islam&entry.1842700653=0082826791&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' },
+            { NO: 45, NAMA: 'Sofyan Pallenrungi', KELAS: 'Kelas 12', TAUTAN: 'https://docs.google.com/forms/d/e/1FAIpQLSetryvzh2JF6cXQEXZyRuDGO1NELFTo_M0C5w-rrsQRHa3HZQ/viewform?entry.91861699=Sofyan+Pallenrungi&entry.851575806=40303663&entry.664715575=Laki-laki&entry.1823044574=Islam&entry.1842700653=0085994925&entry.1775251487=Kab.+Soppeng+-+Prov.+Sulawesi+Selatan' }
+        ];
+
         document.addEventListener('DOMContentLoaded', () => {
-
-            // --- A. DEFINISI DATA DAN ASET ---
-
-            // Data sumber energi (Nama, Tipe, dan SVG)
-            const energySources = [
-                { 
-                    id: 'sun', 
-                    name: 'Matahari', 
-                    type: 'renewable', 
-                    svg: `<svg class="w-16 h-16 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-1.414a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4.95 14.536L4.243 15.243a1 1 0 11-1.415-1.415l.707-.707a1 1 0 011.415 1.415zM3.536 15.243a1 1 0 01-1.415-1.415l.707-.707a1 1 0 011.415 1.415l-.707.707zM1 10a1 1 0 011-1h1a1 1 0 110 2H2a1 1 0 01-1-1zM15 11a1 1 0 110-2h1a1 1 0 110 2h-1zM4.95 3.536a1 1 0 010 1.414L4.243 5.657A1 1 0 012.828 4.243l.707-.707a1 1 0 011.415 0zm11.314 0a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM10 5a1 1 0 011 1v1a1 1 0 11-2 0V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>`
-                },
-                { 
-                    id: 'coal', 
-                    name: 'Batu Bara', 
-                    type: 'non-renewable', 
-                    svg: `<svg class="w-16 h-16 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7.746 16.741L11 10.456L14.07 15.42L17.5 12.35L14.735 8.135L17.5 4.5H4.5L7.746 16.741ZM19.5 2.5C20.881 2.5 22 3.619 22 5V19C22 20.381 20.881 21.5 19.5 21.5H4.5C3.119 21.5 2 20.381 2 19V5C2 3.619 3.119 2.5 4.5 2.5H19.5Z"/></svg>`
-                },
-                { 
-                    id: 'wind', 
-                    name: 'Angin', 
-                    type: 'renewable', 
-                    svg: `<svg class="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.125 1.125 0 010 2.25H5.625a1.125 1.125 0 010-2.25z"></path></svg>`
-                },
-                { 
-                    id: 'oil', 
-                    name: 'Minyak Bumi', 
-                    type: 'non-renewable', 
-                    svg: `<svg class="w-16 h-16 text-black" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path><path d="M10 13a3 3 0 100-6 3 3 0 000 6z"></path></svg>`
-                },
-                { 
-                    id: 'water', 
-                    name: 'Air (PLTA)', 
-                    type: 'renewable', 
-                    svg: `<svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>`
-                },
-                { 
-                    id: 'geothermal', 
-                    name: 'Panas Bumi', 
-                    type: 'renewable', 
-                    svg: `<svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657L13.414 20.414a2 2 0 01-1.414 0l-4.243-1.757M10 3v5.657A2.25 2.25 0 019.13 11.21l-4.715 2.15-2.11-2.109 2.15-4.715A2.25 2.25 0 016.343 3H10zm11 0v5.657A2.25 2.25 0 0019.13 11.21l-4.715 2.15-2.11-2.109 2.15-4.715A2.25 2.25 0 0014.657 3H21z"></path></svg>`
-                }
-            ];
-
-            // --- B. VARIABEL DOM & STATE ---
-
-            const itemBank = document.getElementById('item-bank');
-            const dropZones = document.querySelectorAll('.drop-zone');
-            const feedbackMessage = document.getElementById('feedback-message');
-            const resetButton = document.getElementById('reset-button');
-            const winModal = document.getElementById('win-modal');
-            const playAgainButton = document.getElementById('play-again-button');
-            let draggedItem = null;
-            let correctCount = 0;
-            let totalItems = energySources.length;
-            let currentOverZone = null; // Melacak zona drop yang sedang 'di-hover' oleh sentuhan
-
-            // --- C. EFEK SUARA (Tone.js) ---
-
-            // Inisialisasi audio setelah interaksi pengguna pertama (best practice)
-            let audioInitialized = false;
-            let correctSound, wrongSound, winSound;
-
-            function initAudio() {
-                if (audioInitialized) return;
-                Tone.start();
-                // Suara benar: nada C5
-                correctSound = new Tone.Synth().toDestination();
-                // Suara salah: suara noise pendek
-                wrongSound = new Tone.NoiseSynth({
-                    noise: { type: 'brown' },
-                    envelope: { attack: 0.005, decay: 0.1, sustain: 0 }
-                }).toDestination();
-                // Suara menang: akord C mayor
-                winSound = new Tone.PolySynth(Tone.Synth).toDestination();
-                audioInitialized = true;
-            }
+            const tableBody = document.getElementById('student-table-body');
             
-            // Event listener untuk menginisialisasi audio saat ada klik
-            document.body.addEventListener('click', initAudio, { once: true });
-            document.body.addEventListener('dragstart', initAudio, { once: true });
+            // Fungsi untuk membuat baris tabel
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                // Alternating row colors for better readability
+                row.className = student.NO % 2 === 0 ? 'bg-white hover:bg-indigo-50 transition duration-150' : 'bg-gray-50 hover:bg-indigo-50 transition duration-150';
 
+                // Kolom NO
+                const cellNo = document.createElement('td');
+                cellNo.className = 'px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900';
+                cellNo.textContent = student.NO;
 
-            // --- D. FUNGSI UTAMA ---
+                // Kolom NAMA
+                const cellName = document.createElement('td');
+                cellName.className = 'px-6 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 table-cell-name';
+                cellName.textContent = student.NAMA;
 
-            // Fungsi untuk membuat elemen item energi
-            function createEnergyItem(source) {
-                const item = document.createElement('div');
-                item.id = source.id;
-                item.className = 'draggable-item p-4 m-2 bg-white rounded-lg shadow-md cursor-grab active:cursor-grabbing transform transition-all duration-200 hover:scale-105 flex flex-col items-center w-32';
-                item.draggable = true;
-                item.dataset.type = source.type;
-
-                item.innerHTML = `
-                    ${source.svg}
-                    <span class="mt-2 font-semibold text-gray-700 text-center">${source.name}</span>
-                `;
-
-                // Menambahkan event listener untuk drag
-                item.addEventListener('dragstart', handleDragStart);
-                item.addEventListener('dragend', handleDragEnd);
-                // Menambahkan event listener untuk TOUCH
-                item.addEventListener('touchstart', handleTouchStart, { passive: false });
-
-                return item;
-            }
-
-            // Fungsi untuk mengacak urutan array (Fisher-Yates shuffle)
-            function shuffleArray(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-            }
-
-            // Fungsi untuk memulai/mengatur ulang permainan
-            function setupGame() {
-                // Mengosongkan bank item dan zona drop
-                itemBank.innerHTML = '';
-                dropZones.forEach(zone => {
-                    zone.querySelector('.item-slot-container').innerHTML = '';
-                });
-
-                // Mengacak dan membuat item baru
-                shuffleArray(energySources);
-                energySources.forEach(source => {
-                    itemBank.appendChild(createEnergyItem(source));
-                });
-
-                // Reset state
-                correctCount = 0;
-                feedbackMessage.textContent = '';
-                feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 transition-all duration-300';
-                winModal.classList.add('hidden', 'opacity-0');
-                winModal.querySelector('div').classList.add('scale-95');
-                currentOverZone = null; // Reset pelacak zona hover
-            }
-
-            // --- E. EVENT HANDLER DRAG & DROP ---
-
-            function handleDragStart(e) {
-                initAudio(); // Panggil inisialisasi audio di sini
-                draggedItem = e.target;
-                e.dataTransfer.setData('text/plain', e.target.id);
-                // Menunggu sejenak sebelum menambahkan kelas .dragging
-                setTimeout(() => {
-                    e.target.classList.add('dragging');
-                }, 0);
-            }
-
-            function handleDragEnd(e) {
-                e.target.classList.remove('dragging');
-                draggedItem = null;
-                // Pastikan semua state hover 'drag-over' bersih
-                dropZones.forEach(zone => zone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100'));
-                currentOverZone = null;
-            }
-
-            function handleDragOver(e) {
-                e.preventDefault(); // Diperlukan agar event drop bisa di-trigger
-                const dropZone = e.currentTarget;
-                dropZone.classList.add('drag-over', dropZone.dataset.type === 'renewable' ? 'bg-green-100' : 'bg-red-100');
-                currentOverZone = dropZone; // Set zona hover
-            }
-
-            function handleDragLeave(e) {
-                const dropZone = e.currentTarget;
-                dropZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
-                currentOverZone = null; // Hapus zona hover
-            }
-
-            function handleDrop(e) {
-                e.preventDefault();
-                const dropZone = e.currentTarget;
-                processDropLogic(dropZone, draggedItem); // Panggil fungsi logika terpusat
-                dropZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
-                currentOverZone = null;
-            }
-
-            // --- Event Handler untuk TOUCH ---
-
-            function handleTouchStart(e) {
-                // Mencegah scrolling halaman saat memulai drag
-                e.preventDefault();
-                initAudio(); // Panggil inisialisasi audio di sini
+                // Kolom KELAS
+                const cellClass = document.createElement('td');
+                cellClass.className = 'px-6 py-3 whitespace-nowrap text-sm text-gray-700';
+                cellClass.textContent = student.KELAS;
                 
-                draggedItem = e.currentTarget;
+                // Kolom TAUTAN
+                const cellLink = document.createElement('td');
+                cellLink.className = 'px-6 py-3 whitespace-nowrap text-sm font-medium';
+
+                const linkElement = document.createElement('a');
+                linkElement.href = student.TAUTAN;
+                linkElement.target = '_blank'; // Membuka di tab baru
+                linkElement.textContent = 'Buka Form Wajib';
+                linkElement.className = 'link-button inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-full text-white bg-indigo-500 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-md';
                 
-                // Tambahkan kelas visual (opacity, scale)
-                draggedItem.classList.add('dragging');
-                // Tambahkan kelas "terbang" (position: fixed)
-                draggedItem.classList.add('touch-dragging');
+                cellLink.appendChild(linkElement);
 
-                // Posisikan item tepat di bawah jari (ditengah)
-                const touch = e.touches[0];
-                updateItemPosition(touch.clientX, touch.clientY);
-            }
-
-            function handleTouchMove(e) {
-                if (!draggedItem) return;
-
-                // Mencegah scrolling saat drag
-                e.preventDefault();
-
-                // Dapatkan info sentuhan
-                const touch = e.touches[0];
-                const clientX = touch.clientX;
-                const clientY = touch.clientY;
-
-                // --- LOGIKA MELAYANG BARU ---
-                // Perbarui posisi item agar mengikuti jari
-                updateItemPosition(clientX, clientY);
-                // -------------------------
-
-                // Sembunyikan item yang di-drag sejenak agar elementFromPoint bisa mendeteksi apa yang di bawahnya
-                // (Ini sekarang ditangani oleh CSS .touch-dragging { pointer-events: none; })
-                // draggedItem.style.pointerEvents = 'none'; 
-                const elementUnder = document.elementFromPoint(clientX, clientY);
-                // draggedItem.style.pointerEvents = 'auto';
-
-                const dropZone = elementUnder ? elementUnder.closest('.drop-zone') : null;
-
-                // Bersihkan 'drag-over' dari zona sebelumnya jika beda
-                if (currentOverZone && currentOverZone !== dropZone) {
-                    currentOverZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
-                }
-
-                // Tambahkan 'drag-over' ke zona baru
-                if (dropZone) {
-                    dropZone.classList.add('drag-over', dropZone.dataset.type === 'renewable' ? 'bg-green-100' : 'bg-red-100');
-                    currentOverZone = dropZone;
-                } else {
-                    currentOverZone = null;
-                }
-            }
-
-            function handleTouchEnd(e) {
-                if (!draggedItem) return;
-
-                // Hapus semua kelas drag dan style inline
-                draggedItem.classList.remove('dragging');
-                draggedItem.classList.remove('touch-dragging');
-                draggedItem.style.top = '';
-                draggedItem.style.left = '';
-
-                if (currentOverZone) {
-                    // Jika sentuhan berakhir di atas zona drop yang valid
-                    processDropLogic(currentOverZone, draggedItem);
-                    currentOverZone.classList.remove('drag-over', 'bg-green-100', 'bg-red-100');
-                }
-
-                // Reset state
-                draggedItem = null;
-                currentOverZone = null;
-            }
-
-            // --- Fungsi baru untuk memposisikan item (TOUCH) ---
-            function updateItemPosition(x, y) {
-                if (!draggedItem) return;
-                // Kita atur agar jari berada di tengah item
-                const itemWidth = draggedItem.offsetWidth;
-                const itemHeight = draggedItem.offsetHeight;
-                draggedItem.style.left = `${x - itemWidth / 2}px`;
-                draggedItem.style.top = `${y - itemHeight / 2}px`;
-            }
-
-            // --- Logika Inti untuk Drop (Dipakai oleh Mouse & Touch) ---
-
-            function processDropLogic(dropZone, item) {
-                if (!item || !dropZone) return; // Keamanan jika item atau zona null
-
-                const dropType = dropZone.dataset.type;
-                const itemType = item.dataset.type;
-
-                // Cek apakah jawaban benar
-                if (dropType === itemType) {
-                    // Benar
-                    dropZone.querySelector('.item-slot-container').appendChild(item);
-                    item.draggable = false;
-                    item.classList.add('sorted');
-                    item.classList.remove('cursor-grab', 'active:cursor-grabbing', 'hover:scale-105');
-                    // Hapus event listener touch agar tidak bisa di-drag lagi
-                    item.removeEventListener('touchstart', handleTouchStart, { passive: false });
-                    // Pastikan style "melayang" dibersihkan jika ada
-                    item.classList.remove('touch-dragging');
-                    item.style.top = '';
-                    item.style.left = '';
-
-                    showFeedback('Benar! ' + item.querySelector('span').textContent + ' adalah energi ' + (dropType === 'renewable' ? 'terbarukan.' : 'tak terbarukan.'), 'green');
-                    
-                    if (audioInitialized) correctSound.triggerAttackRelease("C5", "8n");
-
-                    correctCount++;
-                    checkWinCondition();
-                } else {
-                    // Salah
-                    showFeedback('Ups! Coba lagi. ' + item.querySelector('span').textContent + ' bukan di situ tempatnya.', 'red');
-                    if (audioInitialized) wrongSound.triggerAttackRelease("4n");
-                }
-            }
-
-
-            // --- F. FUNGSI BANTUAN & KONDISI MENANG ---
-
-            function showFeedback(message, type) {
-                feedbackMessage.textContent = message;
-                if (type === 'green') {
-                    feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 text-green-600';
-                } else {
-                    feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 text-red-600';
-                }
-
-                // Menghilangkan pesan setelah 2 detik
-                setTimeout(() => {
-                    if (feedbackMessage.textContent === message) {
-                        feedbackMessage.textContent = '';
-                        feedbackMessage.className = 'text-xl font-semibold h-8 mb-4 transition-all duration-300';
-                    }
-                }, 2500);
-            }
-
-            function checkWinCondition() {
-                if (correctCount === totalItems) {
-                    // Tampilkan modal kemenangan
-                    winModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        winModal.classList.remove('opacity-0');
-                        winModal.querySelector('div').classList.remove('scale-95');
-                    }, 10); // sedikit delay untuk transisi
-
-                    if (audioInitialized) winSound.triggerAttackRelease(["C4", "E4", "G4"], "1n");
-                }
-            }
-
-            // --- G. INISIALISASI & EVENT LISTENER TOMBOL ---
-
-            // Menambahkan event listener ke zona drop
-            dropZones.forEach(zone => {
-                zone.addEventListener('dragover', handleDragOver);
-                zone.addEventListener('dragleave', handleDragLeave);
-                zone.addEventListener('drop', handleDrop);
+                row.appendChild(cellNo);
+                row.appendChild(cellName);
+                row.appendChild(cellClass);
+                row.appendChild(cellLink);
+                
+                tableBody.appendChild(row);
             });
-
-            // Event listener untuk tombol reset
-            resetButton.addEventListener('click', setupGame);
-            playAgainButton.addEventListener('click', setupGame);
-
-            // Menambahkan listener global untuk touch move dan touch end
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-            document.addEventListener('touchend', handleTouchEnd);
-
-            // Memulai permainan saat halaman dimuat
-            setupGame();
         });
     </script>
 </body>
