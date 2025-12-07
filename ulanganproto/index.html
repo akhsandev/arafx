@@ -3,218 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Input Nilai Suara (Local Processing)</title>
+    <title>SuaraGuru - Penilai Otomatis</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Markdown Parser untuk log jika perlu -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .mic-pulse {
-            animation: pulse-red 2s infinite;
-        }
+        /* Animasi Custom */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .pulse-mic { animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .ai-thinking {
-            animation: pulse-blue 1.5s infinite;
-        }
-        @keyframes pulse-blue {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-        /* Modal Transitions */
-        .modal { transition: opacity 0.3s ease-in-out; }
-        .hidden-modal { opacity: 0; pointer-events: none; }
+
+        /* Scrollbar Halus */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
-    <!-- Login Modal Overlay -->
-    <div id="login-modal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+    <!-- NOTIFIKASI TOAST -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- LOADING SPINNER (Full Screen) -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-[60] flex items-center justify-center">
+        <div class="animate-spin text-blue-600">
+            <i data-lucide="loader-2" width="48" height="48"></i>
+        </div>
+    </div>
+
+    <!-- LOGIN PAGE -->
+    <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-gray-100">
+            <div class="flex justify-center mb-6 text-blue-600">
+                <i data-lucide="volume-2" width="48" height="48"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">SuaraGuru</h1>
+            <p class="text-center text-gray-500 mb-8">Masuk untuk mengelola nilai siswa Anda.</p>
             
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full text-indigo-600 text-3xl mb-4">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <h2 id="modal-title" class="text-2xl font-bold text-slate-800">Selamat Datang</h2>
-                <p id="modal-desc" class="text-slate-500 text-sm">Kelola nilai siswa dengan suara.</p>
-            </div>
-
-            <!-- Tab Switcher Login/Register -->
-            <div class="flex justify-center mb-6 border-b border-slate-100">
-                <button type="button" id="tab-login" class="w-1/2 pb-2 text-indigo-600 border-b-2 border-indigo-600 font-bold text-sm transition focus:outline-none">MASUK</button>
-                <button type="button" id="tab-register" class="w-1/2 pb-2 text-slate-400 font-medium text-sm hover:text-indigo-500 transition focus:outline-none">DAFTAR BARU</button>
-            </div>
-
-            <form id="login-form" class="space-y-4">
+            <form id="auth-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
-                    <input type="email" id="email" placeholder="nama@email.com" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email-input" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="guru@sekolah.id">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
-                    <input type="password" id="password" placeholder="********" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password-input" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="******">
                 </div>
-                <div id="login-error" class="text-red-500 text-sm text-center hidden bg-red-50 p-2 rounded border border-red-100"></div>
-                <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg transform active:scale-95">
-                    Masuk Akun
+                <button type="submit" id="auth-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors">
+                    Masuk
                 </button>
             </form>
-            <p class="text-center text-xs text-slate-400 mt-6">
-                <i class="fas fa-lock mr-1"></i> Data Anda tersimpan aman di database pribadi.
-            </p>
-        </div>
-    </div>
-
-    <!-- Import Modal Overlay -->
-    <div id="import-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 flex items-center justify-center p-4 hidden hidden-modal modal">
-        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 relative">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800"><i class="fas fa-file-import mr-2 text-green-600"></i>Import Data Siswa</h3>
-                <button onclick="toggleImportModal()" class="text-slate-400 hover:text-slate-600">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
             
-            <div class="mb-4 text-sm text-slate-600">
-                <p class="mb-2">Salin data dari Excel/Spreadsheet dan tempel di bawah ini.</p>
-                <div class="bg-slate-100 p-3 rounded border border-slate-200 text-xs font-mono text-slate-500 mb-2">
-                    Format Kolom: <strong>[Nama Siswa]</strong> [TAB] <strong>[Kelas]</strong>
-                </div>
-            </div>
-
-            <textarea id="import-area" rows="10" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-sm" placeholder="Contoh:
-Budi Santoso    10-A
-Siti Aminah     10-B
-Rudi Hartono    10-A"></textarea>
-
-            <div class="mt-4 flex justify-end gap-3">
-                <button onclick="toggleImportModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition">Batal</button>
-                <button onclick="processImport()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow transition">
-                    Proses Import
+            <div class="mt-6 text-center">
+                <button id="toggle-auth-mode" class="text-sm text-blue-600 hover:underline">
+                    Belum punya akun? Daftar sekarang
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Navbar -->
-    <nav class="bg-indigo-600 text-white p-4 shadow-lg sticky top-0 z-10">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold"><i class="fas fa-bolt mr-2 text-yellow-300"></i>AI Grader <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded ml-2">Fast Local Mode</span></h1>
-            <div class="flex items-center gap-3">
-                <div id="user-info" class="text-xs bg-indigo-800 px-3 py-1 rounded-full hidden md:block">
-                    <!-- Email user will appear here -->
-                </div>
-                <button id="btn-logout" class="text-sm bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded text-white transition hidden">
-                    <i class="fas fa-sign-out-alt"></i> Keluar
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mx-auto p-4 max-w-4xl">
+    <!-- MAIN APP CONTAINER -->
+    <div id="main-view" class="hidden flex-col min-h-screen w-full">
         
-        <!-- Main Controls -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Input Manual Siswa -->
-            <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-lg text-indigo-700">Tambah Siswa</h2>
-                    <button onclick="toggleImportModal()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition" title="Paste dari Excel">
-                        <i class="fas fa-file-import mr-1"></i> Import
-                    </button>
+        <!-- HEADER -->
+        <header class="bg-blue-600 text-white p-4 shadow-lg sticky top-0 z-40">
+            <div class="max-w-4xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="volume-2" width="24" height="24"></i>
+                    <h1 class="text-xl font-bold hidden md:block">SuaraGuru</h1>
                 </div>
-                <form id="add-student-form" class="space-y-3">
-                    <input type="text" id="student-name" placeholder="Nama Siswa" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                    <input type="text" id="student-class" placeholder="Kelas (Opsional)" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded transition shadow">
-                        <i class="fas fa-plus mr-2"></i>Tambah
-                    </button>
-                </form>
-            </div>
-
-            <!-- Voice Control Center -->
-            <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                <h2 class="font-bold text-lg mb-2 text-indigo-700">Input Suara</h2>
-                <p class="text-sm text-slate-500 mb-6">Klik mikrofon <b>atau tekan SPASI</b> dan sebut: <b>"Nama Siswa [spasi] Nilai"</b><br>Contoh: <i>"Ahsan Rian sembilan puluh"</i></p>
                 
-                <button id="btn-mic" class="w-20 h-20 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-3xl transition duration-300 flex items-center justify-center border-4 border-slate-200 shadow-inner" title="Tekan SPASI untuk mulai/stop">
-                    <i class="fas fa-microphone"></i>
-                </button>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-xs opacity-75">Login sebagai:</div>
+                        <div id="user-email-display" class="text-sm font-semibold">user@email.com</div>
+                    </div>
+                    <button id="logout-btn" class="p-2 bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors" title="Keluar">
+                        <i data-lucide="log-out" width="18" height="18"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto p-4 space-y-6 w-full flex-grow">
+            
+            <!-- NAV TABS -->
+            <div class="flex gap-2 border-b border-gray-200 pb-2 overflow-x-auto">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap bg-blue-100 text-blue-700">Penilaian</button>
+                <button onclick="switchTab('import')" id="tab-import" class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-gray-500 hover:bg-gray-100">Impor Data</button>
+                <button onclick="switchTab('list')" id="tab-list" class="px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap text-gray-500 hover:bg-gray-100">Data Tabel (<span id="student-count-badge">0</span>)</button>
+            </div>
+
+            <!-- DASHBOARD CONTENT -->
+            <div id="content-dashboard" class="space-y-6 fade-in">
+                <!-- Search & Input Card -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 relative">
+                    <div class="mb-6 text-center">
+                        <h2 class="text-2xl font-semibold text-gray-700 mb-2">Siapa yang akan dinilai?</h2>
+                        <p class="text-gray-500 text-sm">Ketik nama siswa, tekan Enter, lalu ucapkan nilainya.</p>
+                    </div>
+
+                    <!-- Search Box -->
+                    <div class="relative max-w-lg mx-auto mb-8">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="search" class="text-gray-400" width="20"></i>
+                        </div>
+                        <input type="text" id="student-search" class="w-full pl-10 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all shadow-sm" placeholder="Ketik nama siswa..." autocomplete="off">
+                        
+                        <!-- Suggestions Dropdown -->
+                        <div id="search-suggestions" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden max-h-60 overflow-y-auto">
+                            <!-- Suggestion items will be injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Active Grading Area -->
+                    <div id="grading-area" class="hidden bg-blue-50 rounded-xl p-6 border border-blue-100">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div class="text-center md:text-left">
+                                <div class="text-sm text-blue-600 font-bold uppercase tracking-wide">Sedang Menilai</div>
+                                <h3 id="active-student-name" class="text-3xl font-bold text-gray-800">Nama Siswa</h3>
+                                <p id="active-student-class" class="text-gray-600">Kelas: -</p>
+                            </div>
+
+                            <div class="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+                                <button id="mic-btn" class="p-4 rounded-full transition-all bg-blue-100 text-blue-600 hover:bg-blue-200">
+                                    <i data-lucide="mic" width="28" height="28"></i>
+                                </button>
+
+                                <div class="relative">
+                                    <input type="number" id="score-input" class="w-24 text-center text-3xl font-bold p-2 border-b-2 border-gray-300 focus:border-blue-500 outline-none bg-transparent" placeholder="0" min="0" max="100">
+                                    <label class="block text-xs text-center text-gray-400 mt-1">Nilai</label>
+                                </div>
+
+                                <button id="save-score-btn" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg shadow-md transition-colors">
+                                    <i data-lucide="save" width="24" height="24"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center h-6 text-sm">
+                            <p id="transcript-display" class="text-gray-400 text-xs italic"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <h3 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <i data-lucide="check" class="text-green-500" width="18"></i> Terakhir Dinilai
+                    </h3>
+                    <div id="recent-list" class="space-y-2">
+                        <!-- Recent items injected here -->
+                        <p class="text-gray-400 text-sm text-center py-4">Belum ada nilai yang masuk.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMPORT CONTENT -->
+            <div id="content-import" class="hidden bg-white rounded-xl shadow-md p-6 fade-in">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="upload" class="text-blue-500" width="24"></i> Impor Data Siswa
+                </h2>
+                <p class="text-gray-600 mb-4 text-sm">
+                    Salin data dari Excel dan tempel di sini. Format 2 kolom: <strong>Nama Siswa</strong> dan <strong>Kelas</strong>.
+                </p>
                 
-                <!-- Status Indicators -->
-                <div id="listening-indicator" class="mt-4 hidden">
-                    <span class="text-red-500 font-semibold animate-pulse">● Mendengarkan... (Tekan Spasi untuk Stop)</span>
-                    <p id="transcript-preview" class="text-slate-400 text-sm mt-1 italic min-h-[1.5rem]">...</p>
-                </div>
+                <textarea id="import-textarea" class="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none font-mono text-sm" placeholder="Andi Pratama&#9;X-1&#10;Budi Santoso&#9;X-2"></textarea>
 
-                <div id="ai-processing-indicator" class="mt-4 hidden ai-thinking">
-                    <span class="text-blue-600 font-semibold"><i class="fas fa-microchip"></i> Memproses secara lokal...</span>
-                </div>
-
-                <!-- Log Transkrip -->
-                <div id="action-log" class="absolute bottom-0 w-full bg-slate-50 text-xs py-2 px-4 border-t text-slate-500 truncate hidden">
-                    Menunggu perintah...
-                </div>
-            </div>
-        </div>
-
-        <!-- Student List -->
-        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <h3 class="font-bold text-slate-700">Daftar Nilai Siswa (<span id="student-count">0</span>)</h3>
-                <div>
-                    <button onclick="deleteAllStudents()" class="text-sm text-red-500 hover:text-red-700 mr-3 transition" title="Hapus Semua Data">
-                        <i class="fas fa-trash mr-1"></i> Reset
+                <div class="flex justify-between items-center mt-4">
+                    <button id="delete-all-btn" class="text-red-500 hover:text-red-700 text-sm flex items-center gap-1">
+                        <i data-lucide="trash-2" width="16"></i> Hapus Database
                     </button>
-                    <button onclick="copyTable()" class="text-sm text-indigo-600 hover:text-indigo-800 transition">
-                        <i class="far fa-copy mr-1"></i> Salin Data
+                    <button id="process-import-btn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors font-medium">
+                        Simpan ke Cloud
                     </button>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
-                            <th class="p-4 border-b">Nama Siswa</th>
-                            <th class="p-4 border-b w-32">Kelas</th>
-                            <th class="p-4 border-b text-center w-32">Nilai</th>
-                            <th class="p-4 border-b text-center w-20">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="student-list" class="divide-y divide-slate-100">
-                        <!-- Data akan muncul di sini -->
-                        <tr>
-                            <td colspan="4" class="p-8 text-center text-slate-400">
-                                Memuat data...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <!-- LIST CONTENT -->
+            <div id="content-list" class="hidden bg-white rounded-xl shadow-md p-6 fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Data Semua Siswa</h2>
+                    <button id="export-btn" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                        <i data-lucide="download" width="18"></i> Ekspor CSV
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto max-h-[60vh]">
+                    <table class="w-full text-left text-sm relative">
+                        <thead class="bg-gray-100 text-gray-600 uppercase sticky top-0">
+                            <tr>
+                                <th class="p-3 rounded-tl-lg">Nama</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3">Nilai</th>
+                                <th class="p-3 rounded-tr-lg">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="divide-y divide-gray-100">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+
+        </main>
     </div>
 
-    <!-- Feedback Modal (Simple Toast) -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-2xl transform translate-y-20 opacity-0 transition duration-300 z-50 flex items-center">
-        <i id="toast-icon" class="fas fa-check-circle text-green-400 mr-3 text-xl"></i>
-        <div>
-            <h4 id="toast-title" class="font-bold text-sm">Berhasil</h4>
-            <p id="toast-message" class="text-xs text-slate-300">Data disimpan.</p>
-        </div>
-    </div>
-
+    <!-- JAVASCRIPT LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, writeBatch, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
@@ -231,631 +237,474 @@ Rudi Hartono    10-A"></textarea>
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // FIX: Menggunakan Satu Pintu ID (Hardcoded) agar data konsisten antar sesi/perangkat
-        // Sebelumnya menggunakan dynamic __app_id yang berubah-ubah.
-        const appId = 'sekolah-ai-v1'; 
-
+        // Konstanta
+        const APP_ID = "suaraguru_v1";
+        
+        // --- STATE GLOBAL ---
         let currentUser = null;
         let studentsData = [];
-        let unsubscribeSnapshot = null;
-
-        // --- AUTH LOGIC (MODIFIED FOR SAFER LOGIN) ---
-        const loginModal = document.getElementById('login-modal');
-        const userInfo = document.getElementById('user-info');
-        const btnLogout = document.getElementById('btn-logout');
-        const loginError = document.getElementById('login-error');
-        const btnLogin = document.getElementById('btn-login');
-        
-        // Tabs
-        const tabLogin = document.getElementById('tab-login');
-        const tabRegister = document.getElementById('tab-register');
-        let isLoginMode = true; // Default to Login
-
-        function setAuthMode(login) {
-            isLoginMode = login;
-            loginError.classList.add('hidden');
-            if (isLoginMode) {
-                // Style Login Active
-                tabLogin.className = "w-1/2 pb-2 text-indigo-600 border-b-2 border-indigo-600 font-bold text-sm transition focus:outline-none";
-                tabRegister.className = "w-1/2 pb-2 text-slate-400 font-medium text-sm hover:text-indigo-500 transition focus:outline-none";
-                
-                btnLogin.innerText = "Masuk Akun";
-                document.getElementById('modal-title').innerText = "Selamat Datang";
-                document.getElementById('modal-desc').innerText = "Masuk untuk melihat data nilai Anda.";
-            } else {
-                // Style Register Active
-                tabLogin.className = "w-1/2 pb-2 text-slate-400 font-medium text-sm hover:text-indigo-500 transition focus:outline-none";
-                tabRegister.className = "w-1/2 pb-2 text-indigo-600 border-b-2 border-indigo-600 font-bold text-sm transition focus:outline-none";
-                
-                btnLogin.innerText = "Buat Akun Baru";
-                document.getElementById('modal-title').innerText = "Buat Akun Guru";
-                document.getElementById('modal-desc').innerText = "Mulai database baru yang masih kosong.";
-            }
-        }
-
-        tabLogin.addEventListener('click', () => setAuthMode(true));
-        tabRegister.addEventListener('click', () => setAuthMode(false));
-
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } catch (e) { console.log("Custom token skip"); }
-            }
-        };
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                loginModal.classList.add('hidden-modal');
-                setTimeout(() => loginModal.classList.add('hidden'), 300);
-                userInfo.innerText = user.email;
-                userInfo.classList.remove('hidden');
-                btnLogout.classList.remove('hidden');
-                loadStudents();
-                showToast("Login Berhasil", `Halo, ${user.email}`);
-            } else {
-                currentUser = null;
-                loginModal.classList.remove('hidden');
-                loginModal.classList.remove('hidden-modal');
-                userInfo.classList.add('hidden');
-                btnLogout.classList.add('hidden');
-                if(unsubscribeSnapshot) unsubscribeSnapshot();
-                document.getElementById('student-list').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400">Silakan login terlebih dahulu.</td></tr>`;
-                document.getElementById('student-count').innerText = "0";
-            }
-        });
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-            btnLogin.disabled = true;
-            loginError.classList.add('hidden');
-            
-            try {
-                if (isLoginMode) {
-                    // MODE LOGIN: Hanya login, error jika tidak ada
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    // MODE DAFTAR: Buat akun baru
-                    await createUserWithEmailAndPassword(auth, email, password);
-                }
-            } catch (error) {
-                let msg = "Terjadi kesalahan.";
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    msg = isLoginMode ? "Email atau password salah. Cek ejaan atau daftar baru." : "Gagal mendaftar.";
-                } else if (error.code === 'auth/email-already-in-use') {
-                    msg = "Email sudah terdaftar. Silakan login.";
-                } else {
-                    msg = "Error: " + error.message;
-                }
-                
-                loginError.innerText = msg;
-                loginError.classList.remove('hidden');
-            } finally {
-                btnLogin.innerText = isLoginMode ? 'Masuk Akun' : 'Buat Akun Baru';
-                btnLogin.disabled = false;
-            }
-        });
-
-        btnLogout.addEventListener('click', () => signOut(auth));
-
-        // --- IMPORT LOGIC ---
-        window.toggleImportModal = () => {
-            const modal = document.getElementById('import-modal');
-            if (modal.classList.contains('hidden-modal')) {
-                modal.classList.remove('hidden', 'hidden-modal');
-            } else {
-                modal.classList.add('hidden-modal');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            }
-        };
-
-        window.processImport = async () => {
-            if (!currentUser) return;
-            const rawText = document.getElementById('import-area').value;
-            if (!rawText.trim()) return showToast("Kosong", "Tidak ada data untuk diimport.", "error");
-
-            const rows = rawText.split(/\r?\n/);
-            const batchLimit = 500; // Firestore batch limit
-            let count = 0;
-
-            try {
-                // Sederhana: Loop satu per satu agar mudah
-                // Untuk production scale besar sebaiknya pakai batch, tapi untuk UX real-time sederhana ini cukup
-                for (let row of rows) {
-                    if (!row.trim()) continue;
-                    
-                    // Split by tab (Excel default) or comma
-                    // Logic: Jika ada tab, pakai tab. Jika tidak, pakai koma.
-                    let parts = row.includes('\t') ? row.split('\t') : row.split(',');
-                    
-                    const name = parts[0] ? parts[0].trim() : '';
-                    const className = parts[1] ? parts[1].trim() : '';
-                    
-                    if (name) {
-                        await addStudent(name, className);
-                        count++;
-                    }
-                }
-                
-                showToast("Import Sukses", `${count} siswa berhasil ditambahkan.`);
-                document.getElementById('import-area').value = '';
-                toggleImportModal();
-
-            } catch (e) {
-                console.error(e);
-                showToast("Import Gagal", "Terjadi kesalahan saat memproses data.", "error");
-            }
-        };
-
-        // --- FIRESTORE LOGIC ---
-        function loadStudents() {
-            if (!currentUser) return;
-            const studentsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'students');
-            if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-            unsubscribeSnapshot = onSnapshot(studentsRef, (snapshot) => {
-                const listContainer = document.getElementById('student-list');
-                const countEl = document.getElementById('student-count');
-                studentsData = [];
-                let html = '';
-
-                snapshot.forEach((doc) => {
-                    studentsData.push({ id: doc.id, ...doc.data() });
-                });
-
-                // Sort: Nama, lalu Kelas
-                studentsData.sort((a, b) => a.name.localeCompare(b.name));
-                countEl.innerText = studentsData.length;
-
-                if (studentsData.length === 0) {
-                    listContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400">Belum ada data. Tambahkan siswa dulu.</td></tr>`;
-                    return;
-                }
-
-                studentsData.forEach(student => {
-                    const scoreDisplay = student.score !== undefined && student.score !== null ? student.score : '-';
-                    const scoreClass = (student.score !== undefined && student.score !== null)
-                        ? (parseInt(student.score) < 75 ? 'text-red-600 font-bold' : 'text-green-600 font-bold') 
-                        : 'text-slate-400';
-                    const className = student.className || '-';
-
-                    html += `
-                        <tr class="hover:bg-slate-50 transition group border-b border-slate-100">
-                            <td class="p-4 font-medium text-slate-700">${student.name}</td>
-                            <td class="p-4 text-slate-500">${className}</td>
-                            <td class="p-4 text-center text-lg ${scoreClass}">${scoreDisplay}</td>
-                            <td class="p-4 text-center">
-                                <button onclick="window.deleteStudent('${student.id}')" class="text-slate-300 hover:text-red-500 transition">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                listContainer.innerHTML = html;
-            }, (error) => {
-                if(currentUser) showToast("Error", "Gagal memuat data.", "error");
-            });
-        }
-
-        async function addStudent(name, className = '') {
-            if (!currentUser) return;
-            try {
-                const studentsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'students');
-                await addDoc(studentsRef, { 
-                    name: name, 
-                    className: className,
-                    score: null, 
-                    createdAt: serverTimestamp() 
-                });
-                // Toast hanya jika ditambah manual satu per satu, agar import massal tidak spam toast
-                if(!document.getElementById('import-modal').classList.contains('hidden')) {
-                    // silent for import loop
-                } else {
-                    showToast("Sukses", `Siswa ${name} ditambahkan.`);
-                }
-            } catch (e) { 
-                console.error(e);
-                // showToast("Gagal", "Error database.", "error"); 
-            }
-        }
-
-        window.deleteStudent = async (id) => {
-            if (!confirm("Hapus siswa ini?")) return;
-            if (!currentUser) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'students', id));
-                showToast("Dihapus", "Data siswa dihapus.");
-            } catch (e) { showToast("Gagal", "Gagal menghapus.", "error"); }
-        };
-
-        // NEW: Function to delete all students
-        window.deleteAllStudents = async () => {
-            if (!currentUser) return;
-            if (!confirm("PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data siswa?\n\nTindakan ini tidak dapat dibatalkan.")) return;
-            if (!confirm("Konfirmasi terakhir: Hapus semua?")) return;
-            
-            try {
-                const batch = writeBatch(db);
-                // Batas writeBatch adalah 500, jika lebih dari itu perlu loop chunk.
-                // Untuk app sederhana ini, kita asumsikan < 500, atau delete sebagian.
-                // Menggunakan studentsData yang sudah ada di memory
-                
-                if (studentsData.length === 0) {
-                     showToast("Info", "Data sudah kosong.");
-                     return;
-                }
-
-                // Ambil 500 data pertama (limitasi firestore batch)
-                const deleteQueue = studentsData.slice(0, 500);
-                
-                deleteQueue.forEach(student => {
-                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'students', student.id);
-                    batch.delete(docRef);
-                });
-
-                await batch.commit();
-                showToast("Dihapus", `${deleteQueue.length} data siswa berhasil dihapus.`);
-            } catch (e) {
-                console.error(e);
-                showToast("Gagal", "Gagal menghapus data.", "error");
-            }
-        };
-
-        async function updateScore(studentId, score) {
-            if (!currentUser) return;
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'students', studentId), { score: parseInt(score) });
-                return true;
-            } catch (e) { return false; }
-        }
-
-        document.getElementById('add-student-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const inputName = document.getElementById('student-name');
-            const inputClass = document.getElementById('student-class');
-            const name = inputName.value.trim();
-            const className = inputClass.value.trim();
-            
-            if (name) { 
-                addStudent(name, className); 
-                inputName.value = '';
-                inputClass.value = '';
-            }
-        });
-
-        // --- SPEECH & AI LOGIC ---
-        const btnMic = document.getElementById('btn-mic');
-        const listeningIndicator = document.getElementById('listening-indicator');
-        const aiIndicator = document.getElementById('ai-processing-indicator');
-        const transcriptPreview = document.getElementById('transcript-preview');
-        const actionLog = document.getElementById('action-log');
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let selectedStudent = null;
+        let isRegistering = false;
         let recognition = null;
         let isListening = false;
 
-        if (SpeechRecognition) {
+        // --- REFERENSI DOM ---
+        const els = {
+            loadingScreen: document.getElementById('loading-screen'),
+            loginView: document.getElementById('login-view'),
+            mainView: document.getElementById('main-view'),
+            authForm: document.getElementById('auth-form'),
+            emailInput: document.getElementById('email-input'),
+            passInput: document.getElementById('password-input'),
+            authBtn: document.getElementById('auth-btn'),
+            toggleAuthBtn: document.getElementById('toggle-auth-mode'),
+            userEmailDisplay: document.getElementById('user-email-display'),
+            logoutBtn: document.getElementById('logout-btn'),
+            
+            // Search
+            searchInput: document.getElementById('student-search'),
+            suggestionsBox: document.getElementById('search-suggestions'),
+            
+            // Grading Area
+            gradingArea: document.getElementById('grading-area'),
+            activeName: document.getElementById('active-student-name'),
+            activeClass: document.getElementById('active-student-class'),
+            scoreInput: document.getElementById('score-input'),
+            micBtn: document.getElementById('mic-btn'),
+            saveScoreBtn: document.getElementById('save-score-btn'),
+            transcript: document.getElementById('transcript-display'),
+            
+            // Import
+            importText: document.getElementById('import-textarea'),
+            importBtn: document.getElementById('process-import-btn'),
+            deleteBtn: document.getElementById('delete-all-btn'),
+            
+            // Lists
+            recentList: document.getElementById('recent-list'),
+            tableBody: document.getElementById('student-table-body'),
+            countBadge: document.getElementById('student-count-badge'),
+            exportBtn: document.getElementById('export-btn')
+        };
+
+        // --- INISIALISASI IKON ---
+        lucide.createIcons();
+
+        // --- AUTH LOGIC ---
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            els.loadingScreen.classList.add('hidden');
+            
+            if (user) {
+                els.loginView.classList.add('hidden');
+                els.mainView.classList.remove('hidden');
+                els.mainView.classList.add('flex');
+                els.userEmailDisplay.textContent = user.email;
+                initDataListener(user.uid);
+            } else {
+                els.loginView.classList.remove('hidden');
+                els.mainView.classList.add('hidden');
+                els.mainView.classList.remove('flex');
+                studentsData = [];
+            }
+        });
+
+        els.authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = els.emailInput.value;
+            const pass = els.passInput.value;
+            
+            showToast('Memproses...', 'info');
+            
+            try {
+                if (isRegistering) {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                    showToast('Akun berhasil dibuat!', 'success');
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                    showToast('Login berhasil', 'success');
+                }
+            } catch (err) {
+                let msg = "Terjadi kesalahan.";
+                if (err.code === 'auth/invalid-credential') msg = "Email atau password salah.";
+                if (err.code === 'auth/email-already-in-use') msg = "Email sudah terdaftar.";
+                if (err.code === 'auth/weak-password') msg = "Password terlalu lemah (min 6 karakter).";
+                showToast(msg, 'error');
+            }
+        });
+
+        els.toggleAuthBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isRegistering = !isRegistering;
+            els.authBtn.textContent = isRegistering ? 'Daftar Akun Baru' : 'Masuk';
+            els.toggleAuthBtn.textContent = isRegistering ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar sekarang';
+        });
+
+        els.logoutBtn.addEventListener('click', () => signOut(auth));
+
+        // --- FIRESTORE LOGIC ---
+        let unsubscribeSnapshot = null;
+
+        function initDataListener(uid) {
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            const studentsRef = collection(db, 'artifacts', APP_ID, 'users', uid, 'students');
+            const q = query(studentsRef); // Client side sorting for simple lists
+
+            unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+                const list = snapshot.docs.map(doc => ({
+                    docId: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Sort by ID
+                list.sort((a, b) => a.id - b.id);
+                
+                studentsData = list;
+                renderApp();
+            }, (error) => {
+                console.error("Error:", error);
+                showToast("Gagal mengambil data", "error");
+            });
+        }
+
+        async function saveToFirestore(student, newScore) {
+            if (!currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'students', student.docId);
+                await setDoc(docRef, {
+                    ...student,
+                    score: newScore,
+                    timestamp: new Date().toISOString()
+                }, { merge: true });
+                showToast(`Nilai ${newScore} tersimpan!`, 'success');
+                resetGradingArea();
+            } catch (error) {
+                console.error(error);
+                showToast("Gagal menyimpan nilai", "error");
+            }
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderApp() {
+            // Update counts
+            els.countBadge.textContent = studentsData.length;
+            
+            // Render Table
+            renderTable();
+            
+            // Render Recent
+            renderRecent();
+        }
+
+        function renderTable() {
+            if (studentsData.length === 0) {
+                els.tableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">Data kosong.</td></tr>`;
+                return;
+            }
+
+            els.tableBody.innerHTML = studentsData.map(s => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                    <td class="p-3 font-medium text-gray-800">${s.name}</td>
+                    <td class="p-3 text-gray-500">${s.class}</td>
+                    <td class="p-3 font-bold text-blue-600">${s.score !== null ? s.score : '-'}</td>
+                    <td class="p-3">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${s.score !== null ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${s.score !== null ? 'Selesai' : 'Belum'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderRecent() {
+            const graded = studentsData.filter(s => s.score !== null)
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5);
+
+            if (graded.length === 0) {
+                els.recentList.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">Belum ada nilai yang masuk.</p>`;
+                return;
+            }
+
+            els.recentList.innerHTML = graded.map(s => `
+                <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg border-b border-gray-50 last:border-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                            ${s.class.substring(0,2)}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">${s.name}</div>
+                            <div class="text-xs text-gray-500">${new Date(s.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</div>
+                        </div>
+                    </div>
+                    <span class="font-bold text-lg text-blue-600">${s.score}</span>
+                </div>
+            `).join('');
+        }
+
+        // --- SEARCH & SELECT ---
+        els.searchInput.addEventListener('input', (e) => {
+            const queryText = e.target.value.toLowerCase();
+            if (!queryText) {
+                els.suggestionsBox.classList.add('hidden');
+                return;
+            }
+
+            const matches = studentsData.filter(s => 
+                s.name.toLowerCase().includes(queryText) || 
+                s.class.toLowerCase().includes(queryText)
+            ).slice(0, 5);
+
+            if (matches.length > 0) {
+                els.suggestionsBox.innerHTML = matches.map((s, idx) => `
+                    <div class="suggestion-item p-3 px-4 hover:bg-blue-50 cursor-pointer flex justify-between items-center ${idx === 0 ? 'bg-blue-50/50' : ''}" data-id="${s.id}">
+                        <div>
+                            <div class="font-semibold text-gray-800 pointer-events-none">${s.name}</div>
+                            <div class="text-xs text-gray-500 pointer-events-none">${s.class}</div>
+                        </div>
+                        ${s.score !== null ? `<span class="text-green-600 font-bold bg-green-100 px-2 py-1 rounded text-xs pointer-events-none">${s.score}</span>` : ''}
+                    </div>
+                `).join('');
+                els.suggestionsBox.classList.remove('hidden');
+                
+                // Add click events
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', () => selectStudent(parseInt(item.dataset.id)));
+                });
+            } else {
+                els.suggestionsBox.innerHTML = `<div class="p-4 text-center text-gray-400">Tidak ada siswa ditemukan</div>`;
+                els.suggestionsBox.classList.remove('hidden');
+            }
+        });
+
+        els.searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const firstItem = document.querySelector('.suggestion-item');
+                if (firstItem) {
+                    selectStudent(parseInt(firstItem.dataset.id));
+                }
+            }
+        });
+
+        function selectStudent(id) {
+            selectedStudent = studentsData.find(s => s.id === id);
+            if (!selectedStudent) return;
+
+            els.searchInput.value = selectedStudent.name;
+            els.suggestionsBox.classList.add('hidden');
+            
+            // Show Grading Area
+            els.activeName.textContent = selectedStudent.name;
+            els.activeClass.textContent = `Kelas: ${selectedStudent.class}`;
+            els.scoreInput.value = '';
+            els.gradingArea.classList.remove('hidden');
+            
+            // Focus and start listening
+            setTimeout(() => {
+                els.scoreInput.focus();
+                startListening();
+            }, 100);
+        }
+
+        function resetGradingArea() {
+            selectedStudent = null;
+            els.searchInput.value = '';
+            els.gradingArea.classList.add('hidden');
+            els.searchInput.focus();
+            els.suggestionsBox.classList.add('hidden');
+        }
+
+        // --- SPEECH RECOGNITION ---
+        els.micBtn.addEventListener('click', startListening);
+
+        function startListening() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast('Browser tidak mendukung suara.', 'error');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (recognition) recognition.stop();
+            
             recognition = new SpeechRecognition();
-            recognition.continuous = false;
             recognition.lang = 'id-ID';
-            recognition.interimResults = true;
+            recognition.continuous = false;
+            recognition.interimResults = false;
 
             recognition.onstart = () => {
                 isListening = true;
-                btnMic.classList.replace('bg-slate-100', 'bg-red-500');
-                btnMic.classList.replace('text-slate-600', 'text-white');
-                btnMic.classList.add('mic-pulse');
-                listeningIndicator.classList.remove('hidden');
-                aiIndicator.classList.add('hidden');
-                transcriptPreview.innerText = "...";
+                els.micBtn.classList.remove('bg-blue-100', 'text-blue-600');
+                els.micBtn.classList.add('bg-red-500', 'text-white', 'pulse-mic');
+                els.transcript.textContent = "Mendengarkan...";
             };
 
             recognition.onend = () => {
                 isListening = false;
-                btnMic.classList.replace('bg-red-500', 'bg-slate-100');
-                btnMic.classList.replace('text-white', 'text-slate-600');
-                btnMic.classList.remove('mic-pulse');
-                listeningIndicator.classList.add('hidden');
+                els.micBtn.classList.add('bg-blue-100', 'text-blue-600');
+                els.micBtn.classList.remove('bg-red-500', 'text-white', 'pulse-mic');
             };
 
             recognition.onresult = (event) => {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                        handleSpeechResult(finalTranscript);
-                    } else {
-                        transcriptPreview.innerText = event.results[i][0].transcript;
-                    }
-                }
+                const text = event.results[0][0].transcript;
+                els.transcript.textContent = `Terdeteksi: "${text}"`;
+                parseScore(text);
             };
 
-            btnMic.addEventListener('click', () => {
-                if (!currentUser) return showToast("Login Dulu", "Silakan login.", "error");
-                isListening ? recognition.stop() : recognition.start();
-            });
-
-            // --- KEYBOARD SHORTCUT (SPACEBAR) ---
-            document.addEventListener('keydown', (e) => {
-                // Ignore if user is typing in input or textarea
-                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-
-                if (e.code === 'Space') {
-                    e.preventDefault(); // Prevent page scroll
-                    
-                    if (!currentUser) {
-                        showToast("Login Dulu", "Silakan login.", "error");
-                        return;
-                    }
-
-                    if (!recognition) return;
-
-                    if (isListening) {
-                        recognition.stop(); // Stop recording -> Triggers analysis via onresult/onend logic (if results present)
-                    } else {
-                        try {
-                            recognition.start(); // Start recording
-                        } catch(err) {
-                            // Ignore if already started
-                        }
-                    }
-                }
-            });
-
-        } else {
-            btnMic.disabled = true;
-            transcriptPreview.innerText = "Browser tidak support voice.";
+            recognition.start();
         }
 
-        async function handleSpeechResult(text) {
-            text = text.trim();
-            transcriptPreview.innerText = text;
-            aiIndicator.classList.remove('hidden');
-            actionLog.innerText = `AI Menganalisa: "${text}"`;
-            actionLog.classList.remove('hidden');
-
-            try {
-                // Gunakan algoritma lokal, bukan AI Gemini
-                const result = await matchStudentLocally(text, studentsData);
-                aiIndicator.classList.add('hidden');
-
-                if (result && result.studentId && result.score !== null) {
-                    const student = studentsData.find(s => s.id === result.studentId);
-                    if (student) {
-                        await updateScore(result.studentId, result.score);
-                        showToast("Match", `${student.name}: ${result.score}`, "success");
-                        if ('speechSynthesis' in window) {
-                             const utterance = new SpeechSynthesisUtterance(`Nilai ${student.name} disimpan ${result.score}`);
-                             utterance.lang = 'id-ID';
-                             window.speechSynthesis.speak(utterance);
-                        }
-                    }
-                } else {
-                    showToast("Bingung", "Tidak menemukan nama atau nilai yang cocok.", "error");
-                }
-            } catch (err) {
-                console.error(err);
-                aiIndicator.classList.add('hidden');
-                showToast("Error", err.message, "error");
-            }
-        }
-
-        // --- LOCAL MATCHING ALGORITHM (No AI) ---
-        async function matchStudentLocally(text, students) {
-            text = text.toLowerCase();
-            
-            // 1. Ekstrak Score
-            const scoreResult = parseScoreFromText(text);
-            if (scoreResult.score === null) return { studentId: null, score: null };
-            
-            const score = scoreResult.score;
-            let nameQuery = scoreResult.remainingText.trim();
-            
-            // Hapus kata sambung umum
-            const stopWords = ['nilai', 'untuk', 'siswa', 'bernama', 'kelas', 'absen', 'nomor'];
-            stopWords.forEach(w => {
-                 nameQuery = nameQuery.replace(new RegExp(`\\b${w}\\b`, 'gi'), '');
-            });
-            nameQuery = nameQuery.trim();
-
-            if (nameQuery.length < 3) return { studentId: null, score: null };
-
-            // 2. Fuzzy Matching (Levenshtein Distance)
-            let bestMatch = null;
-            let bestDistance = Infinity;
-            // Threshold: Semakin kecil semakin ketat. 
-            // Untuk nama panjang, toleransi typo lebih besar.
-            
-            students.forEach(student => {
-                const sName = student.name.toLowerCase();
-                const dist = levenshteinDistance(nameQuery, sName);
-                
-                // Normalisasi distance berdasarkan panjang string terpanjang
-                // Agar "Siti" (typo "Site") punya skor mirip dengan "Siti Aminah" (typo "Site Aminah")
-                // Tapi kita prefer exact substring match juga.
-                
-                // Strategi Sederhana:
-                // Jika query adalah substring persis dari nama siswa (contoh: "budi" match "budi santoso")
-                if (sName.includes(nameQuery)) {
-                    // Prioritas tertinggi, distance dianggap negatif (sangat dekat)
-                    // Dikurangi panjang selisih agar "Budi" lebih match ke "Budi" daripada "Budiarto"
-                    const diff = sName.length - nameQuery.length;
-                    const adjustedDist = -100 + diff; 
-                    
-                    if (adjustedDist < bestDistance) {
-                        bestDistance = adjustedDist;
-                        bestMatch = student;
-                    }
-                } else {
-                    // Jika bukan substring, pakai Levenshtein biasa
-                    if (dist < bestDistance) {
-                        bestDistance = dist;
-                        bestMatch = student;
-                    }
-                }
-            });
-
-            // Ambang batas toleransi (threshold)
-            // Jika distance > 5 (tergantung panjang nama), mungkin salah.
-            // Kita set threshold dinamis: Max 40% perbedaan.
-            if (bestMatch) {
-                // Cek threshold jika bukan substring match (bestDistance >= 0)
-                if (bestDistance >= 0) {
-                     const threshold = Math.max(3, bestMatch.name.length * 0.4);
-                     if (bestDistance > threshold) return { studentId: null, score: null };
-                }
-                
-                return { studentId: bestMatch.id, score: score };
-            }
-
-            return { studentId: null, score: null };
-        }
-
-        // Fungsi Levenshtein Distance (Standard implementation)
-        function levenshteinDistance(a, b) {
-            if (a.length === 0) return b.length;
-            if (b.length === 0) return a.length;
-
-            const matrix = [];
-
-            // increment along the first column of each row
-            for (let i = 0; i <= b.length; i++) {
-                matrix[i] = [i];
-            }
-
-            // increment each column in the first row
-            for (let j = 0; j <= a.length; j++) {
-                matrix[0][j] = j;
-            }
-
-            // Fill in the rest of the matrix
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    if (b.charAt(i - 1) == a.charAt(j - 1)) {
-                        matrix[i][j] = matrix[i - 1][j - 1];
-                    } else {
-                        matrix[i][j] = Math.min(
-                            matrix[i - 1][j - 1] + 1, // substitution
-                            Math.min(
-                                matrix[i][j - 1] + 1, // insertion
-                                matrix[i - 1][j] + 1 // deletion
-                            )
-                        );
-                    }
-                }
-            }
-
-            return matrix[b.length][a.length];
-        }
-
-        function parseScoreFromText(text) {
-            // Mapping kata ke angka
-            const textToNum = {
-                'nol': 0, 'kosong': 0,
-                'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5,
+        function parseScore(text) {
+            let score = null;
+            const lowerText = text.toLowerCase();
+            const textNumbers = {
+                'nol': 0, 'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5, 
                 'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10,
-                'sebelas': 11, 'seratus': 100,
-                'belas': 10, // Special logic needed usually, simplified here
-                'puluh': 0, // Placeholder logic
-                'lima puluh': 50, 'enam puluh': 60, 'tujuh puluh': 70, 
-                'delapan puluh': 80, 'sembilan puluh': 90
+                'seratus': 100
             };
 
-            // 1. Coba regex angka langsung (e.g. "90")
-            let match = text.match(/(\d+)/);
-            if (match) {
-                return {
-                    score: parseInt(match[0]),
-                    remainingText: text.replace(match[0], '')
-                };
-            }
-
-            // 2. Parsing Text (Sederhana untuk bahasa Indonesia)
-            // Pola: [Puluhan] [Satuan]
-            // Contoh: "Sembilan Puluh Lima" -> 90 + 5
-            
-            let words = text.split(' ');
-            let foundScore = null;
-            let scoreWordsIndices = [];
-
-            // Cek frasa "puluh"
-            for (let i = 0; i < words.length; i++) {
-                if (words[i] === 'puluh' && i > 0) {
-                    const prevWord = words[i-1];
-                    const nextWord = words[i+1]; // optional
-                    
-                    if (textToNum[prevWord] !== undefined) {
-                        let base = textToNum[prevWord] * 10;
-                        scoreWordsIndices.push(i-1, i);
-                        
-                        // Cek satuan setelah puluh (e.g. "lima" in "sembilan puluh lima")
-                        if (nextWord && textToNum[nextWord] !== undefined && textToNum[nextWord] < 10) {
-                            base += textToNum[nextWord];
-                            scoreWordsIndices.push(i+1);
-                        }
-                        
-                        foundScore = base;
-                        break; // Ambil angka pertama yg ketemu
-                    }
-                }
-                // Cek angka tunggal/belasan jika belum ketemu puluh
-                else if (textToNum[words[i]] !== undefined) {
-                     // Logic sederhana: ambil angka terakhir yg disebut jika tidak ada 'puluh'
-                     // Risiko: "Kelas dua nilai lima" -> ambil 5
-                     if (!foundScore) {
-                        // Cek "seratus"
-                        if (words[i] === 'seratus') {
-                            foundScore = 100;
-                            scoreWordsIndices.push(i);
-                        }
-                     }
-                }
-            }
-            
-            // Fallback sederhana jika loop complex gagal tapi ada kata angka satuan/belasan
-            if (foundScore === null) {
-                // Reverse loop untuk cari angka di akhir kalimat (biasanya nilai di akhir)
-                for (let i = words.length - 1; i >= 0; i--) {
-                    if (textToNum[words[i]] !== undefined) {
-                        foundScore = textToNum[words[i]];
-                        scoreWordsIndices.push(i);
+            const digitMatch = text.match(/\d+/);
+            if (digitMatch) {
+                score = parseInt(digitMatch[0]);
+            } else {
+                for (const [key, value] of Object.entries(textNumbers)) {
+                    if (lowerText.includes(key)) {
+                        score = value;
                         break;
                     }
                 }
             }
 
-            if (foundScore !== null) {
-                // Remove identified score words from text
-                let remaining = words.filter((_, idx) => !scoreWordsIndices.includes(idx)).join(' ');
-                return { score: foundScore, remainingText: remaining };
+            if (score !== null && score >= 0 && score <= 100) {
+                els.scoreInput.value = score;
+                saveToFirestore(selectedStudent, score);
+            } else {
+                showToast("Tidak ada angka valid terdeteksi", "error");
             }
-
-            return { score: null, remainingText: text };
         }
 
-        function showToast(title, message, type = 'success') {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-title').innerText = title;
-            document.getElementById('toast-message').innerText = message;
-            const icon = document.getElementById('toast-icon');
-            icon.className = type === 'error' ? 'fas fa-times-circle text-red-400 mr-3 text-xl' : 'fas fa-check-circle text-green-400 mr-3 text-xl';
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
-        }
+        els.scoreInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && els.scoreInput.value) {
+                saveToFirestore(selectedStudent, parseInt(els.scoreInput.value));
+            }
+        });
 
-        window.copyTable = () => {
-            let text = "Nama\tKelas\tNilai\n";
-            studentsData.forEach(s => text += `${s.name}\t${s.className || '-'}\t${s.score || 0}\n`);
-            navigator.clipboard.writeText(text).then(() => showToast("Disalin", "Data siap dipaste ke Excel."));
+        els.saveScoreBtn.addEventListener('click', () => {
+             if (els.scoreInput.value) {
+                saveToFirestore(selectedStudent, parseInt(els.scoreInput.value));
+            }
+        });
+
+        // --- IMPORT & EXPORT ---
+        els.importBtn.addEventListener('click', async () => {
+            const text = els.importText.value;
+            if (!text.trim() || !currentUser) return;
+
+            const lines = text.split('\n');
+            const newStudents = [];
+            let currentMaxId = studentsData.length > 0 ? Math.max(...studentsData.map(s => s.id || 0)) : 0;
+
+            lines.forEach(line => {
+                const parts = line.split(/\t|,/);
+                if (parts.length >= 1) {
+                    const name = parts[0].trim();
+                    if (name) {
+                        currentMaxId++;
+                        newStudents.push({
+                            id: currentMaxId,
+                            name: name,
+                            class: parts[1] ? parts[1].trim() : 'Umum',
+                            score: null,
+                            timestamp: null
+                        });
+                    }
+                }
+            });
+
+            if (newStudents.length === 0) return;
+            
+            showToast('Sedang menyimpan ke cloud...', 'info');
+
+            try {
+                const batch = writeBatch(db);
+                newStudents.forEach(student => {
+                    const docRef = doc(collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'students'));
+                    batch.set(docRef, student);
+                });
+                await batch.commit();
+                els.importText.value = '';
+                showToast(`Berhasil impor ${newStudents.length} siswa!`, 'success');
+                switchTab('dashboard');
+            } catch (err) {
+                console.error(err);
+                showToast('Gagal impor data', 'error');
+            }
+        });
+
+        els.deleteBtn.addEventListener('click', async () => {
+            if(confirm("Hapus SEMUA data siswa?")) {
+                const batch = writeBatch(db);
+                studentsData.forEach(s => {
+                    const docRef = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'students', s.docId);
+                    batch.delete(docRef);
+                });
+                await batch.commit();
+                showToast('Data dihapus.', 'success');
+            }
+        });
+
+        els.exportBtn.addEventListener('click', () => {
+             const headers = "Nama,Kelas,Nilai,Waktu Input\n";
+             const rows = studentsData.map(s => 
+                `"${s.name}","${s.class}","${s.score !== null ? s.score : ''}","${s.timestamp ? new Date(s.timestamp).toLocaleString('id-ID') : ''}"`
+            ).join("\n");
+
+            const csvContent = "data:text/csv;charset=utf-8," + encodeURI(headers + rows);
+            const link = document.createElement("a");
+            link.setAttribute("href", csvContent);
+            link.setAttribute("download", "Rekap_Nilai.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // --- UTILS ---
+        window.switchTab = (tabName) => {
+            ['dashboard', 'import', 'list'].forEach(t => {
+                const content = document.getElementById(`content-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                
+                if (t === tabName) {
+                    content.classList.remove('hidden');
+                    btn.classList.remove('text-gray-500', 'hover:bg-gray-100');
+                    btn.classList.add('bg-blue-100', 'text-blue-700');
+                } else {
+                    content.classList.add('hidden');
+                    btn.classList.add('text-gray-500', 'hover:bg-gray-100');
+                    btn.classList.remove('bg-blue-100', 'text-blue-700');
+                }
+            });
         };
 
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let colorClass = type === 'error' ? 'bg-red-100 text-red-700 border-red-200' : 
+                             type === 'success' ? 'bg-green-100 text-green-700 border-green-200' : 
+                             'bg-blue-100 text-blue-700 border-blue-200';
+            
+            toast.className = `p-4 rounded-lg shadow-md border ${colorClass} fade-in flex items-center gap-2`;
+            toast.innerHTML = `<span class="font-medium">${msg}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Set default tab
+        switchTab('dashboard');
     </script>
 </body>
 </html>
