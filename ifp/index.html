@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eco-Guardian: Renewable Energy Defense</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Google Fonts: Orbitron for Sci-Fi look -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+
+    <style>
+        /* IFP Optimization: Prevent scrolling and zooming */
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000; 
+            font-family: 'Roboto', sans-serif;
+            touch-action: none; /* Critical for IFP */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        
+        /* Sci-Fi HUD Styles */
+        .scifi-font { font-family: 'Orbitron', sans-serif; }
+        
+        .hud-panel {
+            background: rgba(16, 24, 39, 0.9);
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px; /* Bigger for IFP visibility */
+            height: 60px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+            transition: transform 0.1s;
+        }
+
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #00ffcc;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+        .crosshair::before { top: 28px; left: 0; width: 60px; height: 4px; }
+        .crosshair::after { left: 28px; top: 0; width: 4px; height: 60px; }
+
+        /* Animation for feedback */
+        @keyframes flash-green { 0% { background-color: rgba(0,255,0,0); } 50% { background-color: rgba(0,255,0,0.3); } 100% { background-color: rgba(0,255,0,0); } }
+        @keyframes flash-red { 0% { background-color: rgba(255,0,0,0); } 50% { background-color: rgba(255,0,0,0.3); } 100% { background-color: rgba(255,0,0,0); } }
+        
+        .feedback-correct { animation: flash-green 0.5s ease-out; }
+        .feedback-wrong { animation: flash-red 0.5s ease-out; }
+
+        /* Custom Scrollbar for modal */
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 6px; }
+
+        /* Button Tap Feedback */
+        button:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="text-white select-none">
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- HUD Layer -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 md:p-8">
+        <!-- Top Bar -->
+        <div class="flex justify-between items-start">
+            <div class="hud-panel p-6 rounded-br-3xl clip-path-polygon pointer-events-auto">
+                <h1 class="text-2xl md:text-4xl text-cyan-400 font-bold scifi-font tracking-widest">ECO-GUARDIAN</h1>
+                <p class="text-sm md:text-lg text-gray-400 mt-1">SEKTOR PERTAHANAN: BUMI</p>
+                <button onclick="toggleFullscreen()" class="mt-2 text-xs border border-cyan-500 text-cyan-500 px-2 py-1 rounded hover:bg-cyan-900 pointer-events-auto">
+                    [ TOGGLE FULLSCREEN ]
+                </button>
+            </div>
+            <div class="hud-panel p-6 rounded-bl-3xl text-right min-w-[200px]">
+                <div class="text-sm md:text-lg text-gray-400">SKOR ENERGI</div>
+                <div id="score-display" class="text-4xl md:text-6xl font-bold text-yellow-400 scifi-font">0</div>
+            </div>
+        </div>
+
+        <!-- Center Crosshair -->
+        <div class="crosshair" id="crosshair"></div>
+
+        <!-- Bottom Bar -->
+        <div class="flex justify-center items-end pb-4">
+            <div class="hud-panel px-10 py-4 rounded-t-3xl border-t-4 border-cyan-500 w-full max-w-2xl">
+                <div class="text-center">
+                    <span class="text-sm md:text-xl text-gray-400 block mb-2 font-bold">INTEGRITAS PERISAI</span>
+                    <div class="w-full h-6 md:h-8 bg-gray-800 rounded-full overflow-hidden border-2 border-gray-600">
+                        <div id="health-bar" class="h-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Flash Overlay -->
+    <div id="feedback-overlay" class="absolute inset-0 pointer-events-none z-20"></div>
+
+    <!-- Start Screen Modal -->
+    <div id="start-screen" class="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+        <div class="max-w-3xl w-full hud-panel p-10 rounded-2xl text-center border-4 border-cyan-500 relative overflow-hidden shadow-[0_0_50px_rgba(0,255,204,0.2)]">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
+            <h1 class="text-5xl md:text-7xl scifi-font text-cyan-400 mb-4 animate-pulse">MISI DIMULAI</h1>
+            <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                Alien "Carbonus" menyerang! <br>
+                Ketuk layar untuk menembak dan jawab kuis energi terbarukan.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left bg-gray-900/60 p-6 rounded-xl mb-8 text-lg border border-gray-700">
+                <div class="flex items-center gap-4">
+                    <span class="text-4xl">👆</span>
+                    <div>
+                        <span class="text-cyan-300 font-bold block">Kontrol Sentuh</span>
+                        <span class="text-gray-400 text-sm">Ketuk alien untuk menembak.</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-4xl">🧠</span>
+                    <div>
+                        <span class="text-yellow-300 font-bold block">Tantangan</span>
+                        <span class="text-gray-400 text-sm">Jawab soal fisika untuk menghancurkan musuh.</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="startGame()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-2xl py-6 px-8 rounded-xl scifi-font transition-all shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:scale-105 transform">
+                AKTIFKAN SISTEM (START)
+            </button>
+        </div>
+    </div>
+
+    <!-- Question Modal -->
+    <div id="question-modal" class="hidden absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-lg p-4">
+        <div class="max-w-4xl w-full hud-panel p-0 rounded-2xl overflow-hidden shadow-2xl transform transition-all pointer-events-auto border-2 border-cyan-400">
+            <div class="bg-gradient-to-r from-blue-950 to-slate-900 p-6 border-b border-cyan-500/50 flex justify-between items-center">
+                <h3 class="text-cyan-400 scifi-font text-2xl flex items-center gap-3">
+                    <span class="animate-pulse text-yellow-500">⚠️</span> ANALISIS DATA DIPERLUKAN
+                </h3>
+                <div class="text-gray-400 text-sm scifi-font">WAKTU TERHENTI</div>
+            </div>
+            
+            <div class="p-8">
+                <p id="question-text" class="text-2xl md:text-3xl text-white mb-8 font-medium leading-relaxed font-serif">
+                    <!-- Pertanyaan masuk sini -->
+                </p>
+
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Opsi jawaban masuk sini -->
+                </div>
+            </div>
+
+            <div id="explanation-panel" class="hidden bg-gray-900 p-8 border-t border-gray-600">
+                <p class="font-bold mb-2 text-2xl" id="feedback-title"></p>
+                <p class="text-lg text-gray-300 mb-6 leading-relaxed" id="feedback-text"></p>
+                <button onclick="resumeGame()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xl font-bold py-4 px-6 rounded-xl scifi-font shadow-lg">
+                    LANJUTKAN MISI >>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-red-950/95 backdrop-blur-md p-4">
+        <div class="max-w-2xl w-full hud-panel p-10 rounded-2xl text-center border-4 border-red-500 shadow-[0_0_50px_rgba(220,38,38,0.4)]">
+            <h1 class="text-6xl md:text-8xl scifi-font text-red-500 mb-4 tracking-tighter">SISTEM GAGAL</h1>
+            <p class="text-xl text-gray-300 mb-8">Pertahanan bumi telah ditembus oleh polusi.</p>
+            <div class="text-4xl text-white mb-10 border-y border-red-900 py-4">Skor Akhir: <span id="final-score" class="text-yellow-400 font-bold">0</span></div>
+            <button onclick="location.reload()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold text-2xl py-5 px-8 rounded-xl scifi-font shadow-[0_0_20px_rgba(220,38,38,0.6)] hover:scale-105 transform">
+                REBOOT SYSTEM
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. GAME DATA (Question Bank) ---
+        const questions = [
+            {
+                q: "Manakah di bawah ini yang merupakan sumber energi terbarukan yang memanfaatkan panas dari dalam bumi?",
+                options: ["Biomassa", "Geothermal", "Hidroelektrik", "Fotovoltaik"],
+                answer: 1, 
+                explanation: "Energi Geothermal (Panas Bumi) memanfaatkan panas yang tersimpan di dalam inti bumi."
+            },
+            {
+                q: "Efek Fotovoltaik adalah prinsip dasar dari pembangkit listrik tenaga...",
+                options: ["Angin", "Air", "Surya (Matahari)", "Uap"],
+                answer: 2,
+                explanation: "Sel surya bekerja berdasarkan efek fotovoltaik, yaitu mengubah cahaya matahari langsung menjadi listrik."
+            },
+            {
+                q: "Energi kinetik angin diubah menjadi energi mekanik oleh...",
+                options: ["Generator", "Baling-baling turbin", "Transformator", "Baterai"],
+                answer: 1,
+                explanation: "Angin memutar baling-baling (energi mekanik), yang kemudian memutar poros generator."
+            },
+            {
+                q: "Bioetanol dan Biodiesel adalah contoh pemanfaatan energi...",
+                options: ["Biomassa", "Nuklir", "Gelombang Laut", "Fosil"],
+                answer: 0,
+                explanation: "Biomassa meliputi bahan organik tumbuhan/hewan yang diolah menjadi bahan bakar."
+            },
+            {
+                q: "Apa keuntungan utama energi terbarukan dibandingkan energi fosil?",
+                options: ["Lebih murah investasinya", "Emisi karbon sangat rendah", "Tersedia terbatas", "Menghasilkan limbah radioaktif"],
+                answer: 1,
+                explanation: "Energi terbarukan ramah lingkungan karena menghasilkan emisi karbon yang sangat sedikit atau nol."
+            },
+            {
+                q: "Pada PLTA (Pembangkit Listrik Tenaga Air), energi potensial air diubah menjadi energi...",
+                options: ["Kimia", "Panas", "Kinetik", "Cahaya"],
+                answer: 2,
+                explanation: "Air yang jatuh (potensial) berubah menjadi aliran deras (kinetik) untuk memutar turbin."
+            },
+            {
+                q: "Panel surya paling efisien menyerap energi jika diposisikan...",
+                options: ["Tegak lurus arah sinar matahari", "Membelakangi matahari", "Horizontal mutlak", "Vertikal mutlak"],
+                answer: 0,
+                explanation: "Posisi tegak lurus memaksimalkan intensitas foton yang mengenai permukaan panel."
+            }
+        ];
+
+        // --- 2. THREE.JS SETUP & GAME VARIABLES ---
+        let scene, camera, renderer;
+        let aliens = [];
+        let particles = [];
+        let score = 0;
+        let health = 100;
+        let isGameActive = false;
+        let isPaused = false;
+        let animationId;
+        
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        let currentTargetAlien = null;
+
+        function init3D() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050510);
+            scene.fog = new THREE.FogExp2(0x050510, 0.02);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); // Important for crisp text on 4K IFP
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 2); 
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0x00ffcc, 1, 50);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            // Starfield
+            const starGeometry = new THREE.BufferGeometry();
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05 });
+            const starVertices = [];
+            for (let i = 0; i < 2000; i++) {
+                const x = (Math.random() - 0.5) * 100;
+                const y = (Math.random() - 0.5) * 100;
+                const z = (Math.random() - 0.5) * 100;
+                starVertices.push(x, y, z);
+            }
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Mouse & Touch Events
+            document.addEventListener('mousedown', onDocumentMouseDown, false);
+            document.addEventListener('mousemove', onMouseMove, false);
+            
+            // IFP Specific Touch Events
+            const canvas = document.getElementById('canvas-container');
+            canvas.addEventListener('touchstart', onTouchStart, {passive: false});
+            canvas.addEventListener('touchmove', onTouchMove, {passive: false});
+        }
+
+        function spawnAlien() {
+            if (!isGameActive || isPaused) return;
+
+            const geometry = new THREE.IcosahedronGeometry(0.8, 0); // Slightly larger for easier tapping
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0xff0055, 
+                emissive: 0xaa0033,
+                emissiveIntensity: 0.8,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+            
+            const alien = new THREE.Mesh(geometry, material);
+            alien.position.x = (Math.random() - 0.5) * 12;
+            alien.position.y = (Math.random() - 0.5) * 8;
+            alien.position.z = -25 - (Math.random() * 10);
+            
+            // REVISION: Math correction for speed
+            // Old formula: 0.08 + (score * 0.005) -> Score 100 = 0.58 speed (insane)
+            // New formula: 0.05 + (score * 0.0002) -> Score 100 = 0.07 speed (reasonable)
+            // Max speed cap added (0.25) to prevent impossible difficulty
+            
+            let calculatedSpeed = 0.05 + (score * 0.0002);
+            if (calculatedSpeed > 0.25) calculatedSpeed = 0.25;
+
+            alien.userData = {
+                rotSpeed: { x: Math.random() * 0.05, y: Math.random() * 0.05 },
+                speed: calculatedSpeed
+            };
+
+            scene.add(alien);
+            aliens.push(alien);
+        }
+
+        function createExplosion(position, color) {
+            const particleCount = 30; // More particles
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const velocities = [];
+
+            for(let i=0; i<particleCount; i++){
+                positions.push(position.x, position.y, position.z);
+                velocities.push(
+                    (Math.random()-0.5)*0.8,
+                    (Math.random()-0.5)*0.8,
+                    (Math.random()-0.5)*0.8
+                );
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: color,
+                size: 0.3,
+                transparent: true,
+                opacity: 1
+            });
+
+            const particleSystem = new THREE.Points(geometry, material);
+            particleSystem.userData = { velocities: velocities, life: 1.0 };
+            scene.add(particleSystem);
+            particles.push(particleSystem);
+        }
+
+        // --- 3. INPUT HANDLING (Optimized for Touch) ---
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function updateCameraAndPointer(clientX, clientY) {
+            // Normalized Device Coordinates (-1 to +1)
+            const x = (clientX / window.innerWidth) * 2 - 1;
+            const y = -(clientY / window.innerHeight) * 2 + 1;
+            
+            pointer.x = x;
+            pointer.y = y;
+
+            // Move camera slightly based on input position (Immersive feel)
+            // On IFP, this helps map the user's "look" direction
+            if(isGameActive && !isPaused) {
+                camera.rotation.y = x * 0.4;
+                camera.rotation.x = y * 0.2;
+            }
+
+            // Move crosshair visual
+            const crosshair = document.getElementById('crosshair');
+            crosshair.style.left = clientX + 'px';
+            crosshair.style.top = clientY + 'px';
+            crosshair.style.transform = 'translate(-50%, -50%)'; // Reset center
+        }
+
+        function onMouseMove(event) {
+            updateCameraAndPointer(event.clientX, event.clientY);
+        }
+
+        function onTouchMove(event) {
+            event.preventDefault(); // Prevent scrolling
+            const touch = event.touches[0];
+            updateCameraAndPointer(touch.clientX, touch.clientY);
+        }
+
+        function onTouchStart(event) {
+             if (!isGameActive || isPaused) return;
+             event.preventDefault();
+             
+             // Immediate feedback and update
+             const touch = event.touches[0];
+             updateCameraAndPointer(touch.clientX, touch.clientY);
+             
+             checkHit();
+        }
+
+        function onDocumentMouseDown(event) {
+            if (!isGameActive || isPaused) return;
+            checkHit();
+        }
+
+        function checkHit() {
+            raycaster.setFromCamera(pointer, camera);
+            const intersects = raycaster.intersectObjects(aliens);
+
+            if (intersects.length > 0) {
+                const hitObject = intersects[0].object;
+                currentTargetAlien = hitObject;
+                pauseGameAndShowQuestion();
+            }
+        }
+
+        // --- 4. GAME LOOP ---
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('opacity-50');
+            isGameActive = true;
+            score = 0;
+            health = 100;
+            updateHUD();
+            
+            // Auto fullscreen on start (optional, usually browsers block this without direct gesture)
+            // toggleFullscreen(); 
+
+            setInterval(spawnAlien, 1800);
+            animate();
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('health-bar').style.width = health + '%';
+            
+            if (health <= 30) {
+                document.getElementById('health-bar').classList.remove('from-red-500', 'to-green-500');
+                document.getElementById('health-bar').classList.add('bg-red-600');
+            }
+        }
+
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+
+            if (isPaused) return;
+
+            // Update Aliens
+            for (let i = aliens.length - 1; i >= 0; i--) {
+                let alien = aliens[i];
+                
+                alien.position.z += alien.userData.speed;
+                alien.rotation.x += alien.userData.rotSpeed.x;
+                alien.rotation.y += alien.userData.rotSpeed.y;
+
+                if (alien.position.z > 4) {
+                    createExplosion(alien.position, 0xff0000);
+                    scene.remove(alien);
+                    aliens.splice(i, 1);
+                    takeDamage(15);
+                }
+            }
+
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                const positions = p.geometry.attributes.position.array;
+                const vels = p.userData.velocities;
+
+                for(let j=0; j < positions.length; j+=3) {
+                    positions[j] += vels[j];
+                    positions[j+1] += vels[j+1];
+                    positions[j+2] += vels[j+2];
+                }
+                p.geometry.attributes.position.needsUpdate = true;
+                p.material.opacity -= 0.02;
+
+                if(p.material.opacity <= 0) {
+                    scene.remove(p);
+                    particles.splice(i, 1);
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function takeDamage(amount) {
+            health -= amount;
+            updateHUD();
+            
+            const overlay = document.getElementById('feedback-overlay');
+            overlay.classList.remove('feedback-correct');
+            overlay.classList.add('feedback-wrong');
+            void overlay.offsetWidth; 
+            
+            if (health <= 0) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            isGameActive = false;
+            cancelAnimationFrame(animationId);
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('game-over-screen').classList.remove('hidden');
+        }
+
+        // --- 5. QUIZ LOGIC ---
+
+        function pauseGameAndShowQuestion() {
+            isPaused = true;
+            // CRITICAL FIX: Stop the previous animation loop completely
+            cancelAnimationFrame(animationId);
+            
+            const qData = questions[Math.floor(Math.random() * questions.length)];
+            
+            const modal = document.getElementById('question-modal');
+            const qText = document.getElementById('question-text');
+            const optsContainer = document.getElementById('options-container');
+            const explanationPanel = document.getElementById('explanation-panel');
+
+            modal.classList.remove('hidden');
+            explanationPanel.classList.add('hidden');
+            optsContainer.innerHTML = '';
+            optsContainer.classList.remove('hidden');
+            
+            qText.innerText = qData.q;
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                // Larger buttons for IFP touch
+                btn.className = "w-full text-left bg-gray-800 hover:bg-cyan-900 border-2 border-gray-600 hover:border-cyan-400 text-gray-200 p-6 rounded-xl transition-all flex items-center group shadow-md";
+                btn.innerHTML = `<span class="bg-gray-700 w-10 h-10 flex items-center justify-center rounded-lg mr-4 text-lg font-bold text-cyan-400 border border-gray-500 group-hover:border-cyan-400">${String.fromCharCode(65+index)}</span> <span class="text-xl">${opt}</span>`;
+                
+                btn.onclick = () => handleAnswer(index, qData);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, qData) {
+            const isCorrect = selectedIndex === qData.answer;
+            const explanationPanel = document.getElementById('explanation-panel');
+            const optsContainer = document.getElementById('options-container');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            optsContainer.classList.add('hidden');
+            explanationPanel.classList.remove('hidden');
+
+            if (isCorrect) {
+                feedbackTitle.innerText = "JAWABAN BENAR!";
+                feedbackTitle.className = "font-bold mb-2 text-green-400 text-3xl";
+                feedbackText.innerText = `Analisis Tepat: ${qData.explanation}`;
+                
+                if (currentTargetAlien) {
+                    createExplosion(currentTargetAlien.position, 0x00ffcc);
+                    scene.remove(currentTargetAlien);
+                    aliens = aliens.filter(a => a !== currentTargetAlien);
+                    currentTargetAlien = null;
+                }
+                score += 100;
+                
+                const overlay = document.getElementById('feedback-overlay');
+                overlay.classList.remove('feedback-wrong');
+                overlay.classList.add('feedback-correct');
+                void overlay.offsetWidth; 
+
+            } else {
+                feedbackTitle.innerText = "ANALISIS GAGAL!";
+                feedbackTitle.className = "font-bold mb-2 text-red-400 text-3xl";
+                feedbackText.innerText = `Koreksi: Jawaban yang tepat adalah ${qData.options[qData.answer]}. \n${qData.explanation}`;
+                takeDamage(10);
+            }
+            updateHUD();
+        }
+
+        function resumeGame() {
+            document.getElementById('question-modal').classList.add('hidden');
+            isPaused = false;
+            // Since we cancelled the previous loop, we start a new one here.
+            // This ensures only ONE loop runs at a time.
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init3D();
+
+    </script>
+</body>
+</html>
