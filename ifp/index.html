@@ -3,496 +3,885 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eco-Guardian: Renewable Energy Defense</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-    <!-- Google Fonts: Orbitron for Sci-Fi look -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-
+    <title>Eco-Guardian: Physics Defender (IFP Edition)</title>
     <style>
-        /* IFP Optimization: Prevent scrolling and zooming */
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-color: #000; 
-            font-family: 'Roboto', sans-serif;
-            touch-action: none; /* Critical for IFP */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Rajdhani', sans-serif;
+            color: white;
             user-select: none;
-            -webkit-user-select: none;
-        }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
-        
-        /* Sci-Fi HUD Styles */
-        .scifi-font { font-family: 'Orbitron', sans-serif; }
-        
-        .hud-panel {
-            background: rgba(16, 24, 39, 0.9);
-            border: 2px solid #00ffcc;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
-            backdrop-filter: blur(8px);
+            /* OPTIMASI IFP: Mencegah browser melakukan zoom/scroll default pada sentuhan */
+            touch-action: none; 
+            -webkit-touch-callout: none;
         }
 
-        .crosshair {
+        #game-container {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 60px; /* Bigger for IFP visibility */
-            height: 60px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 10;
-            transition: transform 0.1s;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
-        .crosshair::before, .crosshair::after {
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none; /* Let clicks pass through to game */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .score-box {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .score-title {
+            font-size: 0.8rem;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Boss Health Bar - Scale up slightly for big screens */
+        #boss-hud {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%; 
+            display: none; /* Hidden initially */
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .boss-name {
+            color: #ff0055;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ff0055;
+            text-align: center;
+        }
+
+        .health-bar-container {
+            width: 100%;
+            height: 30px; /* Thicker for visibility on IFP */
+            background: rgba(50, 0, 0, 0.5);
+            border: 3px solid #ff0055;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #boss-health-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff0055, #ff5500);
+            transition: width 0.5s ease-out;
+            box-shadow: 0 0 15px #ff0055;
+        }
+
+        /* Start Screen & Modals */
+        #modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            transition: opacity 0.3s;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.95), rgba(0, 0, 0, 0.95));
+            border: 2px solid #00ffff;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 700px; /* Wider for IFP readability */
+            width: 90%;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-content::before {
             content: '';
             position: absolute;
-            background: #00ffcc;
-            box-shadow: 0 0 10px #00ffcc;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #00ffff, #0088ff, #00ffff);
         }
-        .crosshair::before { top: 28px; left: 0; width: 60px; height: 4px; }
-        .crosshair::after { left: 28px; top: 0; width: 4px; height: 60px; }
 
-        /* Animation for feedback */
-        @keyframes flash-green { 0% { background-color: rgba(0,255,0,0); } 50% { background-color: rgba(0,255,0,0.3); } 100% { background-color: rgba(0,255,0,0); } }
-        @keyframes flash-red { 0% { background-color: rgba(255,0,0,0); } 50% { background-color: rgba(255,0,0,0.3); } 100% { background-color: rgba(255,0,0,0); } }
-        
-        .feedback-correct { animation: flash-green 0.5s ease-out; }
-        .feedback-wrong { animation: flash-red 0.5s ease-out; }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffff;
+            margin-top: 0;
+            font-size: 2.5rem; /* Bigger title */
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
 
-        /* Custom Scrollbar for modal */
-        ::-webkit-scrollbar { width: 12px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 6px; }
+        p {
+            font-size: 1.3rem; /* Bigger text for classroom viewing */
+            line-height: 1.6;
+            color: #ccc;
+        }
 
-        /* Button Tap Feedback */
-        button:active { transform: scale(0.95); }
+        .btn {
+            background: transparent;
+            border: 3px solid #00ffff; /* Thicker border */
+            color: #00ffff;
+            padding: 15px 40px; /* Larger touch target */
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .btn:hover, .btn:active {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 30px #00ffff;
+        }
+
+        /* Quiz Specific Styles */
+        .quiz-option {
+            display: block;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            padding: 20px; /* Larger padding for touch */
+            margin: 15px 0;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.2rem; /* Readable from back of class */
+        }
+
+        .quiz-option:hover, .quiz-option:active {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+        }
+
+        .correct-anim {
+            animation: pulse-green 0.5s;
+            background: rgba(0, 255, 0, 0.2) !important;
+            border-color: #00ff00 !important;
+        }
+
+        .wrong-anim {
+            animation: shake 0.5s;
+            background: rgba(255, 0, 0, 0.2) !important;
+            border-color: #ff0000 !important;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Mobile controls hint */
+        .controls-hint {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            pointer-events: none;
+            background: rgba(0,0,0,0.5); /* Background for readability */
+            padding: 5px 0;
+        }
+
+        /* Tutorial/Explanation text */
+        .explanation-text {
+            font-size: 1.1rem;
+            color: #00ffaa;
+            margin-top: 15px;
+            font-style: italic;
+            display: none;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body class="text-white select-none">
+<body>
 
-    <!-- 3D Canvas -->
-    <div id="canvas-container"></div>
-
-    <!-- HUD Layer -->
-    <div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 md:p-8">
-        <!-- Top Bar -->
-        <div class="flex justify-between items-start">
-            <div class="hud-panel p-6 rounded-br-3xl clip-path-polygon pointer-events-auto">
-                <h1 class="text-2xl md:text-4xl text-cyan-400 font-bold scifi-font tracking-widest">ECO-GUARDIAN</h1>
-                <p class="text-sm md:text-lg text-gray-400 mt-1">SEKTOR PERTAHANAN: BUMI</p>
-                <button onclick="toggleFullscreen()" class="mt-2 text-xs border border-cyan-500 text-cyan-500 px-2 py-1 rounded hover:bg-cyan-900 pointer-events-auto">
-                    [ TOGGLE FULLSCREEN ]
-                </button>
+    <!-- UI Layer -->
+    <div id="ui-layer">
+        <div class="hud-top">
+            <div class="score-box">
+                <div class="score-title">SKOR</div>
+                <div class="score-value" id="score-display">0</div>
             </div>
-            <div class="hud-panel p-6 rounded-bl-3xl text-right min-w-[200px]">
-                <div class="text-sm md:text-lg text-gray-400">SKOR ENERGI</div>
-                <div id="score-display" class="text-4xl md:text-6xl font-bold text-yellow-400 scifi-font">0</div>
+            <div class="score-box" style="border-color: #ff0055; box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);">
+                <div class="score-title" style="color: #ff0055;">NYAWA</div>
+                <div class="score-value" id="player-hp-display">100%</div>
+            </div>
+        </div>
+        
+        <div id="boss-hud">
+            <div class="boss-name">TITAN POLUSI (BOSS)</div>
+            <div class="health-bar-container">
+                <div id="boss-health-fill"></div>
             </div>
         </div>
 
-        <!-- Center Crosshair -->
-        <div class="crosshair" id="crosshair"></div>
+        <div class="controls-hint">Sentuh & Geser Layar untuk Menggerakkan Pesawat • Pesawat Menembak Otomatis saat Disentuh</div>
+    </div>
 
-        <!-- Bottom Bar -->
-        <div class="flex justify-center items-end pb-4">
-            <div class="hud-panel px-10 py-4 rounded-t-3xl border-t-4 border-cyan-500 w-full max-w-2xl">
-                <div class="text-center">
-                    <span class="text-sm md:text-xl text-gray-400 block mb-2 font-bold">INTEGRITAS PERISAI</span>
-                    <div class="w-full h-6 md:h-8 bg-gray-800 rounded-full overflow-hidden border-2 border-gray-600">
-                        <div id="health-bar" class="h-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 w-full transition-all duration-300"></div>
-                    </div>
-                </div>
+    <!-- Modals -->
+    <div id="modal-overlay">
+        <!-- Start Screen -->
+        <div id="start-screen" class="modal-content">
+            <h1>ECO-GUARDIAN</h1>
+            <p>Bumi sedang diserang oleh armada <strong>Titan Polusi</strong>. Kalahkan pasukan musuh dan hancurkan Bos Utama.</p>
+            <p style="font-size: 1.1rem; color: #aaa;">Bos memiliki perisai yang hanya bisa ditembus dengan pengetahuan tentang <strong>Energi Terbarukan</strong>.</p>
+            <button class="btn" onclick="startGame()">MULAI MISI</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="modal-content hidden">
+            <h2 id="quiz-title" style="color: #ffff00; text-transform: uppercase;">Analisis Energi</h2>
+            <p id="quiz-question">Pertanyaan akan muncul di sini...</p>
+            <div id="quiz-options">
+                <!-- Options generated by JS -->
             </div>
+            <div id="quiz-explanation" class="explanation-text"></div>
+            <button id="quiz-continue-btn" class="btn hidden" onclick="closeQuiz()">Lanjutkan Serangan</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="modal-content hidden">
+            <h1 id="go-title">MISI GAGAL</h1>
+            <p id="go-message">Pesawat hancur.</p>
+            <div style="margin: 20px 0; font-size: 3rem; color: #00ffff;" id="final-score">0</div>
+            <button class="btn" onclick="location.reload()">Coba Lagi</button>
         </div>
     </div>
 
-    <!-- Feedback Flash Overlay -->
-    <div id="feedback-overlay" class="absolute inset-0 pointer-events-none z-20"></div>
-
-    <!-- Start Screen Modal -->
-    <div id="start-screen" class="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-        <div class="max-w-3xl w-full hud-panel p-10 rounded-2xl text-center border-4 border-cyan-500 relative overflow-hidden shadow-[0_0_50px_rgba(0,255,204,0.2)]">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
-            <h1 class="text-5xl md:text-7xl scifi-font text-cyan-400 mb-4 animate-pulse">MISI DIMULAI</h1>
-            <p class="text-xl text-gray-300 mb-8 leading-relaxed">
-                Alien "Carbonus" menyerang! <br>
-                Ketuk layar untuk menembak dan jawab kuis energi terbarukan.
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left bg-gray-900/60 p-6 rounded-xl mb-8 text-lg border border-gray-700">
-                <div class="flex items-center gap-4">
-                    <span class="text-4xl">👆</span>
-                    <div>
-                        <span class="text-cyan-300 font-bold block">Kontrol Sentuh</span>
-                        <span class="text-gray-400 text-sm">Ketuk alien untuk menembak.</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-4xl">🧠</span>
-                    <div>
-                        <span class="text-yellow-300 font-bold block">Tantangan</span>
-                        <span class="text-gray-400 text-sm">Jawab soal fisika untuk menghancurkan musuh.</span>
-                    </div>
-                </div>
-            </div>
-            <button onclick="startGame()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-2xl py-6 px-8 rounded-xl scifi-font transition-all shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:scale-105 transform">
-                AKTIFKAN SISTEM (START)
-            </button>
-        </div>
-    </div>
-
-    <!-- Question Modal -->
-    <div id="question-modal" class="hidden absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-lg p-4">
-        <div class="max-w-4xl w-full hud-panel p-0 rounded-2xl overflow-hidden shadow-2xl transform transition-all pointer-events-auto border-2 border-cyan-400">
-            <div class="bg-gradient-to-r from-blue-950 to-slate-900 p-6 border-b border-cyan-500/50 flex justify-between items-center">
-                <h3 class="text-cyan-400 scifi-font text-2xl flex items-center gap-3">
-                    <span class="animate-pulse text-yellow-500">⚠️</span> ANALISIS DATA DIPERLUKAN
-                </h3>
-                <div class="text-gray-400 text-sm scifi-font">WAKTU TERHENTI</div>
-            </div>
-            
-            <div class="p-8">
-                <p id="question-text" class="text-2xl md:text-3xl text-white mb-8 font-medium leading-relaxed font-serif">
-                    <!-- Pertanyaan masuk sini -->
-                </p>
-
-                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Opsi jawaban masuk sini -->
-                </div>
-            </div>
-
-            <div id="explanation-panel" class="hidden bg-gray-900 p-8 border-t border-gray-600">
-                <p class="font-bold mb-2 text-2xl" id="feedback-title"></p>
-                <p class="text-lg text-gray-300 mb-6 leading-relaxed" id="feedback-text"></p>
-                <button onclick="resumeGame()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xl font-bold py-4 px-6 rounded-xl scifi-font shadow-lg">
-                    LANJUTKAN MISI >>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Game Over Screen -->
-    <div id="game-over-screen" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-red-950/95 backdrop-blur-md p-4">
-        <div class="max-w-2xl w-full hud-panel p-10 rounded-2xl text-center border-4 border-red-500 shadow-[0_0_50px_rgba(220,38,38,0.4)]">
-            <h1 class="text-6xl md:text-8xl scifi-font text-red-500 mb-4 tracking-tighter">SISTEM GAGAL</h1>
-            <p class="text-xl text-gray-300 mb-8">Pertahanan bumi telah ditembus oleh polusi.</p>
-            <div class="text-4xl text-white mb-10 border-y border-red-900 py-4">Skor Akhir: <span id="final-score" class="text-yellow-400 font-bold">0</span></div>
-            <button onclick="location.reload()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold text-2xl py-5 px-8 rounded-xl scifi-font shadow-[0_0_20px_rgba(220,38,38,0.6)] hover:scale-105 transform">
-                REBOOT SYSTEM
-            </button>
-        </div>
-    </div>
+    <!-- 3D Canvas Container -->
+    <div id="game-container"></div>
 
     <script>
-        // --- 1. GAME DATA (Question Bank) ---
-        const questions = [
+        // --- IFP OPTIMIZATION: PREVENT CONTEXT MENU ---
+        // Mencegah menu klik kanan muncul saat layar ditekan lama (Long Press)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // --- GAME CONFIGURATION & STATE ---
+        const config = {
+            playerSpeed: 0.15,
+            bulletSpeed: 0.5,
+            enemySpeed: 0.08,
+            bossSpeed: 0.02,
+            spawnRate: 60, // frames
+        };
+
+        const state = {
+            isPlaying: false,
+            isPaused: false,
+            score: 0,
+            playerHP: 100,
+            level: 1, // 1: Minions, 2: Boss
+            bossHP: 100,
+            bossMaxHP: 500, // Boss takes a lot of hits
+            frames: 0,
+            bossPhase: 0, // 0: 100%, 1: 75%, 2: 50%, 3: 25%, 4: 0%
+            mouse: { x: 0, y: 0 },
+            isShooting: false
+        };
+
+        // --- THREE.JS VARIABLES ---
+        let scene, camera, renderer;
+        let player, boss;
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let starField;
+
+        // --- PHYSICS/QUIZ DATA ---
+        const quizData = [
             {
-                q: "Manakah di bawah ini yang merupakan sumber energi terbarukan yang memanfaatkan panas dari dalam bumi?",
-                options: ["Biomassa", "Geothermal", "Hidroelektrik", "Fotovoltaik"],
-                answer: 1, 
-                explanation: "Energi Geothermal (Panas Bumi) memanfaatkan panas yang tersimpan di dalam inti bumi."
+                threshold: 100,
+                question: "Bos tiba! Perisainya aktif. Apa definisi energi terbarukan yang paling tepat?",
+                options: [
+                    "Energi yang berasal dari fosil dan terbatas.",
+                    "Energi yang berasal dari proses alam yang berkelanjutan.",
+                    "Energi yang hanya bisa digunakan di siang hari.",
+                    "Energi buatan manusia dari reaksi kimia berbahaya."
+                ],
+                correct: 1,
+                explanation: "Energi terbarukan berasal dari sumber alam (matahari, angin, air) yang terus diperbarui secara alami."
             },
             {
-                q: "Efek Fotovoltaik adalah prinsip dasar dari pembangkit listrik tenaga...",
-                options: ["Angin", "Air", "Surya (Matahari)", "Uap"],
-                answer: 2,
-                explanation: "Sel surya bekerja berdasarkan efek fotovoltaik, yaitu mengubah cahaya matahari langsung menjadi listrik."
+                threshold: 75,
+                question: "Perisai 75%! Panel surya mengubah energi cahaya menjadi listrik menggunakan efek apa?",
+                options: [
+                    "Efek Rumah Kaca",
+                    "Efek Doppler",
+                    "Efek Fotovoltaik",
+                    "Efek Piezoelektrik"
+                ],
+                correct: 2,
+                explanation: "Sel surya menggunakan efek Fotovoltaik, di mana foton cahaya melepaskan elektron dari material semikonduktor."
             },
             {
-                q: "Energi kinetik angin diubah menjadi energi mekanik oleh...",
-                options: ["Generator", "Baling-baling turbin", "Transformator", "Baterai"],
-                answer: 1,
-                explanation: "Angin memutar baling-baling (energi mekanik), yang kemudian memutar poros generator."
+                threshold: 50,
+                question: "Perisai 50%! Pada Pembangkit Listrik Tenaga Bayu (Angin), perubahan energi apa yang terjadi?",
+                options: [
+                    "Energi Kimia → Energi Listrik",
+                    "Energi Kinetik → Energi Mekanik → Energi Listrik",
+                    "Energi Panas → Energi Listrik",
+                    "Energi Potensial → Energi Kinetik"
+                ],
+                correct: 1,
+                explanation: "Angin (Kinetik) memutar turbin (Mekanik) yang kemudian memutar generator untuk menghasilkan Listrik."
             },
             {
-                q: "Bioetanol dan Biodiesel adalah contoh pemanfaatan energi...",
-                options: ["Biomassa", "Nuklir", "Gelombang Laut", "Fosil"],
-                answer: 0,
-                explanation: "Biomassa meliputi bahan organik tumbuhan/hewan yang diolah menjadi bahan bakar."
+                threshold: 25,
+                question: "Perisai 25%! Apa keunggulan utama energi Geothermal (Panas Bumi) dibanding tenaga surya?",
+                options: [
+                    "Lebih murah instalasinya",
+                    "Tidak bergantung pada cuaca (stabil 24 jam)",
+                    "Bisa dipasang di atap rumah",
+                    "Tidak memerlukan peralatan khusus"
+                ],
+                correct: 1,
+                explanation: "Geothermal memiliki faktor kapasitas tinggi (Base Load) karena panas bumi tersedia terus-menerus, tidak seperti matahari yang ada malam/siang."
             },
             {
-                q: "Apa keuntungan utama energi terbarukan dibandingkan energi fosil?",
-                options: ["Lebih murah investasinya", "Emisi karbon sangat rendah", "Tersedia terbatas", "Menghasilkan limbah radioaktif"],
-                answer: 1,
-                explanation: "Energi terbarukan ramah lingkungan karena menghasilkan emisi karbon yang sangat sedikit atau nol."
-            },
-            {
-                q: "Pada PLTA (Pembangkit Listrik Tenaga Air), energi potensial air diubah menjadi energi...",
-                options: ["Kimia", "Panas", "Kinetik", "Cahaya"],
-                answer: 2,
-                explanation: "Air yang jatuh (potensial) berubah menjadi aliran deras (kinetik) untuk memutar turbin."
-            },
-            {
-                q: "Panel surya paling efisien menyerap energi jika diposisikan...",
-                options: ["Tegak lurus arah sinar matahari", "Membelakangi matahari", "Horizontal mutlak", "Vertikal mutlak"],
-                answer: 0,
-                explanation: "Posisi tegak lurus memaksimalkan intensitas foton yang mengenai permukaan panel."
+                threshold: 5, // Near death
+                question: "Finishing Move! Manakah di bawah ini yang BUKAN merupakan sumber energi terbarukan?",
+                options: [
+                    "Biomassa",
+                    "Batubara",
+                    "Hidroelektrik (Air)",
+                    "Energi Pasang Surut"
+                ],
+                correct: 1,
+                explanation: "Batubara adalah bahan bakar fosil yang butuh jutaan tahun untuk terbentuk dan menghasilkan emisi karbon tinggi."
             }
         ];
 
-        // --- 2. THREE.JS SETUP & GAME VARIABLES ---
-        let scene, camera, renderer;
-        let aliens = [];
-        let particles = [];
-        let score = 0;
-        let health = 100;
-        let isGameActive = false;
-        let isPaused = false;
-        let animationId;
-        
-        const raycaster = new THREE.Raycaster();
-        const pointer = new THREE.Vector2();
-        let currentTargetAlien = null;
+        let currentQuizIndex = 0;
 
-        function init3D() {
+        // --- INIT FUNCTION ---
+        function init() {
+            // Scene Setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050510);
-            scene.fog = new THREE.FogExp2(0x050510, 0.02);
+            scene.fog = new THREE.FogExp2(0x050505, 0.02);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 20;
+            camera.position.y = 10;
+            camera.rotation.x = -0.3;
 
+            // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio); // Important for crisp text on 4K IFP
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('game-container').appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0x404040, 2); 
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
 
-            const pointLight = new THREE.PointLight(0x00ffcc, 1, 50);
-            pointLight.position.set(5, 5, 5);
-            scene.add(pointLight);
-
-            // Starfield
-            const starGeometry = new THREE.BufferGeometry();
-            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05 });
-            const starVertices = [];
-            for (let i = 0; i < 2000; i++) {
-                const x = (Math.random() - 0.5) * 100;
-                const y = (Math.random() - 0.5) * 100;
-                const z = (Math.random() - 0.5) * 100;
-                starVertices.push(x, y, z);
-            }
-            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-            const stars = new THREE.Points(starGeometry, starMaterial);
-            scene.add(stars);
-
-            window.addEventListener('resize', onWindowResize, false);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(10, 20, 10);
+            scene.add(dirLight);
             
-            // Mouse & Touch Events
-            document.addEventListener('mousedown', onDocumentMouseDown, false);
+            // Create Objects
+            createStarfield();
+            createPlayer();
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('mousemove', onMouseMove, false);
             
-            // IFP Specific Touch Events
-            const canvas = document.getElementById('canvas-container');
-            canvas.addEventListener('touchstart', onTouchStart, {passive: false});
-            canvas.addEventListener('touchmove', onTouchMove, {passive: false});
-        }
-
-        function spawnAlien() {
-            if (!isGameActive || isPaused) return;
-
-            const geometry = new THREE.IcosahedronGeometry(0.8, 0); // Slightly larger for easier tapping
-            const material = new THREE.MeshStandardMaterial({ 
-                color: 0xff0055, 
-                emissive: 0xaa0033,
-                emissiveIntensity: 0.8,
-                roughness: 0.2,
-                metalness: 0.8
-            });
+            // IFP / Touch Specific Events
+            // Passive false is important to allow preventDefault (stops scrolling)
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
             
-            const alien = new THREE.Mesh(geometry, material);
-            alien.position.x = (Math.random() - 0.5) * 12;
-            alien.position.y = (Math.random() - 0.5) * 8;
-            alien.position.z = -25 - (Math.random() * 10);
+            // Mouse Interactions
+            document.addEventListener('mousedown', () => state.isShooting = true);
+            document.addEventListener('mouseup', () => state.isShooting = false);
             
-            // REVISION: Math correction for speed
-            // Old formula: 0.08 + (score * 0.005) -> Score 100 = 0.58 speed (insane)
-            // New formula: 0.05 + (score * 0.0002) -> Score 100 = 0.07 speed (reasonable)
-            // Max speed cap added (0.25) to prevent impossible difficulty
+            // Touch Interactions (Multi-touch support for shooting while moving)
+            document.addEventListener('touchstart', (e) => { 
+                state.isShooting = true; 
+                onTouchMove(e); 
+            }, { passive: false });
             
-            let calculatedSpeed = 0.05 + (score * 0.0002);
-            if (calculatedSpeed > 0.25) calculatedSpeed = 0.25;
-
-            alien.userData = {
-                rotSpeed: { x: Math.random() * 0.05, y: Math.random() * 0.05 },
-                speed: calculatedSpeed
-            };
-
-            scene.add(alien);
-            aliens.push(alien);
-        }
-
-        function createExplosion(position, color) {
-            const particleCount = 30; // More particles
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-            const velocities = [];
-
-            for(let i=0; i<particleCount; i++){
-                positions.push(position.x, position.y, position.z);
-                velocities.push(
-                    (Math.random()-0.5)*0.8,
-                    (Math.random()-0.5)*0.8,
-                    (Math.random()-0.5)*0.8
-                );
-            }
-
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            
-            const material = new THREE.PointsMaterial({
-                color: color,
-                size: 0.3,
-                transparent: true,
-                opacity: 1
+            document.addEventListener('touchend', (e) => {
+                if(e.touches.length === 0) state.isShooting = false; 
             });
 
-            const particleSystem = new THREE.Points(geometry, material);
-            particleSystem.userData = { velocities: velocities, life: 1.0 };
-            scene.add(particleSystem);
-            particles.push(particleSystem);
-        }
-
-        // --- 3. INPUT HANDLING (Optimized for Touch) ---
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        }
-
-        function updateCameraAndPointer(clientX, clientY) {
-            // Normalized Device Coordinates (-1 to +1)
-            const x = (clientX / window.innerWidth) * 2 - 1;
-            const y = -(clientY / window.innerHeight) * 2 + 1;
-            
-            pointer.x = x;
-            pointer.y = y;
-
-            // Move camera slightly based on input position (Immersive feel)
-            // On IFP, this helps map the user's "look" direction
-            if(isGameActive && !isPaused) {
-                camera.rotation.y = x * 0.4;
-                camera.rotation.x = y * 0.2;
-            }
-
-            // Move crosshair visual
-            const crosshair = document.getElementById('crosshair');
-            crosshair.style.left = clientX + 'px';
-            crosshair.style.top = clientY + 'px';
-            crosshair.style.transform = 'translate(-50%, -50%)'; // Reset center
-        }
-
-        function onMouseMove(event) {
-            updateCameraAndPointer(event.clientX, event.clientY);
-        }
-
-        function onTouchMove(event) {
-            event.preventDefault(); // Prevent scrolling
-            const touch = event.touches[0];
-            updateCameraAndPointer(touch.clientX, touch.clientY);
-        }
-
-        function onTouchStart(event) {
-             if (!isGameActive || isPaused) return;
-             event.preventDefault();
-             
-             // Immediate feedback and update
-             const touch = event.touches[0];
-             updateCameraAndPointer(touch.clientX, touch.clientY);
-             
-             checkHit();
-        }
-
-        function onDocumentMouseDown(event) {
-            if (!isGameActive || isPaused) return;
-            checkHit();
-        }
-
-        function checkHit() {
-            raycaster.setFromCamera(pointer, camera);
-            const intersects = raycaster.intersectObjects(aliens);
-
-            if (intersects.length > 0) {
-                const hitObject = intersects[0].object;
-                currentTargetAlien = hitObject;
-                pauseGameAndShowQuestion();
-            }
-        }
-
-        // --- 4. GAME LOOP ---
-
-        function startGame() {
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('ui-layer').classList.remove('opacity-50');
-            isGameActive = true;
-            score = 0;
-            health = 100;
-            updateHUD();
-            
-            // Auto fullscreen on start (optional, usually browsers block this without direct gesture)
-            // toggleFullscreen(); 
-
-            setInterval(spawnAlien, 1800);
             animate();
         }
 
-        function updateHUD() {
-            document.getElementById('score-display').innerText = score;
-            document.getElementById('health-bar').style.width = health + '%';
+        // --- OBJECT CREATION ---
+        function createPlayer() {
+            const geometry = new THREE.ConeGeometry(1, 3, 4); // Futuristic wedge
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x00ffff, 
+                emissive: 0x0044aa, 
+                roughness: 0.2, 
+                metalness: 0.8,
+                flatShading: true 
+            });
+            player = new THREE.Mesh(geometry, material);
+            player.rotation.x = -Math.PI / 2; // Point forward
+            player.rotation.y = Math.PI / 4; // Flat side up
+            player.position.y = -8;
+            scene.add(player);
+
+            // Engine glow
+            const glowGeo = new THREE.SphereGeometry(0.3, 8, 8);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            glow.position.y = -1.5;
+            player.add(glow);
+        }
+
+        function createEnemy() {
+            const geometry = new THREE.TetrahedronGeometry(1.2);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0xff0055, 
+                emissive: 0x440022, 
+                roughness: 0.1,
+                metalness: 0.6
+            });
+            const enemy = new THREE.Mesh(geometry, material);
             
-            if (health <= 30) {
-                document.getElementById('health-bar').classList.remove('from-red-500', 'to-green-500');
-                document.getElementById('health-bar').classList.add('bg-red-600');
+            // Random start X
+            const x = (Math.random() - 0.5) * 30;
+            enemy.position.set(x, -8, -50); // Start far back
+            enemy.position.y = -8; // Same plane as player generally
+            
+            // Add custom properties
+            enemy.userData = { 
+                hp: 1, 
+                velocity: new THREE.Vector3(0, 0, (Math.random() * 0.2) + 0.3),
+                rotSpeed: (Math.random() - 0.5) * 0.1
+            };
+            
+            enemies.push(enemy);
+            scene.add(enemy);
+        }
+
+        function createBoss() {
+            const geometry = new THREE.IcosahedronGeometry(4, 1);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0xff0000, 
+                emissive: 0x550000,
+                specular: 0xffffff,
+                shininess: 50,
+                flatShading: true
+            });
+            boss = new THREE.Mesh(geometry, material);
+            boss.position.set(0, -5, -60); // Start far
+            
+            // Boss rings
+            const ringGeo = new THREE.TorusGeometry(6, 0.2, 8, 50);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            boss.add(ring);
+            boss.userData = { ring: ring };
+
+            scene.add(boss);
+        }
+
+        function createBullet() {
+            const geometry = new THREE.BoxGeometry(0.2, 0.2, 2);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+            const bullet = new THREE.Mesh(geometry, material);
+            
+            bullet.position.copy(player.position);
+            bullet.position.z -= 1; // Start slightly in front
+            
+            bullets.push(bullet);
+            scene.add(bullet);
+        }
+
+        function createStarfield() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 1000; i++) {
+                vertices.push(
+                    (Math.random() - 0.5) * 200,
+                    (Math.random() - 0.5) * 200,
+                    (Math.random() - 0.5) * 200 - 50
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 });
+            starField = new THREE.Points(geometry, material);
+            scene.add(starField);
+        }
+
+        function createExplosion(position, color) {
+            const particleCount = 15;
+            const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+            const material = new THREE.MeshBasicMaterial({ color: color });
+
+            for (let i = 0; i < particleCount; i++) {
+                const part = new THREE.Mesh(geometry, material);
+                part.position.copy(position);
+                part.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5),
+                        (Math.random() - 0.5),
+                        (Math.random() - 0.5)
+                    ),
+                    life: 1.0
+                };
+                particles.push(part);
+                scene.add(part);
             }
         }
 
-        function animate() {
-            animationId = requestAnimationFrame(animate);
+        // --- GAME LOGIC ---
 
-            if (isPaused) return;
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden'); 
+            state.isPlaying = true;
+            state.score = 0;
+            state.playerHP = 100;
+            state.level = 1;
+            updateHUD();
+        }
 
-            // Update Aliens
-            for (let i = aliens.length - 1; i >= 0; i--) {
-                let alien = aliens[i];
+        function updateHUD() {
+            document.getElementById('score-display').innerText = state.score;
+            document.getElementById('player-hp-display').innerText = state.playerHP + "%";
+            
+            if (boss && state.level === 2) {
+                const percent = (state.bossHP / state.bossMaxHP) * 100;
+                document.getElementById('boss-health-fill').style.width = percent + "%";
+            }
+        }
+
+        function onMouseMove(event) {
+            // Normalized device coordinates -1 to +1
+            state.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            state.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onTouchMove(event) {
+            event.preventDefault(); // Prevent scrolling on IFP
+            const touch = event.touches[0];
+            state.mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+            state.mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function checkBossThresholds() {
+            if (!boss || state.level !== 2) return;
+
+            const hpPercent = (state.bossHP / state.bossMaxHP) * 100;
+            
+            let targetIndex = -1;
+
+            if (state.bossPhase === 0) targetIndex = 0; 
+            else if (state.bossPhase === 1 && hpPercent <= 75) targetIndex = 1;
+            else if (state.bossPhase === 2 && hpPercent <= 50) targetIndex = 2;
+            else if (state.bossPhase === 3 && hpPercent <= 25) targetIndex = 3;
+            else if (state.bossPhase === 4 && hpPercent <= 5) targetIndex = 4;
+
+            if (targetIndex !== -1 && targetIndex < quizData.length) {
+                triggerQuiz(targetIndex);
+                state.bossPhase++; 
+            }
+        }
+
+        function triggerQuiz(index) {
+            state.isPaused = true;
+            state.isPlaying = false;
+            
+            const q = quizData[index];
+            const overlay = document.getElementById('modal-overlay'); 
+            const modal = document.getElementById('quiz-screen');
+            const questionEl = document.getElementById('quiz-question');
+            const optionsEl = document.getElementById('quiz-options');
+            const explainEl = document.getElementById('quiz-explanation');
+            const continueBtn = document.getElementById('quiz-continue-btn');
+
+            overlay.classList.remove('hidden'); 
+            modal.classList.remove('hidden');
+            explainEl.style.display = 'none';
+            continueBtn.classList.add('hidden');
+            
+            questionEl.innerText = q.question;
+            optionsEl.innerHTML = ''; 
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'quiz-option';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(i, index, btn);
+                optionsEl.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(choiceIndex, quizIndex, btnElement) {
+            if (document.getElementById('quiz-continue-btn').classList.contains('hidden') === false) return;
+
+            const q = quizData[quizIndex];
+            const explainEl = document.getElementById('quiz-explanation');
+            const continueBtn = document.getElementById('quiz-continue-btn');
+
+            if (choiceIndex === q.correct) {
+                btnElement.classList.add('correct-anim');
+                explainEl.style.color = "#00ffaa";
+                explainEl.innerText = "BENAR! " + q.explanation;
+                state.score += 500;
+            } else {
+                btnElement.classList.add('wrong-anim');
+                const opts = document.getElementById('quiz-options').children;
+                opts[q.correct].style.border = "1px solid #00ff00";
                 
-                alien.position.z += alien.userData.speed;
-                alien.rotation.x += alien.userData.rotSpeed.x;
-                alien.rotation.y += alien.userData.rotSpeed.y;
+                explainEl.style.color = "#ff5555";
+                explainEl.innerText = "SALAH. " + q.explanation;
+                state.playerHP -= 10;
+                updateHUD();
+            }
 
-                if (alien.position.z > 4) {
-                    createExplosion(alien.position, 0xff0000);
-                    scene.remove(alien);
-                    aliens.splice(i, 1);
-                    takeDamage(15);
+            explainEl.style.display = 'block';
+            continueBtn.classList.remove('hidden');
+        }
+
+        function closeQuiz() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden'); 
+            state.isPaused = false;
+            state.isPlaying = true;
+            
+            if (state.bossPhase === 5) { 
+                 state.bossHP = 1; 
+            }
+        }
+
+        function gameOver(victory) {
+            state.isPlaying = false;
+            const overlay = document.getElementById('modal-overlay'); 
+            const screen = document.getElementById('game-over-screen');
+            const title = document.getElementById('go-title');
+            const msg = document.getElementById('go-message');
+            
+            overlay.classList.remove('hidden'); 
+            screen.classList.remove('hidden');
+            document.getElementById('final-score').innerText = state.score;
+
+            if (victory) {
+                title.innerText = "MISI SUKSES";
+                title.style.color = "#00ff00";
+                msg.innerText = "Titan Polusi telah dikalahkan. Bumi kembali bersih.";
+            } else {
+                title.innerText = "MISI GAGAL";
+                title.style.color = "#ff0000";
+                msg.innerText = "Energi pesawat habis.";
+            }
+        }
+
+        // --- MAIN ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Move stars always
+            starField.rotation.z += 0.002;
+
+            if (!state.isPlaying && !state.isPaused) {
+                return;
+            }
+
+            if (state.isPaused) return;
+
+            state.frames++;
+
+            // 1. Move Player
+            const targetX = state.mouse.x * 20;
+            player.position.x += (targetX - player.position.x) * 0.1;
+            player.rotation.z = -(targetX - player.position.x) * 0.1;
+
+            // 2. Shooting
+            if (state.isShooting && state.frames % 10 === 0) {
+                createBullet();
+            }
+
+            // 3. Move Bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                b.position.z -= config.bulletSpeed; 
+                if (b.position.z < -100) {
+                    scene.remove(b);
+                    bullets.splice(i, 1);
                 }
             }
 
-            // Update Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                const positions = p.geometry.attributes.position.array;
-                const vels = p.userData.velocities;
-
-                for(let j=0; j < positions.length; j+=3) {
-                    positions[j] += vels[j];
-                    positions[j+1] += vels[j+1];
-                    positions[j+2] += vels[j+2];
+            // 4. Level Management
+            if (state.level === 1) {
+                if (state.frames % config.spawnRate === 0) {
+                    createEnemy();
                 }
-                p.geometry.attributes.position.needsUpdate = true;
-                p.material.opacity -= 0.02;
 
-                if(p.material.opacity <= 0) {
+                if (state.score >= 1000 && enemies.length === 0) {
+                    state.level = 2;
+                    createBoss();
+                    document.getElementById('boss-hud').style.display = 'flex';
+                    triggerQuiz(0);
+                    state.bossPhase = 1;
+                }
+            } else if (state.level === 2 && boss) {
+                if (boss.position.z < -20) {
+                    boss.position.z += 0.2; 
+                } else {
+                    boss.position.x = Math.sin(state.frames * 0.01) * 10;
+                    boss.position.y = -5 + Math.cos(state.frames * 0.02) * 2;
+                }
+                
+                boss.rotation.y += 0.01;
+                boss.userData.ring.rotation.x += 0.02;
+                boss.userData.ring.rotation.y += 0.02;
+
+                checkBossThresholds();
+            }
+
+            // 5. Move Enemies & Collisions
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                e.position.z += config.enemySpeed * 5; 
+                e.rotation.x += e.userData.rotSpeed;
+                e.rotation.y += e.userData.rotSpeed;
+
+                if (e.position.z > -8 && Math.abs(e.position.x - player.position.x) < 2) {
+                    createExplosion(e.position, 0xff0055);
+                    scene.remove(e);
+                    enemies.splice(i, 1);
+                    state.playerHP -= 10;
+                    updateHUD();
+                    if(state.playerHP <= 0) gameOver(false);
+                    continue;
+                }
+
+                if (e.position.z > 5) { 
+                    scene.remove(e);
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    const b = bullets[j];
+                    if (b.position.z < e.position.z && b.position.z > e.position.z - 2) {
+                        if (Math.abs(b.position.x - e.position.x) < 2) {
+                            createExplosion(e.position, 0xffaaff);
+                            scene.remove(e);
+                            enemies.splice(i, 1);
+                            
+                            scene.remove(b);
+                            bullets.splice(j, 1);
+                            
+                            state.score += 100;
+                            updateHUD();
+                            break; 
+                        }
+                    }
+                }
+            }
+
+            // 6. Boss Collisions
+            if (boss && state.level === 2) {
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    const b = bullets[j];
+                    if (b.position.z < boss.position.z + 4 && b.position.z > boss.position.z - 4) {
+                        if (Math.abs(b.position.x - boss.position.x) < 5) {
+                            createExplosion(b.position, 0xffaa00);
+                            state.bossHP -= 5; 
+                            updateHUD();
+                            
+                            scene.remove(b);
+                            bullets.splice(j, 1);
+
+                            if (state.bossHP <= 0) {
+                                createExplosion(boss.position, 0xffffff);
+                                scene.remove(boss);
+                                boss = null;
+                                setTimeout(() => gameOver(true), 1000);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 7. Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.position.add(p.userData.velocity);
+                p.userData.life -= 0.05;
+                p.scale.setScalar(p.userData.life);
+                if (p.userData.life <= 0) {
                     scene.remove(p);
                     particles.splice(i, 1);
                 }
@@ -501,111 +890,14 @@
             renderer.render(scene, camera);
         }
 
-        function takeDamage(amount) {
-            health -= amount;
-            updateHUD();
-            
-            const overlay = document.getElementById('feedback-overlay');
-            overlay.classList.remove('feedback-correct');
-            overlay.classList.add('feedback-wrong');
-            void overlay.offsetWidth; 
-            
-            if (health <= 0) {
-                endGame();
-            }
-        }
-
-        function endGame() {
-            isGameActive = false;
-            cancelAnimationFrame(animationId);
-            document.getElementById('final-score').innerText = score;
-            document.getElementById('game-over-screen').classList.remove('hidden');
-        }
-
-        // --- 5. QUIZ LOGIC ---
-
-        function pauseGameAndShowQuestion() {
-            isPaused = true;
-            // CRITICAL FIX: Stop the previous animation loop completely
-            cancelAnimationFrame(animationId);
-            
-            const qData = questions[Math.floor(Math.random() * questions.length)];
-            
-            const modal = document.getElementById('question-modal');
-            const qText = document.getElementById('question-text');
-            const optsContainer = document.getElementById('options-container');
-            const explanationPanel = document.getElementById('explanation-panel');
-
-            modal.classList.remove('hidden');
-            explanationPanel.classList.add('hidden');
-            optsContainer.innerHTML = '';
-            optsContainer.classList.remove('hidden');
-            
-            qText.innerText = qData.q;
-
-            qData.options.forEach((opt, index) => {
-                const btn = document.createElement('button');
-                // Larger buttons for IFP touch
-                btn.className = "w-full text-left bg-gray-800 hover:bg-cyan-900 border-2 border-gray-600 hover:border-cyan-400 text-gray-200 p-6 rounded-xl transition-all flex items-center group shadow-md";
-                btn.innerHTML = `<span class="bg-gray-700 w-10 h-10 flex items-center justify-center rounded-lg mr-4 text-lg font-bold text-cyan-400 border border-gray-500 group-hover:border-cyan-400">${String.fromCharCode(65+index)}</span> <span class="text-xl">${opt}</span>`;
-                
-                btn.onclick = () => handleAnswer(index, qData);
-                optsContainer.appendChild(btn);
-            });
-        }
-
-        function handleAnswer(selectedIndex, qData) {
-            const isCorrect = selectedIndex === qData.answer;
-            const explanationPanel = document.getElementById('explanation-panel');
-            const optsContainer = document.getElementById('options-container');
-            const feedbackTitle = document.getElementById('feedback-title');
-            const feedbackText = document.getElementById('feedback-text');
-
-            optsContainer.classList.add('hidden');
-            explanationPanel.classList.remove('hidden');
-
-            if (isCorrect) {
-                feedbackTitle.innerText = "JAWABAN BENAR!";
-                feedbackTitle.className = "font-bold mb-2 text-green-400 text-3xl";
-                feedbackText.innerText = `Analisis Tepat: ${qData.explanation}`;
-                
-                if (currentTargetAlien) {
-                    createExplosion(currentTargetAlien.position, 0x00ffcc);
-                    scene.remove(currentTargetAlien);
-                    aliens = aliens.filter(a => a !== currentTargetAlien);
-                    currentTargetAlien = null;
-                }
-                score += 100;
-                
-                const overlay = document.getElementById('feedback-overlay');
-                overlay.classList.remove('feedback-wrong');
-                overlay.classList.add('feedback-correct');
-                void overlay.offsetWidth; 
-
-            } else {
-                feedbackTitle.innerText = "ANALISIS GAGAL!";
-                feedbackTitle.className = "font-bold mb-2 text-red-400 text-3xl";
-                feedbackText.innerText = `Koreksi: Jawaban yang tepat adalah ${qData.options[qData.answer]}. \n${qData.explanation}`;
-                takeDamage(10);
-            }
-            updateHUD();
-        }
-
-        function resumeGame() {
-            document.getElementById('question-modal').classList.add('hidden');
-            isPaused = false;
-            // Since we cancelled the previous loop, we start a new one here.
-            // This ensures only ONE loop runs at a time.
-            animate();
-        }
-
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        init3D();
+        // Start
+        init();
 
     </script>
 </body>
