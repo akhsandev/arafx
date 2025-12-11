@@ -462,15 +462,22 @@
             document.addEventListener('mousemove', onMouseMove, false);
             
             // IFP / Touch Specific Events
-            // Passive false is important to allow preventDefault (stops scrolling)
-            document.addEventListener('touchmove', onTouchMove, { passive: false });
+            // Fix: Check if target is inside modal/button to allow clicks
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.modal-content') || e.target.tagName === 'BUTTON') return;
+                onTouchMove(e);
+            }, { passive: false });
             
             // Mouse Interactions
-            document.addEventListener('mousedown', () => state.isShooting = true);
+            document.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.modal-content') || e.target.tagName === 'BUTTON') return;
+                state.isShooting = true;
+            });
             document.addEventListener('mouseup', () => state.isShooting = false);
             
-            // Touch Interactions (Multi-touch support for shooting while moving)
+            // Touch Interactions
             document.addEventListener('touchstart', (e) => { 
+                if (e.target.closest('.modal-content') || e.target.tagName === 'BUTTON') return;
                 state.isShooting = true; 
                 onTouchMove(e); 
             }, { passive: false });
