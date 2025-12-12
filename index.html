@@ -320,6 +320,11 @@
             
             <div class="container mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-4">
+                    <!-- Mobile Sidebar Toggle -->
+                    <button onclick="toggleSidebar()" class="md:hidden btn-medieval btn-stone text-white px-3 py-2 rounded text-xs border-2 border-stone-500">
+                        <i class="fas fa-scroll"></i>
+                    </button>
+
                     <div id="avatar-display" class="w-12 h-12 rounded bg-stone-700 flex items-center justify-center border-4 border-amber-600 shadow-lg">
                         <i class="fas fa-chess-knight text-white text-2xl"></i>
                     </div>
@@ -338,16 +343,23 @@
                         <i class="fas fa-crown"></i> <span class="hidden md:inline">TAHTA</span>
                     </button>
                     <button onclick="openShop()" class="btn-medieval btn-red px-3 py-1 rounded text-xs font-bold flex items-center gap-1">
-                        <i class="fas fa-store-alt"></i> PASAR
+                        <i class="fas fa-store-alt"></i> <span class="hidden md:inline">PASAR</span>
                     </button>
                     <button onclick="logout()" class="text-red-400 hover:text-red-300 text-xs px-2"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
         </nav>
 
-        <div class="flex-grow flex flex-col md:flex-row overflow-hidden">
-            <!-- Sidebar (The Scroll) -->
-            <div class="md:w-1/4 wood-panel p-4 overflow-y-auto hidden md:block z-10">
+        <div class="flex-grow flex flex-col md:flex-row overflow-hidden relative">
+            <!-- Sidebar (The Scroll) - Updated for Mobile Overlay -->
+            <div id="sidebar-panel" class="md:w-1/4 wood-panel p-4 overflow-y-auto hidden md:block z-30 absolute md:relative w-full h-full top-0 left-0 bg-[#4e342e]">
+                
+                <!-- Mobile Close Button -->
+                <div class="flex justify-between items-center md:hidden mb-4 border-b border-amber-900 pb-2">
+                    <span class="text-amber-500 font-bold title-font">GULUNGAN MISI</span>
+                    <button onclick="toggleSidebar()" class="text-red-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                </div>
+
                 <!-- Status Misi -->
                 <div class="text-center mb-6">
                     <h3 class="title-font text-amber-500 border-b-2 border-amber-900 pb-1 mb-2 inline-block">TITAH RAJA</h3>
@@ -1422,6 +1434,12 @@
             const r = document.getElementById('import-area').value.trim(); if(!r) return;
             const b = db.batch(); r.split('\n').forEach(l=>{const[n,k,ni]=l.split('\t'); if(ni) b.set(db.collection('users').doc(),{nama:n,kelas:k,nisn:ni,password:ni,stats:{}})});
             await b.commit(); alert("Siswa diimport");
+        }
+
+        // --- MOBILE SIDEBAR TOGGLE ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-panel');
+            sidebar.classList.toggle('hidden');
         }
     </script>
 </body>
