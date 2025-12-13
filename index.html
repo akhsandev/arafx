@@ -243,6 +243,35 @@
             transform: translateY(20px);
             transition: all 1.5s ease-out;
         }
+
+        /* --- BOSS BATTLE STYLES --- */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-effect { animation: shake 0.5s; }
+        
+        .boss-container {
+            background-color: #212121;
+            border: 4px solid #880e4f;
+            border-radius: 8px;
+            padding: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hp-bar-bg { width: 100%; height: 20px; bg-gray-700; border: 2px solid white; border-radius: 10px; overflow: hidden; background: #424242; }
+        .hp-bar-fill { height: 100%; transition: width 0.3s; }
+        .boss-hp { background: linear-gradient(90deg, #c62828, #ff5252); }
+        .player-hp { background: linear-gradient(90deg, #2e7d32, #66bb6a); }
     </style>
 </head>
 <body>
@@ -464,6 +493,39 @@
                     </div>
                 </div>
 
+                <!-- BOSS BATTLE VIEW -->
+                <div id="view-boss" class="hidden">
+                    <div class="boss-container text-center">
+                        <!-- Boss Image Area -->
+                        <div class="relative w-full h-48 mb-4 rounded border-2 border-stone-600 bg-black overflow-hidden flex justify-center items-center">
+                            <img id="boss-image" src="" class="h-full object-cover" alt="Boss">
+                            <div class="absolute bottom-0 w-full bg-black/60 text-white font-bold py-1 title-font" id="boss-name">THE BOSS</div>
+                        </div>
+
+                        <!-- HP Bars -->
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-1/2">
+                                <div class="text-xs text-green-400 font-bold text-left mb-1">DARAHMU</div>
+                                <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill player-hp" style="width: 100%;"></div></div>
+                            </div>
+                            <div class="w-1/2">
+                                <div class="text-xs text-red-400 font-bold text-right mb-1">DARAH BOSS</div>
+                                <div class="hp-bar-bg"><div id="boss-hp-bar" class="hp-bar-fill boss-hp" style="width: 100%;"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- Question Area -->
+                        <div class="bg-[#eefebe] p-4 rounded border border-[#8d6e63] mb-4">
+                            <p id="boss-q-text" class="text-[#3e2723] font-serif font-bold">Bersiap bertarung...</p>
+                        </div>
+
+                        <!-- Options -->
+                        <div id="boss-options" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Buttons injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Upload & Simulation (Level 5 PhET) -->
                 <div id="view-upload" class="hidden">
                     <!-- PhET Container -->
@@ -651,11 +713,15 @@
                         <table class="w-full text-left text-sm text-slate-300">
                             <thead class="bg-[#263238] text-xs uppercase font-bold text-slate-400">
                                 <tr>
-                                    <th class="p-3 sticky left-0 bg-[#37474f] border-r border-[#263238]">Nama</th>
+                                    <th class="p-3 sticky left-0 bg-[#37474f] border-r border-[#263238] z-10">Nama</th>
+                                    <th class="p-3 text-center border-r border-[#263238]">Kelas</th>
+                                    <th class="p-3 text-center border-r border-[#263238]">Avatar</th>
+                                    <th class="p-3 text-center border-r border-[#263238]">Gold (XP)</th>
+                                    <th class="p-3 text-center border-r border-[#263238]">Benteng</th>
                                     <th class="p-1 text-center">1</th><th class="p-1 text-center">2</th><th class="p-1 text-center">3</th><th class="p-1 text-center">4</th><th class="p-1 text-center">5</th>
                                     <th class="p-1 text-center">6</th><th class="p-1 text-center">7</th><th class="p-1 text-center">8</th><th class="p-1 text-center">9</th><th class="p-1 text-center">10</th>
                                     <th class="p-1 text-center">11</th><th class="p-1 text-center">12</th><th class="p-1 text-center">13</th><th class="p-1 text-center">14</th><th class="p-1 text-center">15</th>
-                                    <th class="p-3 text-center border-l border-[#263238] text-amber-400">NILAI AKHIR</th>
+                                    <th class="p-3 text-center border-l border-[#263238] text-amber-400">NILAI</th>
                                 </tr>
                             </thead>
                             <tbody id="student-progress-list" class="divide-y divide-[#37474f]"></tbody>
@@ -686,22 +752,31 @@
         });
 
         // --- DATA LEVEL ---
-        // UPDATED LEVEL 5 TO USE PHET
+        // UPDATED LEVELS 4, 9, 14 TO BOSS MODE
         const levels = [
             { id: 1, type: 'quiz', title: "Energi & Kehidupan", desc: "Konsep Dasar.", icon: "fa-leaf", top: "95%", left: "10%" },
             { id: 2, type: 'quiz', title: "Konsep Usaha", desc: "Definisi W = F.s.", icon: "fa-running", top: "89%", left: "30%" },
             { id: 3, type: 'game', gameType: 'word_scramble', title: "Game: Istilah", desc: "Susun kata.", icon: "fa-gamepad", top: "83%", left: "50%" },
-            { id: 4, type: 'quiz', title: "Energi Mekanik", desc: "EM = Ep + Ek.", icon: "fa-cogs", top: "77%", left: "70%" },
+            
+            // BOSS 1
+            { id: 4, type: 'boss', title: "BOSS: Silent Assassins", desc: "Kalahkan pembunuh bayangan dengan ilmu Energi Mekanik!", icon: "fa-skull", top: "77%", left: "70%", bossImg: "https://arafx.vercel.app/thesilentassassins.jpg" },
+            
             { id: 5, type: 'upload', title: "Lab: Skate Park", desc: "Simulasi PhET & Analisis.", icon: "fa-skating", top: "71%", left: "50%" }, 
             { id: 6, type: 'quiz', title: "Daya & Efisiensi", desc: "Menghitung Daya.", icon: "fa-tachometer-alt", top: "65%", left: "30%" },
             { id: 7, type: 'game', gameType: 'energy_sort', title: "Game: Pilah", desc: "Pilah Energi.", icon: "fa-recycle", top: "59%", left: "10%" },
             { id: 8, type: 'quiz', title: "Energi Surya", desc: "Panel Surya.", icon: "fa-solar-panel", top: "53%", left: "30%" },
-            { id: 9, type: 'quiz', title: "Angin & Air", desc: "Kincir & Turbin.", icon: "fa-wind", top: "47%", left: "50%" },
+            
+            // BOSS 2
+            { id: 9, type: 'boss', title: "BOSS: Black Tyrant", desc: "Hentikan tirani polusi dengan pengetahuan Angin & Air!", icon: "fa-dragon", top: "47%", left: "50%", bossImg: "https://arafx.vercel.app/theblacktyrant.jpg" },
+            
             { id: 10, type: 'upload', title: "Prototipe", desc: "Desain alat.", icon: "fa-pencil-ruler", top: "41%", left: "70%" },
             { id: 11, type: 'quiz', title: "Biomassa", desc: "Energi Organik.", icon: "fa-fire", top: "35%", left: "50%" },
             { id: 12, type: 'game', gameType: 'click_target', title: "Game: Foton", desc: "Tangkap Foton.", icon: "fa-bolt", top: "29%", left: "30%" },
             { id: 13, type: 'quiz', title: "Lingkungan", desc: "Dampak Emisi.", icon: "fa-smog", top: "23%", left: "10%" },
-            { id: 14, type: 'quiz', title: "Masa Depan", desc: "Teknologi Baru.", icon: "fa-car-battery", top: "17%", left: "30%" },
+            
+            // BOSS 3
+            { id: 14, type: 'boss', title: "BOSS: Righteous Paladin", desc: "Buktikan kelayakanmu tentang Masa Depan!", icon: "fa-shield-alt", top: "17%", left: "30%", bossImg: "https://arafx.vercel.app/therighteouspaladin.jpg" },
+            
             { id: 15, type: 'upload', title: "FINAL PROJECT", desc: "Laporan Akhir.", icon: "fa-flag-checkered", top: "8%", left: "50%" }
         ];
 
@@ -804,6 +879,7 @@
                 node.onclick = () => openLevelModal(l.id);
                 // Changing icons to be more 'castle' like conceptually but keeping fontawesome
                 let icon = l.icon;
+                if (l.type === 'boss') icon = "fa-skull-crossbones"; // Special icon for boss
                 if (st==='approved') icon = "fa-flag"; // Completed castles have flags
                 
                 node.innerHTML = `<i class="fas ${icon} text-2xl"></i><span class="absolute -bottom-8 w-32 text-center text-[10px] font-bold bg-black/70 px-2 py-1 rounded text-white left-1/2 -translate-x-1/2 border border-[#8d6e63] font-serif">${l.id}. ${l.title}</span>`;
@@ -815,7 +891,7 @@
             if(n) document.getElementById('map-wrapper').scrollTo({ top: (parseFloat(n.top)/100)*2500 - 300, behavior: 'smooth' });
         }
 
-        // --- MATERIAL SYSTEM (UPDATED) ---
+        // --- MATERIAL SYSTEM ---
         function initAdminMaterials() {
             const sel = document.getElementById('mat-level');
             sel.innerHTML = "";
@@ -837,7 +913,7 @@
                     level: level,
                     title: title,
                     link: link,
-                    type: type, // Saving Type
+                    type: type, 
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 alert("Gulungan materi berhasil disimpan di perpustakaan!");
@@ -888,7 +964,7 @@
             }
 
             // Hide other views
-            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-material').classList.remove('hidden');
             
             const container = document.getElementById('mat-content-container');
@@ -920,9 +996,9 @@
             document.getElementById('game-modal').classList.remove('opacity-0', 'pointer-events-none');
         }
 
-        // --- SHOP SYSTEM (THE MARKET) ---
+        // --- SHOP SYSTEM ---
         function openShop() {
-            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-shop').classList.remove('hidden');
             
             let totalXP = 0;
@@ -986,10 +1062,10 @@
             openShop();
         }
 
-        // --- NEW: CASTLE BUILDING SYSTEM ---
+        // --- CASTLE BUILDING SYSTEM ---
         function openCastle() {
             // Hide other views
-            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-castle').classList.remove('hidden');
             
             document.getElementById('modal-title').innerText = "Markas Komando";
@@ -1041,20 +1117,12 @@
         async function upgradeCastle(levelId, cost) {
             if(confirm(`Tingkatkan benteng ke Level ${levelId} seharga ${cost} Gold?`)) {
                 playSound('correct');
-                // Update Firestore
                 await db.collection('users').doc(currentUserDocId).update({
                     spent_xp: (currentUserData.spent_xp || 0) + cost,
                     castle_level: levelId
                 });
-                // Re-render handled by onSnapshot listener which calls updateAvatarDisplay etc, but we need to re-open modal to see change immediately or just wait for listener
-                // Listener updates currentUserData, so calling openCastle() again after a slight delay or just rely on reactivity if we built it that way. 
-                // Since openCastle reads from currentUserData which is updated by snapshot, we just need to wait for snapshot.
-                // For better UX, we can manually update local state temporarily or just wait.
-                // Let's close and reopen to refresh or just call openCastle inside the listener? No, listener updates global vars.
-                // Simple fix: The listener will update `currentUserData`. We can re-call openCastle() inside the listener IF the modal is open, but simpler to just re-call it here after a short timeout or just let user re-click.
-                // Actually, let's just alert success.
                 alert("Pembangunan selesai! Bentengmu semakin kuat.");
-                openCastle(); // This might show old data if snapshot hasn't fired yet.
+                openCastle(); 
             }
         }
 
@@ -1078,7 +1146,7 @@
             document.getElementById('modal-type-badge').innerText = l.type.toUpperCase();
             document.getElementById('modal-desc').innerText = l.desc;
             
-            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-intro').classList.remove('hidden');
             
             const btn = document.getElementById('btn-start-action');
@@ -1114,9 +1182,11 @@
             if(type === 'quiz') {
                 await startQuiz();
             }
+            else if(type === 'boss') {
+                await startBossBattle();
+            }
             else if(type === 'upload') {
                 document.getElementById('view-upload').classList.remove('hidden');
-                
                 const phetContainer = document.getElementById('phet-container');
                 const phetFrame = document.getElementById('phet-frame');
                 const phetBtn = document.getElementById('phet-fullscreen-btn');
@@ -1136,7 +1206,99 @@
             }
         }
 
-        // --- QUIZ ---
+        // --- BOSS BATTLE LOGIC ---
+        let bossState = { hp: 100, maxHp: 100, playerHp: 3, maxPlayerHp: 3, questions: [], currentQ: 0 };
+
+        async function startBossBattle() {
+            document.getElementById('view-boss').classList.remove('hidden');
+            const levelData = levels.find(l => l.id === activeLevel);
+            
+            document.getElementById('boss-image').src = levelData.bossImg;
+            document.getElementById('boss-name').innerText = levelData.title;
+            
+            // Fetch Questions
+            bossState.questions = [];
+            bossState.currentQ = 0;
+            bossState.hp = 100;
+            bossState.playerHp = 3; 
+            
+            updateBossUI();
+
+            try {
+                const snap = await db.collection('questions').where('level', '==', activeLevel).get();
+                snap.forEach(doc => bossState.questions.push(doc.data()));
+                
+                if(bossState.questions.length === 0) {
+                    alert("Boss belum memiliki soal serangan! Hubungi Guru.");
+                    closeModal();
+                    return;
+                }
+                
+                renderBossQuestion();
+            } catch(e) { console.error(e); }
+        }
+
+        function updateBossUI() {
+            document.getElementById('boss-hp-bar').style.width = `${bossState.hp}%`;
+            document.getElementById('player-hp-bar').style.width = `${(bossState.playerHp/3)*100}%`;
+        }
+
+        function renderBossQuestion() {
+            if (bossState.currentQ >= bossState.questions.length) {
+                // Out of questions - loop or reshuffle? Let's loop for boss
+                bossState.currentQ = 0;
+            }
+            
+            const q = bossState.questions[bossState.currentQ];
+            document.getElementById('boss-q-text').innerText = q.q;
+            
+            const div = document.getElementById('boss-options'); div.innerHTML = "";
+            q.opts.forEach((o, i) => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 bg-[#3e2723] text-amber-100 border border-[#5d4037] rounded hover:bg-[#5d4037] text-left text-sm font-bold transition";
+                btn.innerText = o;
+                btn.onclick = () => handleBossAnswer(i, q.a);
+                div.appendChild(btn);
+            });
+        }
+
+        function handleBossAnswer(selected, correct) {
+            const bossView = document.getElementById('view-boss');
+            
+            if (selected === correct) {
+                // Player Hits Boss
+                playSound('correct');
+                const damage = 100 / Math.min(bossState.questions.length, 5); // Minimum 5 hits to kill or question count
+                bossState.hp = Math.max(0, bossState.hp - damage);
+                
+                // Animation
+                document.getElementById('boss-image').classList.add('shake-effect');
+                setTimeout(()=>document.getElementById('boss-image').classList.remove('shake-effect'), 500);
+
+                if (bossState.hp <= 0) {
+                    finishLevel(100, 'boss');
+                    return;
+                }
+            } else {
+                // Boss Hits Player
+                playSound('wrong');
+                bossState.playerHp--;
+                bossView.classList.add('shake-effect');
+                setTimeout(()=>bossView.classList.remove('shake-effect'), 500);
+
+                if (bossState.playerHp <= 0) {
+                    alert("Ksatria Gugur! Cobalah lagi dengan strategi yang lebih baik.");
+                    closeModal();
+                    return;
+                }
+            }
+            
+            updateBossUI();
+            bossState.currentQ++;
+            setTimeout(renderBossQuestion, 800); // Slight delay for impact
+        }
+
+        // --- QUIZ (Standard) ---
         async function startQuiz() {
             document.getElementById('view-quiz').classList.remove('hidden');
             document.getElementById('q-feedback').classList.add('hidden'); 
@@ -1374,14 +1536,14 @@
         }
 
         function showResult(score, msg) {
-            ['intro','quiz','upload','game','result','shop','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-result').classList.remove('hidden');
             document.getElementById('res-msg').innerText = `${msg} (Skor Pertempuran: ${score})`;
         }
 
         // --- LEADERBOARD LOGIC ---
         async function openLeaderboard() {
-            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-leaderboard').classList.remove('hidden');
             
             document.getElementById('modal-title').innerText = "Aula Pahlawan";
@@ -1555,14 +1717,21 @@
         function renderStudentProgressTable() {
             const k = document.getElementById('search-student').value.toLowerCase();
             const l = document.getElementById('student-progress-list'); l.innerHTML = "";
+            
+            // Helper for colors and icons
+            const getAvatarColor = (id) => avatars.find(a => a.id === id)?.color || 'bg-blue-800';
+            const getCastleIcon = (lvl) => castleLevels.find(c => c.id === (lvl||1))?.icon || 'fa-campground';
+
             window.allStd.filter(s=>s.nama.toLowerCase().includes(k)).forEach(s => {
-                let h = `<td class="p-3 sticky left-0 bg-[#37474f] text-white text-xs border-r border-[#263238]">${s.nama}</td>`;
                 let totalXP = 0;
+                let levelCols = "";
+                
+                // Calculate XP and build level dots
                 for(let i=1; i<=15; i++) {
                     const st = s.stats[`level_${i}_status`];
                     if(st === 'approved') totalXP += (s.stats[`level_${i}_xp`] || 0);
                     let c = "text-slate-600"; if(st==='approved') c="text-green-400"; else if(st==='pending') c="text-yellow-400"; else if(st==='rejected') c="text-red-400";
-                    h += `<td class="p-1 text-center ${c}">•</td>`;
+                    levelCols += `<td class="p-1 text-center ${c}">•</td>`;
                 }
                 
                 // Live Grade Calculation
@@ -1570,8 +1739,26 @@
                 let finalGrade = 70 + ((totalXP / maxPossibleXP) * 30);
                 finalGrade = Math.min(100, Math.max(70, finalGrade)).toFixed(1);
                 
-                h += `<td class="p-3 text-center border-l border-[#263238] text-amber-400 font-bold pixel-font">${finalGrade}</td>`;
-                l.innerHTML += `<tr class="border-b border-[#263238] hover:bg-[#455a64]">${h}</tr>`;
+                const avColor = getAvatarColor(s.avatar);
+                const castleIcon = getCastleIcon(s.castle_level);
+
+                const rowHTML = `
+                    <td class="p-3 sticky left-0 bg-[#37474f] text-white text-xs border-r border-[#263238] z-10 font-bold whitespace-nowrap">${s.nama}</td>
+                    <td class="p-3 text-center text-xs border-r border-[#263238] text-stone-300">${s.kelas || '-'}</td>
+                    <td class="p-3 text-center border-r border-[#263238]">
+                        <div class="w-6 h-6 rounded-full ${avColor} flex items-center justify-center border border-white mx-auto shadow-sm" title="${s.avatar || 'blue'}">
+                            <i class="fas fa-user-astronaut text-white text-[10px]"></i>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center text-xs font-bold text-amber-400 border-r border-[#263238]">${totalXP}</td>
+                    <td class="p-3 text-center border-r border-[#263238]">
+                        <i class="fas ${castleIcon} text-stone-400 text-sm" title="Level Benteng: ${s.castle_level || 1}"></i>
+                    </td>
+                    ${levelCols}
+                    <td class="p-3 text-center border-l border-[#263238] text-amber-400 font-bold pixel-font">${finalGrade}</td>
+                `;
+                
+                l.innerHTML += `<tr class="border-b border-[#263238] hover:bg-[#455a64] transition-colors">${rowHTML}</tr>`;
             });
         }
         async function processImport() { /* Same logic */
