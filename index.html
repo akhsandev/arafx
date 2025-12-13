@@ -101,6 +101,7 @@
         .btn-red { background: #880e4f; color: #ffecb3; border-color: #4a001f; box-shadow: 0 4px 0 #4a001f; }
         .btn-gold { background: #fbc02d; color: #3e2723; border-color: #f57f17; box-shadow: 0 4px 0 #f57f17; }
         .btn-stone { background: #78909c; color: #263238; border-color: #37474f; box-shadow: 0 4px 0 #37474f; }
+        .btn-blue { background: #1565c0; color: #e3f2fd; border-color: #0d47a1; box-shadow: 0 4px 0 #0d47a1; }
 
         /* Map Styling */
         .map-wrapper {
@@ -178,6 +179,22 @@
         .rank-2 { color: #616161; font-weight: bold; }
         .rank-3 { color: #795548; font-weight: bold; }
         .current-user-row { background-color: rgba(255, 215, 0, 0.2); border-left: 4px solid #ffd700; }
+
+        /* Castle Upgrade Styles */
+        .castle-level-card {
+            text-align: center;
+            padding: 20px;
+            background-color: #eefebe;
+            border: 2px dashed #8d6e63;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .castle-icon-large {
+            font-size: 5rem;
+            color: #5d4037;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
 
         /* --- GLOWING WELCOME ANIMATION --- */
         #intro-overlay {
@@ -338,6 +355,10 @@
                 </div>
                 <div class="flex gap-2">
                     <button onclick="toggleMute()" id="mute-btn" class="btn-medieval btn-stone px-3 py-1 rounded text-xs"><i class="fas fa-volume-up"></i></button>
+                    <!-- NEW Castle Button -->
+                    <button onclick="openCastle()" class="btn-medieval btn-blue px-3 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <i class="fas fa-hammer"></i> <span class="hidden md:inline">BENTENG</span>
+                    </button>
                     <!-- Leaderboard Button -->
                     <button onclick="openLeaderboard()" class="btn-medieval btn-gold px-3 py-1 rounded text-xs font-bold flex items-center gap-1">
                         <i class="fas fa-crown"></i> <span class="hidden md:inline">TAHTA</span>
@@ -491,6 +512,22 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-6" id="shop-items"></div>
                 </div>
 
+                <!-- NEW: View Castle (Base Building) -->
+                <div id="view-castle" class="hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="title-font text-[#3e2723] text-2xl font-bold">Markas Komando</h2>
+                        <p class="text-[#5d4037] text-xs italic">Bangun bentengmu untuk kejayaan!</p>
+                    </div>
+                    
+                    <div id="castle-display" class="castle-level-card">
+                        <!-- Content Injected by JS -->
+                    </div>
+
+                    <div class="bg-[#efebe9] p-4 rounded border border-[#8d6e63] text-sm text-[#3e2723] mb-4">
+                        <p><strong>Tips:</strong> Kumpulkan Gold (XP) dari misi untuk memperkuat benteng pertahananmu dari serangan ketidaktahuan!</p>
+                    </div>
+                </div>
+
                 <!-- Leaderboard -->
                 <div id="view-leaderboard" class="hidden">
                     <div class="text-center mb-6">
@@ -618,6 +655,7 @@
                                     <th class="p-1 text-center">1</th><th class="p-1 text-center">2</th><th class="p-1 text-center">3</th><th class="p-1 text-center">4</th><th class="p-1 text-center">5</th>
                                     <th class="p-1 text-center">6</th><th class="p-1 text-center">7</th><th class="p-1 text-center">8</th><th class="p-1 text-center">9</th><th class="p-1 text-center">10</th>
                                     <th class="p-1 text-center">11</th><th class="p-1 text-center">12</th><th class="p-1 text-center">13</th><th class="p-1 text-center">14</th><th class="p-1 text-center">15</th>
+                                    <th class="p-3 text-center border-l border-[#263238] text-amber-400">NILAI AKHIR</th>
                                 </tr>
                             </thead>
                             <tbody id="student-progress-list" class="divide-y divide-[#37474f]"></tbody>
@@ -674,6 +712,15 @@
             { id: 'green', name: 'Forest Ranger', color: 'bg-green-800', cost: 500 },
             { id: 'yellow', name: 'King Gold', color: 'bg-yellow-600', cost: 1000 },
             { id: 'purple', name: 'Royal Mage', color: 'bg-purple-800', cost: 2000 }
+        ];
+
+        // --- NEW CASTLE LEVELS ---
+        const castleLevels = [
+            { id: 1, name: "Perkemahan Liar", cost: 0, icon: "fa-campground", desc: "Tempat istirahat sederhana." },
+            { id: 2, name: "Gubuk Kayu", cost: 200, icon: "fa-home", desc: "Perlindungan dasar dari elemen." },
+            { id: 3, name: "Menara Batu", cost: 500, icon: "fa-dungeon", desc: "Struktur kokoh untuk memantau musuh." },
+            { id: 4, name: "Benteng Besi", cost: 1000, icon: "fa-chess-rook", desc: "Pertahanan yang sulit ditembus." },
+            { id: 5, name: "Istana Agung", cost: 2000, icon: "fa-crown", desc: "Simbol kejayaan tertinggi!" }
         ];
 
         // --- AUTH ---
@@ -841,7 +888,7 @@
             }
 
             // Hide other views
-            ['intro','quiz','upload','game','result','shop','material','leaderboard'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-material').classList.remove('hidden');
             
             const container = document.getElementById('mat-content-container');
@@ -875,7 +922,7 @@
 
         // --- SHOP SYSTEM (THE MARKET) ---
         function openShop() {
-            ['intro','quiz','upload','game','result','shop','material','leaderboard'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-shop').classList.remove('hidden');
             
             let totalXP = 0;
@@ -939,6 +986,78 @@
             openShop();
         }
 
+        // --- NEW: CASTLE BUILDING SYSTEM ---
+        function openCastle() {
+            // Hide other views
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById('view-castle').classList.remove('hidden');
+            
+            document.getElementById('modal-title').innerText = "Markas Komando";
+            document.getElementById('modal-type-badge').innerText = "BASE";
+            document.getElementById('game-modal').classList.remove('opacity-0', 'pointer-events-none');
+
+            // Calculate Balance
+            let totalXP = 0;
+            for(let i=1; i<=15; i++) if(currentUserData.stats[`level_${i}_status`] === 'approved') totalXP += (currentUserData.stats[`level_${i}_xp`] || 0);
+            const spent = currentUserData.spent_xp || 0;
+            const balance = totalXP - spent;
+
+            const currentLevel = currentUserData.castle_level || 1;
+            const currentCastle = castleLevels.find(c => c.id === currentLevel);
+            const nextCastle = castleLevels.find(c => c.id === currentLevel + 1);
+
+            const display = document.getElementById('castle-display');
+            
+            let upgradeHtml = "";
+            if (nextCastle) {
+                const canAfford = balance >= nextCastle.cost;
+                upgradeHtml = `
+                    <div class="mt-4 pt-4 border-t border-[#8d6e63]">
+                        <p class="text-xs text-[#5d4037] mb-2">Peningkatan Selanjutnya:</p>
+                        <h4 class="font-bold text-[#3e2723] mb-1">${nextCastle.name}</h4>
+                        <button onclick="upgradeCastle(${nextCastle.id}, ${nextCastle.cost})" 
+                            class="btn-medieval ${canAfford ? 'btn-green bg-[#2e7d32] text-white' : 'bg-gray-400 text-gray-700 cursor-not-allowed'} px-6 py-2 rounded text-sm w-full"
+                            ${!canAfford ? 'disabled' : ''}>
+                            Tingkatkan (${nextCastle.cost} Gold)
+                        </button>
+                        ${!canAfford ? `<p class="text-[10px] text-red-600 mt-1 font-bold">Kurang ${nextCastle.cost - balance} Gold</p>` : ''}
+                    </div>
+                `;
+            } else {
+                upgradeHtml = `<div class="mt-4 pt-4 border-t border-[#8d6e63] text-green-700 font-bold">Benteng Maksimal Tercapai!</div>`;
+            }
+
+            display.innerHTML = `
+                <i class="fas ${currentCastle.icon} castle-icon-large"></i>
+                <h3 class="text-xl font-bold text-[#3e2723] title-font">${currentCastle.name}</h3>
+                <p class="text-sm text-[#5d4037] italic mb-4">${currentCastle.desc}</p>
+                <div class="text-xs bg-[#fff8e1] p-2 rounded inline-block border border-[#8d6e63]">
+                    Saldo Saat Ini: <span class="font-bold text-amber-600">${balance} Gold</span>
+                </div>
+                ${upgradeHtml}
+            `;
+        }
+
+        async function upgradeCastle(levelId, cost) {
+            if(confirm(`Tingkatkan benteng ke Level ${levelId} seharga ${cost} Gold?`)) {
+                playSound('correct');
+                // Update Firestore
+                await db.collection('users').doc(currentUserDocId).update({
+                    spent_xp: (currentUserData.spent_xp || 0) + cost,
+                    castle_level: levelId
+                });
+                // Re-render handled by onSnapshot listener which calls updateAvatarDisplay etc, but we need to re-open modal to see change immediately or just wait for listener
+                // Listener updates currentUserData, so calling openCastle() again after a slight delay or just rely on reactivity if we built it that way. 
+                // Since openCastle reads from currentUserData which is updated by snapshot, we just need to wait for snapshot.
+                // For better UX, we can manually update local state temporarily or just wait.
+                // Let's close and reopen to refresh or just call openCastle inside the listener? No, listener updates global vars.
+                // Simple fix: The listener will update `currentUserData`. We can re-call openCastle() inside the listener IF the modal is open, but simpler to just re-call it here after a short timeout or just let user re-click.
+                // Actually, let's just alert success.
+                alert("Pembangunan selesai! Bentengmu semakin kuat.");
+                openCastle(); // This might show old data if snapshot hasn't fired yet.
+            }
+        }
+
         // --- GAME/MODAL ---
         let activeLevel = null;
         let currentQs = [];
@@ -959,7 +1078,7 @@
             document.getElementById('modal-type-badge').innerText = l.type.toUpperCase();
             document.getElementById('modal-desc').innerText = l.desc;
             
-            ['intro','quiz','upload','game','result','shop','material','leaderboard'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-intro').classList.remove('hidden');
             
             const btn = document.getElementById('btn-start-action');
@@ -1255,14 +1374,14 @@
         }
 
         function showResult(score, msg) {
-            ['intro','quiz','upload','game','result','shop','leaderboard'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-result').classList.remove('hidden');
             document.getElementById('res-msg').innerText = `${msg} (Skor Pertempuran: ${score})`;
         }
 
         // --- LEADERBOARD LOGIC ---
         async function openLeaderboard() {
-            ['intro','quiz','upload','game','result','shop','material','leaderboard'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-leaderboard').classList.remove('hidden');
             
             document.getElementById('modal-title').innerText = "Aula Pahlawan";
@@ -1320,8 +1439,8 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = "template_soal_v2.csv"; a.click();
         }
-        function downloadGrades() { /* Same as original */
-            let csv = "Nama,NISN,Kelas,Total XP,Waktu Total (detik)";
+        function downloadGrades() { 
+            let csv = "Nama,NISN,Kelas,Total XP,Nilai Akhir (Skala 100),Predikat,Waktu Total (detik)";
             for(let i=1; i<=15; i++) csv += `,L${i}_Status,L${i}_Skor/Info,L${i}_Waktu(dtk)`;
             csv += "\n";
             db.collection('users').get().then(snap => {
@@ -1329,6 +1448,8 @@
                     const d = doc.data();
                     let totalXP = 0; let totalTime = 0;
                     let row = `"${d.nama}",${d.nisn},${d.kelas}`;
+                    
+                    // Calc totals & detail columns
                     let levelCols = "";
                     for(let i=1; i<=15; i++) {
                         const st = d.stats[`level_${i}_status`] || '-';
@@ -1337,7 +1458,21 @@
                         if(st === 'approved') { totalXP += xp; totalTime += time; }
                         levelCols += `,${st},${xp},${time}`;
                     }
-                    row += `,${totalXP},${totalTime}${levelCols}\n`;
+                    
+                    // --- NILAI AKHIR CALCULATION ---
+                    // Base 70 + (TotalXP / MaxPossibleXP * 30)
+                    // Max XP approx: 15 levels * 140 avg XP = 2100
+                    const maxPossibleXP = 2100;
+                    let finalGrade = 70 + ((totalXP / maxPossibleXP) * 30);
+                    // Cap at 100
+                    finalGrade = Math.min(100, Math.max(70, finalGrade)).toFixed(2);
+                    
+                    let predikat = "C";
+                    if(finalGrade >= 90) predikat = "A (Sangat Baik)";
+                    else if(finalGrade >= 80) predikat = "B (Baik)";
+                    else predikat = "C (Cukup)";
+
+                    row += `,${totalXP},${finalGrade},"${predikat}",${totalTime}${levelCols}\n`;
                     csv += row;
                 });
                 const blob = new Blob([csv], { type: 'text/csv' });
@@ -1417,16 +1552,25 @@
             if(!u.empty) { const upd={}; upd[`stats.level_${lvl}_status`]=act; if(act==='rejected') upd[`stats.level_${lvl}_note`]=note; batch.update(u.docs[0].ref, upd); }
             await batch.commit();
         }
-        function renderStudentProgressTable() { /* Same logic */
+        function renderStudentProgressTable() {
             const k = document.getElementById('search-student').value.toLowerCase();
             const l = document.getElementById('student-progress-list'); l.innerHTML = "";
             window.allStd.filter(s=>s.nama.toLowerCase().includes(k)).forEach(s => {
                 let h = `<td class="p-3 sticky left-0 bg-[#37474f] text-white text-xs border-r border-[#263238]">${s.nama}</td>`;
+                let totalXP = 0;
                 for(let i=1; i<=15; i++) {
                     const st = s.stats[`level_${i}_status`];
+                    if(st === 'approved') totalXP += (s.stats[`level_${i}_xp`] || 0);
                     let c = "text-slate-600"; if(st==='approved') c="text-green-400"; else if(st==='pending') c="text-yellow-400"; else if(st==='rejected') c="text-red-400";
                     h += `<td class="p-1 text-center ${c}">•</td>`;
                 }
+                
+                // Live Grade Calculation
+                const maxPossibleXP = 2100;
+                let finalGrade = 70 + ((totalXP / maxPossibleXP) * 30);
+                finalGrade = Math.min(100, Math.max(70, finalGrade)).toFixed(1);
+                
+                h += `<td class="p-3 text-center border-l border-[#263238] text-amber-400 font-bold pixel-font">${finalGrade}</td>`;
                 l.innerHTML += `<tr class="border-b border-[#263238] hover:bg-[#455a64]">${h}</tr>`;
             });
         }
