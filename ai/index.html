@@ -174,7 +174,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-gray-800 dark:text-white tracking-tight">AjarAI <span class="text-indigo-600 dark:text-indigo-400">DeepLearning</span></h1>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Module Generator v5.0 (History Log)</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Module Generator v5.1 (History Fix)</p>
                 </div>
             </div>
             
@@ -574,7 +574,7 @@
                     <button onclick="resetApp()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors">Buat Baru</button>
                     
                     <!-- NEW REGENERATE BUTTON -->
-                    <button onclick="generateModule()" class="px-4 py-2 text-sm text-white bg-orange-600 hover:bg-orange-700 rounded-lg font-medium shadow-sm flex items-center gap-2 transition-colors">
+                    <button id="btn-regenerate" onclick="generateModule()" class="px-4 py-2 text-sm text-white bg-orange-600 hover:bg-orange-700 rounded-lg font-medium shadow-sm flex items-center gap-2 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
                         Regenerate (Buat Ulang)
                     </button>
@@ -665,7 +665,9 @@
                 mapel: data.mapel || 'Tanpa Mapel',
                 jenjang: data.jenjang || 'Umum',
                 model: data.model,
-                content: markdown
+                content: markdown,
+                sekolah: data.sekolah || 'Sekolah', // Add this
+                semester: data.semester || '-' // Add this
             };
 
             let history = JSON.parse(localStorage.getItem('ajarai_history') || '[]');
@@ -728,11 +730,15 @@
             if (item) {
                 // Rendering
                 const htmlContent = marked.parse(item.content);
+                // FIX: Use actual school name if available, else fallback
+                const schoolName = item.sekolah ? item.sekolah : '[RESTORASI RIWAYAT]';
+                const semesterInfo = item.semester ? ` - ${item.semester}` : '';
+
                 document.getElementById('print-area').innerHTML = `
                     <div class="text-center border-b-2 border-double border-gray-800 pb-6 mb-8">
-                        <h1 class="text-3xl font-serif font-bold uppercase tracking-widest">[RESTORASI RIWAYAT]</h1>
-                        <p class="text-lg italic font-serif mt-2">Modul Ajar: ${item.topic}</p>
-                        <p class="text-xs text-gray-500 mt-1">Digenerate pada: ${item.timestamp}</p>
+                        <h1 class="text-3xl font-serif font-bold uppercase tracking-widest">${schoolName}</h1>
+                        <p class="text-lg italic font-serif mt-2">Modul Ajar ${item.mapel}${semesterInfo}</p>
+                        <p class="text-xs text-gray-500 mt-1">Dicetak ulang dari riwayat (${item.timestamp})</p>
                     </div>
                     ${htmlContent}
                 `;
@@ -744,6 +750,9 @@
                 document.getElementById('result-container').classList.remove('hidden');
                 document.getElementById('history-modal').classList.add('hidden');
                 
+                // HIDE REGENERATE BUTTON WHEN VIEWING HISTORY
+                document.getElementById('btn-regenerate').classList.add('hidden');
+
                 // Optional: Scroll to top of result
                 document.getElementById('result-container').scrollTop = 0;
             }
@@ -886,6 +895,9 @@
             document.getElementById('btn-prev').disabled = true;
             document.getElementById('btn-next').classList.remove('hidden');
             document.getElementById('btn-generate').classList.add('hidden');
+            
+            // SHOW REGENERATE BUTTON WHEN CREATING NEW
+            document.getElementById('btn-regenerate').classList.remove('hidden');
         }
 
         // --- REALTIME LOG SIMULATION ---
@@ -1135,6 +1147,9 @@
                 // Show Result
                 document.getElementById('process-overlay').classList.add('hidden');
                 document.getElementById('result-container').classList.remove('hidden');
+                
+                // SHOW REGENERATE BUTTON FOR NEW GENERATION
+                document.getElementById('btn-regenerate').classList.remove('hidden');
 
             } catch (error) {
                 clearInterval(progressInterval);
