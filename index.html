@@ -3,214 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AjarAI - Deep Learning Module Generator</title>
+    <title>AjarAI 5.1 - Teacher Super App (Full Feature)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Marked.js untuk Markdown Parsing -->
+    <!-- Marked.js & HTML2PDF -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- MathJax untuk Rumus Matematika -->
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- MathJax -->
     <script>
     window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      },
-      startup: {
-        typeset: false
-      }
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      startup: { typeset: false }
     };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
-        /* Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap');
-
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         
-        /* Preview Styles (Screen) */
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+
+        /* Preview Styles */
         .preview-content { font-family: 'Merriweather', serif; line-height: 1.6; color: #1f2937; font-size: 11pt; }
-        .preview-content h1 { font-size: 1.6em; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.8em; color: #000; text-align: center; text-transform: uppercase; }
-        .preview-content h2 { font-size: 1.3em; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.6em; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
-        .preview-content h3 { font-size: 1.15em; font-weight: 700; margin-top: 1.2em; margin-bottom: 0.5em; color: #374151; }
-        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; font-size: 0.95em; }
+        .preview-content h1 { font-size: 1.6em; font-weight: 800; margin: 1.5em 0 0.8em; text-align: center; text-transform: uppercase; page-break-after: avoid; }
+        .preview-content h2 { font-size: 1.3em; font-weight: 700; margin: 1.5em 0 0.6em; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; page-break-after: avoid; }
+        .preview-content h3 { font-size: 1.15em; font-weight: 700; margin: 1.2em 0 0.5em; color: #374151; page-break-after: avoid; }
+        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; font-size: 0.95em; page-break-inside: avoid; }
         .preview-content th, .preview-content td { border: 1px solid #000; padding: 8px 12px; text-align: left; vertical-align: top; }
         .preview-content th { background-color: #f3f4f6; font-weight: 700; color: #000; }
-        .preview-content ul, .preview-content ol { margin-bottom: 1em; padding-left: 1.5em; }
-        .preview-content ul { list-style-type: disc; }
-        .preview-content ol { list-style-type: decimal; }
-        .preview-content blockquote { border-left: 4px solid #3b82f6; padding-left: 1em; color: #555; font-style: italic; background: #f9fafb; padding: 10px; margin: 1em 0; }
-        
-        /* Animations */
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Realtime Log Animation */
-        .log-item { opacity: 0; animation: slideIn 0.3s forwards; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .preview-content ul, .preview-content ol { margin-bottom: 1em; padding-left: 1.5em; page-break-inside: avoid; }
+        .preview-content blockquote { border-left: 4px solid #3b82f6; padding-left: 1em; color: #555; background: #f9fafb; padding: 10px; margin: 1em 0; page-break-inside: avoid; }
 
-        /* =========================================
-           PRINT CSS (PERBAIKAN TOTAL UNTUK PDF)
-           ========================================= */
+        /* Print CSS */
         @media print {
-            @page {
-                size: A4;
-                margin: 20mm; /* Margin standar dokumen */
-            }
-            
-            /* RESET TOTAL: Hapus semua pembatasan tinggi/scroll dari framework CSS */
-            html, body {
-                height: auto !important;
-                min-height: 100% !important;
-                width: 100% !important;
-                overflow: visible !important; /* PENTING: Izinkan konten memanjang */
-                position: static !important;
-                display: block !important;
-            }
-
-            /* Sembunyikan UI Aplikasi yang tidak perlu dicetak */
-            header, #wizard-container, #settings-panel, .toolbar-ui, #process-overlay, #btn-prev, #btn-next {
-                display: none !important;
-                height: 0 !important;
-                overflow: hidden !important;
-            }
-
-            /* Reset Main Container */
-            main {
-                height: auto !important;
-                overflow: visible !important;
-                display: block !important; /* Matikan flexbox saat print */
-                position: static !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            /* Tampilkan Hasil */
-            #result-container {
-                position: static !important;
-                display: block !important;
-                height: auto !important;
-                overflow: visible !important; /* PENTING: Jangan potong konten */
-                background: white !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                inset: auto !important; /* Reset absolute positioning */
-            }
-
-            /* Area Cetak */
-            #print-area {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                overflow: visible !important;
-            }
-
-            /* Optimasi Teks untuk Cetak */
-            .preview-content {
-                font-size: 11pt !important;
-                color: #000 !important;
-                line-height: 1.4 !important;
-            }
-
-            /* Anti-Potong Elemen (Page Break Control) */
-            .preview-content table, 
-            .preview-content tr, 
-            .preview-content blockquote,
-            .preview-content p,
-            .preview-content li {
-                page-break-inside: avoid; /* Usahakan tidak memotong elemen di tengah halaman */
-            }
-            
-            .preview-content h1, 
-            .preview-content h2, 
-            .preview-content h3 {
-                page-break-after: avoid; /* Jangan pisahkan judul dengan isinya */
-                page-break-inside: avoid;
-            }
-
-            /* Paksa link agar hitam */
-            a { text-decoration: none; color: black !important; }
+            @page { size: A4; margin: 20mm; }
+            body, html, main, #app-container { height: auto !important; overflow: visible !important; display: block !important; }
+            .no-print { display: none !important; }
+            #preview-panel { display: block !important; position: static !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+            #result-overlay { position: static !important; display: block !important; inset: auto !important; height: auto !important; overflow: visible !important; }
+            #print-scroll { overflow: visible !important; height: auto !important; }
+            #print-area { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+            .preview-content { font-size: 11pt !important; line-height: 1.4 !important; }
+            .preview-content table, .preview-content tr, .preview-content h1, .preview-content h2 { page-break-inside: avoid; }
         }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+<body class="text-gray-800 h-screen flex overflow-hidden">
 
-    <!-- HEADER -->
-    <header class="bg-white border-b border-gray-200 flex-none z-10 shadow-sm">
-        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-indigo-700 rounded-lg flex items-center justify-center text-white shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">AjarAI <span class="text-indigo-600">DeepLearning</span></h1>
-                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Module Generator v4.1 (Full Print)</p>
-                </div>
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-none flex flex-col no-print z-20 shadow-lg">
+        <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
+            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                <i data-lucide="brain-circuit" class="w-5 h-5"></i>
             </div>
-            <button onclick="toggleSettings()" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                Settings
+            <span class="font-bold text-lg tracking-tight">AjarAI <span class="text-indigo-600">5.1</span></span>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all">
+                <i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard
             </button>
-        </div>
-        
-        <!-- Settings Panel -->
-        <div id="settings-panel" class="hidden bg-gray-50 border-b border-gray-200 shadow-inner">
-            <div class="max-w-6xl mx-auto px-4 py-4">
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Google Gemini API Key</label>
-                <div class="flex gap-2">
-                    <input type="text" id="api-key" value="AIzaSyD9VX1oOACcFpyRjtDlwfg6JTphKGWFmjE" class="flex-1 p-2 border border-gray-300 rounded bg-white text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Paste your AIzaSy... key here">
-                    <button onclick="toggleSettings()" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">Simpan</button>
-                </div>
+            <button onclick="switchTab('generator')" id="nav-generator" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all">
+                <i data-lucide="file-text" class="w-5 h-5"></i> Buat Modul
+            </button>
+            <button onclick="switchTab('exam')" id="nav-exam" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all">
+                <i data-lucide="pen-tool" class="w-5 h-5"></i> Bank Soal
+            </button>
+            <div class="pt-4 mt-4 border-t border-gray-100">
+                <p class="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Pengaturan</p>
+                <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-orange-50 hover:text-orange-700 transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i> Profil & API
+                </button>
             </div>
-        </div>
-    </header>
+        </nav>
+    </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 w-full relative overflow-hidden flex flex-col">
+    <main class="flex-1 bg-gray-50 relative flex flex-col h-full overflow-hidden" id="app-container">
         
-        <!-- WIZARD AREA -->
-        <div id="wizard-container" class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50">
-            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col min-h-[600px] overflow-hidden fade-in">
-                
-                <!-- Progress Header -->
-                <div class="bg-gray-50 px-8 py-6 border-b border-gray-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 id="step-title" class="text-lg font-bold text-gray-800">Langkah 1: Identitas Modul</h2>
-                        <span id="step-count" class="text-sm text-gray-500 font-medium">1 dari 3</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-500 ease-out" style="width: 33%"></div>
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="flex-1 overflow-y-auto p-8 fade-in">
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800" id="welcome-msg">Selamat Datang, Guru Hebat!</h1>
+                    <p class="text-gray-500 text-sm mt-1">Kelola arsip modul ajar dan bank soal Anda di sini.</p>
+                </div>
+                <button onclick="switchTab('generator')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-indigo-700 shadow-md flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Buat Modul Baru
+                </button>
+            </header>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="files" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Modul</p>
+                        <h3 class="text-2xl font-bold text-gray-800" id="stat-modul">0</h3>
                     </div>
                 </div>
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center"><i data-lucide="clipboard-list" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Bank Soal</p>
+                        <h3 class="text-2xl font-bold text-gray-800" id="stat-soal">0</h3>
+                    </div>
+                </div>
+            </div>
 
-                <!-- Form Content -->
-                <div class="flex-1 p-8 overflow-y-auto">
-                    
-                    <!-- STEP 1: IDENTITAS LENGKAP -->
-                    <div id="step-1" class="step-content space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Nama Guru</label>
-                                <input type="text" id="guru" class="w-full p-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all" placeholder="Nama Lengkap & Gelar">
+            <!-- Recent Files -->
+            <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5 text-gray-400"></i> Arsip Terbaru
+            </h2>
+            <div id="archive-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards injected here -->
+                <div class="col-span-full text-center py-12 text-gray-400">
+                    <i data-lucide="folder-open" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                    <p>Belum ada modul tersimpan. Buat sekarang!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GENERATOR VIEW (RESTORED FULL FEATURES) -->
+        <div id="view-generator" class="hidden flex-1 flex flex-col h-full fade-in">
+            <!-- Wizard Container -->
+            <div id="gen-wizard" class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <!-- Progress -->
+                    <div class="mb-8">
+                        <div class="flex justify-between text-sm font-medium text-gray-500 mb-2">
+                            <span>Konfigurasi Modul (Fitur Lengkap)</span>
+                            <span id="step-counter">Langkah 1/3</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-indigo-600 transition-all duration-500" style="width: 33%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 1: Identitas & CP -->
+                    <div id="step-1" class="space-y-6">
+                        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Identitas Pembelajaran</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Nama Guru</label>
+                                <input type="text" id="guru" class="w-full p-3 border rounded-lg mt-1 text-sm bg-gray-50" placeholder="Nama Lengkap">
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Nama Sekolah</label>
-                                <input type="text" id="sekolah" class="w-full p-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all" placeholder="Nama Sekolah">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Nama Sekolah</label>
+                                <input type="text" id="sekolah" class="w-full p-3 border rounded-lg mt-1 text-sm bg-gray-50" placeholder="Nama Sekolah">
                             </div>
                         </div>
 
-                        <!-- JENJANG, FASE, SEMESTER -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                             <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Jenjang Pendidikan</label>
-                                <select id="jenjang" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Jenjang</label>
+                                <select id="gen-jenjang" class="w-full p-3 border rounded-lg mt-1 text-sm bg-white">
                                     <option value="SMA/MA">SMA/MA</option>
                                     <option value="SMK/MAK">SMK/MAK</option>
                                     <option value="SMP/MTs">SMP/MTs</option>
@@ -218,38 +181,38 @@
                                     <option value="SLB">SLB</option>
                                 </select>
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Fase/Kelas</label>
-                                <select id="fase" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Fase/Kelas</label>
+                                <select id="gen-fase" class="w-full p-3 border rounded-lg mt-1 text-sm bg-white">
                                     <optgroup label="Sekolah Menengah (SMA/SMK)">
-                                        <option value="Fase E (Kelas 10)" selected>Fase E (Kelas 10)</option>
+                                        <option value="Fase E (Kelas 10)">Fase E (Kelas 10)</option>
                                         <option value="Fase F (Kelas 11)">Fase F (Kelas 11)</option>
                                         <option value="Fase F (Kelas 12)">Fase F (Kelas 12)</option>
                                     </optgroup>
-                                    <optgroup label="Sekolah Menengah Pertama (SMP)">
+                                    <optgroup label="SMP">
                                         <option value="Fase D (Kelas 7)">Fase D (Kelas 7)</option>
                                         <option value="Fase D (Kelas 8)">Fase D (Kelas 8)</option>
                                         <option value="Fase D (Kelas 9)">Fase D (Kelas 9)</option>
                                     </optgroup>
-                                    <optgroup label="Sekolah Dasar (SD)">
+                                    <optgroup label="SD">
                                         <option value="Fase A (Kelas 1-2)">Fase A (Kelas 1-2)</option>
                                         <option value="Fase B (Kelas 3-4)">Fase B (Kelas 3-4)</option>
                                         <option value="Fase C (Kelas 5-6)">Fase C (Kelas 5-6)</option>
                                     </optgroup>
                                 </select>
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Semester</label>
-                                <select id="semester" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Semester</label>
+                                <select id="gen-semester" class="w-full p-3 border rounded-lg mt-1 text-sm bg-white">
                                     <option value="1 (Ganjil)">1 (Ganjil)</option>
                                     <option value="2 (Genap)">2 (Genap)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-semibold text-gray-700">Mata Pelajaran</label>
-                            <select id="mapel" class="w-full p-3 border border-gray-300 rounded-lg bg-white">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Mata Pelajaran</label>
+                            <select id="gen-mapel" class="w-full p-3 border rounded-lg mt-1 text-sm bg-white">
                                 <option value="">Pilih Mapel...</option>
                                 <optgroup label="Umum">
                                     <option>Bahasa Indonesia</option>
@@ -282,301 +245,330 @@
                                 </optgroup>
                             </select>
                         </div>
-                        
-                        <div class="space-y-2">
-                            <label class="text-sm font-semibold text-gray-700">Topik / Materi Pokok</label>
-                            <input type="text" id="topik" class="w-full p-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all" placeholder="Contoh: Termodinamika, Teks Prosedur, Instalasi Listrik, dll.">
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Topik Materi</label>
+                            <input type="text" id="gen-topik" class="w-full p-3 border rounded-lg mt-1 text-sm font-medium" placeholder="Misal: Termodinamika / Teks Prosedur / Perang Dunia II">
                         </div>
-                        
-                        <!-- CP FIELD -->
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm font-semibold text-gray-700">Capaian Pembelajaran (CP)</label>
-                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Opsional</span>
+
+                        <!-- RESTORED CP FIELD -->
+                        <div>
+                            <div class="flex justify-between">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Capaian Pembelajaran (CP)</label>
+                                <span class="text-xs text-gray-400">Opsional (AI akan cari otomatis jika kosong)</span>
                             </div>
-                            <textarea id="cp_text" class="w-full p-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all h-24 text-sm" placeholder="Paste teks CP di sini. Jika dikosongkan, AI akan mencarikan CP yang sesuai secara otomatis."></textarea>
+                            <textarea id="gen-cp" class="w-full p-3 border rounded-lg mt-1 text-sm h-20" placeholder="Paste teks CP di sini..."></textarea>
                         </div>
                     </div>
 
-                    <!-- STEP 2: KARAKTERISTIK & MODEL -->
-                    <div id="step-2" class="step-content hidden space-y-6">
-                        <!-- Identifikasi Murid -->
-                        <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
-                            <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                Identifikasi Murid
-                            </h3>
-                            <div class="space-y-2">
-                                <label class="text-sm text-gray-600">Karakteristik Umum (Gaya Belajar/Minat)</label>
-                                <input type="text" id="murid" class="w-full p-3 border border-gray-300 rounded-lg bg-white text-sm" placeholder="Contoh: Murid beragam gaya belajar (Visual, Audio), menyukai diskusi..." value="Murid dengan ragam gaya belajar dan latar belakang beragam">
+                    <!-- Step 2: Strategi & Profil -->
+                    <div id="step-2" class="hidden space-y-6">
+                        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Strategi & Profil</h3>
+                        
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Karakteristik Murid</label>
+                            <input type="text" id="gen-murid" class="w-full p-3 border rounded-lg mt-1 text-sm" placeholder="Misal: Gaya belajar visual, suka diskusi..." value="Murid dengan ragam gaya belajar dan latar belakang beragam">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Model Pembelajaran</label>
+                                <select id="gen-model" class="w-full p-3 border rounded-lg mt-1 text-sm bg-white">
+                                    <option>Problem Based Learning</option>
+                                    <option>Project Based Learning</option>
+                                    <option>Inquiry Learning</option>
+                                    <option>Discovery Learning</option>
+                                    <option>Cooperative Learning</option>
+                                </select>
+                            </div>
+                            <!-- RESTORED MEDIA INPUT -->
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Media/Alat (Wajib Diisi)</label>
+                                <input type="text" id="gen-media" class="w-full p-3 border rounded-lg mt-1 text-sm" placeholder="Contoh: Quizizz, Video Youtube, Kartu Domino">
                             </div>
                         </div>
 
-                        <div class="space-y-3">
-                            <label class="text-sm font-semibold text-gray-700">Model Pembelajaran</label>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="model-container">
-                                <!-- Models will be rendered here by JS -->
+                        <!-- RESTORED PROFIL BUTTONS -->
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Dimensi Profil Lulusan (Pilih minimal 1)</label>
+                            <div class="flex flex-wrap gap-2" id="profil-container">
+                                <!-- JS will inject buttons here -->
                             </div>
-                        </div>
-
-                        <!-- Media Pembelajaran Custom -->
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm font-semibold text-gray-700">Media & Alat Pembelajaran</label>
-                                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Wajib Diisi untuk Integrasi Spesifik</span>
-                            </div>
-                            <input type="text" id="media_tools" class="w-full p-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all" placeholder="Contoh: Quizizz, Video YouTube, Peta Konsep, Kartu Domino, Alat Praktikum Fisika">
-                        </div>
-
-                        <div class="space-y-3">
-                            <label class="text-sm font-semibold text-gray-700">Dimensi Profil Lulusan (8 Dimensi)</label>
-                            <div class="flex flex-wrap gap-2" id="profil-container"></div>
                         </div>
                     </div>
 
-                    <!-- STEP 3: DETAIL ASESMEN -->
-                    <div id="step-3" class="step-content hidden space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Jml. Pertemuan</label>
-                                <input type="number" id="pertemuan" value="2" min="1" max="10" class="w-full p-3 border border-gray-300 rounded-lg text-center font-bold text-lg">
+                    <!-- Step 3: Detail & Asesmen -->
+                    <div id="step-3" class="hidden space-y-6">
+                        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Detail Asesmen</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Jumlah Pertemuan</label>
+                                <input type="number" id="gen-pertemuan" value="2" class="w-full p-3 border rounded-lg mt-1 text-center font-bold">
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-sm font-semibold text-gray-700">Durasi (Menit)</label>
-                                <select id="durasi" class="w-full p-3 border border-gray-300 rounded-lg text-center font-bold">
-                                    <option value="35">35 Menit (SD/SMP)</option>
-                                    <option value="40">40 Menit (SMP/SMA)</option>
-                                    <option value="45" selected>45 Menit (SMA/SMK)</option>
-                                    <option value="90">90 Menit (Blok)</option>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Durasi (Menit)</label>
+                                <select id="gen-durasi" class="w-full p-3 border rounded-lg mt-1 text-center font-bold">
+                                    <option value="45">45 Menit</option>
+                                    <option value="40">40 Menit</option>
+                                    <option value="35">35 Menit</option>
+                                    <option value="90">90 Menit</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Configurable Assessment Components -->
-                        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                            <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
-                                <h3 class="font-bold text-gray-800">Komponen Asesmen & Materi</h3>
+                        <!-- RESTORED DETAILED ASSESSMENT CONFIG -->
+                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                            <div class="flex items-center gap-2 mb-4">
+                                <input type="checkbox" id="gen-asesmen-check" checked class="w-5 h-5 text-indigo-600 rounded">
+                                <span class="font-bold text-gray-700">Generate Soal Asesmen Sumatif</span>
                             </div>
-                            <div class="p-5 space-y-5">
-                                
-                                <!-- Assessment Qty -->
-                                <div>
-                                    <div class="flex items-center gap-2 mb-3">
-                                        <input type="checkbox" id="asesmen_kompleks" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
-                                        <label for="asesmen_kompleks" class="font-medium text-gray-800">Generate Soal Asesmen Sumatif</label>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pl-7">
-                                        <div class="space-y-1">
-                                            <label class="text-xs text-gray-500 uppercase font-bold">Pilgan</label>
-                                            <input type="number" id="qty_pg" value="5" min="0" max="20" class="w-full p-2 border border-gray-300 rounded text-center text-sm font-bold">
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="text-xs text-gray-500 uppercase font-bold">Kompleks</label>
-                                            <input type="number" id="qty_kompleks" value="3" min="0" max="10" class="w-full p-2 border border-gray-300 rounded text-center text-sm font-bold">
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="text-xs text-gray-500 uppercase font-bold">B / S</label>
-                                            <input type="number" id="qty_bs" value="3" min="0" max="10" class="w-full p-2 border border-gray-300 rounded text-center text-sm font-bold">
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="text-xs text-gray-500 uppercase font-bold">Esai</label>
-                                            <input type="number" id="qty_esai" value="2" min="0" max="5" class="w-full p-2 border border-gray-300 rounded text-center text-sm font-bold">
-                                        </div>
-                                    </div>
-                                </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pl-7 mb-4">
+                                <div><label class="text-[10px] uppercase font-bold text-gray-500">Pilgan</label><input type="number" id="qty-pg" value="5" class="w-full p-2 border rounded text-center text-sm"></div>
+                                <div><label class="text-[10px] uppercase font-bold text-gray-500">Kompleks</label><input type="number" id="qty-kompleks" value="2" class="w-full p-2 border rounded text-center text-sm"></div>
+                                <div><label class="text-[10px] uppercase font-bold text-gray-500">B / S</label><input type="number" id="qty-bs" value="3" class="w-full p-2 border rounded text-center text-sm"></div>
+                                <div><label class="text-[10px] uppercase font-bold text-gray-500">Esai</label><input type="number" id="qty-esai" value="2" class="w-full p-2 border rounded text-center text-sm"></div>
+                            </div>
 
-                                <hr class="border-gray-100">
-                                <label class="flex items-start gap-3 cursor-pointer group">
-                                    <input type="checkbox" id="rubrik_detail" class="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
-                                    <div>
-                                        <span class="font-medium text-gray-800 group-hover:text-indigo-700 transition-colors">Sertakan Rubrik & Tindak Lanjut</span>
-                                        <p class="text-xs text-gray-500">Rubrik skala 1-4 dan rencana remedial/pengayaan.</p>
-                                    </div>
+                            <div class="pl-7 space-y-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="gen-rubrik" checked class="w-4 h-4 text-indigo-600">
+                                    <span class="text-sm text-gray-600">Sertakan Rubrik Penilaian (Skala 1-4)</span>
                                 </label>
-                                 <hr class="border-gray-100">
-                                <label class="flex items-start gap-3 cursor-pointer group">
-                                    <input type="checkbox" id="lampiran_lkpd" class="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" checked>
-                                    <div>
-                                        <span class="font-medium text-gray-800 group-hover:text-indigo-700 transition-colors">Lampiran LKPD</span>
-                                        <p class="text-xs text-gray-500">Lembar Kerja Peserta Didik yang siap pakai.</p>
-                                    </div>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="gen-lkpd" checked class="w-4 h-4 text-indigo-600">
+                                    <span class="text-sm text-gray-600">Buatkan Lampiran LKPD</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                </div>
-
-                <!-- Footer Buttons -->
-                <div class="bg-gray-50 px-8 py-5 border-t border-gray-200 flex justify-between items-center">
-                    <button id="btn-prev" onclick="changeStep(-1)" class="text-gray-500 font-medium hover:text-gray-800 disabled:opacity-0" disabled>
-                        &larr; Kembali
-                    </button>
-                    <button id="btn-next" onclick="changeStep(1)" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-900 transition-all shadow-md">
-                        Lanjut
-                    </button>
-                    <button id="btn-generate" onclick="generateModule()" class="hidden bg-indigo-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
-                        Generate Modul
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Process Overlay (Fake Realtime) -->
-            <div id="process-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-6 animate-in zoom-in duration-300">
-                    <div class="relative w-20 h-20 mx-auto">
-                         <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
-                         <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-                         <div class="absolute inset-0 flex items-center justify-center">
-                             <span class="text-2xl">🧠</span>
-                         </div>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">AjarAI sedang bekerja...</h3>
-                        <p class="text-sm text-gray-500">Menganalisis karakteristik murid dan menyusun strategi pembelajaran mendalam.</p>
-                    </div>
-                    
-                    <!-- Dynamic Log -->
-                    <div class="bg-gray-50 rounded-lg p-4 h-32 overflow-hidden border border-gray-100 text-left relative">
-                         <div id="process-log" class="space-y-2 text-sm font-mono">
-                             <!-- Log items will appear here -->
-                         </div>
-                         <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-gray-50 to-transparent"></div>
+                    <!-- Nav Buttons -->
+                    <div class="flex justify-between mt-8 pt-6 border-t border-gray-100">
+                        <button onclick="changeStep(-1)" id="btn-prev" class="px-6 py-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-50" disabled>Kembali</button>
+                        <button onclick="changeStep(1)" id="btn-next" class="px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Lanjut</button>
+                        <button onclick="generateContent('modul')" id="btn-generate" class="hidden px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Generate Modul
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- RESULT PREVIEW (Hidden Initially) -->
-        <div id="result-container" class="hidden absolute inset-0 bg-gray-100 z-40 flex flex-col">
-            <!-- Toolbar -->
-            <div class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm toolbar-ui">
-                <div class="flex items-center gap-3">
-                    <div class="bg-green-100 text-green-700 p-2 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <!-- EXAM BUILDER VIEW -->
+        <div id="view-exam" class="hidden flex-1 flex flex-col h-full fade-in">
+            <div id="exam-form" class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                        <div class="p-3 bg-orange-100 text-orange-600 rounded-lg"><i data-lucide="pen-tool" class="w-6 h-6"></i></div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Bank Soal Generator</h2>
+                            <p class="text-sm text-gray-500">Buat soal ulangan harian, UTS, atau UAS secara instan.</p>
+                        </div>
                     </div>
+
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+                                <input type="text" id="exam-mapel" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-200" placeholder="Misal: Biologi">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jenjang/Kelas</label>
+                                <input type="text" id="exam-kelas" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-200" placeholder="Misal: SMA Kelas 11">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Topik / Materi Ujian</label>
+                            <input type="text" id="exam-topik" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-200" placeholder="Misal: Sistem Pencernaan Manusia">
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Soal PG</label>
+                                <input type="number" id="exam-pg" value="10" class="w-full p-2.5 border rounded-lg text-center">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Esai</label>
+                                <input type="number" id="exam-esai" value="5" class="w-full p-2.5 border rounded-lg text-center">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Kesulitan</label>
+                                <select id="exam-level" class="w-full p-2.5 border rounded-lg">
+                                    <option>Campuran (LOTS & HOTS)</option>
+                                    <option>HOTS (Analisis/Evaluasi)</option>
+                                    <option>Dasar (Pemahaman)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="generateContent('exam')" class="w-full py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 shadow-lg transition-transform hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                            <i data-lucide="zap" class="w-5 h-5"></i> Buat Bank Soal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="view-settings" class="hidden flex-1 overflow-y-auto p-8 fade-in">
+            <div class="max-w-2xl mx-auto">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Profil & API</h2>
+                
+                <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
+                    <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Identitas Guru (Auto-Fill)</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nama Lengkap & Gelar</label>
+                            <input type="text" id="set-guru" class="w-full p-3 border rounded-lg mt-1" placeholder="Nama Anda">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nama Sekolah</label>
+                            <input type="text" id="set-sekolah" class="w-full p-3 border rounded-lg mt-1" placeholder="Nama Sekolah">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 text-red-600">Konfigurasi API</h3>
                     <div>
-                        <h2 class="font-bold text-gray-800 text-sm">Modul Siap Digunakan</h2>
-                        <p class="text-xs text-gray-500">Format sesuai standar Deep Learning</p>
+                        <label class="block text-sm font-medium text-gray-700">Google Gemini API Key</label>
+                        <div class="flex gap-2 mt-1">
+                            <input type="password" id="set-api" class="flex-1 p-3 border rounded-lg font-mono text-sm" placeholder="Paste Key AIzaSy...">
+                            <button onclick="toggleVisibility()" class="p-3 border rounded-lg hover:bg-gray-50"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">API Key disimpan lokal di browser Anda. Tidak dikirim ke server kami.</p>
                     </div>
+                </div>
+
+                <button onclick="saveSettings()" class="mt-6 w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700">Simpan Pengaturan</button>
+            </div>
+        </div>
+
+        <!-- RESULT CONTAINER -->
+        <div id="result-overlay" class="hidden absolute inset-0 bg-white z-50 flex flex-col animate-in slide-in-from-bottom-10">
+            <div class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white no-print">
+                <div class="flex items-center gap-3">
+                    <button onclick="closeResult()" class="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <h3 class="font-bold text-lg" id="result-title">Hasil Generator</h3>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="resetApp()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Buat Baru</button>
-                    <!-- PDF Button (NATIVE) -->
-                    <button onclick="exportToPDF()" class="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium shadow-sm flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        PDF (Cetak)
+                    <button onclick="saveToArchive()" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan
                     </button>
-                    <!-- Word Button -->
-                    <button onclick="exportToWord()" class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium shadow-sm flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
-                        Word (.doc)
+                    <button onclick="exportPDF()" class="flex items-center gap-2 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium">
+                        <i data-lucide="file-down" class="w-4 h-4"></i> PDF
+                    </button>
+                    <button onclick="exportWord()" class="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">
+                        <i data-lucide="file-type-2" class="w-4 h-4"></i> Word
                     </button>
                 </div>
             </div>
+            <div class="flex-1 overflow-y-auto bg-gray-50 p-8" id="print-scroll">
+                <div id="print-area" class="max-w-[21cm] mx-auto bg-white shadow-xl min-h-[29.7cm] p-[2cm] preview-content">
+                    <!-- CONTENT GOES HERE -->
+                </div>
+            </div>
+        </div>
 
-            <!-- Editor/Preview -->
-            <div class="flex-1 overflow-auto p-4 md:p-8">
-                <div id="print-area" class="max-w-5xl mx-auto bg-white shadow-xl min-h-[1000px] p-12 rounded-sm preview-content">
-                    <!-- Content will be injected here -->
-                </div>
-            </div>
+        <!-- LOADING OVERLAY -->
+        <div id="loader" class="hidden absolute inset-0 bg-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+            <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <h3 class="text-xl font-bold text-gray-800 animate-pulse">Sedang Berpikir...</h3>
+            <p class="text-gray-500 text-sm mt-2" id="loader-text">Menyusun strategi pembelajaran...</p>
         </div>
 
     </main>
 
     <script>
-        // --- CONFIG ---
-        const models = [
-            { id: 'PBL', name: 'Problem Based Learning' },
-            { id: 'PjBL', name: 'Project Based Learning' },
-            { id: 'Inquiry', name: 'Inquiry Learning' },
-            { id: 'Discovery', name: 'Discovery Learning' }
-        ];
-        
-        // UPDATE: 8 DIMENSI PROFIL LULUSAN
-        const profils = [
-            "Keimanan & Ketakwaan", 
-            "Kewargaan", 
-            "Penalaran Kritis", 
-            "Kreativitas", 
-            "Kolaborasi", 
-            "Kemandirian", 
-            "Kesehatan", 
-            "Komunikasi"
-        ];
-
+        // --- STATE MANAGEMENT ---
         let currentStep = 1;
-        let selectedModel = 'PBL';
+        let archive = JSON.parse(localStorage.getItem('ajarai_archive') || '[]');
+        let settings = JSON.parse(localStorage.getItem('ajarai_settings') || '{"guru":"", "sekolah":"", "api":"AIzaSyD9VX1oOACcFpyRjtDlwfg6JTphKGWFmjE"}');
+        let currentResultType = ''; 
+        let currentGeneratedContent = '';
+        
+        const profils = ["Keimanan & Ketakwaan", "Kewargaan", "Penalaran Kritis", "Kreativitas", "Kolaborasi", "Kemandirian", "Kesehatan", "Komunikasi"];
         let selectedProfils = [];
 
         // --- INIT ---
         window.onload = function() {
-            renderModels();
-            renderProfils();
+            lucide.createIcons();
+            loadSettings();
+            renderArchive();
+            renderProfilButtons();
+            
+            if(settings.guru) document.getElementById('welcome-msg').innerText = `Halo, ${settings.guru}!`;
         };
 
-        function renderModels() {
-            document.getElementById('model-container').innerHTML = models.map(m => `
-                <div onclick="selectModel('${m.id}')" id="model-${m.id}" 
-                     class="p-4 rounded-lg border cursor-pointer transition-all ${
-                         m.id === selectedModel 
-                         ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' 
-                         : 'border-gray-200 bg-white hover:border-gray-300'
-                     }">
-                    <div class="flex items-center justify-between">
-                        <span class="font-medium text-gray-800">${m.name}</span>
-                        ${m.id === selectedModel ? '<span class="text-indigo-600 font-bold">✓</span>' : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function selectModel(id) {
-            selectedModel = id;
-            renderModels(); 
-        }
-
-        function renderProfils() {
-            document.getElementById('profil-container').innerHTML = profils.map(p => `
-                <button onclick="toggleProfil(this, '${p}')" 
-                        class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                            selectedProfils.includes(p) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                        }">
-                    ${p}
-                </button>
-            `).join('');
+        function renderProfilButtons() {
+            const container = document.getElementById('profil-container');
+            if(container) {
+                container.innerHTML = profils.map(p => `
+                    <button onclick="toggleProfil(this, '${p}')" class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors border bg-white text-gray-600 border-gray-200 hover:bg-gray-50">${p}</button>
+                `).join('');
+            }
         }
 
         function toggleProfil(btn, name) {
-            if (selectedProfils.includes(name)) selectedProfils = selectedProfils.filter(p => p !== name);
-            else selectedProfils.push(name);
-            renderProfils();
+            if (selectedProfils.includes(name)) {
+                selectedProfils = selectedProfils.filter(p => p !== name);
+                btn.className = "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border bg-white text-gray-600 border-gray-200 hover:bg-gray-50";
+            } else {
+                selectedProfils.push(name);
+                btn.className = "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border bg-indigo-600 text-white border-indigo-600 shadow-sm";
+            }
         }
 
-        // --- NAVIGATION ---
-        function changeStep(n) {
-            // Validation
-            if (n === 1 && currentStep === 1 && (!document.getElementById('mapel').value || !document.getElementById('topik').value)) {
-                alert("Mohon lengkapi Mapel dan Topik!");
-                return;
-            }
+        function loadSettings() {
+            if(document.getElementById('set-guru')) document.getElementById('set-guru').value = settings.guru || '';
+            if(document.getElementById('set-sekolah')) document.getElementById('set-sekolah').value = settings.sekolah || '';
+            if(document.getElementById('set-api')) document.getElementById('set-api').value = settings.api || '';
+            if(document.getElementById('guru')) document.getElementById('guru').value = settings.guru || '';
+            if(document.getElementById('sekolah')) document.getElementById('sekolah').value = settings.sekolah || '';
+        }
 
+        function saveSettings() {
+            settings = {
+                guru: document.getElementById('set-guru').value,
+                sekolah: document.getElementById('set-sekolah').value,
+                api: document.getElementById('set-api').value
+            };
+            localStorage.setItem('ajarai_settings', JSON.stringify(settings));
+            alert("Pengaturan tersimpan!");
+            loadSettings();
+        }
+
+        function toggleVisibility() {
+            const el = document.getElementById('set-api');
+            el.type = el.type === 'password' ? 'text' : 'password';
+        }
+
+        // --- NAVIGATION & WIZARD ---
+        function switchTab(tabId) {
+            ['dashboard', 'generator', 'exam', 'settings'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`nav-${id}`).classList.remove('bg-indigo-50', 'text-indigo-700', 'bg-orange-50', 'text-orange-700');
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if(tabId === 'exam') activeBtn.classList.add('bg-orange-50', 'text-orange-700');
+            else activeBtn.classList.add('bg-indigo-50', 'text-indigo-700');
+        }
+
+        function changeStep(n) {
             document.getElementById(`step-${currentStep}`).classList.add('hidden');
             currentStep += n;
             document.getElementById(`step-${currentStep}`).classList.remove('hidden');
-
-            // Update Header
-            const titles = ["Identitas Modul", "Karakteristik & Profil", "Detail & Asesmen"];
-            document.getElementById('step-title').innerText = `Langkah ${currentStep}: ${titles[currentStep-1]}`;
-            document.getElementById('step-count').innerText = `${currentStep} dari 3`;
+            document.getElementById('step-counter').innerText = `Langkah ${currentStep}/3`;
             document.getElementById('progress-bar').style.width = `${currentStep * 33.3}%`;
-
-            // Buttons
             document.getElementById('btn-prev').disabled = currentStep === 1;
-            if (currentStep === 3) {
+            
+            if(currentStep === 3) {
                 document.getElementById('btn-next').classList.add('hidden');
                 document.getElementById('btn-generate').classList.remove('hidden');
             } else {
@@ -585,172 +577,168 @@
             }
         }
 
-        function toggleSettings() {
-            document.getElementById('settings-panel').classList.toggle('hidden');
+        // --- ARCHIVE ---
+        function renderArchive() {
+            const grid = document.getElementById('archive-grid');
+            document.getElementById('stat-modul').innerText = archive.filter(x => x.type === 'modul').length;
+            document.getElementById('stat-soal').innerText = archive.filter(x => x.type === 'exam').length;
+
+            if(archive.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400 opacity-50"><i data-lucide="folder-open" class="w-12 h-12 mx-auto mb-2"></i><p>Belum ada arsip.</p></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = archive.slice().reverse().map((item, idx) => `
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all group relative">
+                    <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                        <button onclick="loadArchive(${archive.length - 1 - idx})" class="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                        <button onclick="deleteArchive(${archive.length - 1 - idx})" class="p-1.5 bg-red-100 text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 rounded-lg ${item.type === 'exam' ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600'}">
+                            <i data-lucide="${item.type === 'exam' ? 'pen-tool' : 'book-open'}" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400 uppercase">${item.type === 'exam' ? 'Bank Soal' : 'Modul Ajar'}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 mb-1 truncate">${item.title}</h3>
+                    <p class="text-sm text-gray-500 mb-4">${item.subtitle}</p>
+                    <p class="text-xs text-gray-400 border-t pt-3 flex justify-between">
+                        <span>${item.date}</span>
+                        <span>${item.author || 'Anda'}</span>
+                    </p>
+                </div>
+            `).join('');
+            lucide.createIcons();
         }
 
-        function resetApp() {
-            document.getElementById('result-container').classList.add('hidden');
-            currentStep = 1;
-            // Reset to step 1 visibility
-            document.getElementById('step-1').classList.remove('hidden');
-            document.getElementById('step-2').classList.add('hidden');
-            document.getElementById('step-3').classList.add('hidden');
-            document.getElementById('step-title').innerText = "Langkah 1: Identitas Modul";
-            document.getElementById('progress-bar').style.width = "33%";
-            document.getElementById('btn-prev').disabled = true;
-            document.getElementById('btn-next').classList.remove('hidden');
-            document.getElementById('btn-generate').classList.add('hidden');
-        }
-
-        // --- REALTIME LOG SIMULATION ---
-        function addLog(message, delay) {
-            setTimeout(() => {
-                const log = document.getElementById('process-log');
-                const item = document.createElement('div');
-                item.className = "log-item text-gray-600 flex items-center gap-2";
-                item.innerHTML = `<span class="text-indigo-500">➜</span> ${message}`;
-                log.appendChild(item);
-                log.scrollTop = log.scrollHeight; // Auto scroll
-            }, delay);
-        }
-
-        // --- AI GENERATION ---
-        async function generateModule() {
-            const apiKey = document.getElementById('api-key').value;
-            if (!apiKey) { alert("API Key belum diisi!"); toggleSettings(); return; }
-
-            // Show Overlay
-            document.getElementById('process-overlay').classList.remove('hidden');
-            document.getElementById('process-log').innerHTML = ""; // Clear log
-            
-            // Collect Data
-            const d = {
-                guru: document.getElementById('guru').value || "[Nama Guru]",
-                sekolah: document.getElementById('sekolah').value || "[Nama Sekolah]",
-                mapel: document.getElementById('mapel').value,
-                jenjang: document.getElementById('jenjang').value, // NEW: Jenjang
-                fase: document.getElementById('fase').value,
-                semester: document.getElementById('semester').value,
-                topik: document.getElementById('topik').value,
-                cp: document.getElementById('cp_text').value,
-                murid: document.getElementById('murid').value,
-                model: models.find(m => m.id === selectedModel).name,
-                // NEW: Custom Media
-                media: document.getElementById('media_tools').value,
-                
-                profil: selectedProfils.join(", "),
-                pertemuan: document.getElementById('pertemuan').value,
-                durasi: document.getElementById('durasi').value,
-                asesmen_kompleks: document.getElementById('asesmen_kompleks').checked,
-                // Qty Data
-                qty_pg: document.getElementById('qty_pg').value,
-                qty_kompleks: document.getElementById('qty_kompleks').value,
-                qty_bs: document.getElementById('qty_bs').value,
-                qty_esai: document.getElementById('qty_esai').value,
-                
-                rubrik: document.getElementById('rubrik_detail').checked,
-                lkpd: document.getElementById('lampiran_lkpd').checked
+        function saveToArchive() {
+            if(!currentGeneratedContent) return;
+            const newItem = {
+                id: Date.now(),
+                type: currentResultType,
+                title: currentResultType === 'modul' ? document.getElementById('gen-topik').value : document.getElementById('exam-topik').value,
+                subtitle: currentResultType === 'modul' ? document.getElementById('gen-mapel').value : document.getElementById('exam-mapel').value,
+                content: currentGeneratedContent,
+                date: new Date().toLocaleDateString('id-ID'),
+                author: settings.guru
             };
+            archive.push(newItem);
+            localStorage.setItem('ajarai_archive', JSON.stringify(archive));
+            renderArchive();
+            alert("Disimpan ke Arsip!");
+        }
 
-            // Simulate Realtime Progress
-            addLog(`Mengadaptasi kurikulum untuk jenjang ${d.jenjang}...`, 500);
-            addLog("Menganalisis Capaian Pembelajaran (CP)...", 1200);
-            addLog(`Menyusun strategi ${d.model} dengan media: ${d.media || 'Standard'}...`, 2000);
-            addLog("Merancang aktivitas 'Bermakna' dan 'Menggembirakan'...", 3000);
-            if(d.asesmen_kompleks) addLog(`Membuat soal: ${d.qty_pg} PG, ${d.qty_kompleks} Kompleks, ${d.qty_esai} Esai...`, 4500);
-            if(d.rubrik) addLog("Menyusun rubrik penilaian skala 1-4...", 5500);
-            addLog("Finalisasi dokumen...", 7000);
+        function loadArchive(index) {
+            const item = archive[index];
+            document.getElementById('print-area').innerHTML = item.content;
+            document.getElementById('result-overlay').classList.remove('hidden');
+            currentResultType = item.type;
+            currentGeneratedContent = item.content;
+        }
 
-            // Construct Prompt based on the uploaded DOC structure
-            const prompt = `
-            Bertindaklah sebagai Ahli Kurikulum dan Guru Penggerak Spesialis Jenjang ${d.jenjang}. Buat "Modul Ajar Pembelajaran Mendalam" yang profesional.
-            
-            **SPESIFIKASI DATA:**
-            - Sekolah: ${d.sekolah} | Guru: ${d.guru}
-            - Jenjang: ${d.jenjang} | Mapel: ${d.mapel}
-            - Kelas/Fase: ${d.fase} | Semester: ${d.semester}
-            - Topik: ${d.topik}
-            - CP (Capaian Pembelajaran): ${d.cp ? d.cp : "(Tolong carikan CP yang paling sesuai dengan Kurikulum Merdeka untuk topik dan jenjang ini)"}
-            - Alokasi: ${d.pertemuan} Pertemuan (@ ${d.durasi} menit)
-            - Karakteristik Murid: ${d.murid}
-            - Model: ${d.model}
-            - Dimensi Profil Lulusan (8 Poin): ${d.profil}
+        function deleteArchive(index) {
+            if(confirm("Hapus?")) {
+                archive.splice(index, 1);
+                localStorage.setItem('ajarai_archive', JSON.stringify(archive));
+                renderArchive();
+            }
+        }
 
-            **INSTRUKSI KHUSUS JENJANG (${d.jenjang}):**
-            1. **Gaya Bahasa:** Sesuaikan bahasa dengan usia siswa ${d.jenjang}. (SD: Konkret & Sederhana, SMP: Eksploratif, SMA: Analitis, SMK: Vokasional/Praktis).
-            2. **SMK Spesifik:** Jika jenjang adalah SMK, WAJIB kaitkan materi dengan konteks dunia kerja/industri yang relevan.
-            3. **SLB Spesifik:** Jika jenjang SLB, fokus pada adaptasi dan keterampilan hidup sehari-hari.
+        // --- AI LOGIC ---
+        async function generateContent(type) {
+            const apiKey = settings.api;
+            if(!apiKey || apiKey.length < 10) { alert("API Key error!"); switchTab('settings'); return; }
 
-            **INSTRUKSI PENGGUNAAN MEDIA (${d.media ? d.media : "Media Relevan"}):**
-            ${d.media ? `Anda WAJIB memasukkan penggunaan "${d.media}" secara eksplisit dalam langkah-langkah pembelajaran (Kegiatan Inti). Jangan hanya menulis "mengamati media", tapi tulislah "mengamati ${d.media}" atau aktivitas spesifik yang menggunakan ${d.media}.` : "Gunakan media yang relevan dan sebutkan secara spesifik dalam langkah pembelajaran."}
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loader-text');
+            loader.classList.remove('hidden');
+            currentResultType = type;
 
-            **INSTRUKSI BAHASA (SANGAT PENTING):**
-            1. **Gunakan Kalimat Pasti & Direktif:** HILANGKAN kata-kata seperti "misalnya", "atau", "bisa", "contohnya", "opsional", "guru dapat". Gunakan kalimat aktif: "Guru mengajak...", "Siswa melakukan...".
-            2. **Detail Rutinitas:** Langkah Pendahuluan WAJIB diawali dengan: "Guru membuka pembelajaran dengan mengucapkan salam, mengajak siswa berdoa, dan mengecek kehadiran/absensi."
+            let prompt = "";
+            let data = {};
 
-            **INSTRUKSI STRUKTUR OUTPUT (Markdown):**
-            
-            # RPP PEMBELAJARAN MENDALAM: ${d.topik.toUpperCase()}
-            
-            **Satuan Pendidikan** : ${d.sekolah}
-            **Jenjang/Kelas** : ${d.jenjang} / ${d.fase}
-            **Mata Pelajaran** : ${d.mapel}
-            **Semester** : ${d.semester}
-            **Alokasi Waktu** : ${d.pertemuan} Pertemuan (@ ${d.durasi} Menit)
-            **Guru Mata Pelajaran** : ${d.guru}
+            if(type === 'modul') {
+                data = {
+                    guru: document.getElementById('guru').value || settings.guru,
+                    sekolah: document.getElementById('sekolah').value || settings.sekolah,
+                    jenjang: document.getElementById('gen-jenjang').value,
+                    fase: document.getElementById('gen-fase').value,
+                    semester: document.getElementById('gen-semester').value,
+                    mapel: document.getElementById('gen-mapel').value,
+                    topik: document.getElementById('gen-topik').value,
+                    cp: document.getElementById('gen-cp').value,
+                    murid: document.getElementById('gen-murid').value,
+                    model: document.getElementById('gen-model').value,
+                    media: document.getElementById('gen-media').value,
+                    profil: selectedProfils.join(", "),
+                    waktu: `${document.getElementById('gen-pertemuan').value} Pertemuan x ${document.getElementById('gen-durasi').value}`,
+                    asesmen: document.getElementById('gen-asesmen-check').checked,
+                    // Qty
+                    qty_pg: document.getElementById('qty-pg').value,
+                    qty_kompleks: document.getElementById('qty-kompleks').value,
+                    qty_bs: document.getElementById('qty-bs').value,
+                    qty_esai: document.getElementById('qty-esai').value,
+                    rubrik: document.getElementById('gen-rubrik').checked,
+                    lkpd: document.getElementById('gen-lkpd').checked
+                };
+                
+                loaderText.innerText = "Merancang modul ajar lengkap...";
+                
+                prompt = `
+                Bertindaklah sebagai Guru Profesional Jenjang ${data.jenjang}. Buat Modul Ajar Lengkap.
+                
+                DATA:
+                - Sekolah: ${data.sekolah} | Guru: ${data.guru}
+                - Mapel: ${data.mapel} | Kelas: ${data.fase}
+                - Topik: ${data.topik}
+                - CP: ${data.cp || "Otomatis sesuai kurikulum"}
+                - Waktu: ${data.waktu}
+                - Model: ${data.model}
+                - Media: ${data.media || "Otomatis"}
+                - Profil Lulusan: ${data.profil || "Mandiri, Bernalar Kritis"}
+                
+                OUTPUT MARKDOWN:
+                # MODUL AJAR: ${data.topik.toUpperCase()}
+                
+                **Informasi Umum**
+                Tabel: (Satuan Pendidikan, Mapel, Kelas/Fase/Semester, Waktu, Guru)
+                
+                ## 1. Identifikasi & Tujuan
+                - Karakteristik Murid: ${data.murid}
+                - Profil Lulusan: ${data.profil}
+                - Tujuan Pembelajaran (Turunkan dari CP)
+                
+                ## 2. Kegiatan Pembelajaran
+                Buat tabel langkah-langkah (Pendahuluan, Inti, Penutup). 
+                *WAJIB:* Masukkan penggunaan media "${data.media}" secara eksplisit dalam kegiatan inti. Gunakan kalimat instruksi pasti ("Guru menayangkan...", "Siswa mengerjakan...").
+                
+                ## 3. Asesmen & Lampiran
+                ${data.asesmen ? `
+                Buatkan soal sumatif:
+                1. ${data.qty_pg} Soal PG
+                2. ${data.qty_kompleks} Soal PG Kompleks
+                3. ${data.qty_bs} Soal Benar/Salah
+                4. ${data.qty_esai} Soal Esai
+                ` : ''}
+                
+                ${data.rubrik ? '- Buatkan Rubrik Penilaian (Skor 1-4)' : ''}
+                ${data.lkpd ? '- Buatkan Kerangka LKPD Siswa' : ''}
+                `;
 
-            ## 1. IDENTIFIKASI
-            Buat Tabel Identifikasi (Kolom: Komponen, Deskripsi):
-            | Komponen | Deskripsi |
-            | :--- | :--- |
-            | **Identifikasi Murid** | ${d.murid} |
-            | **Karakteristik Materi** | (Jelaskan karakteristik materi ${d.topik} secara singkat dan pasti, sesuaikan dengan jenjang ${d.jenjang}) |
-            | **Dimensi Profil Lulusan** | ${d.profil} |
-
-            ## 2. DESAIN PEMBELAJARAN
-            - **Capaian Pembelajaran:** (Gunakan CP yang diberikan atau yang sesuai)
-            - **Tujuan Pembelajaran:** (Buat 3-4 poin spesifik & terukur)
-            - **Topik Pembelajaran:** ${d.topik}
-
-            ## 3. KERANGKA PEMBELAJARAN
-            Buat tabel/list untuk:
-            - Praktik Pedagogis: Model ${d.model}, Metode (Diskusi, Brainstorming, dll)
-            - Kemitraan Pembelajaran: (Misal: Orang tua, Pakar, Dunia Industri (untuk SMK), atau 'Tidak ada')
-            - Lingkungan Pembelajaran: (Fisik & Virtual)
-            - Pemanfaatan Digital/Media: ${d.media ? d.media : "(Saran media yang relevan seperti PPT, Video, atau Quizizz)"}
-
-            ## 4. PENGALAMAN BELAJAR (LANGKAH-LANGKAH)
-            Rincikan Pertemuan 1 s.d ${d.pertemuan}.
-            UNTUK SETIAP PERTEMUAN, buat Tabel dengan 3 Kolom Wajib:
-            | Aktivitas (Sintaks ${d.model}) | Pengalaman Belajar (Langkah-langkah Pasti & Detail) | Prinsip Pembelajaran |
-            | :--- | :--- | :--- |
-            | **Pendahuluan** | (Awali dengan: Guru membuka pembelajaran dengan salam, doa, dan absensi. Lalu apersepsi.) | (Pilih: Bermakna/Berkesadaran/Menggembirakan) |
-            | **Kegiatan Inti** | (Rincikan langkah sintaks ${d.model}. Gunakan kalimat pasti. ${d.media ? `Integrasikan penggunaan ${d.media} secara nyata.` : ''}) | (Pilih Prinsip) |
-            | **Penutup** | (Guru membimbing simpulan, refleksi, doa penutup) | (Pilih Prinsip) |
-
-            ## 5. PENILAIAN & ASESMEN
-            **A. Asesmen Diagnostik**
-            - Non-Kognitif: (3 pertanyaan tentang minat/gaya belajar)
-            - Kognitif: (3 soal prasyarat materi, sesuaikan tingkat kesulitan jenjang ${d.jenjang})
-            
-            **B. Tindak Lanjut Diagnostik (Diferensiasi)**
-            Buat tabel: Jenis Diagnostik | Hasil Ketercapaian | Tindak Lanjut (Tutor sebaya / Bimbingan khusus)
-
-            **C. Asesmen Sumatif (Variatif)**
-            Buatkan contoh soal nyata terkait ${d.topik} dengan jumlah berikut (Sesuaikan tingkat kognitif untuk ${d.jenjang}):
-            1. **Pilihan Ganda:** ${d.qty_pg} Soal
-            2. **Pilihan Ganda Kompleks:** ${d.qty_kompleks} Soal (Jawaban lebih dari satu)
-            3. **Benar/Salah:** ${d.qty_bs} Soal
-            4. **Esai Reflektif:** ${d.qty_esai} Soal
-
-            **D. Rubrik Penilaian (Skor 1-4)**
-            Buat tabel rubrik untuk penilaian Sikap (Berkesadaran, Bermakna, Menggembirakan) atau Keterampilan.
-
-            ## 6. LAMPIRAN
-            **LKPD: ${d.topik}**
-            Buat kerangka LKPD yang berisi: Judul, Identitas Kelompok, Panduan Aktivitas, dan Pertanyaan Diskusi.
-            `;
+            } else if (type === 'exam') {
+                // Exam logic remains same
+                data = {
+                    mapel: document.getElementById('exam-mapel').value,
+                    kelas: document.getElementById('exam-kelas').value,
+                    topik: document.getElementById('exam-topik').value,
+                    pg: document.getElementById('exam-pg').value,
+                    esai: document.getElementById('exam-esai').value,
+                    level: document.getElementById('exam-level').value
+                };
+                loaderText.innerText = "Membuat bank soal...";
+                prompt = `Buatkan BANK SOAL ${data.mapel} topik ${data.topik} kelas ${data.kelas}. Level: ${data.level}. Jumlah: ${data.pg} PG dan ${data.esai} Esai. Lengkap Kunci Jawaban.`;
+            }
 
             try {
                 const response = await fetch(
@@ -761,111 +749,42 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
                     }
                 );
-
+                
                 const result = await response.json();
-                const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal menghasilkan teks.";
-
-                // Rendering
-                const htmlContent = marked.parse(rawText);
-                document.getElementById('print-area').innerHTML = `
-                    <div class="text-center border-b-2 border-double border-gray-800 pb-6 mb-8">
-                        <h1 class="text-3xl font-serif font-bold uppercase tracking-widest">${d.sekolah}</h1>
-                        <p class="text-lg italic font-serif mt-2">Modul Ajar ${d.mapel} - ${d.semester}</p>
+                const rawMarkdown = result.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal menghasilkan konten.";
+                
+                const html = marked.parse(rawMarkdown);
+                const header = `
+                    <div style="text-align: center; border-bottom: 3px double black; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h2 style="margin:0; font-size: 14pt; text-transform: uppercase;">${settings.sekolah || 'NAMA SEKOLAH'}</h2>
+                        <p style="margin:0; font-size: 11pt;">Dokumen Perangkat Ajar - ${new Date().getFullYear()}</p>
                     </div>
-                    ${htmlContent}
                 `;
+                
+                currentGeneratedContent = header + html;
+                document.getElementById('print-area').innerHTML = currentGeneratedContent;
+                document.getElementById('result-overlay').classList.remove('hidden');
+                
+                if(window.MathJax) MathJax.typesetPromise();
 
-                // Typeset Math
-                if (window.MathJax) MathJax.typesetPromise();
-
-                // Show Result
-                document.getElementById('process-overlay').classList.add('hidden');
-                document.getElementById('result-container').classList.remove('hidden');
-
-            } catch (error) {
-                alert("Error: " + error.message);
-                document.getElementById('process-overlay').classList.add('hidden');
+            } catch (e) {
+                alert("Error: " + e.message);
+            } finally {
+                loader.classList.add('hidden');
             }
         }
 
-        // --- EXPORT PDF FUNCTION (NATIVE BROWSER PRINT) ---
-        function exportToPDF() {
-            // Memberikan instruksi kepada user karena browser akan membuka dialog print
-            // Ini adalah cara paling aman agar tidak ada teks terpotong
-            alert("Aplikasi akan membuka dialog cetak browser.\nPilih 'Save as PDF' (Simpan sebagai PDF) pada menu tujuan (Destination).");
-            window.print();
-        }
-
-        // --- EXPORT WORD FUNCTION (IMPROVED STYLING) ---
-        function exportToWord() {
+        function closeResult() { document.getElementById('result-overlay').classList.add('hidden'); }
+        function exportPDF() { alert("Pilih 'Save as PDF' di dialog cetak."); window.print(); }
+        function exportWord() {
             const content = document.getElementById('print-area').innerHTML;
-            const topik = document.getElementById('topik').value || 'Modul_Ajar';
-            
-            // CSS Khusus agar Tabel di Word punya Border HITAM TEBAL & RAPI
-            const preHtml = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                <head>
-                    <meta charset='utf-8'>
-                    <title>Export HTML to Word</title>
-                    <style>
-                        /* Set Halaman Word ke A4 */
-                        @page {
-                            size: 21cm 29.7cm;
-                            margin: 2cm 2cm 2cm 2cm;
-                            mso-page-orientation: portrait;
-                        }
-                        
-                        body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; color: #000; }
-                        
-                        /* Gaya Judul yang Rapi */
-                        h1 { font-size: 16pt; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 20px; color: #000; }
-                        h2 { font-size: 14pt; font-weight: bold; color: #2e74b5; border-bottom: 2px solid #000; margin-top: 25px; margin-bottom: 10px; }
-                        h3 { font-size: 12pt; font-weight: bold; color: #000; margin-top: 15px; text-transform: uppercase; }
-                        
-                        /* GAYA TABEL WORD (Wajib ada border hitam solid) */
-                        table { 
-                            border-collapse: collapse; 
-                            width: 100%; 
-                            margin-bottom: 15px; 
-                            border: 1px solid #000;
-                        }
-                        td, th { 
-                            border: 1px solid #000; 
-                            padding: 8px; 
-                            vertical-align: top; 
-                        }
-                        th { 
-                            background-color: #d9d9d9; 
-                            font-weight: bold; 
-                            text-align: center; 
-                        }
-                        
-                        /* List */
-                        ul, ol { padding-left: 30px; margin-bottom: 10px; }
-                        li { margin-bottom: 5px; }
-                    </style>
-                </head><body>`;
-            
-            const postHtml = "</body></html>";
-            
-            const blob = new Blob(['\ufeff', preHtml + content + postHtml], { type: 'application/msword' });
-            
-            // Link Download
-            const downloadLink = document.createElement("a");
-            document.body.appendChild(downloadLink);
-            
-            if(navigator.msSaveOrOpenBlob){
-                navigator.msSaveOrOpenBlob(blob, `Modul_Ajar_${topik}.doc`);
-            } else {
-                const url = URL.createObjectURL(blob);
-                downloadLink.href = url;
-                // Note: Tetap .doc karena format ini paling stabil untuk HTML-to-Word
-                downloadLink.download = `Modul_Ajar_${topik}.doc`; 
-                downloadLink.click();
-                setTimeout(() => { URL.revokeObjectURL(url); }, 100); 
-            }
-            
-            document.body.removeChild(downloadLink);
+            const title = currentResultType === 'modul' ? document.getElementById('gen-topik').value : document.getElementById('exam-topik').value;
+            const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>Doc</title><style>@page { size: A4; margin: 2cm; } body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; } table { border-collapse: collapse; width: 100%; margin-bottom: 15px; } td, th { border: 1px solid black; padding: 5px; vertical-align: top; } h1, h2, h3 { color: black; }</style></head><body>`;
+            const blob = new Blob(['\ufeff', preHtml + content + '</body></html>'], { type: 'application/msword' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${title || 'Dokumen'}.doc`;
+            link.click();
         }
     </script>
 </body>
