@@ -11,6 +11,9 @@
     <!-- Marked.js untuk Markdown Parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
+    <!-- html2pdf.js untuk Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <!-- MathJax untuk Rumus Matematika -->
     <script>
     window.MathJax = {
@@ -151,7 +154,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-gray-800 tracking-tight">AjarAI <span class="text-indigo-600">DeepLearning</span></h1>
-                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Module Generator v4.1 (Full Print)</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Module Generator v4.1 (Restore)</p>
                 </div>
             </div>
             <button onclick="toggleSettings()" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
@@ -738,11 +741,12 @@
             Buat tabel: Jenis Diagnostik | Hasil Ketercapaian | Tindak Lanjut (Tutor sebaya / Bimbingan khusus)
 
             **C. Asesmen Sumatif (Variatif)**
+            INSTRUKSI PENTING: Anda WAJIB membuat soal sejumlah angka yang diminta di bawah ini. JANGAN KURANGI jumlahnya. JANGAN hanya memberi contoh. Tuliskan semua soal secara lengkap.
             Buatkan contoh soal nyata terkait ${d.topik} dengan jumlah berikut (Sesuaikan tingkat kognitif untuk ${d.jenjang}):
-            1. **Pilihan Ganda:** ${d.qty_pg} Soal
-            2. **Pilihan Ganda Kompleks:** ${d.qty_kompleks} Soal (Jawaban lebih dari satu)
-            3. **Benar/Salah:** ${d.qty_bs} Soal
-            4. **Esai Reflektif:** ${d.qty_esai} Soal
+            1. **Pilihan Ganda:** ${d.qty_pg} Soal (Tuliskan ${d.qty_pg} butir soal lengkap dengan opsi A-E)
+            2. **Pilihan Ganda Kompleks:** ${d.qty_kompleks} Soal (Tuliskan ${d.qty_kompleks} butir soal lengkap dengan opsi centang)
+            3. **Benar/Salah:** ${d.qty_bs} Soal (Tuliskan ${d.qty_bs} pernyataan lengkap)
+            4. **Esai Reflektif:** ${d.qty_esai} Soal (Tuliskan ${d.qty_esai} soal uraian lengkap)
 
             **D. Rubrik Penilaian (Skor 1-4)**
             Buat tabel rubrik untuk penilaian Sikap (Berkesadaran, Bermakna, Menggembirakan) atau Keterampilan.
