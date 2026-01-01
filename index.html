@@ -33,17 +33,12 @@
         
         /* Preview Styles (Screen) */
         .preview-content { font-family: 'Merriweather', serif; line-height: 1.6; color: #1f2937; font-size: 11pt; }
-        
-        /* Heading Styles */
-        .preview-content h1 { font-size: 1.6em; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.8em; color: #000; text-align: center; text-transform: uppercase; page-break-after: avoid; }
-        .preview-content h2 { font-size: 1.3em; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.6em; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; page-break-after: avoid; }
-        .preview-content h3 { font-size: 1.15em; font-weight: 700; margin-top: 1.2em; margin-bottom: 0.5em; color: #374151; page-break-after: avoid; }
-        
-        /* Tables */
+        .preview-content h1 { font-size: 1.6em; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.8em; color: #000; text-align: center; text-transform: uppercase; }
+        .preview-content h2 { font-size: 1.3em; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.6em; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
+        .preview-content h3 { font-size: 1.15em; font-weight: 700; margin-top: 1.2em; margin-bottom: 0.5em; color: #374151; }
         .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; font-size: 0.95em; }
         .preview-content th, .preview-content td { border: 1px solid #000; padding: 8px 12px; text-align: left; vertical-align: top; }
         .preview-content th { background-color: #f3f4f6; font-weight: 700; color: #000; }
-        
         .preview-content ul, .preview-content ol { margin-bottom: 1em; padding-left: 1.5em; }
         .preview-content ul { list-style-type: disc; }
         .preview-content ol { list-style-type: decimal; }
@@ -58,23 +53,39 @@
         @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
         /* =========================================
-           PRINT CSS (NATIVE PDF GENERATION)
+           PRINT CSS (PERBAIKAN TOTAL UNTUK PDF)
            ========================================= */
         @media print {
             @page {
                 size: A4;
-                margin: 2cm; /* Margin standar dokumen */
+                margin: 20mm; /* Margin standar dokumen */
             }
             
-            body {
-                background-color: white;
-                height: auto;
-                overflow: visible;
+            /* RESET TOTAL: Hapus semua pembatasan tinggi/scroll dari framework CSS */
+            html, body {
+                height: auto !important;
+                min-height: 100% !important;
+                width: 100% !important;
+                overflow: visible !important; /* PENTING: Izinkan konten memanjang */
+                position: static !important;
+                display: block !important;
             }
 
-            /* Sembunyikan UI Aplikasi saat Print */
-            header, #wizard-container, #settings-panel, .toolbar-ui, #process-overlay {
+            /* Sembunyikan UI Aplikasi yang tidak perlu dicetak */
+            header, #wizard-container, #settings-panel, .toolbar-ui, #process-overlay, #btn-prev, #btn-next {
                 display: none !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            /* Reset Main Container */
+            main {
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important; /* Matikan flexbox saat print */
+                position: static !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
             /* Tampilkan Hasil */
@@ -82,42 +93,50 @@
                 position: static !important;
                 display: block !important;
                 height: auto !important;
-                overflow: visible !important;
+                overflow: visible !important; /* PENTING: Jangan potong konten */
                 background: white !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                inset: auto !important; /* Reset absolute positioning */
             }
 
+            /* Area Cetak */
             #print-area {
                 box-shadow: none !important;
                 border: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                max-width: 100% !important;
                 width: 100% !important;
+                max-width: 100% !important;
+                overflow: visible !important;
             }
 
             /* Optimasi Teks untuk Cetak */
             .preview-content {
-                font-size: 12pt !important;
+                font-size: 11pt !important;
                 color: #000 !important;
-                line-height: 1.5 !important;
+                line-height: 1.4 !important;
             }
 
-            /* Hindari pemotongan elemen penting */
+            /* Anti-Potong Elemen (Page Break Control) */
             .preview-content table, 
             .preview-content tr, 
             .preview-content blockquote,
-            .preview-content h2,
-            .preview-content h3 {
-                page-break-inside: avoid;
+            .preview-content p,
+            .preview-content li {
+                page-break-inside: avoid; /* Usahakan tidak memotong elemen di tengah halaman */
             }
             
-            .preview-content h2 {
-                page-break-after: avoid;
-                border-bottom: 1px solid #000 !important;
+            .preview-content h1, 
+            .preview-content h2, 
+            .preview-content h3 {
+                page-break-after: avoid; /* Jangan pisahkan judul dengan isinya */
+                page-break-inside: avoid;
             }
 
-            /* Paksa link agar tidak berwarna biru/garis bawah aneh */
-            a { text-decoration: none; color: black; }
+            /* Paksa link agar hitam */
+            a { text-decoration: none; color: black !important; }
         }
     </style>
 </head>
@@ -132,7 +151,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-gray-800 tracking-tight">AjarAI <span class="text-indigo-600">DeepLearning</span></h1>
-                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Module Generator v4.0 (Stable)</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Module Generator v4.1 (Full Print)</p>
                 </div>
             </div>
             <button onclick="toggleSettings()" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
