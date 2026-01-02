@@ -59,7 +59,7 @@
         .preview-content h1 { font-size: 1.4em; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.8em; color: #000; text-align: center; text-transform: uppercase; }
         .preview-content h2 { font-size: 1.2em; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.6em; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
         .preview-content h3 { font-size: 1.1em; font-weight: 700; margin-top: 1.2em; margin-bottom: 0.5em; color: #374151; }
-        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; font-size: 0.9em; display: block; overflow-x: auto; } /* Table scroll on mobile */
+        .preview-content table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; font-size: 0.9em; display: block; overflow-x: auto; }
         .preview-content th, .preview-content td { border: 1px solid #000; padding: 8px 12px; text-align: left; vertical-align: top; min-width: 120px; }
         .preview-content th { background-color: #f3f4f6; font-weight: 700; color: #000; }
         .preview-content ul, .preview-content ol { margin-bottom: 1em; padding-left: 1.5em; }
@@ -76,58 +76,53 @@
         @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
         /* =========================================
-           PRINT CSS (PERBAIKAN TOTAL UNTUK PDF)
+           PRINT CSS
            ========================================= */
         @media print {
             @page {
                 size: A4;
-                margin: 20mm; /* Margin standar dokumen */
+                margin: 20mm;
             }
             
-            /* RESET TOTAL: Hapus semua pembatasan tinggi/scroll dari framework CSS */
             html, body {
                 height: auto !important;
                 min-height: 100% !important;
                 width: 100% !important;
-                overflow: visible !important; /* PENTING: Izinkan konten memanjang */
+                overflow: visible !important;
                 position: static !important;
                 display: block !important;
-                background-color: white !important; /* Force White Background for Print */
+                background-color: white !important;
                 color: black !important;
             }
 
-            /* Sembunyikan UI Aplikasi yang tidak perlu dicetak */
             header, #wizard-container, #settings-panel, .toolbar-ui, #process-overlay, #btn-prev, #btn-next, #apikey-modal, #theme-toggle, #history-modal {
                 display: none !important;
                 height: 0 !important;
                 overflow: hidden !important;
             }
 
-            /* Reset Main Container */
             main {
                 height: auto !important;
                 overflow: visible !important;
-                display: block !important; /* Matikan flexbox saat print */
+                display: block !important;
                 position: static !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 background-color: white !important;
             }
 
-            /* Tampilkan Hasil */
             #result-container {
                 position: static !important;
                 display: block !important;
                 height: auto !important;
-                overflow: visible !important; /* PENTING: Jangan potong konten */
+                overflow: visible !important;
                 background: white !important;
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                inset: auto !important; /* Reset absolute positioning */
+                inset: auto !important;
             }
 
-            /* Area Cetak */
             #print-area {
                 box-shadow: none !important;
                 border: none !important;
@@ -138,39 +133,33 @@
                 overflow: visible !important;
             }
 
-            /* Optimasi Teks untuk Cetak */
             .preview-content {
                 font-size: 11pt !important;
                 color: #000 !important;
                 line-height: 1.4 !important;
             }
             
-            /* Table Print Fix */
             .preview-content table { display: table !important; width: 100% !important; }
 
-            /* Anti-Potong Elemen (Page Break Control) */
             .preview-content table, 
             .preview-content tr, 
             .preview-content blockquote,
             .preview-content p,
             .preview-content li {
-                page-break-inside: avoid; /* Usahakan tidak memotong elemen di tengah halaman */
+                page-break-inside: avoid;
             }
             
             .preview-content h1, 
             .preview-content h2, 
             .preview-content h3 {
-                page-break-after: avoid; /* Jangan pisahkan judul dengan isinya */
-                page-break-inside: avoid;
+                page-break-after: avoid;
             }
 
-            /* Paksa link agar hitam */
             a { text-decoration: none; color: black !important; }
         }
     </style>
 </head>
-<!-- Use h-[100dvh] for better mobile browser support -->
-<body class="bg-gray-50 dark:bg-dark-bg h-screen h-[100dvh] flex flex-col overflow-hidden text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-dark-bg h-[100dvh] flex flex-col overflow-hidden text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
     <!-- HEADER -->
     <header class="bg-white dark:bg-dark-card border-b border-gray-200 dark:border-gray-700 flex-none z-10 shadow-sm transition-colors duration-300">
@@ -181,7 +170,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg md:text-xl font-bold text-gray-800 dark:text-white tracking-tight leading-tight">AjarAI <span class="text-indigo-600 dark:text-indigo-400">DL</span></h1>
-                    <p class="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider hidden xs:block">Module Generator v5.2 Mobile</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider hidden xs:block">Deep Learning Edition v5.3</p>
                 </div>
             </div>
             
@@ -1065,14 +1054,21 @@
             - Lingkungan Pembelajaran: (Fisik & Virtual)
             - Pemanfaatan Digital/Media: ${d.media ? d.media : "(Media yang Anda pilihkan)"}
 
-            ## 4. PENGALAMAN BELAJAR (LANGKAH-LANGKAH)
+            ## 4. PENGALAMAN BELAJAR (LANGKAH-LANGKAH) - PENDEKATAN DEEP LEARNING
             Rincikan Pertemuan 1 s.d ${d.pertemuan}.
-            UNTUK SETIAP PERTEMUAN, buat Tabel dengan 3 Kolom Wajib:
-            | Aktivitas (Sintaks ${d.model}) | Pengalaman Belajar (Langkah-langkah Pasti & Detail) | Prinsip Pembelajaran |
+            
+            **ATURAN PENULISAN DEEP LEARNING:**
+            Anda WAJIB menandai setiap aktivitas utama dengan salah satu prinsip berikut dalam tanda kurung:
+            - **(Mindful)**: Untuk aktivitas fokus, refleksi, kesadaran diri.
+            - **(Meaningful)**: Untuk aktivitas relevan kehidupan, pemahaman konsep, diskusi mendalam.
+            - **(Joyful)**: Untuk aktivitas menyenangkan, ice breaking, perayaan hasil belajar.
+
+            Buat Tabel untuk setiap pertemuan:
+            | Tahapan Pembelajaran | Deskripsi Kegiatan (Integrasi 3 Pilar) | Alokasi Waktu |
             | :--- | :--- | :--- |
-            | **Pendahuluan** | (Awali dengan: Guru membuka pembelajaran dengan salam, doa, dan absensi. Lalu apersepsi.) | (Pilih: Bermakna/Berkesadaran/Menggembirakan) |
-            | **Kegiatan Inti** | (Rincikan langkah sintaks ${d.model}. Gunakan kalimat pasti. Integrasikan media secara nyata.) | (Pilih Prinsip) |
-            | **Penutup** | (Guru membimbing simpulan, refleksi, doa penutup) | (Pilih Prinsip) |
+            | **Pendahuluan** | Jelaskan aktivitas pembuka. <br>Contoh: Guru mengajak siswa hening sejenak **(Mindful)**. Melakukan apersepsi terkait berita terkini **(Meaningful)**. | 10' |
+            | **Kegiatan Inti** | Rincikan sintaks model ${d.model}. <br>Gunakan kalimat aktif. <br>Contoh: Siswa berdiskusi memecahkan masalah **(Meaningful)**. Siswa mempresentasikan karya dengan antusias **(Joyful)**. | ...' |
+            | **Penutup** | Refleksi dan penutup. <br>Contoh: Siswa menuliskan refleksi perasaan hari ini **(Mindful)**. | ...' |
 
             ## 5. PENILAIAN & ASESMEN
             **A. Asesmen Diagnostik**
@@ -1249,3 +1245,5 @@
     </script>
 </body>
 </html>
+
+
