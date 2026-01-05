@@ -2,909 +2,788 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eco-Guardian: Physics Defender (IFP Edition)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JaringanKita | Media Pembelajaran Interaktif</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
-
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #050505;
-            font-family: 'Rajdhani', sans-serif;
-            color: white;
-            user-select: none;
-            /* OPTIMASI IFP: Mencegah browser melakukan zoom/scroll default pada sentuhan */
-            touch-action: none; 
-            -webkit-touch-callout: none;
+        /* Custom Styles */
+        body { font-family: 'Inter', sans-serif; overflow: hidden; touch-action: none; background-color: #f0f9ff; }
+        .canvas-grid {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
         }
-
-        #game-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+        .device-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
         }
-
-        /* UI Overlay */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            pointer-events: none; /* Let clicks pass through to game */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .hud-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .score-box {
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid #00ffff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-
-        .score-title {
-            font-size: 0.8rem;
-            color: #00ffff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .score-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        /* Boss Health Bar - Scale up slightly for big screens */
-        #boss-hud {
-            position: absolute;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 70%; 
-            display: none; /* Hidden initially */
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .boss-name {
-            color: #ff0055;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px #ff0055;
-            text-align: center;
-        }
-
-        .health-bar-container {
-            width: 100%;
-            height: 30px; /* Thicker for visibility on IFP */
-            background: rgba(50, 0, 0, 0.5);
-            border: 3px solid #ff0055;
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #boss-health-fill {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #ff0055, #ff5500);
-            transition: width 0.5s ease-out;
-            box-shadow: 0 0 15px #ff0055;
-        }
-
-        /* Start Screen & Modals */
-        #modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: auto;
-            transition: opacity 0.3s;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, rgba(10, 20, 40, 0.95), rgba(0, 0, 0, 0.95));
-            border: 2px solid #00ffff;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 700px; /* Wider for IFP readability */
-            width: 90%;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modal-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, #00ffff, #0088ff, #00ffff);
-        }
-
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            color: #00ffff;
-            margin-top: 0;
-            font-size: 2.5rem; /* Bigger title */
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-
-        p {
-            font-size: 1.3rem; /* Bigger text for classroom viewing */
-            line-height: 1.6;
-            color: #ccc;
-        }
-
-        .btn {
-            background: transparent;
-            border: 3px solid #00ffff; /* Thicker border */
-            color: #00ffff;
-            padding: 15px 40px; /* Larger touch target */
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            margin-top: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
-            border-radius: 8px;
-        }
-
-        .btn:hover, .btn:active {
-            background: #00ffff;
-            color: #000;
-            box-shadow: 0 0 30px #00ffff;
-        }
-
-        /* Quiz Specific Styles */
-        .quiz-option {
-            display: block;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #444;
-            padding: 20px; /* Larger padding for touch */
-            margin: 15px 0;
-            text-align: left;
-            cursor: pointer;
-            transition: 0.2s;
-            border-radius: 8px;
-            color: white;
-            font-size: 1.2rem; /* Readable from back of class */
-        }
-
-        .quiz-option:hover, .quiz-option:active {
-            background: rgba(0, 255, 255, 0.2);
-            border-color: #00ffff;
-        }
-
-        .correct-anim {
-            animation: pulse-green 0.5s;
-            background: rgba(0, 255, 0, 0.2) !important;
-            border-color: #00ff00 !important;
-        }
-
-        .wrong-anim {
-            animation: shake 0.5s;
-            background: rgba(255, 0, 0, 0.2) !important;
-            border-color: #ff0000 !important;
-        }
-
-        @keyframes pulse-green {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Mobile controls hint */
-        .controls-hint {
-            position: absolute;
-            bottom: 30px;
-            width: 100%;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1rem;
-            pointer-events: none;
-            background: rgba(0,0,0,0.5); /* Background for readability */
-            padding: 5px 0;
-        }
-
-        /* Tutorial/Explanation text */
-        .explanation-text {
-            font-size: 1.1rem;
-            color: #00ffaa;
-            margin-top: 15px;
-            font-style: italic;
-            display: none;
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-</head>
-<body>
-
-    <!-- UI Layer -->
-    <div id="ui-layer">
-        <div class="hud-top">
-            <div class="score-box">
-                <div class="score-title">SKOR</div>
-                <div class="score-value" id="score-display">0</div>
-            </div>
-            <div class="score-box" style="border-color: #ff0055; box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);">
-                <div class="score-title" style="color: #ff0055;">NYAWA</div>
-                <div class="score-value" id="player-hp-display">100%</div>
-            </div>
-        </div>
+        .device-shadow:active { transform: scale(0.95); }
         
-        <div id="boss-hud">
-            <div class="boss-name">TITAN POLUSI (BOSS)</div>
-            <div class="health-bar-container">
-                <div id="boss-health-fill"></div>
+        .packet-anim { transition: all 0.8s linear; }
+        
+        .cable-line { stroke: #cbd5e1; stroke-width: 6; stroke-linecap: round; }
+        .cable-active { 
+            stroke: #f59e0b; 
+            stroke-width: 4; 
+            stroke-dasharray: 10; 
+            animation: dash 1s linear infinite; 
+        }
+        @keyframes dash { to { stroke-dashoffset: -20; } }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Utility classes for tabs */
+        .tab-content { display: none; height: 100%; }
+        .tab-content.active { display: flex; }
+    </style>
+</head>
+<body class="flex flex-col h-screen text-slate-800">
+
+    <!-- HEADER -->
+    <header class="bg-indigo-600 text-white p-3 md:p-4 flex justify-between items-center shadow-lg z-20 shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="bg-white p-1 rounded text-indigo-600">
+                <i data-lucide="network" width="20"></i>
+            </div>
+            <h1 class="text-lg md:text-xl font-bold tracking-wide">JaringanKita <span class="hidden sm:inline text-xs font-normal opacity-80">| Media Pembelajaran Interaktif</span></h1>
+        </div>
+        <nav class="flex gap-2">
+            <button onclick="switchTab('sim')" id="btn-sim" class="nav-btn flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm rounded-full transition font-bold bg-white text-indigo-600 shadow-md">
+                <i data-lucide="box-select" width="16"></i> <span class="hidden md:inline">Lab Simulator</span>
+            </button>
+            <button onclick="switchTab('learn')" id="btn-learn" class="nav-btn flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm rounded-full transition font-bold hover:bg-indigo-500 text-indigo-100">
+                <i data-lucide="book-open" width="16"></i> <span class="hidden md:inline">Materi</span>
+            </button>
+            <button onclick="switchTab('game')" id="btn-game" class="nav-btn flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm rounded-full transition font-bold hover:bg-indigo-500 text-indigo-100">
+                <i data-lucide="trophy" width="16"></i> <span class="hidden md:inline">Kuis</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- NOTIFICATION -->
+    <div id="notification" class="hidden absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg shadow-xl text-white text-sm font-medium z-50 animate-bounce text-center"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-hidden relative">
+
+        <!-- TAB: SIMULATOR -->
+        <div id="tab-sim" class="tab-content active flex-col md:flex-row w-full">
+            
+            <!-- TOOLBAR -->
+            <div class="w-full md:w-64 bg-white border-b md:border-r border-slate-200 flex md:flex-col p-2 gap-2 shadow-sm z-10 shrink-0 overflow-x-auto items-center md:items-stretch">
+                <!-- Mobile Scenario Btn -->
+                <div class="md:hidden flex-none">
+                    <button onclick="loadScenario(1)" class="p-2 bg-yellow-100 text-yellow-800 rounded text-xs font-bold border border-yellow-300">⚠️ Misi 1</button>
+                </div>
+
+                <!-- Devices -->
+                <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 min-w-[150px] md:min-w-0">
+                    <h3 class="text-[10px] font-bold text-indigo-800 uppercase mb-2">Devices</h3>
+                    <div class="grid grid-cols-4 md:grid-cols-2 gap-2">
+                        <button onclick="addDevice('pc')" class="flex flex-col items-center p-2 bg-white border border-slate-200 rounded hover:bg-indigo-100 active:scale-95 transition shadow-sm">
+                            <i data-lucide="monitor" class="text-slate-700 w-6 h-6"></i>
+                            <span class="text-[10px] mt-1 font-medium">PC</span>
+                        </button>
+                        <button onclick="addDevice('switch')" class="flex flex-col items-center p-2 bg-white border border-slate-200 rounded hover:bg-indigo-100 active:scale-95 transition shadow-sm">
+                            <i data-lucide="box-select" class="text-indigo-600 w-6 h-6"></i>
+                            <span class="text-[10px] mt-1 font-medium">Switch</span>
+                        </button>
+                        <button onclick="addDevice('hub')" class="flex flex-col items-center p-2 bg-white border border-slate-200 rounded hover:bg-indigo-100 active:scale-95 transition shadow-sm">
+                            <i data-lucide="share-2" class="text-orange-600 w-6 h-6"></i>
+                            <span class="text-[10px] mt-1 font-medium">Hub</span>
+                        </button>
+                        <button onclick="addDevice('server')" class="flex flex-col items-center p-2 bg-white border border-slate-200 rounded hover:bg-indigo-100 active:scale-95 transition shadow-sm">
+                            <i data-lucide="server" class="text-emerald-600 w-6 h-6"></i>
+                            <span class="text-[10px] mt-1 font-medium">Server</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tools -->
+                <div class="bg-orange-50 p-3 rounded-lg border border-orange-100 min-w-[200px] md:min-w-0 flex-1">
+                    <h3 class="text-[10px] font-bold text-orange-800 uppercase mb-2">Tools</h3>
+                    <div class="grid grid-cols-5 md:grid-cols-1 gap-1" id="tools-container">
+                        <!-- Buttons generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Scenarios Desktop -->
+                <div class="hidden md:block mt-auto space-y-2">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase">Tantangan</h3>
+                    <button onclick="loadScenario(1)" class="w-full flex items-center gap-2 p-2 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded text-xs hover:bg-yellow-100 text-left transition">
+                        <i data-lucide="alert-triangle" width="14"></i> Kabel Putus
+                    </button>
+                    <button onclick="loadScenario(2)" class="w-full flex items-center gap-2 p-2 bg-red-50 text-red-700 border border-red-200 rounded text-xs hover:bg-red-100 text-left transition">
+                        <i data-lucide="settings" width="14"></i> Salah IP (Subnet)
+                    </button>
+                    <button onclick="resetLab()" class="w-full flex items-center gap-2 p-2 bg-slate-100 text-slate-600 border border-slate-200 rounded text-xs hover:bg-slate-200 text-left transition">
+                        <i data-lucide="refresh-ccw" width="14"></i> Reset Lab
+                    </button>
+                </div>
+            </div>
+
+            <!-- CANVAS AREA -->
+            <div id="canvas-area" class="flex-1 relative bg-slate-50 canvas-grid overflow-hidden touch-none">
+                <!-- SVG Layer for Cables -->
+                <svg id="cables-layer" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
+                
+                <!-- Devices Layer -->
+                <div id="devices-layer" class="absolute inset-0 w-full h-full"></div>
+                
+                <!-- Packets Layer -->
+                <div id="packets-layer" class="absolute inset-0 w-full h-full pointer-events-none"></div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
+                    <div class="text-center">
+                        <i data-lucide="mouse-pointer-click" width="48" class="mx-auto text-slate-400 mb-2"></i>
+                        <p class="font-bold text-slate-500">Tap + Device di kiri untuk mulai</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="controls-hint">Sentuh & Geser Layar untuk Menggerakkan Pesawat • Pesawat Menembak Otomatis saat Disentuh</div>
-    </div>
+        <!-- TAB: MATERI (LEARN) -->
+        <div id="tab-learn" class="tab-content flex-col w-full bg-slate-50 overflow-y-auto">
+            <div class="max-w-4xl mx-auto p-6 md:p-10 space-y-10">
+                <div class="text-center space-y-2">
+                    <h2 class="text-3xl font-bold text-indigo-900">Rangkuman Materi Jaringan</h2>
+                    <p class="text-slate-500">Informatika Kelas XI - Bab 4</p>
+                </div>
 
-    <!-- Modals -->
-    <div id="modal-overlay">
-        <!-- Start Screen -->
-        <div id="start-screen" class="modal-content">
-            <h1>ECO-GUARDIAN</h1>
-            <p>Bumi sedang diserang oleh armada <strong>Titan Polusi</strong>. Kalahkan pasukan musuh dan hancurkan Bos Utama.</p>
-            <p style="font-size: 1.1rem; color: #aaa;">Bos memiliki perisai yang hanya bisa ditembus dengan pengetahuan tentang <strong>Energi Terbarukan</strong>.</p>
-            <button class="btn" onclick="startGame()">MULAI MISI</button>
-        </div>
+                <!-- Sections -->
+                <div id="materi-content">
+                    <!-- Section A -->
+                    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">A</div>
+                            <h3 class="text-xl font-bold text-slate-800">Pengantar Jaringan Komputer</h3>
+                        </div>
+                        <ul class="space-y-3 text-slate-600">
+                            <li class="flex gap-2"><i data-lucide="check-circle-2" class="text-blue-500 shrink-0 mt-1" width="18"></i> <span><strong>Jaringan Komputer:</strong> Sekumpulan komputer yang saling terhubung untuk berbagi sumber daya.</span></li>
+                            <li class="flex gap-2"><i data-lucide="check-circle-2" class="text-blue-500 shrink-0 mt-1" width="18"></i> <span><strong>Internet:</strong> Jaringan global yang menghubungkan miliaran jaringan komputer.</span></li>
+                            <li class="flex gap-2"><i data-lucide="check-circle-2" class="text-blue-500 shrink-0 mt-1" width="18"></i> <span><strong>LAN:</strong> Jaringan area lokal (lab, kantor).</span></li>
+                        </ul>
+                    </section>
 
-        <!-- Quiz Screen -->
-        <div id="quiz-screen" class="modal-content hidden">
-            <h2 id="quiz-title" style="color: #ffff00; text-transform: uppercase;">Analisis Energi</h2>
-            <p id="quiz-question">Pertanyaan akan muncul di sini...</p>
-            <div id="quiz-options">
-                <!-- Options generated by JS -->
+                    <!-- Section B -->
+                    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">B</div>
+                            <h3 class="text-xl font-bold text-slate-800">Topologi Jaringan</h3>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-indigo-50 rounded-lg">
+                                <h4 class="font-bold text-indigo-800 mb-2">1. Topologi Bus</h4>
+                                <p class="text-sm text-slate-600">Satu kabel utama (backbone). Jika putus, semua mati.</p>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded-lg">
+                                <h4 class="font-bold text-indigo-800 mb-2">2. Topologi Ring</h4>
+                                <p class="text-sm text-slate-600">Melingkar. Data satu arah (token). Rentan 1 titik mati.</p>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded-lg">
+                                <h4 class="font-bold text-indigo-800 mb-2">3. Topologi Star</h4>
+                                <p class="text-sm text-slate-600">Terpusat (Switch/Hub). Paling stabil & mudah dikelola.</p>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded-lg">
+                                <h4 class="font-bold text-indigo-800 mb-2">4. Topologi Tree</h4>
+                                <p class="text-sm text-slate-600">Hirarkis, gabungan topologi star.</p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- More sections can be added here similar to the React code -->
+                    <div class="pt-6 border-t border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6">F. Perangkat Keras Jaringan</h3>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="border border-indigo-200 rounded-xl p-4 bg-indigo-50/50">
+                                <h4 class="font-bold text-indigo-800 flex items-center gap-2"><i data-lucide="box-select" width="18"></i> Switch</h4>
+                                <p class="text-sm text-slate-600 mt-2">Mengirim data HANYA ke tujuan (Unicast). Cerdas & Aman.</p>
+                            </div>
+                            <div class="border border-orange-200 rounded-xl p-4 bg-orange-50/50">
+                                <h4 class="font-bold text-orange-800 flex items-center gap-2"><i data-lucide="share-2" width="18"></i> Hub</h4>
+                                <p class="text-sm text-slate-600 mt-2">Mengirim data ke SEMUA (Broadcast). Rawan macet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="quiz-explanation" class="explanation-text"></div>
-            <button id="quiz-continue-btn" class="btn hidden" onclick="closeQuiz()">Lanjutkan Serangan</button>
         </div>
 
-        <!-- Game Over Screen -->
-        <div id="game-over-screen" class="modal-content hidden">
-            <h1 id="go-title">MISI GAGAL</h1>
-            <p id="go-message">Pesawat hancur.</p>
-            <div style="margin: 20px 0; font-size: 3rem; color: #00ffff;" id="final-score">0</div>
-            <button class="btn" onclick="location.reload()">Coba Lagi</button>
+        <!-- TAB: GAME (QUIZ) -->
+        <div id="tab-game" class="tab-content flex-col w-full bg-slate-50 items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-slate-200" id="quiz-container">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- CONFIG MODAL (Terminal) -->
+    <div id="config-modal" class="hidden absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="bg-slate-800 text-white p-3 flex justify-between items-center">
+                <span class="font-mono text-sm flex items-center gap-2"><i data-lucide="terminal" width="14"></i> Terminal: <span id="modal-title">PC 1</span></span>
+                <button onclick="closeConfig()"><i data-lucide="x" width="18"></i></button>
+            </div>
+            <div class="p-4 bg-slate-100 border-b border-slate-200">
+                <label class="block text-xs font-bold text-slate-500 mb-1">IP Address Configuration</label>
+                <div class="flex gap-2">
+                    <input type="text" id="ip-input" class="flex-1 border rounded px-2 py-1 font-mono text-sm" placeholder="192.168.1.1">
+                    <div class="px-2 py-1 bg-slate-200 rounded text-xs font-mono flex items-center">/24</div>
+                </div>
+            </div>
+            <div class="flex-1 bg-black p-4 font-mono text-xs md:text-sm text-green-400 overflow-y-auto min-h-[300px]" id="terminal-body" onclick="document.getElementById('term-input').focus()">
+                <div id="terminal-output"></div>
+                <div class="flex gap-1 mt-2">
+                    <span class="text-white" id="terminal-prompt">C:\Users\PC 1&gt;</span>
+                    <form onsubmit="handleTerminalSubmit(event)" class="flex-1">
+                        <input id="term-input" type="text" class="bg-transparent border-none outline-none text-green-400 w-full" autocomplete="off">
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 3D Canvas Container -->
-    <div id="game-container"></div>
-
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- IFP OPTIMIZATION: PREVENT CONTEXT MENU ---
-        // Mencegah menu klik kanan muncul saat layar ditekan lama (Long Press)
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // --- GAME CONFIGURATION & STATE ---
-        const config = {
-            playerSpeed: 0.15,
-            bulletSpeed: 0.5,
-            enemySpeed: 0.08,
-            bossSpeed: 0.02,
-            spawnRate: 60, // frames
-        };
-
-        const state = {
-            isPlaying: false,
-            isPaused: false,
-            score: 0,
-            playerHP: 100,
-            level: 1, // 1: Minions, 2: Boss
-            bossHP: 100,
-            bossMaxHP: 500, // Boss takes a lot of hits
-            frames: 0,
-            bossPhase: 0, // 0: 100%, 1: 75%, 2: 50%, 3: 25%, 4: 0%
-            mouse: { x: 0, y: 0 },
-            isShooting: false
-        };
-
-        // --- THREE.JS VARIABLES ---
-        let scene, camera, renderer;
-        let player, boss;
-        let bullets = [];
-        let enemies = [];
-        let particles = [];
-        let starField;
-
-        // --- PHYSICS/QUIZ DATA ---
-        const quizData = [
-            {
-                threshold: 100,
-                question: "Bos tiba! Perisainya aktif. Apa definisi energi terbarukan yang paling tepat?",
-                options: [
-                    "Energi yang berasal dari fosil dan terbatas.",
-                    "Energi yang berasal dari proses alam yang berkelanjutan.",
-                    "Energi yang hanya bisa digunakan di siang hari.",
-                    "Energi buatan manusia dari reaksi kimia berbahaya."
-                ],
-                correct: 1,
-                explanation: "Energi terbarukan berasal dari sumber alam (matahari, angin, air) yang terus diperbarui secara alami."
-            },
-            {
-                threshold: 75,
-                question: "Perisai 75%! Panel surya mengubah energi cahaya menjadi listrik menggunakan efek apa?",
-                options: [
-                    "Efek Rumah Kaca",
-                    "Efek Doppler",
-                    "Efek Fotovoltaik",
-                    "Efek Piezoelektrik"
-                ],
-                correct: 2,
-                explanation: "Sel surya menggunakan efek Fotovoltaik, di mana foton cahaya melepaskan elektron dari material semikonduktor."
-            },
-            {
-                threshold: 50,
-                question: "Perisai 50%! Pada Pembangkit Listrik Tenaga Bayu (Angin), perubahan energi apa yang terjadi?",
-                options: [
-                    "Energi Kimia → Energi Listrik",
-                    "Energi Kinetik → Energi Mekanik → Energi Listrik",
-                    "Energi Panas → Energi Listrik",
-                    "Energi Potensial → Energi Kinetik"
-                ],
-                correct: 1,
-                explanation: "Angin (Kinetik) memutar turbin (Mekanik) yang kemudian memutar generator untuk menghasilkan Listrik."
-            },
-            {
-                threshold: 25,
-                question: "Perisai 25%! Apa keunggulan utama energi Geothermal (Panas Bumi) dibanding tenaga surya?",
-                options: [
-                    "Lebih murah instalasinya",
-                    "Tidak bergantung pada cuaca (stabil 24 jam)",
-                    "Bisa dipasang di atap rumah",
-                    "Tidak memerlukan peralatan khusus"
-                ],
-                correct: 1,
-                explanation: "Geothermal memiliki faktor kapasitas tinggi (Base Load) karena panas bumi tersedia terus-menerus, tidak seperti matahari yang ada malam/siang."
-            },
-            {
-                threshold: 5, // Near death
-                question: "Finishing Move! Manakah di bawah ini yang BUKAN merupakan sumber energi terbarukan?",
-                options: [
-                    "Biomassa",
-                    "Batubara",
-                    "Hidroelektrik (Air)",
-                    "Energi Pasang Surut"
-                ],
-                correct: 1,
-                explanation: "Batubara adalah bahan bakar fosil yang butuh jutaan tahun untuk terbentuk dan menghasilkan emisi karbon tinggi."
-            }
+        // --- DATA & STATE ---
+        const tools = [
+            { id: 'pointer', icon: 'mouse-pointer-2', label: 'Pindah' },
+            { id: 'cable', icon: 'cable', label: 'Kabel (Connect)' },
+            { id: 'ping', icon: 'mail', label: 'Ping Test' },
+            { id: 'config', icon: 'terminal', label: 'Config / CLI' },
+            { id: 'delete', icon: 'trash-2', label: 'Hapus' }
         ];
 
-        let currentQuizIndex = 0;
+        const quizQuestions = [
+            { q: "Topologi manakah yang menggunakan satu kabel utama (backbone)?", opts: ["Star", "Ring", "Bus", "Tree"], c: 2 },
+            { q: "Di lapisan OSI manakah IP Address bekerja?", opts: ["Physical", "Data Link", "Network", "Transport"], c: 2 },
+            { q: "Perangkat apa yang mengirimkan data ke SEMUA port (Broadcast)?", opts: ["Switch", "Router", "Hub", "Server"], c: 2 },
+            { q: "Metode deteksi error dengan menambahkan satu bit di akhir data disebut...", opts: ["Checksum", "Parity Check", "CRC", "Subnetting"], c: 1 },
+            { q: "Apa kelemahan utama dari Topologi Ring?", opts: ["Boros kabel", "Sulit config", "1 node mati, jaringan putus", "Mahal"], c: 2 },
+            { q: "Perangkat pusat pada Topologi Star biasanya...", opts: ["Coaxial", "Terminator", "Switch/Hub", "Token"], c: 2 },
+            { q: "Lapisan OSI yang berinteraksi langsung dengan pengguna (Browser)?", opts: ["Presentation", "Application", "Session", "Transport"], c: 1 },
+            { q: "MAC Address ada di lapisan mana?", opts: ["Physical", "Data Link", "Network", "Session"], c: 1 },
+            { q: "Data dipecah jadi potongan kecil independen disebut...", opts: ["Circuit Switching", "Packet Switching", "Broadcast", "Token Passing"], c: 1 },
+            { q: "Sinyal gelombang kontinu dan rentan noise?", opts: ["Digital", "Analog", "Diskrit", "Biner"], c: 1 },
+            { q: "Representasi data nilai diskrit (0 dan 1)?", opts: ["Analog", "Digital", "Radio", "Suara"], c: 1 },
+            { q: "Penghubung dua jaringan berbeda (LAN ke Internet)?", opts: ["Switch", "Hub", "Router", "Repeater"], c: 2 },
+            { q: "Keunggulan Switch dibanding Hub?", opts: ["Broadcast", "Murah", "Privat (Unicast)", "Tanpa Listrik"], c: 2 },
+            { q: "Deteksi error dengan menjumlahkan nilai data?", opts: ["Parity Check", "Checksum", "Encoding", "Modulasi"], c: 1 },
+            { q: "Lapisan terbawah (kabel & sinyal)?", opts: ["Network", "Transport", "Physical", "Data Link"], c: 2 }
+        ];
 
-        // --- INIT FUNCTION ---
-        function init() {
-            // Scene Setup
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x050505, 0.02);
+        // Global State
+        let state = {
+            activeTab: 'sim',
+            devices: [],
+            connections: [],
+            selectedTool: 'pointer',
+            draggedDevice: null,
+            pendingConnection: null,
+            activeCable: null,
+            activeScenario: null,
+            configModalId: null,
+            terminalLog: [],
+            quiz: { current: 0, score: 0, answered: null, finished: false }
+        };
 
-            // Camera
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 20;
-            camera.position.y = 10;
-            camera.rotation.x = -0.3;
-
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById('game-container').appendChild(renderer.domElement);
-
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(10, 20, 10);
-            scene.add(dirLight);
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTools();
+            renderSim();
+            lucide.createIcons();
             
-            // Create Objects
-            createStarfield();
-            createPlayer();
+            // Canvas Event Listeners
+            const canvas = document.getElementById('canvas-area');
+            canvas.addEventListener('mousemove', handleCanvasMove);
+            canvas.addEventListener('mouseup', handleCanvasUp);
+            canvas.addEventListener('mouseleave', handleCanvasUp);
+            
+            // Touch support
+            canvas.addEventListener('touchmove', (e) => handleCanvasMove(e.touches[0]));
+            canvas.addEventListener('touchend', handleCanvasUp);
+        });
 
-            // Event Listeners
-            window.addEventListener('resize', onWindowResize, false);
-            document.addEventListener('mousemove', onMouseMove, false);
+        // --- TAB LOGIC ---
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
             
-            // IFP / Touch Specific Events
-            // Fix: Check if target is inside modal/button to allow clicks
-            document.addEventListener('touchmove', (e) => {
-                if (e.target.closest('.modal-content') || e.target.tagName === 'BUTTON') return;
-                onTouchMove(e);
-            }, { passive: false });
-            
-            // Mouse Interactions
-            document.addEventListener('mousedown', (e) => {
-                if (e.target.closest('.modal-content') || e.target.tagName === 'BUTTON') return;
-                state.isShooting = true;
+            // Update Nav Buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = `nav-btn flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm rounded-full transition font-bold hover:bg-indigo-500 text-indigo-100`;
             });
-            document.addEventListener('mouseup', () => state.isShooting = false);
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.className = `nav-btn flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm rounded-full transition font-bold bg-white text-indigo-600 shadow-md`;
             
-            // Touch Interactions
-            document.addEventListener('touchstart', (e) => { 
-                if (e.target.closest('.modal-content') || e.target.tagName === 'BUTTON') return;
-                state.isShooting = true; 
-                onTouchMove(e); 
-            }, { passive: false });
-            
-            document.addEventListener('touchend', (e) => {
-                if(e.touches.length === 0) state.isShooting = false; 
-            });
-
-            animate();
+            if (tabId === 'game') renderQuiz();
+            lucide.createIcons();
         }
 
-        // --- OBJECT CREATION ---
-        function createPlayer() {
-            const geometry = new THREE.ConeGeometry(1, 3, 4); // Futuristic wedge
-            const material = new THREE.MeshStandardMaterial({ 
-                color: 0x00ffff, 
-                emissive: 0x0044aa, 
-                roughness: 0.2, 
-                metalness: 0.8,
-                flatShading: true 
-            });
-            player = new THREE.Mesh(geometry, material);
-            player.rotation.x = -Math.PI / 2; // Point forward
-            player.rotation.y = Math.PI / 4; // Flat side up
-            player.position.y = -8;
-            scene.add(player);
-
-            // Engine glow
-            const glowGeo = new THREE.SphereGeometry(0.3, 8, 8);
-            const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-            const glow = new THREE.Mesh(glowGeo, glowMat);
-            glow.position.y = -1.5;
-            player.add(glow);
+        // --- SIMULATOR LOGIC ---
+        function renderTools() {
+            const container = document.getElementById('tools-container');
+            container.innerHTML = tools.map(tool => `
+                <button onclick="selectTool('${tool.id}')" 
+                    class="flex items-center justify-center md:justify-start gap-3 p-2 rounded transition active:scale-95 border
+                    ${state.selectedTool === tool.id 
+                        ? 'bg-orange-500 text-white shadow-md ring-2 ring-orange-200 border-transparent' 
+                        : 'bg-white hover:bg-orange-100 border-transparent'}">
+                    <i data-lucide="${tool.icon}" width="16" height="16"></i>
+                    <span class="text-[10px] md:text-xs font-bold hidden md:inline">${tool.label}</span>
+                </button>
+            `).join('');
+            lucide.createIcons();
         }
 
-        function createEnemy() {
-            const geometry = new THREE.TetrahedronGeometry(1.2);
-            const material = new THREE.MeshStandardMaterial({ 
-                color: 0xff0055, 
-                emissive: 0x440022, 
-                roughness: 0.1,
-                metalness: 0.6
-            });
-            const enemy = new THREE.Mesh(geometry, material);
+        function selectTool(toolId) {
+            state.selectedTool = toolId;
+            state.pendingConnection = null;
+            renderTools();
+        }
+
+        function addDevice(type) {
+            const id = Date.now();
+            const offset = state.devices.length * 20;
+            const pcCount = state.devices.filter(d => d.type === 'pc').length;
+            const defaultIP = type === 'pc' ? `192.168.1.${pcCount + 2}` : (type === 'server' ? '192.168.1.1' : '');
             
-            // Random start X
-            const x = (Math.random() - 0.5) * 30;
-            enemy.position.set(x, -8, -50); // Start far back
-            enemy.position.y = -8; // Same plane as player generally
-            
-            // Add custom properties
-            enemy.userData = { 
-                hp: 1, 
-                velocity: new THREE.Vector3(0, 0, (Math.random() * 0.2) + 0.3),
-                rotSpeed: (Math.random() - 0.5) * 0.1
+            const newDevice = {
+                id, type,
+                x: 50 + (offset % 200),
+                y: 50 + (offset % 200),
+                name: `${type.toUpperCase()} ${state.devices.filter(d => d.type === type).length + 1}`,
+                ip: defaultIP
             };
-            
-            enemies.push(enemy);
-            scene.add(enemy);
+            state.devices.push(newDevice);
+            renderSim();
+            showNotification(`${newDevice.name} ditambahkan!`, 'success');
         }
 
-        function createBoss() {
-            const geometry = new THREE.IcosahedronGeometry(4, 1);
-            const material = new THREE.MeshPhongMaterial({ 
-                color: 0xff0000, 
-                emissive: 0x550000,
-                specular: 0xffffff,
-                shininess: 50,
-                flatShading: true
-            });
-            boss = new THREE.Mesh(geometry, material);
-            boss.position.set(0, -5, -60); // Start far
-            
-            // Boss rings
-            const ringGeo = new THREE.TorusGeometry(6, 0.2, 8, 50);
-            const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            boss.add(ring);
-            boss.userData = { ring: ring };
+        function renderSim() {
+            // Render Cables
+            const svgLayer = document.getElementById('cables-layer');
+            svgLayer.innerHTML = state.connections.map(conn => {
+                const start = state.devices.find(d => d.id === conn.from);
+                const end = state.devices.find(d => d.id === conn.to);
+                if (!start || !end) return '';
+                const isActive = conn.id === state.activeCable;
+                return `
+                    <line x1="${start.x+32}" y1="${start.y+32}" x2="${end.x+32}" y2="${end.y+32}" class="cable-line" />
+                    <line x1="${start.x+32}" y1="${start.y+32}" x2="${end.x+32}" y2="${end.y+32}" 
+                        class="${isActive ? 'cable-active' : ''}" stroke="transparent" stroke-width="4" />
+                `;
+            }).join('');
 
-            scene.add(boss);
+            // Render Devices
+            const devLayer = document.getElementById('devices-layer');
+            devLayer.innerHTML = state.devices.map(dev => {
+                // Inlining Icons for performance during drag
+                let iconSvg = '';
+                if(dev.type === 'pc') iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+                else if(dev.type === 'switch') iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M19 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M5 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M19 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M5 7v10"/><path d="M19 7v10"/><path d="M5 12h14"/></svg>';
+                else if(dev.type === 'hub') iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+                else if(dev.type === 'server') iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>';
+
+                const isPending = state.selectedTool === 'cable' && state.pendingConnection === dev.id;
+                const borderClass = state.selectedTool === 'delete' ? 'hover:border-red-500' 
+                                : state.selectedTool === 'config' ? 'hover:border-blue-500'
+                                : isPending ? 'border-orange-500 ring-4 ring-orange-200' 
+                                : 'border-slate-200 hover:border-indigo-400';
+
+                return `
+                    <div onmousedown="handleDeviceDown(event, ${dev.id})" ontouchstart="handleDeviceDown(event, ${dev.id})"
+                        class="absolute flex flex-col items-center justify-center w-16 h-16 bg-white rounded-lg border-2 cursor-pointer device-shadow z-10 select-none ${borderClass}"
+                        style="left: ${dev.x}px; top: ${dev.y}px;">
+                        ${iconSvg}
+                        <span class="absolute -bottom-6 text-[10px] font-bold bg-white/90 px-1 rounded shadow-sm whitespace-nowrap pointer-events-none">${dev.name}</span>
+                        ${dev.ip ? `<span class="absolute -bottom-9 text-[9px] text-slate-500 bg-white/80 px-1 rounded pointer-events-none">${dev.ip}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            // Empty State
+            document.getElementById('empty-state').style.display = state.devices.length === 0 ? 'flex' : 'none';
         }
 
-        function createBullet() {
-            const geometry = new THREE.BoxGeometry(0.2, 0.2, 2);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-            const bullet = new THREE.Mesh(geometry, material);
-            
-            bullet.position.copy(player.position);
-            bullet.position.z -= 1; // Start slightly in front
-            
-            bullets.push(bullet);
-            scene.add(bullet);
-        }
-
-        function createStarfield() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 1000; i++) {
-                vertices.push(
-                    (Math.random() - 0.5) * 200,
-                    (Math.random() - 0.5) * 200,
-                    (Math.random() - 0.5) * 200 - 50
-                );
+        function handleDeviceDown(e, id) {
+            e.stopPropagation();
+            // Prevent default to stop scrolling on touch
+            if(e.type === 'touchstart') {
+                // e.preventDefault(); 
             }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 });
-            starField = new THREE.Points(geometry, material);
-            scene.add(starField);
-        }
 
-        function createExplosion(position, color) {
-            const particleCount = 15;
-            const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-            const material = new THREE.MeshBasicMaterial({ color: color });
-
-            for (let i = 0; i < particleCount; i++) {
-                const part = new THREE.Mesh(geometry, material);
-                part.position.copy(position);
-                part.userData = {
-                    velocity: new THREE.Vector3(
-                        (Math.random() - 0.5),
-                        (Math.random() - 0.5),
-                        (Math.random() - 0.5)
-                    ),
-                    life: 1.0
-                };
-                particles.push(part);
-                scene.add(part);
-            }
-        }
-
-        // --- GAME LOGIC ---
-
-        function startGame() {
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('modal-overlay').classList.add('hidden'); 
-            state.isPlaying = true;
-            state.score = 0;
-            state.playerHP = 100;
-            state.level = 1;
-            updateHUD();
-        }
-
-        function updateHUD() {
-            document.getElementById('score-display').innerText = state.score;
-            document.getElementById('player-hp-display').innerText = state.playerHP + "%";
-            
-            if (boss && state.level === 2) {
-                const percent = (state.bossHP / state.bossMaxHP) * 100;
-                document.getElementById('boss-health-fill').style.width = percent + "%";
-            }
-        }
-
-        function onMouseMove(event) {
-            // Normalized device coordinates -1 to +1
-            state.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            state.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        }
-
-        function onTouchMove(event) {
-            event.preventDefault(); // Prevent scrolling on IFP
-            const touch = event.touches[0];
-            state.mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-            state.mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-        }
-
-        function checkBossThresholds() {
-            if (!boss || state.level !== 2) return;
-
-            const hpPercent = (state.bossHP / state.bossMaxHP) * 100;
-            
-            let targetIndex = -1;
-
-            if (state.bossPhase === 0) targetIndex = 0; 
-            else if (state.bossPhase === 1 && hpPercent <= 75) targetIndex = 1;
-            else if (state.bossPhase === 2 && hpPercent <= 50) targetIndex = 2;
-            else if (state.bossPhase === 3 && hpPercent <= 25) targetIndex = 3;
-            else if (state.bossPhase === 4 && hpPercent <= 5) targetIndex = 4;
-
-            if (targetIndex !== -1 && targetIndex < quizData.length) {
-                triggerQuiz(targetIndex);
-                state.bossPhase++; 
+            if (state.selectedTool === 'pointer') {
+                state.draggedDevice = id;
+            } else if (state.selectedTool === 'delete') {
+                state.devices = state.devices.filter(d => d.id !== id);
+                state.connections = state.connections.filter(c => c.from !== id && c.to !== id);
+                renderSim();
+            } else if (state.selectedTool === 'cable') {
+                if (!state.pendingConnection) {
+                    state.pendingConnection = id;
+                    showNotification("Pilih tujuan...", "info");
+                } else if (state.pendingConnection === id) {
+                    state.pendingConnection = null;
+                } else {
+                    const exists = state.connections.find(c => 
+                        (c.from === state.pendingConnection && c.to === id) || 
+                        (c.from === id && c.to === state.pendingConnection)
+                    );
+                    if (!exists) {
+                        state.connections.push({ id: Date.now(), from: state.pendingConnection, to: id });
+                        showNotification("Terhubung!", "success");
+                        // Scenario Check
+                        if (state.activeScenario === 1 && ((state.pendingConnection === 2 && id === 3) || (state.pendingConnection === 3 && id === 2))) {
+                            showNotification("Sirkuit tersambung! Coba Ping sekarang.", "success");
+                        }
+                    }
+                    state.pendingConnection = null;
+                }
+                renderSim();
+            } else if (state.selectedTool === 'ping') {
+                if (!state.pendingConnection) {
+                    state.pendingConnection = id;
+                    showNotification("Pilih tujuan Ping...", "info");
+                } else {
+                    runPingSimulation(state.pendingConnection, id);
+                    state.pendingConnection = null;
+                }
+            } else if (state.selectedTool === 'config') {
+                openConfig(id);
             }
         }
 
-        function triggerQuiz(index) {
-            state.isPaused = true;
-            state.isPlaying = false;
-            
-            const q = quizData[index];
-            const overlay = document.getElementById('modal-overlay'); 
-            const modal = document.getElementById('quiz-screen');
-            const questionEl = document.getElementById('quiz-question');
-            const optionsEl = document.getElementById('quiz-options');
-            const explainEl = document.getElementById('quiz-explanation');
-            const continueBtn = document.getElementById('quiz-continue-btn');
+        function handleCanvasMove(e) {
+            if (state.draggedDevice && state.selectedTool === 'pointer') {
+                const rect = document.getElementById('canvas-area').getBoundingClientRect();
+                const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
 
-            overlay.classList.remove('hidden'); 
-            modal.classList.remove('hidden');
-            explainEl.style.display = 'none';
-            continueBtn.classList.add('hidden');
-            
-            questionEl.innerText = q.question;
-            optionsEl.innerHTML = ''; 
-
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('div');
-                btn.className = 'quiz-option';
-                btn.innerText = opt;
-                btn.onclick = () => handleAnswer(i, index, btn);
-                optionsEl.appendChild(btn);
-            });
-        }
-
-        function handleAnswer(choiceIndex, quizIndex, btnElement) {
-            if (document.getElementById('quiz-continue-btn').classList.contains('hidden') === false) return;
-
-            const q = quizData[quizIndex];
-            const explainEl = document.getElementById('quiz-explanation');
-            const continueBtn = document.getElementById('quiz-continue-btn');
-
-            if (choiceIndex === q.correct) {
-                btnElement.classList.add('correct-anim');
-                explainEl.style.color = "#00ffaa";
-                explainEl.innerText = "BENAR! " + q.explanation;
-                state.score += 500;
-            } else {
-                btnElement.classList.add('wrong-anim');
-                const opts = document.getElementById('quiz-options').children;
-                opts[q.correct].style.border = "1px solid #00ff00";
+                const x = clientX - rect.left - 32;
+                const y = clientY - rect.top - 32;
                 
-                explainEl.style.color = "#ff5555";
-                explainEl.innerText = "SALAH. " + q.explanation;
-                state.playerHP -= 10;
-                updateHUD();
-            }
+                // Clamp
+                const clampedX = Math.max(0, Math.min(x, rect.width - 64));
+                const clampedY = Math.max(0, Math.min(y, rect.height - 64));
 
-            explainEl.style.display = 'block';
-            continueBtn.classList.remove('hidden');
-        }
-
-        function closeQuiz() {
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('modal-overlay').classList.add('hidden'); 
-            state.isPaused = false;
-            state.isPlaying = true;
-            
-            if (state.bossPhase === 5) { 
-                 state.bossHP = 1; 
+                const dev = state.devices.find(d => d.id === state.draggedDevice);
+                if(dev) {
+                    dev.x = clampedX;
+                    dev.y = clampedY;
+                    renderSim();
+                }
             }
         }
 
-        function gameOver(victory) {
-            state.isPlaying = false;
-            const overlay = document.getElementById('modal-overlay'); 
-            const screen = document.getElementById('game-over-screen');
-            const title = document.getElementById('go-title');
-            const msg = document.getElementById('go-message');
-            
-            overlay.classList.remove('hidden'); 
-            screen.classList.remove('hidden');
-            document.getElementById('final-score').innerText = state.score;
-
-            if (victory) {
-                title.innerText = "MISI SUKSES";
-                title.style.color = "#00ff00";
-                msg.innerText = "Titan Polusi telah dikalahkan. Bumi kembali bersih.";
-            } else {
-                title.innerText = "MISI GAGAL";
-                title.style.color = "#ff0000";
-                msg.innerText = "Energi pesawat habis.";
-            }
+        function handleCanvasUp() {
+            state.draggedDevice = null;
         }
 
-        // --- MAIN ANIMATION LOOP ---
-        function animate() {
-            requestAnimationFrame(animate);
+        // --- PING SIMULATION LOGIC ---
+        function runPingSimulation(sourceId, targetId) {
+            const source = state.devices.find(d => d.id === sourceId);
+            const target = state.devices.find(d => d.id === targetId);
 
-            // Move stars always
-            starField.rotation.z += 0.002;
+            // Subnet Check
+            const isSameSubnet = (ip1, ip2) => {
+                if (!ip1 || !ip2) return false;
+                const sub1 = ip1.split('.').slice(0,3).join('.');
+                const sub2 = ip2.split('.').slice(0,3).join('.');
+                return sub1 === sub2;
+            };
 
-            if (!state.isPlaying && !state.isPaused) {
+            if (!isSameSubnet(source.ip, target.ip)) {
+                showNotification("Gagal: Destination Host Unreachable (Beda Network)", "error");
+                spawnPacket(source.x, source.y, source.x, source.y, 'fail');
                 return;
             }
 
-            if (state.isPaused) return;
+            // Pathfinding (BFS)
+            const getNeighbors = (nodeId) => state.connections
+                .filter(c => c.from === nodeId || c.to === nodeId)
+                .map(c => c.from === nodeId ? c.to : c.from);
 
-            state.frames++;
+            const findPath = (start, end) => {
+                let queue = [[start]];
+                let visited = new Set();
+                while (queue.length > 0) {
+                    let path = queue.shift();
+                    let node = path[path.length - 1];
+                    if (node === end) return path;
+                    if (!visited.has(node)) {
+                        visited.add(node);
+                        getNeighbors(node).forEach(n => queue.push([...path, n]));
+                    }
+                }
+                return null;
+            };
 
-            // 1. Move Player
-            const targetX = state.mouse.x * 20;
-            player.position.x += (targetX - player.position.x) * 0.1;
-            player.rotation.z = -(targetX - player.position.x) * 0.1;
-
-            // 2. Shooting
-            if (state.isShooting && state.frames % 10 === 0) {
-                createBullet();
+            const path = findPath(sourceId, targetId);
+            if (!path) {
+                showNotification("Gagal: Request Timed Out (Kabel Putus)", "error");
+                return;
             }
 
-            // 3. Move Bullets
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const b = bullets[i];
-                b.position.z -= config.bulletSpeed; 
-                if (b.position.z < -100) {
-                    scene.remove(b);
-                    bullets.splice(i, 1);
-                }
+            showNotification("Mengirim Paket ICMP...", "info");
+            animatePacketTravel(path, 0, targetId);
+        }
+
+        function animatePacketTravel(path, stepIndex, finalTargetId) {
+            if (stepIndex >= path.length - 1) {
+                showNotification("Reply from target: bytes=32 time=1ms TTL=64", "success");
+                state.activeCable = null;
+                renderSim();
+                return;
             }
 
-            // 4. Level Management
-            if (state.level === 1) {
-                if (state.frames % config.spawnRate === 0) {
-                    createEnemy();
-                }
+            const currentId = path[stepIndex];
+            const nextId = path[stepIndex + 1];
+            const currentDev = state.devices.find(d => d.id === currentId);
+            const nextDev = state.devices.find(d => d.id === nextId);
 
-                if (state.score >= 1000 && enemies.length === 0) {
-                    state.level = 2;
-                    createBoss();
-                    document.getElementById('boss-hud').style.display = 'flex';
-                    triggerQuiz(0);
-                    state.bossPhase = 1;
-                }
-            } else if (state.level === 2 && boss) {
-                if (boss.position.z < -20) {
-                    boss.position.z += 0.2; 
-                } else {
-                    boss.position.x = Math.sin(state.frames * 0.01) * 10;
-                    boss.position.y = -5 + Math.cos(state.frames * 0.02) * 2;
-                }
+            // Highlight Cable
+            const conn = state.connections.find(c => 
+                (c.from === currentId && c.to === nextId) || 
+                (c.from === nextId && c.to === currentId)
+            );
+            if (conn) state.activeCable = conn.id;
+            renderSim();
+
+            // Spawn Packet Animation
+            // Hub Logic: Broadcast to all neighbors except previous
+            if (currentDev.type === 'hub') {
+                const neighbors = state.connections
+                    .filter(c => c.from === currentId || c.to === currentId)
+                    .map(c => c.from === currentId ? c.to : c.from);
                 
-                boss.rotation.y += 0.01;
-                boss.userData.ring.rotation.x += 0.02;
-                boss.userData.ring.rotation.y += 0.02;
+                const prevId = stepIndex > 0 ? path[stepIndex - 1] : null;
 
-                checkBossThresholds();
-            }
-
-            // 5. Move Enemies & Collisions
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const e = enemies[i];
-                e.position.z += config.enemySpeed * 5; 
-                e.rotation.x += e.userData.rotSpeed;
-                e.rotation.y += e.userData.rotSpeed;
-
-                if (e.position.z > -8 && Math.abs(e.position.x - player.position.x) < 2) {
-                    createExplosion(e.position, 0xff0055);
-                    scene.remove(e);
-                    enemies.splice(i, 1);
-                    state.playerHP -= 10;
-                    updateHUD();
-                    if(state.playerHP <= 0) gameOver(false);
-                    continue;
-                }
-
-                if (e.position.z > 5) { 
-                    scene.remove(e);
-                    enemies.splice(i, 1);
-                    continue;
-                }
-
-                for (let j = bullets.length - 1; j >= 0; j--) {
-                    const b = bullets[j];
-                    if (b.position.z < e.position.z && b.position.z > e.position.z - 2) {
-                        if (Math.abs(b.position.x - e.position.x) < 2) {
-                            createExplosion(e.position, 0xffaaff);
-                            scene.remove(e);
-                            enemies.splice(i, 1);
-                            
-                            scene.remove(b);
-                            bullets.splice(j, 1);
-                            
-                            state.score += 100;
-                            updateHUD();
-                            break; 
-                        }
+                neighbors.forEach(nid => {
+                    if (nid !== prevId) {
+                        const targetN = state.devices.find(d => d.id === nid);
+                        const isCorrect = nid === nextId;
+                        spawnPacket(currentDev.x, currentDev.y, targetN.x, targetN.y, isCorrect ? 'normal' : 'fail');
                     }
-                }
+                });
+            } else {
+                spawnPacket(currentDev.x, currentDev.y, nextDev.x, nextDev.y, 'normal');
             }
 
-            // 6. Boss Collisions
-            if (boss && state.level === 2) {
-                for (let j = bullets.length - 1; j >= 0; j--) {
-                    const b = bullets[j];
-                    if (b.position.z < boss.position.z + 4 && b.position.z > boss.position.z - 4) {
-                        if (Math.abs(b.position.x - boss.position.x) < 5) {
-                            createExplosion(b.position, 0xffaa00);
-                            state.bossHP -= 5; 
-                            updateHUD();
-                            
-                            scene.remove(b);
-                            bullets.splice(j, 1);
-
-                            if (state.bossHP <= 0) {
-                                createExplosion(boss.position, 0xffffff);
-                                scene.remove(boss);
-                                boss = null;
-                                setTimeout(() => gameOver(true), 1000);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 7. Update Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.position.add(p.userData.velocity);
-                p.userData.life -= 0.05;
-                p.scale.setScalar(p.userData.life);
-                if (p.userData.life <= 0) {
-                    scene.remove(p);
-                    particles.splice(i, 1);
-                }
-            }
-
-            renderer.render(scene, camera);
+            setTimeout(() => {
+                animatePacketTravel(path, stepIndex + 1, finalTargetId);
+            }, 800);
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        function spawnPacket(x1, y1, x2, y2, type) {
+            const layer = document.getElementById('packets-layer');
+            const el = document.createElement('div');
+            el.className = `packet-anim flex items-center justify-center absolute z-50 w-5 h-5 bg-white rounded-full shadow-lg border-2 border-slate-200`;
+            el.style.left = (x1 + 32) + 'px'; // Center offset
+            el.style.top = (y1 + 32) + 'px';
+            el.innerHTML = type === 'fail' 
+                ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+                : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+            
+            layer.appendChild(el);
+
+            // Trigger reflow
+            el.offsetHeight; 
+
+            el.style.transform = `translate(${x2 - x1}px, ${y2 - y1}px)`;
+
+            setTimeout(() => el.remove(), 800);
         }
 
-        // Start
-        init();
+        // --- SCENARIO & CONFIG ---
+        function loadScenario(level) {
+            state.activeScenario = level;
+            state.connections = [];
+            state.devices = [];
+            
+            if (level === 1) {
+                state.devices = [
+                    { id: 1, type: 'pc', x: 100, y: 150, name: 'PC 1', ip: '192.168.1.2' },
+                    { id: 2, type: 'switch', x: 300, y: 150, name: 'Switch Utama', ip: '' },
+                    { id: 3, type: 'pc', x: 500, y: 150, name: 'PC 2', ip: '192.168.1.3' }
+                ];
+                state.connections = [{ id: 101, from: 1, to: 2 }];
+                showNotification("Misi: PC 2 tidak bisa Ping. Perbaiki kabelnya!", "error");
+            } else if (level === 2) {
+                state.devices = [
+                    { id: 1, type: 'pc', x: 100, y: 150, name: 'PC A', ip: '192.168.1.10' },
+                    { id: 2, type: 'hub', x: 300, y: 150, name: 'Hub Jadul', ip: '' },
+                    { id: 3, type: 'pc', x: 500, y: 150, name: 'PC B', ip: '192.168.2.10' }
+                ];
+                state.connections = [{ id: 101, from: 1, to: 2 }, { id: 102, from: 3, to: 2 }];
+                showNotification("Misi: Kabel oke, tapi Ping gagal. Cek IP!", "error");
+            }
+            renderSim();
+        }
+
+        function resetLab() {
+            state.devices = [];
+            state.connections = [];
+            state.activeScenario = null;
+            renderSim();
+        }
+
+        function openConfig(id) {
+            const dev = state.devices.find(d => d.id === id);
+            if (dev.type === 'switch' || dev.type === 'hub') {
+                showNotification("Perangkat ini tidak perlu konfigurasi IP.", "info");
+                return;
+            }
+            state.configModalId = id;
+            document.getElementById('modal-title').innerText = dev.name;
+            document.getElementById('terminal-prompt').innerText = `C:\\Users\\${dev.name}>`;
+            document.getElementById('ip-input').value = dev.ip;
+            document.getElementById('ip-input').onchange = (e) => {
+                dev.ip = e.target.value;
+                if (state.activeScenario === 2 && id === 3 && dev.ip.startsWith('192.168.1.')) {
+                    showNotification("IP diperbaiki! Coba Ping lagi.", "success");
+                }
+                renderSim();
+            };
+            
+            // Terminal Reset
+            const output = document.getElementById('terminal-output');
+            output.innerHTML = `<div class="mb-1">JaringanKita OS [Version 1.0]<br>(c) 2024. Login: ${dev.name}</div>`;
+            
+            document.getElementById('config-modal').classList.remove('hidden');
+        }
+
+        function closeConfig() {
+            document.getElementById('config-modal').classList.add('hidden');
+            state.configModalId = null;
+        }
+
+        function handleTerminalSubmit(e) {
+            e.preventDefault();
+            const inputEl = document.getElementById('term-input');
+            const cmd = inputEl.value.trim().toLowerCase();
+            const dev = state.devices.find(d => d.id === state.configModalId);
+            const outputEl = document.getElementById('terminal-output');
+
+            outputEl.innerHTML += `<div class="mb-1">C:\\Users\\${dev.name}> ${inputEl.value}</div>`;
+            
+            if (cmd === 'help') {
+                outputEl.innerHTML += `<div class="mb-1">Available commands:<br>  ping [ip]  - Test connection<br>  ipconfig   - Show IP details<br>  cls        - Clear screen<br>  exit       - Close terminal</div>`;
+            } else if (cmd === 'cls') {
+                outputEl.innerHTML = '';
+            } else if (cmd === 'exit') {
+                closeConfig();
+            } else if (cmd === 'ipconfig') {
+                outputEl.innerHTML += `<div class="mb-1">Ethernet adapter Local Area Connection:<br><br>   IPv4 Address. . . . . : ${dev.ip}<br>   Subnet Mask . . . . . : 255.255.255.0<br>   Default Gateway . . . : 0.0.0.0</div>`;
+            } else if (cmd.startsWith('ping ')) {
+                const targetIP = cmd.split(' ')[1];
+                if (!targetIP) outputEl.innerHTML += `<div class="mb-1">Usage: ping [IP Address]</div>`;
+                else {
+                    const targetDev = state.devices.find(d => d.ip === targetIP);
+                    if (targetDev) {
+                        runPingSimulation(dev.id, targetDev.id);
+                        outputEl.innerHTML += `<div class="mb-1">Pinging ${targetIP} with 32 bytes of data...<br>Check visual simulator for result.</div>`;
+                    } else {
+                        outputEl.innerHTML += `<div class="mb-1">Pinging ${targetIP}...<br>Request timed out.<br>Destination host unreachable.</div>`;
+                    }
+                }
+            } else if (cmd !== '') {
+                outputEl.innerHTML += `<div class="mb-1">'${cmd}' is not recognized as an internal command.</div>`;
+            }
+
+            inputEl.value = '';
+            document.getElementById('terminal-body').scrollTop = document.getElementById('terminal-body').scrollHeight;
+        }
+
+        // --- QUIZ LOGIC ---
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            const { current, score, answered, finished } = state.quiz;
+
+            if (finished) {
+                const finalScore = Math.round((score / quizQuestions.length) * 100);
+                container.innerHTML = `
+                    <div class="p-10 text-center">
+                        <div class="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="trophy" class="text-yellow-600 w-12 h-12"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-2">Selesai!</h2>
+                        <p class="text-slate-500 mb-6">Skor kamu:</p>
+                        <div class="text-6xl font-black text-indigo-600 mb-2">${finalScore}</div>
+                        <p class="text-slate-400 mb-8 text-sm">(Benar ${score} dari ${quizQuestions.length})</p>
+                        <button onclick="resetQuiz()" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold hover:bg-indigo-700 transition w-full">Main Lagi</button>
+                    </div>
+                `;
+            } else {
+                const q = quizQuestions[current];
+                container.innerHTML = `
+                    <div class="bg-indigo-600 p-6 text-white text-center relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="trophy" width="100" height="100"></i></div>
+                        <h2 class="text-2xl font-bold relative z-10">Kuis Jaringan</h2>
+                        <p class="opacity-80 text-sm relative z-10">Soal ${current + 1} dari ${quizQuestions.length}</p>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-6 min-h-[60px]">${q.q}</h3>
+                        <div class="space-y-3">
+                            ${q.opts.map((opt, i) => {
+                                let bgClass = 'bg-slate-50 border-slate-100 hover:border-indigo-500 hover:text-indigo-600';
+                                if (answered === 'correct' && i === q.c) bgClass = 'bg-emerald-100 border-emerald-500 text-emerald-800';
+                                else if (answered === 'wrong' && i !== q.c) bgClass = 'opacity-50 border-transparent';
+                                else if (answered === 'wrong' && i === state.quiz.selected) bgClass = 'bg-red-100 border-red-500 text-red-800';
+                                
+                                return `<button onclick="answerQuiz(${i})" ${answered ? 'disabled' : ''} class="w-full p-4 rounded-xl text-left font-medium transition flex justify-between items-center border-2 ${bgClass}">
+                                    ${opt}
+                                    ${answered === 'correct' && i === q.c ? '<i data-lucide="check-circle-2" class="text-emerald-600"></i>' : ''}
+                                </button>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        function answerQuiz(index) {
+            const q = quizQuestions[state.quiz.current];
+            const isCorrect = index === q.c;
+            state.quiz.answered = isCorrect ? 'correct' : 'wrong';
+            state.quiz.selected = index;
+            if(isCorrect) state.quiz.score++;
+            renderQuiz();
+
+            setTimeout(() => {
+                state.quiz.answered = null;
+                if (state.quiz.current < quizQuestions.length - 1) {
+                    state.quiz.current++;
+                } else {
+                    state.quiz.finished = true;
+                }
+                renderQuiz();
+            }, 1200);
+        }
+
+        function resetQuiz() {
+            state.quiz = { current: 0, score: 0, answered: null, finished: false };
+            renderQuiz();
+        }
+
+        // --- UTILS ---
+        function showNotification(msg, type) {
+            const el = document.getElementById('notification');
+            el.className = `absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg shadow-xl text-white text-sm font-medium z-50 animate-bounce text-center ${type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-emerald-500' : 'bg-blue-600'}`;
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
 
     </script>
 </body>
