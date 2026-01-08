@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jurnal KBM Digital - SMAN 1 Soppeng</title>
     
     <!-- Tailwind CSS -->
@@ -13,23 +13,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #f0f4f8; }
+        body { font-family: 'Outfit', sans-serif; background-color: #f0f4f8; overscroll-behavior: none; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
-        .slide-up-enter-active { transition: all 0.3s ease-out; }
-        .slide-up-enter-from { opacity: 0; transform: translateY(20px); }
-        ::-webkit-scrollbar { width: 6px; }
+        .slide-up-enter-active { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 10px; }
         
-        /* Utilitas tambahan untuk visualisasi grafik */
         .bar-container { position: relative; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
         .bar-fill { height: 100%; transition: width 1s ease-in-out; }
     </style>
 </head>
 <body>
 
-    <div id="app" class="min-h-screen flex flex-col relative overflow-hidden bg-gray-50">
+    <div id="app" class="h-screen w-full flex flex-col relative overflow-hidden bg-gray-50">
         
         <!-- Loading Overlay -->
         <div v-if="loading" class="fixed inset-0 bg-white/90 z-[70] flex flex-col items-center justify-center backdrop-blur-sm">
@@ -38,38 +37,43 @@
         </div>
 
         <!-- HEADER -->
-        <header class="bg-gradient-to-r from-indigo-800 to-blue-700 px-6 py-6 pb-16 text-white shadow-xl relative z-10">
+        <header class="bg-gradient-to-r from-indigo-800 to-blue-700 px-6 py-6 pb-16 text-white shadow-xl relative z-10 flex-shrink-0">
             <div class="flex justify-between items-start mb-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">Jurnal KBM</h1>
                     <p class="text-indigo-200 text-sm opacity-90">SMAN 1 Soppeng</p>
                 </div>
-                <div class="text-right bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/20">
-                    <p class="text-[10px] font-light text-indigo-100 uppercase tracking-widest">Hari ini</p>
-                    <p class="font-semibold text-sm">{{ tanggalFormat }}</p>
+                <div class="flex flex-col items-end gap-2">
+                    <div class="bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/20 text-right">
+                        <p class="text-[10px] font-light text-indigo-100 uppercase tracking-widest">Hari ini</p>
+                        <p class="font-semibold text-sm">{{ tanggalFormat }}</p>
+                    </div>
+                    <!-- Tombol Rekapan -->
+                    <button @click="bukaRekapan" class="text-xs bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1">
+                        <i class="fas fa-file-invoice"></i> Rekapan Absen
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- KONTEN UTAMA -->
-        <main class="relative z-20 flex-grow px-4 -mt-12 pb-10">
+        <!-- KONTEN UTAMA (SCROLLABLE) -->
+        <main class="relative z-20 flex-grow px-4 -mt-12 pb-20 overflow-y-auto">
             
             <!-- VIEW: DASHBOARD -->
-            <div v-if="view === 'dashboard'" class="max-w-7xl mx-auto">
+            <div v-if="view === 'dashboard'" class="max-w-7xl mx-auto pb-20">
                 
-                <!-- 1. Statistik / Grafik Guru (Analitik) -->
+                <!-- 1. Statistik / Grafik Guru -->
                 <div class="bg-white rounded-xl shadow-lg p-5 mb-6 border border-indigo-50">
                     <div class="flex justify-between items-center mb-3">
                         <h2 class="text-gray-800 font-bold flex items-center gap-2">
                             <i class="fas fa-chart-pie text-indigo-500"></i> Monitoring KBM
                         </h2>
                         <span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full animate-pulse">
-                            <i class="fas fa-circle text-[8px] mr-1"></i>Live Update
+                            <i class="fas fa-circle text-[8px] mr-1"></i>Live
                         </span>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Stat Cards -->
                         <div class="col-span-1 grid grid-cols-2 gap-3">
                             <div class="text-center p-3 bg-indigo-50 rounded-lg border border-indigo-100">
                                 <div class="text-2xl font-bold text-indigo-700">{{ totalLaporanHariIni }}</div>
@@ -81,37 +85,28 @@
                             </div>
                         </div>
 
-                        <!-- Grafik Kehadiran Guru -->
                         <div class="col-span-1 md:col-span-2 space-y-3">
-                            <!-- Hadir -->
+                            <!-- Grafik Batang -->
                             <div>
                                 <div class="flex justify-between text-xs mb-1">
                                     <span class="text-gray-600 font-medium">Guru Hadir ({{ statistics.hadir }})</span>
                                     <span class="font-bold text-green-600">{{ statistics.persenHadir }}%</span>
                                 </div>
-                                <div class="bar-container">
-                                    <div class="bar-fill bg-green-500" :style="{ width: statistics.persenHadir + '%' }"></div>
-                                </div>
+                                <div class="bar-container"><div class="bar-fill bg-green-500" :style="{ width: statistics.persenHadir + '%' }"></div></div>
                             </div>
-                            <!-- Terlambat -->
                             <div>
                                 <div class="flex justify-between text-xs mb-1">
                                     <span class="text-gray-600 font-medium">Guru Terlambat ({{ statistics.terlambat }})</span>
                                     <span class="font-bold text-yellow-600">{{ statistics.persenTerlambat }}%</span>
                                 </div>
-                                <div class="bar-container">
-                                    <div class="bar-fill bg-yellow-400" :style="{ width: statistics.persenTerlambat + '%' }"></div>
-                                </div>
+                                <div class="bar-container"><div class="bar-fill bg-yellow-400" :style="{ width: statistics.persenTerlambat + '%' }"></div></div>
                             </div>
-                            <!-- Tidak Hadir -->
                             <div>
                                 <div class="flex justify-between text-xs mb-1">
                                     <span class="text-gray-600 font-medium">Guru Berhalangan ({{ statistics.absen }})</span>
                                     <span class="font-bold text-red-600">{{ statistics.persenAbsen }}%</span>
                                 </div>
-                                <div class="bar-container">
-                                    <div class="bar-fill bg-red-500" :style="{ width: statistics.persenAbsen + '%' }"></div>
-                                </div>
+                                <div class="bar-container"><div class="bar-fill bg-red-500" :style="{ width: statistics.persenAbsen + '%' }"></div></div>
                             </div>
                         </div>
                     </div>
@@ -125,22 +120,19 @@
                 </div>
 
                 <!-- 3. Grid Kelas (5 Kolom) -->
-                <div v-if="filteredClasses.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-20">
+                <div v-if="filteredClasses.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <button 
                         v-for="kelas in filteredClasses" 
                         :key="kelas.id"
                         @click="bukaDetailKelas(kelas)"
                         class="relative bg-white rounded-xl shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all duration-200 text-left overflow-hidden group flex flex-col h-40"
                     >
-                        <!-- Header Card -->
                         <div class="p-3 border-b border-gray-100 bg-gray-50 group-hover:bg-indigo-50 transition-colors flex justify-between items-start">
                             <span class="font-bold text-gray-700 group-hover:text-indigo-700 text-sm leading-tight">{{ kelas.nama }}</span>
                             <div v-if="kelas.jumlahLaporan > 0" class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                                {{ kelas.jumlahLaporan }} Mapel
+                                {{ kelas.jumlahLaporan }} JP
                             </div>
                         </div>
-
-                        <!-- Body Card: Timeline Mini -->
                         <div class="p-2 flex-grow overflow-y-auto scrollbar-hide">
                             <div v-if="kelas.laporanRingkas.length > 0" class="space-y-1.5">
                                 <div v-for="lap in kelas.laporanRingkas" :key="lap.id" class="flex items-center text-[10px] text-gray-500">
@@ -150,224 +142,215 @@
                                     <span class="truncate">{{ lap.mapel }}</span>
                                 </div>
                             </div>
-                            <div v-else class="h-full flex items-center justify-center text-[10px] text-gray-300 italic">
-                                Belum ada data
-                            </div>
+                            <div v-else class="h-full flex items-center justify-center text-[10px] text-gray-300 italic">Belum ada data</div>
                         </div>
-
-                        <!-- Footer Card: Call to Action -->
                         <div class="p-2 bg-gray-50 text-[10px] text-center text-indigo-500 font-medium group-hover:bg-indigo-100 transition-colors">
                             Buka Jurnal &rarr;
                         </div>
                     </button>
                 </div>
 
-                <!-- Empty State -->
                 <div v-else class="text-center py-10 px-4 bg-white rounded-xl border border-dashed border-gray-300">
                     <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
                     <h3 class="font-bold text-gray-700">Kelas tidak ditemukan</h3>
-                    <p class="text-xs text-gray-500 mt-1">Coba kata kunci lain atau import data di menu Admin.</p>
                 </div>
             </div>
 
-            <!-- VIEW: DETAIL KELAS (TIMELINE) - REALTIME -->
+            <!-- VIEW: REKAPAN (FIXED FULL HEIGHT SCROLLABLE) -->
             <transition name="slide-up">
-                <div v-if="view === 'class-detail'" class="max-w-md mx-auto bg-white rounded-t-3xl min-h-[85vh] shadow-2xl absolute top-10 left-0 right-0 bottom-0 z-50 overflow-y-auto">
-                    <!-- Header -->
-                    <div class="sticky top-0 bg-white/95 backdrop-blur z-20 px-6 py-4 border-b flex justify-between items-center shadow-sm">
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800">{{ selectedClass.nama }}</h2>
-                            <p class="text-xs text-gray-500">Timeline KBM Hari Ini</p>
+                <div v-if="view === 'recap'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
+                    <div class="w-full max-w-2xl mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
+                        <!-- Sticky Header -->
+                        <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+                            <h2 class="text-lg font-bold text-gray-800">Rekapan Guru Berhalangan</h2>
+                            <button @click="view = 'dashboard'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 text-gray-600"><i class="fas fa-times"></i></button>
                         </div>
-                        <button @click="view = 'dashboard'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition text-gray-600">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+                        
+                        <!-- Scrollable Content with Extra Padding Bottom -->
+                        <div class="flex-grow overflow-y-auto p-6 pb-40">
+                            <!-- Filter Toggle -->
+                            <div class="flex bg-gray-100 p-1 rounded-lg mb-6 sticky top-0 z-10 shadow-sm">
+                                <button @click="loadRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Minggu Ini</button>
+                                <button @click="loadRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Bulan Ini</button>
+                            </div>
 
-                    <div class="p-6 pb-24">
-                        <!-- Timeline Laporan (Reactive Computed) -->
-                        <div v-if="classReports.length > 0" class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
-                            <div v-for="(report, index) in classReports" :key="index" class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active animate-fade">
-                                <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-indigo-50 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-indigo-600 font-bold text-sm">
-                                    {{ index + 1 }}
+                            <!-- Content Per Level -->
+                            <div v-for="level in ['X', 'XI', 'XII']" :key="level" class="mb-8">
+                                <h3 class="text-lg font-bold text-gray-800 mb-3 border-l-4 border-indigo-500 pl-2">Tingkat Kelas {{ level }}</h3>
+                                
+                                <div v-if="groupedRecap[level] && groupedRecap[level].length > 0" class="space-y-3">
+                                    <div v-for="item in groupedRecap[level]" :key="item.id" class="bg-white border border-gray-200 p-3 rounded-lg shadow-sm flex flex-col gap-1">
+                                        <div class="flex justify-between items-start">
+                                            <span class="font-bold text-gray-800">{{ item.namaGuru }}</span>
+                                            <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">{{ item.tanggal }}</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs text-gray-600">
+                                            <span>{{ item.mapel }} ({{ item.kelasNama }})</span>
+                                        </div>
+                                        <div class="mt-1 p-2 bg-gray-50 rounded text-xs text-red-600 font-medium italic border-l-2 border-red-400">
+                                            "{{ item.keteranganKBM }}"
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <h3 class="font-bold text-gray-800">{{ report.mapel }}</h3>
-                                        <span class="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">
-                                            {{ report.jamKe.join(', ') }} ({{ report.jamKe.length }}JP)
-                                        </span>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mb-2"><i class="fas fa-chalkboard-teacher mr-1"></i> {{ report.namaGuru }}</p>
-                                    
-                                    <!-- Status Guru Badge -->
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-[10px] px-2 py-0.5 rounded-full border" 
-                                            :class="{
-                                                'bg-green-50 text-green-700 border-green-200': report.statusGuru === 'Hadir',
-                                                'bg-yellow-50 text-yellow-700 border-yellow-200': report.statusGuru === 'Terlambat',
-                                                'bg-red-50 text-red-700 border-red-200': report.statusGuru === 'Tidak Hadir'
-                                            }">
-                                            Guru {{ report.statusGuru }}
-                                        </span>
-                                    </div>
+                                <div v-else class="text-xs text-gray-400 italic bg-gray-50 p-3 rounded">Tidak ada guru berhalangan di tingkat ini.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
 
-                                    <!-- Absensi Mini -->
-                                    <div v-if="report.absensiSiswa && report.absensiSiswa.length > 0" class="mt-2 pt-2 border-t border-gray-100">
-                                        <p class="text-[10px] text-gray-400 mb-1">Absensi Siswa:</p>
-                                        <div class="flex flex-wrap gap-1">
-                                            <span v-for="absen in report.absensiSiswa" :key="absen.nama" 
-                                                class="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 mb-1 mr-1 inline-block">
-                                                {{ absen.nama.split(' ')[0] }} <span class="font-bold ml-0.5" :class="{'text-red-500':absen.keterangan=='Alfa','text-blue-500':absen.keterangan=='Sakit','text-yellow-600':absen.keterangan=='Izin'}">({{ absen.keterangan[0] }})</span>
-                                            </span>
+            <!-- VIEW: DETAIL KELAS (FIXED FULL HEIGHT SCROLLABLE) -->
+            <transition name="slide-up">
+                <div v-if="view === 'class-detail'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
+                    <div class="w-full max-w-md mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
+                        <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">{{ selectedClass.nama }}</h2>
+                                <p class="text-xs text-gray-500">Timeline KBM Hari Ini</p>
+                            </div>
+                            <button @click="view = 'dashboard'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition text-gray-600"><i class="fas fa-times"></i></button>
+                        </div>
+
+                        <div class="flex-grow overflow-y-auto p-6 pb-40">
+                            <div v-if="classReports.length > 0" class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                                <div v-for="(report, index) in classReports" :key="index" class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active animate-fade">
+                                    <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-indigo-50 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-indigo-600 font-bold text-sm">{{ index + 1 }}</div>
+                                    <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h3 class="font-bold text-gray-800">{{ report.mapel }}</h3>
+                                            <span class="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{{ report.jamKe.join(', ') }} ({{ report.jamKe.length }}JP)</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mb-2"><i class="fas fa-chalkboard-teacher mr-1"></i> {{ report.namaGuru }}</p>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full border" :class="{'bg-green-50 text-green-700 border-green-200': report.statusGuru === 'Hadir', 'bg-yellow-50 text-yellow-700 border-yellow-200': report.statusGuru === 'Terlambat', 'bg-red-50 text-red-700 border-red-200': report.statusGuru === 'Tidak Hadir'}">Guru {{ report.statusGuru }}</span>
+                                            <span v-if="report.statusGuru!=='Hadir'" class="text-[10px] text-gray-500 italic">({{ report.keteranganKBM }})</span>
+                                        </div>
+                                        <div v-if="report.absensiSiswa && report.absensiSiswa.length > 0" class="mt-2 pt-2 border-t border-gray-100">
+                                            <p class="text-[10px] text-gray-400 mb-1">Absensi Siswa:</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                <span v-for="absen in report.absensiSiswa" :key="absen.nama" class="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 mb-1 mr-1 inline-block">
+                                                    {{ absen.nama.split(' ')[0] }} <span class="font-bold ml-0.5" :class="{'text-red-500':absen.keterangan=='Alfa','text-blue-500':absen.keterangan=='Sakit','text-yellow-600':absen.keterangan=='Izin'}">({{ absen.keterangan[0] }})</span>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <div v-else class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
+                                <p class="text-gray-500 text-sm">Belum ada mata pelajaran tercatat hari ini.</p>
+                            </div>
+                            <button @click="bukaFormTambah" class="w-full mt-6 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"><i class="fas fa-plus-circle"></i> Tambah Mapel Baru</button>
                         </div>
-
-                        <!-- Empty State -->
-                        <div v-else class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                            <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500 text-sm">Belum ada mata pelajaran tercatat hari ini.</p>
-                        </div>
-
-                        <!-- Tombol Tambah -->
-                        <button @click="bukaFormTambah" class="w-full mt-6 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                            <i class="fas fa-plus-circle"></i> Tambah Mapel Baru
-                        </button>
                     </div>
                 </div>
             </transition>
 
-            <!-- VIEW: FORM INPUT -->
+            <!-- VIEW: FORM INPUT (FIXED FULL HEIGHT SCROLLABLE) -->
             <transition name="slide-up">
-                <div v-if="view === 'form'" class="max-w-md mx-auto bg-white rounded-t-3xl min-h-[90vh] shadow-2xl absolute top-5 left-0 right-0 bottom-0 z-[60] overflow-y-auto">
-                    
-                    <div class="sticky top-0 bg-white z-10 px-6 py-4 border-b flex justify-between items-center shadow-sm">
-                        <div>
-                            <h2 class="text-lg font-bold text-indigo-900">Input Jurnal</h2>
-                            <p class="text-xs text-gray-500">{{ selectedClass.nama }}</p>
-                        </div>
-                        <button @click="view = 'class-detail'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition">
-                            <i class="fas fa-arrow-left text-gray-600"></i>
-                        </button>
-                    </div>
-
-                    <form @submit.prevent="kirimLaporan" class="p-6 space-y-6 pb-24">
-                        
-                        <!-- 1. Jam Pelajaran (LOGIKA BERURUTAN) -->
-                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm font-bold text-indigo-900"><i class="fas fa-clock mr-1"></i> Jam Pelajaran</label>
-                                <span v-if="form.jamKe.length > 0" class="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">{{ form.jamKe.length }} JP</span>
+                <div v-if="view === 'form'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
+                    <div class="w-full max-w-md mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
+                        <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10">
+                            <div>
+                                <h2 class="text-lg font-bold text-indigo-900">Input Jurnal</h2>
+                                <p class="text-xs text-gray-500">{{ selectedClass.nama }}</p>
                             </div>
-                            <div class="grid grid-cols-5 gap-2">
-                                <button type="button" v-for="n in 10" :key="n"
-                                    @click="toggleJamSmart(n)"
-                                    class="h-10 rounded-lg font-bold text-sm transition-all border relative"
-                                    :class="form.jamKe.includes(n) 
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105' 
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'"
-                                >
-                                    {{ n }}
-                                    <!-- Indikator urutan -->
-                                    <span v-if="form.jamKe.includes(n)" class="absolute -top-1 -right-1 flex h-3 w-3">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
-                                    </span>
-                                </button>
-                            </div>
-                            <p class="text-[10px] text-gray-500 mt-2">
-                                <i class="fas fa-info-circle mr-1 text-indigo-500"></i>
-                                Jam harus dipilih berurutan (Contoh: 1, 2, 3).
-                            </p>
+                            <button @click="view = 'class-detail'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i class="fas fa-arrow-left text-gray-600"></i></button>
                         </div>
 
-                        <!-- 2. Mata Pelajaran -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Mata Pelajaran</label>
-                            <select v-model="form.mapel" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-                                <option value="" disabled>-- Pilih Mapel --</option>
-                                <option v-for="m in masterData.subjects" :value="m">{{ m }}</option>
-                            </select>
-                        </div>
-
-                        <!-- 3. Guru & Status -->
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Guru Pengajar</label>
-                            <select v-model="form.namaGuru" required class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-3">
-                                <option value="" disabled>-- Pilih Guru --</option>
-                                <option v-for="g in masterData.teachers" :value="g">{{ g }}</option>
-                            </select>
+                        <form @submit.prevent="kirimLaporan" class="flex-grow overflow-y-auto p-6 pb-40">
                             
-                            <div class="grid grid-cols-3 gap-2">
-                                <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-green-500 peer-checked:text-white text-xs font-bold transition">Hadir</div></label>
-                                <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Terlambat" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-yellow-500 peer-checked:text-white text-xs font-bold transition">Terlambat</div></label>
-                                <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Tidak Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-red-500 peer-checked:text-white text-xs font-bold transition">Absen</div></label>
-                            </div>
-
-                            <div v-if="form.statusGuru !== 'Hadir'" class="mt-3">
-                                <label class="text-xs text-gray-500 mb-1 block">Keterangan:</label>
-                                <select v-model="form.keteranganKBM" class="w-full p-2 rounded border border-gray-300 text-sm">
-                                    <option value="Ada Tugas">Ada Tugas</option>
-                                    <option value="Jam Kosong">Jam Kosong</option>
-                                    <option value="Guru Inval">Guru Inval</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- 4. Absensi Siswa -->
-                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <div class="flex justify-between items-center mb-3">
-                                <label class="block text-sm font-bold text-indigo-900"><i class="fas fa-user-check mr-1"></i> Absensi Siswa</label>
-                                <span class="text-xs bg-white px-2 py-1 rounded text-indigo-600 border border-indigo-200">{{ form.absensiSiswa.length }} Siswa</span>
-                            </div>
-
-                            <div class="bg-white p-3 rounded-lg border border-gray-200 mb-3 shadow-sm">
-                                <div class="flex gap-2 mb-2">
-                                    <select v-model="tempStudent.name" class="flex-1 p-2 border rounded text-sm bg-gray-50 focus:outline-none">
-                                        <option value="" disabled>-- Pilih Siswa --</option>
-                                        <option v-for="siswa in currentClassStudents" :key="siswa.nama" :value="siswa.nama">{{ siswa.nama }}</option>
-                                    </select>
+                            <!-- JAM (SMART LOGIC) -->
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-sm font-bold text-indigo-900"><i class="fas fa-clock mr-1"></i> Jam Pelajaran</label>
+                                    <span v-if="form.jamKe.length > 0" class="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">{{ form.jamKe.length }} JP</span>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button type="button" @click="tempStudent.reason = 'Sakit'" :class="tempStudent.reason === 'Sakit' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Sakit</button>
-                                    <button type="button" @click="tempStudent.reason = 'Izin'" :class="tempStudent.reason === 'Izin' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Izin</button>
-                                    <button type="button" @click="tempStudent.reason = 'Alfa'" :class="tempStudent.reason === 'Alfa' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Alfa</button>
+                                <div class="grid grid-cols-5 gap-2">
+                                    <button type="button" v-for="n in 10" :key="n" @click="toggleJamSmart(n)" class="h-10 rounded-lg font-bold text-sm transition-all border relative" :class="form.jamKe.includes(n) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'">
+                                        {{ n }}
+                                    </button>
                                 </div>
-                                <button type="button" @click="addStudentToAbsence" :disabled="!tempStudent.name" class="w-full mt-2 bg-indigo-600 text-white text-xs py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50 transition">
-                                    + Tambahkan
-                                </button>
                             </div>
 
-                            <div v-if="form.absensiSiswa.length > 0" class="space-y-2">
-                                <div v-for="(item, index) in form.absensiSiswa" :key="index" class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 text-sm">
-                                    <span class="font-medium text-gray-700">{{ item.nama }}</span>
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded text-xs font-bold text-white" :class="{'bg-blue-500': item.keterangan === 'Sakit','bg-yellow-500': item.keterangan === 'Izin','bg-red-500': item.keterangan === 'Alfa'}">{{ item.keterangan }}</span>
-                                        <button type="button" @click="removeStudentFromAbsence(index)" class="text-gray-400 hover:text-red-500 ml-1"><i class="fas fa-times-circle"></i></button>
+                            <!-- MAPEL & GURU (SMART AUTOCOMPLETE) -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Mata Pelajaran</label>
+                                <input v-model="form.mapel" list="listMapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                                <datalist id="listMapel"><option v-for="m in masterData.subjects" :value="m"></option></datalist>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Guru Pengajar</label>
+                                <input v-model="form.namaGuru" list="listGuru" placeholder="Ketik nama guru (misal: Ak...)" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-3" required>
+                                <datalist id="listGuru"><option v-for="g in masterData.teachers" :value="g"></option></datalist>
+                                
+                                <div class="grid grid-cols-3 gap-2">
+                                    <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-green-500 peer-checked:text-white text-xs font-bold transition">Hadir</div></label>
+                                    <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Terlambat" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-yellow-500 peer-checked:text-white text-xs font-bold transition">Terlambat</div></label>
+                                    <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Tidak Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-red-500 peer-checked:text-white text-xs font-bold transition">Absen</div></label>
+                                </div>
+
+                                <div v-if="form.statusGuru !== 'Hadir'" class="mt-3 animate-fade">
+                                    <label class="text-xs text-gray-500 mb-1 block">Alasan / Keterangan (Opsional):</label>
+                                    <input v-model="form.keteranganKBM" list="listAlasan" placeholder="Contoh: Guru Izin ke Dinas..." class="w-full p-2 rounded border border-gray-300 text-sm focus:outline-none focus:border-red-400">
+                                    <datalist id="listAlasan">
+                                        <option value="Ada Tugas">
+                                        <option value="Jam Kosong">
+                                        <option value="Guru Inval">
+                                        <option value="Sakit">
+                                        <option value="Izin Dinas">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <!-- ABSENSI SISWA (AUTO CARRY & SEARCH) -->
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-8">
+                                <div class="flex justify-between items-center mb-3">
+                                    <label class="block text-sm font-bold text-indigo-900"><i class="fas fa-user-check mr-1"></i> Absensi Siswa</label>
+                                    <span class="text-xs bg-white px-2 py-1 rounded text-indigo-600 border border-indigo-200">{{ form.absensiSiswa.length }} Siswa</span>
+                                </div>
+
+                                <!-- List Siswa Absen (Otomatis terisi dari jam sebelumnya) -->
+                                <div v-if="form.absensiSiswa.length > 0" class="space-y-2 mb-4">
+                                    <div v-for="(item, index) in form.absensiSiswa" :key="index" class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 text-sm shadow-sm">
+                                        <span class="font-medium text-gray-700">{{ item.nama }}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 rounded text-xs font-bold text-white" :class="{'bg-blue-500': item.keterangan === 'Sakit','bg-yellow-500': item.keterangan === 'Izin','bg-red-500': item.keterangan === 'Alfa'}">{{ item.keterangan }}</span>
+                                            <button type="button" @click="removeStudentFromAbsence(index)" class="text-gray-400 hover:text-red-500 ml-1 bg-gray-100 h-6 w-6 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <button type="submit" :disabled="isSubmitting" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-70">
-                            {{ isSubmitting ? 'Menyimpan...' : 'Simpan Laporan' }}
-                        </button>
-                    </form>
+                                <!-- Form Tambah Siswa -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                                    <div class="mb-2">
+                                        <input v-model="tempStudent.name" list="listSiswa" placeholder="Ketik nama siswa..." class="w-full p-2 border rounded text-sm bg-gray-50 focus:outline-none focus:border-indigo-500">
+                                        <datalist id="listSiswa"><option v-for="siswa in currentClassStudents" :value="siswa.nama"></option></datalist>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button type="button" @click="tempStudent.reason = 'Sakit'" :class="tempStudent.reason === 'Sakit' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Sakit</button>
+                                        <button type="button" @click="tempStudent.reason = 'Izin'" :class="tempStudent.reason === 'Izin' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Izin</button>
+                                        <button type="button" @click="tempStudent.reason = 'Alfa'" :class="tempStudent.reason === 'Alfa' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Alfa</button>
+                                    </div>
+                                    <button type="button" @click="addStudentToAbsence" :disabled="!tempStudent.name" class="w-full mt-2 bg-indigo-600 text-white text-xs py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50 transition">+ Tambahkan</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" :disabled="isSubmitting" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-70">{{ isSubmitting ? 'Menyimpan...' : 'Simpan Laporan' }}</button>
+                        </form>
+                    </div>
                 </div>
             </transition>
 
-            <!-- ADMIN AREA (Hidden) -->
+            <!-- ADMIN AREA -->
             <transition name="slide-up">
-                <div v-if="view === 'admin'" class="fixed inset-0 z-[80] bg-gray-900 text-white overflow-y-auto">
-                    <div class="p-6">
+                <div v-if="view === 'admin'" class="fixed inset-0 z-[80] bg-gray-900 text-white overflow-y-auto flex flex-col">
+                    <div class="p-6 flex-grow">
                         <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                             <h2 class="text-2xl font-bold text-indigo-400">Admin Area</h2>
                             <button @click="view = 'dashboard'" class="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700 text-sm">Tutup</button>
                         </div>
-                        
                         <div v-if="!adminUser" class="max-w-sm mx-auto mt-20 p-6 bg-gray-800 rounded-xl border border-gray-700">
                             <h3 class="text-center font-bold mb-4">Login Admin</h3>
                             <form @submit.prevent="handleAdminLogin" class="space-y-4">
@@ -376,38 +359,20 @@
                                 <button type="submit" class="w-full bg-indigo-600 py-3 rounded font-bold">Masuk</button>
                             </form>
                         </div>
-
-                        <div v-else class="space-y-8">
-                             <!-- Tools Import (Sama seperti sebelumnya) -->
-                            <div class="flex justify-between bg-indigo-900/30 p-4 rounded">
-                                <p>Login sebagai: {{ adminUser.email }}</p>
-                                <button @click="handleAdminLogout" class="bg-red-600 px-3 py-1 rounded text-xs">Keluar</button>
-                            </div>
+                        <div v-else class="space-y-8 pb-40">
+                            <div class="flex justify-between bg-indigo-900/30 p-4 rounded"><p>Login: {{ adminUser.email }}</p><button @click="handleAdminLogout" class="bg-red-600 px-3 py-1 rounded text-xs">Keluar</button></div>
                             <div class="grid md:grid-cols-2 gap-6">
-                                <div class="bg-gray-800 p-4 rounded border border-gray-700">
-                                    <h3>Import Guru</h3>
-                                    <textarea v-model="adminForm.rawTeachers" rows="4" class="w-full bg-gray-900 mt-2 p-2 text-xs"></textarea>
-                                    <button @click="saveTeachers" class="bg-indigo-600 w-full mt-2 py-2 rounded">Simpan Guru</button>
-                                </div>
-                                <div class="bg-gray-800 p-4 rounded border border-gray-700">
-                                    <h3>Import Mapel</h3>
-                                    <textarea v-model="adminForm.rawSubjects" rows="4" class="w-full bg-gray-900 mt-2 p-2 text-xs"></textarea>
-                                    <button @click="saveSubjects" class="bg-indigo-600 w-full mt-2 py-2 rounded">Simpan Mapel</button>
-                                </div>
+                                <div class="bg-gray-800 p-4 rounded border border-gray-700"><h3>Import Guru</h3><textarea v-model="adminForm.rawTeachers" rows="4" class="w-full bg-gray-900 mt-2 p-2 text-xs"></textarea><button @click="saveTeachers" class="bg-indigo-600 w-full mt-2 py-2 rounded">Simpan Guru</button></div>
+                                <div class="bg-gray-800 p-4 rounded border border-gray-700"><h3>Import Mapel</h3><textarea v-model="adminForm.rawSubjects" rows="4" class="w-full bg-gray-900 mt-2 p-2 text-xs"></textarea><button @click="saveSubjects" class="bg-indigo-600 w-full mt-2 py-2 rounded">Simpan Mapel</button></div>
                             </div>
-                             <div class="bg-gray-800 p-4 rounded border border-gray-700">
-                                <h3>Import Siswa (Nama [TAB] Kelas)</h3>
-                                <textarea v-model="adminForm.rawStudents" rows="6" class="w-full bg-gray-900 mt-2 p-2 text-xs"></textarea>
-                                <button @click="saveStudents" class="bg-green-600 w-full mt-2 py-2 rounded">Simpan Siswa</button>
-                            </div>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700"><h3>Import Siswa (Nama [TAB] Kelas)</h3><textarea v-model="adminForm.rawStudents" rows="6" class="w-full bg-gray-900 mt-2 p-2 text-xs"></textarea><button @click="saveStudents" class="bg-green-600 w-full mt-2 py-2 rounded">Simpan Siswa</button></div>
                         </div>
                     </div>
                 </div>
             </transition>
-
         </main>
         
-        <footer class="text-center py-4 text-xs text-gray-400 border-t mt-auto relative">
+        <footer class="text-center py-4 text-xs text-gray-400 border-t mt-auto relative bg-white z-20 flex-shrink-0">
             &copy; 2026 SMAN 1 Soppeng.
             <button @click="view = 'admin'" class="absolute right-4 top-4 opacity-30 hover:opacity-100 transition text-indigo-500"><i class="fas fa-lock"></i> Admin</button>
         </footer>
@@ -417,7 +382,7 @@
     <script type="module">
         import { createApp, ref, computed, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, updateDoc, query, where, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, updateDoc, query, where, onSnapshot, serverTimestamp, orderBy } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 
         const firebaseConfig = {
@@ -441,7 +406,7 @@
                 const loading = ref(true);
                 const loadingMessage = ref('Memuat Data...');
                 const isSubmitting = ref(false);
-                const searchQuery = ref(''); // State untuk pencarian
+                const searchQuery = ref('');
 
                 // Data
                 const adminUser = ref(null);
@@ -449,10 +414,11 @@
                 const loginError = ref('');
                 const masterData = ref({ teachers: [], subjects: [] });
                 const currentClassStudents = ref([]); 
-                const allReportsToday = ref([]); // Sumber kebenaran (Source of Truth) dari Firestore
+                const allReportsToday = ref([]); 
                 const selectedClass = ref({});
                 const classesList = ref([]);
                 
+                // Form
                 const form = ref({
                     jamKe: [],
                     mapel: '',
@@ -464,20 +430,30 @@
                 const tempStudent = ref({ name: '', reason: 'Sakit' });
                 const adminForm = ref({ rawTeachers: '', rawSubjects: '', rawStudents: '' });
 
-                // --- COMPUTED PROPERTIES ---
+                // Rekapan
+                const recapFilter = ref('week');
+                const groupedRecap = ref({ 'X': [], 'XI': [], 'XII': [] });
 
+                // UTILS DATE LOKAL (PENTING AGAR TIDAK KENA ISU UTC)
+                const getLocalDateString = (date = new Date()) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+
+                // Computed
                 const tanggalFormat = computed(() => new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
-                const todayQueryString = computed(() => new Date().toISOString().split('T')[0]);
+                
+                // Gunakan fungsi lokal date, bukan toISOString
+                const todayQueryString = computed(() => getLocalDateString(new Date()));
 
-                // Statistik untuk Grafik Dashboard
                 const statistics = computed(() => {
                     const total = allReportsToday.value.length;
                     if (total === 0) return { hadir: 0, terlambat: 0, absen: 0, persenHadir: 0, persenTerlambat: 0, persenAbsen: 0 };
-                    
                     const hadir = allReportsToday.value.filter(r => r.statusGuru === 'Hadir').length;
                     const terlambat = allReportsToday.value.filter(r => r.statusGuru === 'Terlambat').length;
                     const absen = allReportsToday.value.filter(r => r.statusGuru === 'Tidak Hadir').length;
-
                     return {
                         hadir, terlambat, absen,
                         persenHadir: Math.round((hadir / total) * 100),
@@ -486,19 +462,11 @@
                     };
                 });
 
-                // Filter Kelas untuk Pencarian & Grid
                 const filteredClasses = computed(() => {
-                    // 1. Gabungkan data kelas dengan jumlah laporan
                     let data = classesList.value.map(cls => {
                         const classReports = allReportsToday.value.filter(r => r.kelasId === cls.id);
-                        return { 
-                            ...cls, 
-                            jumlahLaporan: classReports.length,
-                            laporanRingkas: classReports // Simpan list laporan untuk ditampilkan di card
-                        };
+                        return { ...cls, jumlahLaporan: classReports.length, laporanRingkas: classReports };
                     });
-
-                    // 2. Filter berdasarkan search query
                     if (searchQuery.value) {
                         const q = searchQuery.value.toLowerCase();
                         data = data.filter(c => c.nama.toLowerCase().includes(q));
@@ -509,71 +477,43 @@
                 const totalLaporanHariIni = computed(() => allReportsToday.value.length);
                 const classesActiveToday = computed(() => new Set(allReportsToday.value.map(r => r.kelasId)).size);
 
-                // --- REALTIME CLASS REPORTS ---
-                // Inilah kunci agar tidak perlu refresh. Computed ini bereaksi terhadap perubahan allReportsToday
                 const classReports = computed(() => {
                     if (!selectedClass.value.id) return [];
-                    return allReportsToday.value
-                        .filter(r => r.kelasId === selectedClass.value.id)
-                        .sort((a,b) => a.jamKe[0] - b.jamKe[0]); // Urutkan berdasarkan jam mulai
+                    return allReportsToday.value.filter(r => r.kelasId === selectedClass.value.id).sort((a,b) => a.jamKe[0] - b.jamKe[0]);
                 });
 
-                // --- LIFECYCLE ---
+                // Lifecycle
                 onMounted(async () => {
                     onAuthStateChanged(auth, (user) => adminUser.value = user);
-
-                    // Realtime Listener
                     const q = query(collection(db, "laporan_kbm"), where("tanggal", "==", todayQueryString.value));
                     onSnapshot(q, (snapshot) => {
                         allReportsToday.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     });
-
                     await fetchClassesFromDB();
                     await fetchMasterData();
                     loading.value = false;
                 });
 
                 // --- FUNCTIONS ---
-
-                // LOGIKA SMART TOGGLE JAM (Agar berurutan)
+                
                 const toggleJamSmart = (n) => {
                     const current = form.value.jamKe;
-                    
-                    // Jika jam sudah dipilih, hapus (toggle off)
                     if (current.includes(n)) {
                         form.value.jamKe = current.filter(j => j !== n);
                         return;
                     }
-
-                    // Jika belum ada pilihan, langsung masukkan
                     if (current.length === 0) {
                         form.value.jamKe.push(n);
                         return;
                     }
-
-                    // Validasi "Loncat"
-                    // Jika user pilih 1, 2 lalu pilih 4. Kita anggap user mau ganti blok jam.
-                    // Atau, jika user pilih 1 lalu pilih 3, kita bantu isi 2?
-                    // Sesuai permintaan: "Tidak boleh random". 
-                    // Pendekatan UX: Jika klik angka yang tidak bertetangga, reset dan mulai baru.
-                    
                     const min = Math.min(...current);
                     const max = Math.max(...current);
-
                     if (n === min - 1 || n === max + 1) {
-                        // Jika bertetangga (misal pilih 2, skrg klik 3), masukkan.
-                        if (current.length >= 3) {
-                            alert("Maksimal 3 jam pelajaran sekaligus.");
-                            return;
-                        }
+                        if (current.length >= 3) { alert("Maksimal 3 JP."); return; }
                         form.value.jamKe.push(n);
                     } else {
-                        // Jika loncat (misal pilih 1, klik 3 atau klik 5)
-                        // Reset dan pilih yang baru saja diklik
-                        // Opsional: Bisa juga alert error, tapi reset lebih cepat utk user.
                         form.value.jamKe = [n];
                     }
-                    
                     form.value.jamKe.sort((a,b) => a - b);
                 };
 
@@ -602,18 +542,41 @@
 
                 const bukaDetailKelas = async (kelas) => {
                     selectedClass.value = kelas;
-                    // Note: classReports sudah dicover oleh computed property, tidak perlu manual filter disini
-                    
                     try {
                         const sDoc = await getDoc(doc(db, 'master_students', kelas.id));
                         currentClassStudents.value = sDoc.exists() ? (sDoc.data().list || []) : [];
                     } catch(e) { console.error(e); }
-
                     view.value = 'class-detail';
                 };
 
                 const bukaFormTambah = () => {
-                    form.value = { jamKe: [], mapel: '', namaGuru: '', statusGuru: 'Hadir', keteranganKBM: 'Ada Tugas', absensiSiswa: [] };
+                    // Logic Smart Persistence: Ambil siswa absen dari jam sebelumnya di kelas yg sama hari ini
+                    const existingAbsences = new Map(); // Gunakan Map biar nama unik (kalau sakit di jam 1, tetap sakit di jam 3)
+                    
+                    if(classReports.value.length > 0) {
+                        classReports.value.forEach(report => {
+                            if(report.absensiSiswa && Array.isArray(report.absensiSiswa)) {
+                                report.absensiSiswa.forEach(siswa => {
+                                    existingAbsences.set(siswa.nama, siswa.keterangan);
+                                });
+                            }
+                        });
+                    }
+
+                    // Convert kembali ke array format form
+                    const carryOverAbsence = [];
+                    existingAbsences.forEach((keterangan, nama) => {
+                        carryOverAbsence.push({ nama, keterangan });
+                    });
+
+                    form.value = { 
+                        jamKe: [], 
+                        mapel: '', 
+                        namaGuru: '', 
+                        statusGuru: 'Hadir', 
+                        keteranganKBM: '', 
+                        absensiSiswa: carryOverAbsence // Pre-fill dengan data absen sebelumnya
+                    };
                     view.value = 'form';
                 };
 
@@ -626,19 +589,15 @@
                 const removeStudentFromAbsence = (idx) => form.value.absensiSiswa.splice(idx, 1);
 
                 const kirimLaporan = async () => {
-                    // Validasi Dasar
                     if(form.value.jamKe.length === 0) return alert("Pilih jam pelajaran.");
                     if(!form.value.mapel || !form.value.namaGuru) return alert("Lengkapi data mapel dan guru.");
-
-                    // Validasi Urutan Jam (Double Check)
                     const sortedJam = [...form.value.jamKe].sort((a,b) => a-b);
                     for(let i = 0; i < sortedJam.length - 1; i++) {
                         if (sortedJam[i+1] !== sortedJam[i] + 1) {
-                            alert(`Jam pelajaran harus berurutan! Anda memilih jam ${sortedJam.join(', ')}. Harusnya misalnya 1, 2, 3.`);
+                            alert("Jam harus berurutan!");
                             return;
                         }
                     }
-
                     isSubmitting.value = true;
                     try {
                         await addDoc(collection(db, "laporan_kbm"), {
@@ -658,42 +617,68 @@
                     finally { isSubmitting.value = false; }
                 };
 
-                // Admin Funcs
-                const handleAdminLogin = async () => {
-                    try { await signInWithEmailAndPassword(auth, loginData.value.email, loginData.value.password); } 
-                    catch (e) { loginError.value = "Login Gagal."; }
+                // --- REKAPAN LOGIC ---
+                const bukaRekapan = async () => {
+                    view.value = 'recap';
+                    loadRecap('week');
                 };
-                const handleAdminLogout = async () => { await signOut(auth); view.value = 'dashboard'; };
 
-                const saveTeachers = async () => {
-                    if(!adminForm.value.rawTeachers) return;
-                    await setDoc(doc(db, 'master_data', 'teachers'), { list: adminForm.value.rawTeachers.split('\n').map(s=>s.trim()).filter(s=>s) });
-                    alert("Guru tersimpan."); await fetchMasterData();
-                };
-                const saveSubjects = async () => {
-                    if(!adminForm.value.rawSubjects) return;
-                    await setDoc(doc(db, 'master_data', 'subjects'), { list: adminForm.value.rawSubjects.split('\n').map(s=>s.trim()).filter(s=>s) });
-                    alert("Mapel tersimpan."); await fetchMasterData();
-                };
-                const saveStudents = async () => {
-                    if(!adminForm.value.rawStudents) return;
+                const loadRecap = async (filterType) => {
+                    recapFilter.value = filterType;
                     loading.value = true;
-                    const studentsByClass = {};
-                    adminForm.value.rawStudents.split('\n').forEach(row => {
-                        const cols = row.split('\t');
-                        if(cols.length >= 2) {
-                            const clsId = cols[1].trim().replace(/\s+/g, '_').toUpperCase();
-                            if(!studentsByClass[clsId]) studentsByClass[clsId] = [];
-                            studentsByClass[clsId].push({ nama: cols[0].trim(), kelas: cols[1].trim() });
-                        }
-                    });
-                    const batch = [];
-                    for (const [id, list] of Object.entries(studentsByClass)) {
-                        batch.push(setDoc(doc(db, 'master_students', id), { className: list[0].kelas, list }));
+                    loadingMessage.value = "Menarik data rekapan...";
+                    groupedRecap.value = { 'X': [], 'XI': [], 'XII': [] };
+
+                    // PERBAIKAN: Gunakan Date Object lokal dan fungsi getLocalDateString
+                    const now = new Date();
+                    let start = new Date(now);
+                    
+                    if (filterType === 'week') {
+                        // Start of week (Monday)
+                        const day = start.getDay() || 7; // Mon=1, Sun=7
+                        if (day !== 1) start.setDate(now.getDate() - (day - 1));
+                    } else {
+                        // Start of month
+                        start.setDate(1);
                     }
-                    await Promise.all(batch);
-                    alert("Siswa tersimpan."); await fetchClassesFromDB(); loading.value = false;
+
+                    const startStr = getLocalDateString(start);
+                    const endStr = getLocalDateString(now);
+
+                    try {
+                        const q = query(
+                            collection(db, "laporan_kbm"), 
+                            where("tanggal", ">=", startStr),
+                            where("tanggal", "<=", endStr)
+                        );
+                        
+                        const snapshot = await getDocs(q);
+                        const allData = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                        const problems = allData.filter(d => d.statusGuru !== 'Hadir');
+
+                        // PERBAIKAN: Sorting yang lebih ketat agar XII tidak masuk ke X
+                        problems.forEach(p => {
+                            const name = p.kelasNama.toUpperCase();
+                            // Cek XII dulu, karena dia mengandung "X" dan "XI"
+                            if (name.startsWith('XII')) {
+                                groupedRecap.value['XII'].push(p);
+                            } else if (name.startsWith('XI')) {
+                                groupedRecap.value['XI'].push(p);
+                            } else if (name.startsWith('X')) {
+                                groupedRecap.value['X'].push(p);
+                            }
+                        });
+
+                    } catch(e) { console.error(e); alert("Gagal memuat rekapan."); }
+                    finally { loading.value = false; }
                 };
+
+                // Admin Funcs
+                const handleAdminLogin = async () => { try { await signInWithEmailAndPassword(auth, loginData.value.email, loginData.value.password); } catch (e) { loginError.value = "Login Gagal."; } };
+                const handleAdminLogout = async () => { await signOut(auth); view.value = 'dashboard'; };
+                const saveTeachers = async () => { if(!adminForm.value.rawTeachers) return; await setDoc(doc(db, 'master_data', 'teachers'), { list: adminForm.value.rawTeachers.split('\n').map(s=>s.trim()).filter(s=>s) }); alert("Guru tersimpan."); await fetchMasterData(); };
+                const saveSubjects = async () => { if(!adminForm.value.rawSubjects) return; await setDoc(doc(db, 'master_data', 'subjects'), { list: adminForm.value.rawSubjects.split('\n').map(s=>s.trim()).filter(s=>s) }); alert("Mapel tersimpan."); await fetchMasterData(); };
+                const saveStudents = async () => { if(!adminForm.value.rawStudents) return; loading.value = true; const studentsByClass = {}; adminForm.value.rawStudents.split('\n').forEach(row => { const cols = row.split('\t'); if(cols.length >= 2) { const clsId = cols[1].trim().replace(/\s+/g, '_').toUpperCase(); if(!studentsByClass[clsId]) studentsByClass[clsId] = []; studentsByClass[clsId].push({ nama: cols[0].trim(), kelas: cols[1].trim() }); } }); const batch = []; for (const [id, list] of Object.entries(studentsByClass)) { batch.push(setDoc(doc(db, 'master_students', id), { className: list[0].kelas, list })); } await Promise.all(batch); alert("Siswa tersimpan."); await fetchClassesFromDB(); loading.value = false; };
 
                 return {
                     view, loading, loadingMessage, isSubmitting, searchQuery,
@@ -701,6 +686,7 @@
                     form, masterData, currentClassStudents, tempStudent, 
                     adminForm, adminUser, loginData, loginError,
                     totalLaporanHariIni, classesActiveToday,
+                    recapFilter, groupedRecap, loadRecap, bukaRekapan,
                     bukaDetailKelas, bukaFormTambah, toggleJamSmart,
                     addStudentToAbsence, removeStudentFromAbsence, kirimLaporan,
                     saveTeachers, saveSubjects, saveStudents, handleAdminLogin, handleAdminLogout
