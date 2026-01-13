@@ -170,7 +170,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg md:text-xl font-bold text-gray-800 dark:text-white tracking-tight leading-tight">AjarAI <span class="text-indigo-600 dark:text-indigo-400">DL</span></h1>
-                    <p class="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider hidden xs:block">Deep Learning Edition v5.6</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider hidden xs:block">Deep Learning Edition v5.8</p>
                 </div>
             </div>
             
@@ -290,7 +290,6 @@
                                 <optgroup label="Umum" class="bg-gray-100 dark:bg-gray-700">
                                     <option>Bahasa Indonesia</option>
                                     <option>Bahasa Inggris</option>
-                                    <option>Bahasa Inggris (Tingkat Lanjut)</option>
                                     <option>Matematika</option>
                                     <option>PKn</option>
                                     <option>PAI & Budi Pekerti</option>
@@ -728,7 +727,7 @@
             
             if (item) {
                 // Rendering
-                const htmlContent = marked.parse(item.content);
+                const htmlContent = marked.parse(item.content, { breaks: true });
                 // FIX: Use actual school name if available, else fallback
                 const schoolName = item.sekolah ? item.sekolah : '[RESTORASI RIWAYAT]';
                 const semesterInfo = item.semester ? ` - ${item.semester}` : '';
@@ -851,10 +850,24 @@
 
         // --- NAVIGATION ---
         function changeStep(n) {
-            // Validation Step 1
-            if (n === 1 && currentStep === 1 && (!document.getElementById('mapel').value || !document.getElementById('topik').value)) {
-                alert("Mohon lengkapi Mapel dan Topik!");
-                return;
+            // Validation Step 1 (Smart Validation)
+            if (n === 1 && currentStep === 1) {
+                const guru = document.getElementById('guru').value.trim();
+                const sekolah = document.getElementById('sekolah').value.trim();
+                const mapel = document.getElementById('mapel').value;
+                const topik = document.getElementById('topik').value.trim();
+                
+                // Cek kolom mana yang masih kosong
+                let emptyFields = [];
+                if (!guru) emptyFields.push("Nama Guru");
+                if (!sekolah) emptyFields.push("Nama Sekolah");
+                if (!mapel) emptyFields.push("Mata Pelajaran");
+                if (!topik) emptyFields.push("Topik / Materi Pokok");
+
+                if (emptyFields.length > 0) {
+                    alert("Mohon lengkapi data berikut agar bisa lanjut:\n- " + emptyFields.join("\n- "));
+                    return; // Stop proses jika ada yang kosong
+                }
             }
 
             document.getElementById(`step-${currentStep}`).classList.add('hidden');
@@ -1028,12 +1041,12 @@
             
             # RPP PEMBELAJARAN MENDALAM: ${d.topik.toUpperCase()}
             
-            **Satuan Pendidikan** : ${d.sekolah}
-            **Jenjang/Kelas** : ${d.jenjang} / ${d.fase}
-            **Mata Pelajaran** : ${d.mapel}
-            **Semester** : ${d.semester}
-            **Alokasi Waktu** : ${d.pertemuan} Pertemuan (@ ${d.durasi} Menit)
-            **Guru Mata Pelajaran** : ${d.guru}
+            **Satuan Pendidikan** : ${d.sekolah}  
+            **Jenjang/Kelas** : ${d.jenjang} / ${d.fase}  
+            **Mata Pelajaran** : ${d.mapel}  
+            **Semester** : ${d.semester}  
+            **Alokasi Waktu** : ${d.pertemuan} Pertemuan (@ ${d.durasi} Menit)  
+            **Guru Mata Pelajaran** : ${d.guru}  
 
             ## 1. IDENTIFIKASI
             Buat Tabel Identifikasi (Kolom: Komponen, Deskripsi):
@@ -1150,7 +1163,8 @@
                 saveModuleToHistory(d, rawText);
 
                 // Rendering
-                const htmlContent = marked.parse(rawText);
+                // ENABLE BREAKS: TRUE for proper newline rendering
+                const htmlContent = marked.parse(rawText, { breaks: true });
                 document.getElementById('print-area').innerHTML = `
                     <div class="text-center border-b-2 border-double border-gray-800 pb-6 mb-8">
                         <h1 class="text-2xl md:text-3xl font-serif font-bold uppercase tracking-widest">${d.sekolah}</h1>

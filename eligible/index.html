@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Eligibilitas SNBP - SMAN 1 Soppeng</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Canvas Confetti for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- KONFIGURASI ---
+        // Ganti link ini dengan link grup WhatsApp yang sebenarnya
+        const WA_GROUP_LINK = "https://chat.whatsapp.com/FBJT7A7zPwu9QXQXbAUxxn"; 
+        
+        // Batas Peringkat Eligible
+        const RANK_LIMIT = 152; 
+
+        // DATA SISWA (CSV RAW DATA)
+        // PENTING: Salin SEMUA isi file .csv Anda dan tempelkan di dalam tanda kutip backtick (`) di bawah ini.
+        // Saya sudah memasukkan contoh data dari snippet yang Anda berikan (awal dan akhir).
+        const csvRawData = `NO,NIS,NISN,NAMA,KELAS
+1,18324,0072702796,ANDI ALIEF MAGALIH PUTRA SYAHRIR,XII9
+2,18360,0077694461,ABIDZAR AL GHIFARI,XII1
+3,18404,0088433220,MUH. HILMY ALFAUZAN. S,XII3
+4,18339,0081464609,FAKHRIYAH MUTAALIYAH,XII1
+5,18340,0078496993,GITA RAMADHANI,XII6
+6,18374,0083036431,ANDI ALZENA IKRAMIYA,XII1
+7,18646,0088112532,AHMAD NAUFAL SYAKIB,XII6
+8,18632,0086302440,MEUTIA PATAPPARI,XII9
+9,18385,0081708423,NUR AZIZAH,XII11
+10,18591,0082115252,ARINI NADIM MUFRI,XII3
+11,18481,0086336383,A. AZIZAH NUR SAFARAZ,XII7
+12,18569,0074199027,RINANDA JULIA RIKA SARI,XII4
+13,18304,0071657723,ANDI KAYLA GHOZAALAH,XII10
+14,18377,0071777892,AYUNSRI SUCI QIRANI,XII1
+15,18320,0089552842,SITI RUH ANNISA PUTRI,XII2
+16,18532,0082577515,NUR KHAIRUN NISA.M,XII2
+17,18670,0082973733,NAHDYAH ANNAZMY,XII8
+18,18372,0308293112,AINUN ASMA LUTFI,XII11
+19,18524,0089947075,AYU FAQHIRA AZZAHRA,XII3
+20,18310,0082040828,MUSYKIRATU RAHMAH,XII9
+21,18520,0086851312,ANDI NAYLA AZZAHRA,XII7
+22,18335,0072148534,AISYA NURFADILLA,XII7
+23,18485,0079050493,KAYLA ATHALAYA IRAWAN,XII10
+24,18380,0087143747,HUSNUL HATIMAH,XII4
+25,18669,0087266249,NADIAH KEISHA KAMILA,XII7
+26,18442,0083944355,YARDAN MUDA,XII2
+27,18614,0077898705,M. KAHLIL ABIMATA REZA,XII7
+28,18608,0082804485,YULIASTRI,XII2
+29,18314,0083131210,NURUL MAGFIRAH SARI,XII9
+30,18458,0074215993,REZKY SYAHRI RAMADHANI,XII8
+31,18355,0079952575,SYIFA ERIA DEWI,XII3
+32,18375,0085772232,ANDI FIRZANAH BUNGAWALI,XII6
+33,18528,0086727606,NAURAH AZKYAH ALISA,XII7
+34,18680,0083235656,SUCI NUR FEBRIANA,XII8
+35,18319,0082729518,SALSALWAH JUWITA,XII11
+36,18350,0074190285,SALVA FAKHIRAH,XII7
+37,18462,0086437683,WANDA MAASITHA,XII8
+38,18570,0089295015,SHIFA FAIHA,XII6
+39,18675,0081940233,NURUL FADILAH,XII11
+40,18381,0084989683,MITZI BENEDICTA ARING,XII6
+41,18482,0086604279,ANDI MUTHIA FADHILAH YUSRA,XII6
+42,18573,0082074603,AHLAL IRFAN,XII6
+43,18568,0072087712,RAFIDAH,XII6
+44,18515,0089855493,A. SYAIKAH ZAHRA,XII7
+45,18656,0072383056,MUHAMMAD RASTRA HUSADA,XII8
+46,18422,0073558085,NUR TRIA PUTRI,XII9
+47,18518,0079921592,AINUL,XII1
+48,18461,0076781579,SEKAR TAJI SUHARTO PUTRI,XII8
+49,18474,0073556832,MUH. NUR IHSAN,XII8
+50,18593,0074185564,DWI ANNISA ZAHRATA LATIFA,XII1
+51,18611,0076832400,AHMAD DZAKI,XII1
+52,18447,0077996057,ALYA SAFIRA,XII8
+53,18299,0088407731,A. ANANDA AZZAHRAH DALAULANG,XII9
+54,18443,0081742696,A.KHUMAIRAH,XII4
+55,18497,0082238113,UMMI HARTANTI,XII1
+56,18449,0082202604,ANDI AJENG BATARIWAWO,XII3
+57,18407,0088732780,A. NAURAH SA'ADAH,XII5
+58,18492,0074445491,SALWA NISYYATUN RAMADHANI,XII6
+59,18500,0085916524,YULIA SAPUTRI,XII6
+60,18512,0076903761,RAHMAT RAMADHANA,XII1
+61,18493,0071752329,SASHA SALWA AZIZAH,XII10
+62,18453,0077535327,NIA RAMADHANI,XII8
+63,18663,0084106459,AURA KASIH QINAYAH,XII3
+64,18640,0077670593,RAHMA SARI,XII8
+65,18423,0071057230,RAHMA RAMADANI.S,XII9
+66,18590,0082350567,ANITA ZAZKIA,XII10
+67,18439,0081290372,MUH.RAIHAN FAWWAS,XII8
+68,18665,0071899361,DZAKIYAH SALSABILA,XII9
+69,18382,0087734815,NADILA MARSYA,XII11
+70,18441,0086155549,MUHAMMAD RESKI ADITYA,XII3
+71,18521,0084138778,ANDI TENRI EZA,XII1
+72,18555,0088580695,ANDI NAILA ATSILAH ZULFA,XII6
+73,18641,0089750226,SYAHRATU MAULIDIYAH R,XII9
+74,18432,0087090610,ANDI BAHRUM NUGRAHA,XII8
+75,18553,0087115316,ALMIRA ZAHRA DEFINA,XII3
+76,18392,0084371667,YOLANDA HUMAERA,XII6
+77,18308,0075753699,HAJJAH FATIMAH AL MUNAWWARAH,XII9
+78,18589,0085352487,ANDI SRY AYU WINANDA,XII1
+79,18454,0083159157,NUR AULYA PRATIWI,XII8
+80,18300,0082789111,ADELIA ERISQA,XII9
+81,18426,0078830641,RIFQAH NUR ALYA,XII2
+82,18414,0083783738,ANINDITA ZAHRATUNNISAA,XII8
+83,18483,0087153794,ASHILA ZAHRA RAMADHANI,XII7
+84,18567,0082303654,RABIATUL ADAWIYAH,XII6
+85,18556,0071518003,ANDI NURHIKMAH RAMADHANI,XII7
+86,18309,0073085161,KEISYA CAHYATUL HIKMA,XII2
+87,18588,0075692085,ANDI FATIMAH AZZAHRA,XII7
+88,18402,0071267159,MUH. FADHYL,XII1
+89,18688,0076156014,FEBRIANO DESTA RAHASTA,XII3
+90,18467,0071450206,ANDI AHMADINAUFAL JAWADI,XII7
+91,18538,0073099608,ZHARATUL JANNI,XII1
+92,18451,0075692085,FATIMAH AZZAHRA,XII7
+93,18415,0074883559,IRVA MURTAFIAH,XII8
+94,18683,0076268230,ALFATH FATHUR RAHMAN,XII7
+95,18488,0084131978,MURFITASARY ASMI YASIR,XII1
+96,18420,0083296274,NUR ANISA,XII5
+97,18559,0086414541,DIAN ANUGRAH CAHYANI,XII6
+98,18405,0084837464,MUHAMMAD KHAIRAN SALIH,XII6
+99,18305,0086434076,ASSIFA RIZKI APRILIANA,XII9
+100,18642,0072325952,WINDA ASHILA,XII11
+101,18328,0085667626,INDRA RAJAZA,XII3
+102,18390,0077916549,RIRI YUNIANTI,XII6
+103,18341,0081621579,MEILANI DWI HASTUTI,XII7
+104,18425,0086625588,REFA MUSDALIFA,XII9
+105,18410,0072156309,ALISA NOVA AZ ZAHRA,XII10
+106,18391,0087006116,SHAULA ZASKIA ANDHYNI,XII7
+107,18605,0074065309,SRI MULIANA,XII7
+108,18427,0079384360,SAKIYYAH,XII4
+109,18499,0082960472,WIDYA AYU PUTRI A.U,XII6
+110,18678,0079780150,RESTY OKTAVIA SAFITRI,XII8
+111,18421,0087162051,NUR FADILAH HARHAS,XII11
+112,18463,0078236517,ZAHRA NATASYA,XII11
+113,18501,0083101303,A.MUH. RANGGA SAPUTRA,XII6
+114,18317,0084453503,REZKY RAMDANI,XII5
+115,18343,0088842137,NINING HAPPY NINGTYAS,XII10
+116,18638,0082777218,NUR REZKY DZASKIA,XII9
+117,18459,0088797724,RIZKY INAYAH,XII5
+118,18627,0088744636,AULIA REZKY ASRA,XII9
+119,18625,0073160561,APRILIA FELISYA,XII2
+120,18609,0084326270,ADHE REZKY MAULANA,XII7
+121,18307,0081158984,FATIMAH ASYAHRA,XII2
+122,18354,0073135505,SYIFA DWI ZAHRELIA,XII6
+123,18479,0074866936,A. AINY SYAHRINI,XII10
+124,18516,0081866478,AILSA RAFIFAH SUCI ARTANTI,XII7
+125,18677,0078116747,PUTRI ZALZABILA,XII8
+126,18356,0084534645,SYIFA KHAERANI USMAN,XII11
+127,18586,0081065354,A. SHERLY PRAMEIVIANA PUTRI,XII11
+128,18526,0083547091,HILDAYANTI,XII6
+129,18379,0086538326,ERINA IKRAMIYA,XII11
+130,18444,0075427228,A. NUR FATIMAH AKBAR,XII8
+131,18344,0089297317,NUR AULIA AMELIA,XII7
+132,18349,0076263157,RISKA RESTYANA,XII10
+133,18664,0083061992,AZATIL IZMAH,XII8
+134,18660,0084292147,ANNISA MAGFIRAH,XII6
+135,18456,0084531398,NURHALIZA ALIMIN,XII3
+136,18448,0087353921,AMABADRIYAH NUR AHMAD,XII4
+137,18667,0082181483,KEYSA AYRA FEBRIA,XII5
+138,18587,0079563956,ALIYYAH FADHILAH,XII10
+139,18561,0083843285,FATIRA NUR AZZIRA,XII1
+140,18636,0079156523,NUR AZKIA AQILAH,XII2
+141,18489,0089837871,NOVA DWI ASTRID,XII1
+142,18475,0088998782,RICO ARI WARDANA,XII2
+143,18342,0083578717,MILLAH PURNAMA,XII7
+144,18571,0077195342,SUCI WIDIANDARI,XII11
+145,18313,0074495199,NURINAYAH,XII3
+146,18450,0086208290,ANDI RAIHANA AYLA LATHIFAH,XII5
+147,18674,0079201281,NURSALSABILA,XII6
+148,18495,0071462166,SITI NIRWANA AMANDA,XII6
+149,19089,0081466610,RAIHAN AMAR FACHROZI,XII11
+150,18490,0076957219,NUR AMALIANTI,XII8
+151,18637,0089542160,NUR EKASAPUTRI ARIS,XII2
+152,18550,0086260694,A.MACJDA WETENRI SAU,XII6
+153,18552,0071269035,ALFIYYAH ZAHRA RUSYDI,XII6
+154,18424,0081810638,REFA GRENI,XII11
+155,18597,0087953860,NABILA ZALZABILA,XII1
+156,18301,0076761649,ADHE CAHYA MENTARI,XII11
+157,18572,0075490028,SYAMRATUL SYAERAH,XII4
+158,18373,0073413899,AINUN AZ ZAHRA,XII4
+159,18486,0073742043,MARFIANI,XII1
+160,18498,0085322790,UMMUL KHAERAH,XII3
+161,18370,0082858341,WAHYU ZAKARIA,XII4
+162,18388,0079879951,PUTRI,XII6
+163,18626,0088296279,AULIA LUTFA ANIQ,XII11
+164,18494,0082225141,SASKIA NURUL AULIYAH,XII1
+165,18327,0075122888,EFAN,XII4
+166,18368,0077574989,MUH.ARIEL RAMADHAN YUNUS,XII4
+167,18541,0081725365,AHMAD FAKHRESI AINUR RIDHO,XII1
+168,18560,0081033637,FADIYAH SALSABILA,XII4
+169,18384,0075157922,NIRWANA AGATA ARVAN,XII8
+170,18548,0084465071,NUR AKHTAR MU'AZHZHAM SYAHIDIN,XII3
+171,18689,0085437737,MUH FAHRUL AL AKBARI,XII5
+172,18480,0078900209,A.ASHILA BALQIS,XII6
+173,18557,0066503090,ASNITA SAFITRI,XII10
+174,18487,0065199033,MUHAIMINA,XII4
+175,18662,0076778299,AURA AURELIA AZ-ZAHRA,XII8
+176,18630,0074709380,FIKA ZILLAH MUTIAH,XII9
+177,18302,0081681820,AINUN MARDIAH ARIFIN,XII2
+178,18606,0078762197,SRI PUTRI RAMADHANI,XII11
+179,18517,0075086173,AINIYYAH ZAHRA,XII7
+180,18326,0074800586,ANDI MUH.IKRAMULLAH,XII2
+181,18491,0083695846,NUR ASHIFAH SHADIQAH,XII2
+182,18460,0073306577,SASYA FITRIA OKTAFIANA,XII7
+183,18337,0073295617,ANDI SITI MAWADDA AMSAL,XII10
+184,18376,0078978215,ANNISA PUTRI,XII11
+185,18311,0082595239,MUTIA SALSABILA,XII9
+186,18417,0072230616,NABILA DWI PUTRI,XII2
+187,18514,0083138106,A.AZABITANUR,XII10
+188,18316,0077169121,PUTRI GITA ANGRENI,XII9
+189,18628,0084934673,AULYA,XII3
+190,18658,0086852677,AFNI OKTAVYANI,XII7
+191,18519,0081120897,ANDI AMIRA IKRAM,XII6
+192,18353,0075813646,SRI RAMADANI,XII10
+193,18602,0085209435,QUEEN KAZHILA,XII4
+194,18661,0087507225,ARINI,XII1
+195,18411,0087588549,ALYA NURSABRINA,XII8
+196,19090,0081129213,ALFIRA MUFIDASARI,XII6
+197,18357,0026805629,ZASKIA RAMADHANI,XII9
+198,18318,0085535916,ROSALINE FEBRIANI,XII9
+199,18601,0072600773,NURUL SALSABILA,XII3
+200,18535,0075829764,PUTRI GIZKA FARINAL,XII11
+201,18681,0086241738,ZHESIL PUTRI MEILANI,XII8
+202,18312,0086576715,NIRMALASARI,XII9
+203,18530,0078673610,NUR AZIZAH MASANGKA,XII11
+204,18634,0084061012,NABILLAH,XII3
+205,18315,0076744440,NURUL UFIA,XII2
+206,18367,0076915446,MUH.  ABYPRATAMA  RAMADHAN,XII3
+207,18351,0082826791,SETYA AYU BUDIMAN,XII6
+208,18618,0075256443,NUR AFDHAL,XII11
+209,18599,0083000094,NHAILA AZZAHRA,XII2
+210,18623,0084432622,AKIFAH NAILAH JUHARTIN,XII5
+211,18668,0074809187,NABILA AZIZAH HERMAN,XII2
+212,18336,0084176926,ANDI PUJI REZQA ABIMUTHIAH,XII3
+213,18615,0088623948,MUH AKHDAN FAHRI,XII7
+214,18673,0079249067,NURFATMA NAJIHA,XII8
+215,18584,0085296725,RESA ANGRYAWAN,XII10
+216,18306,0073463043,EKA,XII3
+217,18585,0082027608,TRI SATRIADI,XII1
+218,18508,0079981379,LUGIS AKBAR,XII10
+219,18331,0072425367,MUH. FATUR FADILLAH MALIK,XII5
+220,18619,0081883579,RAHMAT HIDAYAT,XII5
+221,18536,0082840219,SOFIYAH. A,XII11
+222,18533,0088322813,NURUL DWI SUTRYA KARTINI,XII1
+223,18554,0083383825,ANDI DWI MUQRIMA,XII3
+224,18338,0086965632,AQITA THALITA AZZAHRAH,XII3
+225,18635,0085911432,NAZWA ALIFAH,XII9
+226,18659,0077790482,AL ZHALFHA NAZWA,XII2
+227,18604,0083303022,SRI AMANDA SARI YUSRI,XII11
+228,18676,0076556965,NURUL QESIYA,XII2
+229,18352,0079496618,SHEZA ALISHA,XII2
+230,18412,0079723333,ANDI AYA ASSYURA,XII7
+231,18679,0075742653,RISKI ANANDA,XII1
+232,18503,0088651334,AFZAL ABIZALI,XII9
+233,18378,0073524064,DHEA AURA,XII4
+234,18631,0074111949,JUMARNI,XII11
+235,18531,0076434138,NUR FITRIA,XII1
+236,18596,0082325460,MAGFIRAH HUSAEMA,XII2
+237,18522,0077582994,ANISA PRATIWI,XII4
+238,18346,0077489315,OKTAVIANTI,XII10
+239,18403,0085866047,MUH. FAJRI NUR,XII8
+240,18629,0075420260,CALISTA RASYIQAH RAHMA,XII10
+241,18537,0086650712,SUCI AMELIA SAPUTRI,XII7
+242,18672,0072268214,NUR ILMI,XII11
+243,18361,0078261737,AHMAD AFIS  SAPUTRA,XII6
+244,18527,0087641232,MIFTAHUL GINAYA,XII10
+245,18633,0085654613,MIFTA MAGFIRA ANISA,XII3
+246,18408,0073082241,A. SRI LESTARI,XII10
+247,18436,0071608595,IRFAN HAMKA HIDAYATULLAH,XII8
+248,18525,0086437144,DINA ISMAH AFIQA,XII4
+249,18371,0081642552,ANDI BATARI TOJHA,XII6
+250,18583,0076705302,RAAFIUD WAASIL ANUGRAH,XII10
+251,18429,0085894259,SUREASTELLA AGUS,XII2
+252,18455,0088079232,NURAISYA.S,XII11
+253,18464,0087177709,ZAKIAH ULFIANTY AGUS,XII3
+254,18693,0078751055,MUHAMMAD HISYAM ZHAFRAN,XII7
+255,18511,0073323771,MUHAMMAD FADHEL,XII1
+256,18416,0084845205,LIDYA DEA VEGA,XII3
+257,18563,0075604693,NOPITASARI,XII10
+258,18321,0086086880,SRI MUTIARA SARI,XII11
+259,18345,0088369211,NURHIDAYAH VITASARI IHSAN,XII3
+260,18389,0071291670,RAMYA INGGYTHA MUDYTHA,XII4
+261,18386,0085186516,NUR CAHYANI,XII4
+262,18399,0076903062,M.FADIL AKSAR,XII6
+263,18506,0082178753,ARGA,XII1
+264,18303,0076375020,ANDI ANISAH NURFAHMI HURIYAH R,XII2
+265,18366,0084135749,M. NASRULLAH S,XII6
+266,18594,0086335909,IRVY SYAHRANY ZALZABILA,XII3
+267,18644,0085601412,AHMAD DEEDAT HALID,XII3
+268,18558,0087504988,AULIYA,XII10
+269,18564,0089892089,NUR ALISA,XII10
+270,18446,0085052039,AINA MAHARANI,XII9
+271,18523,0077759123,AULIA RAMADHANI,XII11
+272,18369,0083179010,MUHAMMAD FAHRI,XII4
+273,18562,0086975775,FINA MAYRISKA,XII2
+274,18566,0073204163,NURHALISAH SALNAH,XII10
+275,18647,0089837315,AHMAD RIFATULLAH NASIR,XII3
+276,18551,0084724922,A. RAISYAH KHAIRINNISA,XII6
+277,18692,0081875725,MUH.RESKI FERDYANSA,XII3
+278,18598,0083083290,NAYLA DWI SYAHFIRA,XII5
+279,18624,0086242880,ANDI NAURA ADELIA,XII2
+280,18544,0061183069,FARHAN.B,XII7
+281,18595,0087109256,JIHAN MUNIRA,XII11
+282,18592,0089634305,DINDA DWI PERTIWI,XII10
+283,18607,0073389825,VILSA RAMADHANI,XII2
+284,18691,0075832242,MUH. NIDHAL DHAIFULLAH,XII5
+285,18581,0073834637,MUH.SYAHRUL ASYRAF RUDFI,XII9
+286,18387,0081454460,NURUL RESKY RIANTO,XII4
+287,18406,0077570932,RULY TRY SEPRIADI,XII1
+288,18654,0085883826,MUH.KHAIRY SUARDI,XII9
+289,18457,0079028378,RAHMADANI,XII10
+290,18547,0077656431,MUHAMMAD AL FARUQ,XII7
+291,18323,0082469067,AFIQ EL SHIRAZY,XII2
+292,18470,0085139542,ANDI MUHAMMAD REZKY,XII4
+293,18546,0083315635,MUH. FAJHRY,XII1
+294,18409,0089495165,ANDI SUCI,XII2
+295,18687,0078799502,FATHUR NANDA ILAHI,XII8
+296,18529,0078816989,NOR AMELIA JUHAMSAH,XII4
+297,18510,0087699792,MUH.RIVALDY PRATAMA,XII4
+298,18329,0088919926,M.HABIBIE SURYA,XII5
+299,18603,0087861680,SAYYIDATUNNISYA,XII2
+300,18649,0083718536,ALIF ISHAM,XII3
+301,18582,0088603110,MUHAMMAD FAUZAN,XII3
+302,19088,00842858818,QIFAYAH UMMUL ISNAINI S,XII5
+303,18621,0077062585,SUPRIANTO RUSTAM,XII5
+304,18549,0081815072,SEPTYAN DWIYANTO ZULFIKAR,XII4
+305,18617,0073844770,MUH.FAUZAN PRASETYA,XII7
+306,18322,0084483529,A.RIFQI AQILLAH,XII5
+307,18471,0085051994,BRYAN DWI SAPUTRA,XII7
+308,18401,0087423149,MUFLI ATALLAH,XII1
+309,18577,0077074069,FATRA DWINATA,XII4
+310,18534,0073926098,NURUL HIKMAH,XII10
+311,18452,0085946269,NASYA ALINI PUTRI,XII9
+312,18468,0079066614,ANDI FATHAN SARRA RAMADHAN,XII2
+313,18428,0082742418,SALSABILA,XII3
+314,18652,0085813692,MIRZHA LUTFIR RAHMAN,XII5
+315,18435,0085544773,FADHEL AHMADI,XII8
+316,18477,0081193635,RIO ANDIKA,XII2
+317,18396,0084305349,AHMAD KEVIN NIDAN RAZAK,XII3
+318,18394,0081376977,AHMAD AZLAM,XII1
+319,18542,0083238520,AHMAD ROIHAN,XII7
+320,18576,0088606775,ARIO LORENSO,XII4
+321,18347,0087441391,RAHMAH,XII1
+322,18600,0082882453,NUR UMRAH,XII9
+323,18513,0081680338,SADRON NUSANTARA SYAM,XII9
+324,18610,0073799176,AHMAD DHIYA ULHAQ,XII1
+325,18473,0087705983,KAMEL IBRAHIM,XII2
+326,18507,0073171618,FAJAR EKA SAPUTRA,XII5
+327,18682,0072202737,A. MUH. AKBAR SYAFAAD,XII8
+328,18466,0073073084,AKBAR PRATAMA,XII8
+329,18348,0074140678,RIFDA AFDAL AKNAR,XII2
+330,18539,0074186790,A. MUH RAZYA NURHIDAYAT,XII7
+331,18509,0084974224,MUH AMRIADI,XII5
+332,18639,0079809733,NURUL APIFAH,XII10
+333,18504,0078948328,AHMAD AQIL,XII1
+334,18418,0089745219,NILA PRATIWI,XII9
+335,18653,0085853566,MUH FAHRUL FAUZAN,XII4
+336,18332,0088051047,MUHAMMAD RIZKI MUZAKI,XII2
+337,18438,0086270194,MUH NURHASRASYA,XII3
+338,18505,0082561399,AHMAD ARDIANSYAH,XII4
+339,18690,0079582353,MUH JALIL MAPPAWARE,XII7
+340,18325,0071344957,ANDI LATENRI GAU MALINGKAAN,XII5
+341,18365,0073479490,LAODE ANDI GIAN LUCA P,XII4
+342,18685,0089511290,ANWAR SETIAWAN,XII11
+343,18476,0075190511,RIFQI MAULANA,XII8
+344,18472,0082622256,FADHIL SETIAWAN,XII8
+345,18397,0088157288,ANDI ARYA PHANDITA AHYAR,XII11
+346,18364,0089288039,BAHRIL,XII4
+347,18620,0071609039,RIFQULLAH IZZATUL IBAD,XII2
+348,18434,0081225012,ANDI MUHAMMAD RAIHAN,XII9
+349,18363,0071520728,ARYA PRATAMA,XII4
+350,18333,0073202610,RESKI PUTRA RAMADAN,XII5
+351,18362,0068080205,AHMAD DWI PUTRA,XII4
+352,18575,0074717292,ANDI MUHAMMAD FAYZUL HAQ,XII8
+353,18616,0089223402,MUH.AKRAM SYAM,XII1
+354,18400,0088458939,M. WAL IQRAM SOFYAN,XII9
+355,18433,0084099403,ANDI IMAM FAKHRI,XII7
+356,18395,0082848976,AHMAD FAUZAN,XII6
+357,18543,0074290646,ATHALLAH DAFFAA FAIQH ALIAH,XII5
+358,18540,0071989747,ADIL,XII10
+359,18648,0074712747,AKBAR RASYA,XII9
+360,18437,0081663008,M.FAKHRI HUSAIN ALFIHRA RUSLAN,XII9
+361,18334,0085994925,SOFYAN PALLENRUNGI,XII5
+362,18330,0075695768,MUH.ARDIANSYAH,XII5
+363,18545,0076740915,LUTFI,XII9
+364,18469,0077007842,ANDI ISLAMIC FASYAH,XII8
+365,18612,0067753984,ALDI,XII3
+366,18579,0087660194,MUH AFDAL,XII10
+367,18430,0078802700,A.MUH.RAFIL,XII5
+368,18686,0075915086,FABHIL RAMADHAN,XII11
+369,18645,0074942581,AHMAD FAREL,XII4
+370,18478,0072152028,SEPTIAN SURYA RAMADHAN,XII8
+371,18431,0083761459,AHMAD USAMA ADAM,XII9
+372,19087,0086745596,GIYAS AKHYARY,XII5
+373,18502,0085494854,A. MUHAMMAD LONRONG,XII4
+374,18651,0085234430,ANDI MUH .ALLFIAN,XII5
+375,18655,0083837950,MUHAMMAD FAIZAN,XII10
+376,18440,0085116384,MUH. RIFKY SAFWAN,XII5
+377,18393,0082104108,A. MUHAMMAD,XII11
+378,18580,0071264110,MUH.AUFFA MUZAFFAR,XII10
+379,29292,00888200854,MUHAMMAD RIFKY PRADANA,XII4`;
+
+        // --- COMPONENTS ---
+
+        const SchoolHeader = () => (
+            <div className="text-center mb-8 pt-8 px-4">
+                <div className="flex justify-center mb-4">
+                    <div className="relative w-24 h-24 bg-white rounded-full shadow-lg p-2 flex items-center justify-center border-4 border-blue-600">
+                        {/* Menggunakan object-contain agar logo tidak terpotong */}
+                        <img 
+                            src="https://arafx.vercel.app/logo.png" 
+                            alt="Logo SMAN 1 Soppeng" 
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                                e.target.onerror = null; 
+                                e.target.src = "https://ui-avatars.com/api/?name=SMAN+1&background=0D8ABC&color=fff&size=128";
+                            }}
+                        />
+                    </div>
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
+                    PENGUMUMAN ELIGIBLE SNBP
+                </h1>
+                <p className="text-blue-600 font-semibold mt-1 text-lg">UPT SMAN 1 SOPPENG</p>
+                <div className="w-24 h-1 bg-blue-500 mx-auto mt-3 rounded-full"></div>
+            </div>
+        );
+
+        const SearchBar = ({ searchTerm, setSearchTerm }) => (
+            <div className="max-w-xl mx-auto px-4 mb-8">
+                <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-200"></div>
+                    <div className="relative bg-white rounded-lg shadow-xl flex items-center p-2">
+                        <i data-lucide="search" className="w-6 h-6 text-gray-400 ml-3"></i>
+                        <input 
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Cari Nama / NIS / NISN..."
+                            className="w-full p-3 pl-4 text-gray-700 rounded-lg focus:outline-none font-medium"
+                        />
+                        {searchTerm && (
+                            <button 
+                                onClick={() => setSearchTerm('')}
+                                className="p-2 text-gray-400 hover:text-red-500 transition"
+                            >
+                                <i data-lucide="x" className="w-5 h-5"></i>
+                            </button>
+                        )}
+                    </div>
+                </div>
+                <p className="text-center text-gray-500 text-xs mt-3">
+                    Masukkan setidaknya 3 karakter untuk mencari
+                </p>
+            </div>
+        );
+
+        const ResultCard = ({ student }) => {
+            const isEligible = parseInt(student.NO) <= RANK_LIMIT;
+            
+            useEffect(() => {
+                if (isEligible) {
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#FFD700', '#FFA500', '#0000FF']
+                    });
+                }
+            }, [student]);
+
+            return (
+                <div className="animate-fade-in max-w-lg mx-auto px-4">
+                    <div className={`relative overflow-hidden rounded-2xl shadow-2xl bg-white border-2 ${isEligible ? 'border-yellow-400' : 'border-gray-200'}`}>
+                        
+                        {/* Header Card Status */}
+                        <div className={`p-6 text-center text-white ${isEligible ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-slate-500 to-slate-600'}`}>
+                            {isEligible ? (
+                                <div className="flex flex-col items-center">
+                                    <div className="bg-white/20 p-3 rounded-full mb-3 backdrop-blur-sm">
+                                        <i data-lucide="check-circle-2" className="w-10 h-10 text-white"></i>
+                                    </div>
+                                    <h2 className="text-3xl font-bold mb-1">SELAMAT!</h2>
+                                    <p className="font-medium opacity-90">Anda dinyatakan</p>
+                                    <div className="mt-2 px-6 py-1 bg-white text-green-700 font-bold rounded-full shadow-lg text-lg uppercase tracking-wider">
+                                        ELIGIBLE
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center">
+                                    <div className="bg-white/20 p-3 rounded-full mb-3 backdrop-blur-sm">
+                                        <i data-lucide="book-open-check" className="w-10 h-10 text-white"></i>
+                                    </div>
+                                    <h2 className="text-2xl font-bold mb-1">TETAP SEMANGAT!</h2>
+                                    <p className="font-medium opacity-90">Mohon maaf, Anda dinyatakan</p>
+                                    <div className="mt-2 px-6 py-1 bg-white/20 text-white font-bold rounded-full border border-white/50 shadow-lg text-sm uppercase tracking-wider">
+                                        TIDAK ELIGIBLE
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Student Details */}
+                        <div className="p-6 bg-white">
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="col-span-2 text-center border-b pb-4">
+                                    <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Nama Lengkap</p>
+                                    <p className="text-xl font-bold text-gray-800">{student.NAMA}</p>
+                                </div>
+                                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-xs text-gray-400 uppercase font-semibold">Peringkat</p>
+                                    <p className={`text-2xl font-bold ${isEligible ? 'text-blue-600' : 'text-gray-600'}`}>#{student.NO}</p>
+                                </div>
+                                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-xs text-gray-400 uppercase font-semibold">Kelas</p>
+                                    <p className="text-xl font-bold text-gray-700">{student.KELAS}</p>
+                                </div>
+                                <div className="text-center p-2">
+                                    <p className="text-xs text-gray-400">NIS</p>
+                                    <p className="font-mono font-medium text-gray-600">{student.NIS}</p>
+                                </div>
+                                <div className="text-center p-2">
+                                    <p className="text-xs text-gray-400">NISN</p>
+                                    <p className="font-mono font-medium text-gray-600">{student.NISN}</p>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            {isEligible ? (
+                                <div className="space-y-3">
+                                    <p className="text-center text-sm text-gray-500 mb-2">
+                                        Silakan bergabung ke grup koordinasi SNBP:
+                                    </p>
+                                    <a 
+                                        href={WA_GROUP_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 w-full py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-200 transition transform active:scale-95"
+                                    >
+                                        <i data-lucide="message-circle" className="w-5 h-5"></i>
+                                        GABUNG GRUP WHATSAPP
+                                    </a>
+                                </div>
+                            ) : (
+                                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                                    <p className="text-blue-800 text-sm font-medium">
+                                        "Kesuksesan bukan hanya lewat satu jalan. Persiapkan dirimu untuk SNBT dan Jalur Mandiri!"
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Footer = () => (
+            <div className="mt-12 mb-6 text-center px-4">
+                <p className="text-gray-400 text-xs">
+                    &copy; {new Date().getFullYear()} Tim IT SMAN 1 Soppeng. <br/>
+                    Data berdasarkan SK Kepala Sekolah tentang Pemeringkatan Eligible SNBP.
+                </p>
+            </div>
+        );
+
+        const App = () => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [students, setStudents] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            // CSV Parsing Logic
+            useEffect(() => {
+                try {
+                    const lines = csvRawData.trim().split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim()); // NO,NIS,NISN,NAMA,KELAS
+                    
+                    const parsedData = lines.slice(1).map(line => {
+                        // Handle comma inside quotes if necessary, simpler here for speed
+                        // Using regex to handle CSV properly
+                        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                        
+                        let obj = {};
+                        headers.forEach((header, index) => {
+                            if (values[index]) {
+                                obj[header] = values[index].replace(/^"|"$/g, '').trim();
+                            }
+                        });
+                        return obj;
+                    }).filter(item => item.NAMA && item.NO); // Filter empty rows
+
+                    setStudents(parsedData);
+                    setLoading(false);
+                } catch (error) {
+                    console.error("Error parsing CSV", error);
+                    setLoading(false);
+                }
+            }, []);
+
+            // Lucide icons re-render effect
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            });
+
+            // Filtering Logic
+            const filteredStudents = useMemo(() => {
+                if (searchTerm.length < 3) return [];
+                
+                const lowerTerm = searchTerm.toLowerCase();
+                return students.filter(s => 
+                    (s.NAMA && s.NAMA.toLowerCase().includes(lowerTerm)) ||
+                    (s.NIS && s.NIS.includes(lowerTerm)) ||
+                    (s.NISN && s.NISN.includes(lowerTerm))
+                );
+            }, [searchTerm, students]);
+
+            return (
+                <div className="container mx-auto max-w-2xl min-h-screen flex flex-col">
+                    <SchoolHeader />
+                    
+                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+                    <div className="flex-grow">
+                        {loading ? (
+                            <div className="text-center text-gray-500 py-10">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                Memuat Data...
+                            </div>
+                        ) : searchTerm.length > 0 && searchTerm.length < 3 ? (
+                            <div className="text-center text-gray-400 py-10 animate-fade-in">
+                                Ketik minimal 3 huruf/angka...
+                            </div>
+                        ) : filteredStudents.length > 0 ? (
+                            <div className="space-y-6 pb-10">
+                                {filteredStudents.map((student, idx) => (
+                                    <ResultCard key={idx} student={student} />
+                                ))}
+                                {filteredStudents.length > 5 && (
+                                    <p className="text-center text-xs text-gray-400 mt-4">
+                                        Menampilkan {filteredStudents.length} hasil pencarian
+                                    </p>
+                                )}
+                            </div>
+                        ) : searchTerm.length >= 3 ? (
+                            <div className="text-center py-10 animate-fade-in px-6">
+                                <div className="bg-red-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                                    <i data-lucide="search-x" className="w-8 h-8 text-red-400"></i>
+                                </div>
+                                <h3 className="text-gray-800 font-semibold text-lg">Data Tidak Ditemukan</h3>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    Pastikan ejaan nama, NIS, atau NISN sudah benar.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 px-6 opacity-60">
+                                <img 
+                                    src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" 
+                                    alt="Search Illustration" 
+                                    className="w-32 h-32 mx-auto mb-4 grayscale opacity-50"
+                                />
+                                <p className="text-gray-500 font-medium">
+                                    Silakan cari data Anda menggunakan Nama, NIS, atau NISN.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
