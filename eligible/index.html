@@ -51,15 +51,12 @@
         const { useState, useEffect, useMemo } = React;
 
         // --- KONFIGURASI ---
-        // Ganti link ini dengan link grup WhatsApp yang sebenarnya
         const WA_GROUP_LINK = "https://chat.whatsapp.com/FBJT7A7zPwu9QXQXbAUxxn"; 
         
         // Batas Peringkat Eligible
         const RANK_LIMIT = 152; 
 
         // DATA SISWA (CSV RAW DATA)
-        // PENTING: Salin SEMUA isi file .csv Anda dan tempelkan di dalam tanda kutip backtick (`) di bawah ini.
-        // Saya sudah memasukkan contoh data dari snippet yang Anda berikan (awal dan akhir).
         const csvRawData = `NO,NIS,NISN,NAMA,KELAS
 1,18324,0072702796,ANDI ALIEF MAGALIH PUTRA SYAHRIR,XII9
 2,18360,0077694461,ABIDZAR AL GHIFARI,XII1
@@ -467,34 +464,67 @@
             </div>
         );
 
-        const SearchBar = ({ searchTerm, setSearchTerm }) => (
-            <div className="max-w-xl mx-auto px-4 mb-8">
-                <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-200"></div>
-                    <div className="relative bg-white rounded-lg shadow-xl flex items-center p-2">
-                        <i data-lucide="search" className="w-6 h-6 text-gray-400 ml-3"></i>
-                        <input 
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Cari Nama / NIS / NISN..."
-                            className="w-full p-3 pl-4 text-gray-700 rounded-lg focus:outline-none font-medium"
-                        />
-                        {searchTerm && (
+        const SearchBar = ({ onSearch }) => {
+            const [inputVal, setInputVal] = useState('');
+            const [error, setError] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                // Validasi: Hanya angka
+                if (!/^\d+$/.test(inputVal)) {
+                    setError('Mohon hanya masukkan angka.');
+                    return;
+                }
+                
+                // Validasi: Harus 10 digit
+                if (inputVal.length !== 10) {
+                    setError('NISN harus terdiri dari 10 digit angka.');
+                    return;
+                }
+
+                setError('');
+                onSearch(inputVal);
+            };
+
+            return (
+                <div className="max-w-xl mx-auto px-4 mb-8">
+                    <form onSubmit={handleSubmit} className="relative group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-200"></div>
+                        <div className="relative bg-white rounded-lg shadow-xl flex items-center p-2">
+                            <i data-lucide="hash" className="w-6 h-6 text-gray-400 ml-3"></i>
+                            <input 
+                                type="text"
+                                inputMode="numeric"
+                                value={inputVal}
+                                onChange={(e) => {
+                                    // Hanya izinkan input angka dan maks 10 digit di input field visual
+                                    const val = e.target.value.replace(/\D/g, ''); 
+                                    if (val.length <= 10) setInputVal(val);
+                                    setError(''); // Clear error saat mengetik
+                                }}
+                                placeholder="Masukkan 10 Digit NISN..."
+                                className="w-full p-3 pl-4 text-gray-700 rounded-lg focus:outline-none font-medium tracking-widest placeholder:tracking-normal"
+                            />
                             <button 
-                                onClick={() => setSearchTerm('')}
-                                className="p-2 text-gray-400 hover:text-red-500 transition"
+                                type="submit"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 ml-2 whitespace-nowrap"
                             >
-                                <i data-lucide="x" className="w-5 h-5"></i>
+                                Cek Status
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    </form>
+                    {error && (
+                        <div className="text-center text-red-500 text-sm mt-3 animate-fade-in font-medium bg-red-50 py-1 rounded-md border border-red-100">
+                            {error}
+                        </div>
+                    )}
+                    <p className="text-center text-gray-500 text-xs mt-3">
+                        Contoh: 0072702796
+                    </p>
                 </div>
-                <p className="text-center text-gray-500 text-xs mt-3">
-                    Masukkan setidaknya 3 karakter untuk mencari
-                </p>
-            </div>
-        );
+            );
+        };
 
         const ResultCard = ({ student }) => {
             const isEligible = parseInt(student.NO) <= RANK_LIMIT;
@@ -616,8 +646,6 @@
                     const headers = lines[0].split(',').map(h => h.trim()); // NO,NIS,NISN,NAMA,KELAS
                     
                     const parsedData = lines.slice(1).map(line => {
-                        // Handle comma inside quotes if necessary, simpler here for speed
-                        // Using regex to handle CSV properly
                         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                         
                         let obj = {};
@@ -627,7 +655,7 @@
                             }
                         });
                         return obj;
-                    }).filter(item => item.NAMA && item.NO); // Filter empty rows
+                    }).filter(item => item.NAMA && item.NO); 
 
                     setStudents(parsedData);
                     setLoading(false);
@@ -644,15 +672,18 @@
                 }
             });
 
-            // Filtering Logic
+            // Logic untuk menangani pencarian dari komponen SearchBar
+            const handleSearch = (term) => {
+                setSearchTerm(term);
+            };
+
+            // Filtering Logic - Hanya berdasarkan NISN
             const filteredStudents = useMemo(() => {
-                if (searchTerm.length < 3) return [];
+                if (!searchTerm) return [];
                 
-                const lowerTerm = searchTerm.toLowerCase();
+                // Pencarian Exact Match untuk NISN
                 return students.filter(s => 
-                    (s.NAMA && s.NAMA.toLowerCase().includes(lowerTerm)) ||
-                    (s.NIS && s.NIS.includes(lowerTerm)) ||
-                    (s.NISN && s.NISN.includes(lowerTerm))
+                    s.NISN && s.NISN.trim() === searchTerm.trim()
                 );
             }, [searchTerm, students]);
 
@@ -660,7 +691,8 @@
                 <div className="container mx-auto max-w-2xl min-h-screen flex flex-col">
                     <SchoolHeader />
                     
-                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                    {/* Pass handleSearch ke SearchBar */}
+                    <SearchBar onSearch={handleSearch} />
 
                     <div className="flex-grow">
                         {loading ? (
@@ -668,29 +700,21 @@
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                                 Memuat Data...
                             </div>
-                        ) : searchTerm.length > 0 && searchTerm.length < 3 ? (
-                            <div className="text-center text-gray-400 py-10 animate-fade-in">
-                                Ketik minimal 3 huruf/angka...
-                            </div>
                         ) : filteredStudents.length > 0 ? (
                             <div className="space-y-6 pb-10">
                                 {filteredStudents.map((student, idx) => (
                                     <ResultCard key={idx} student={student} />
                                 ))}
-                                {filteredStudents.length > 5 && (
-                                    <p className="text-center text-xs text-gray-400 mt-4">
-                                        Menampilkan {filteredStudents.length} hasil pencarian
-                                    </p>
-                                )}
                             </div>
-                        ) : searchTerm.length >= 3 ? (
+                        ) : searchTerm ? (
                             <div className="text-center py-10 animate-fade-in px-6">
                                 <div className="bg-red-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
                                     <i data-lucide="search-x" className="w-8 h-8 text-red-400"></i>
                                 </div>
-                                <h3 className="text-gray-800 font-semibold text-lg">Data Tidak Ditemukan</h3>
+                                <h3 className="text-gray-800 font-semibold text-lg">NISN Tidak Ditemukan</h3>
                                 <p className="text-gray-500 text-sm mt-1">
-                                    Pastikan ejaan nama, NIS, atau NISN sudah benar.
+                                    NISN <strong>{searchTerm}</strong> tidak ditemukan dalam daftar. <br/>
+                                    Mohon periksa kembali NISN Anda.
                                 </p>
                             </div>
                         ) : (
@@ -701,7 +725,7 @@
                                     className="w-32 h-32 mx-auto mb-4 grayscale opacity-50"
                                 />
                                 <p className="text-gray-500 font-medium">
-                                    Silakan cari data Anda menggunakan Nama, NIS, atau NISN.
+                                    Masukkan 10 digit NISN dan klik tombol Cek Status.
                                 </p>
                             </div>
                         )}
