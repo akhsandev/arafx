@@ -8,9 +8,15 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- SheetJS untuk Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Markdown Parser untuk Tampilan AI yang Rapi -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: #f0f4f8; overscroll-behavior: none; }
@@ -24,6 +30,17 @@
         
         .bar-container { position: relative; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
         .bar-fill { height: 100%; transition: width 1s ease-in-out; }
+
+        /* Custom Scrollbar untuk Dropdown */
+        .custom-dropdown::-webkit-scrollbar { width: 4px; }
+        .custom-dropdown::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-dropdown::-webkit-scrollbar-track { background: transparent; }
+        
+        /* AI Response Styling */
+        .prose h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.5em; color: #3730a3; }
+        .prose ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.5em; }
+        .prose li { margin-bottom: 0.2em; }
+        .prose strong { color: #1e1b4b; }
     </style>
 </head>
 <body>
@@ -48,10 +65,6 @@
                         <p class="text-[10px] font-light text-indigo-100 uppercase tracking-widest">Hari ini</p>
                         <p class="font-semibold text-sm">{{ tanggalFormat }}</p>
                     </div>
-                    <!-- Tombol Rekapan -->
-                    <button @click="bukaRekapan" class="text-xs bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1">
-                        <i class="fas fa-file-invoice"></i> Rekapan Absen
-                    </button>
                 </div>
             </div>
         </header>
@@ -137,7 +150,13 @@
                             <div v-if="kelas.laporanRingkas.length > 0" class="space-y-1.5">
                                 <div v-for="lap in kelas.laporanRingkas" :key="lap.id" class="flex items-center text-[10px] text-gray-500">
                                     <div class="w-1.5 h-1.5 rounded-full mr-1.5 flex-shrink-0"
-                                         :class="{'bg-green-500': lap.statusGuru === 'Hadir', 'bg-yellow-400': lap.statusGuru === 'Terlambat', 'bg-red-500': lap.statusGuru === 'Tidak Hadir'}">
+                                         :class="{
+                                            'bg-green-500': lap.statusGuru === 'Hadir', 
+                                            'bg-yellow-400': lap.statusGuru === 'Terlambat', 
+                                            'bg-blue-500': lap.statusGuru === 'Sakit',
+                                            'bg-orange-500': lap.statusGuru === 'Izin',
+                                            'bg-red-500': lap.statusGuru === 'Tanpa Ket' || lap.statusGuru === 'Tidak Hadir'
+                                         }">
                                     </div>
                                     <span class="truncate">{{ lap.mapel }}</span>
                                 </div>
@@ -156,220 +175,152 @@
                 </div>
             </div>
 
-            <!-- VIEW: REKAPAN (EXPANDABLE/ACCORDION) -->
+            <!-- VIEW: REKAPAN GURU & SISWA (Sama seperti sebelumnya, disembunyikan dalam Admin) -->
             <transition name="slide-up">
                 <div v-if="view === 'recap'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
                     <div class="w-full max-w-2xl mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
-                        <!-- Sticky Header -->
                         <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10 shadow-sm">
                             <h2 class="text-lg font-bold text-gray-800">Rekapan Guru Berhalangan</h2>
-                            <button @click="view = 'dashboard'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 text-gray-600"><i class="fas fa-times"></i></button>
+                            <button @click="view = 'admin'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 text-gray-600"><i class="fas fa-times"></i></button>
                         </div>
-                        
-                        <!-- Scrollable Content -->
                         <div class="flex-grow overflow-y-auto p-6 pb-40">
-                            <!-- Filter Toggle -->
+                            <!-- Filter & Content (Kode Rekap Guru Lama) -->
                             <div class="flex bg-gray-100 p-1 rounded-lg mb-6 sticky top-0 z-10 shadow-sm">
                                 <button @click="loadRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Minggu Ini</button>
                                 <button @click="loadRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Bulan Ini</button>
                             </div>
-
-                            <!-- Content Per Level -->
                             <div v-for="level in ['X', 'XI', 'XII']" :key="level" class="mb-8">
                                 <h3 class="text-lg font-bold text-gray-800 mb-3 border-l-4 border-indigo-500 pl-2">Tingkat Kelas {{ level }}</h3>
-                                
                                 <div v-if="groupedRecap[level] && groupedRecap[level].length > 0" class="space-y-3">
-                                    <!-- LIST GURU (ACCORDION STYLE) -->
                                     <div v-for="teacher in groupedRecap[level]" :key="teacher.namaGuru" class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all">
-                                        
-                                        <!-- Header Accordion (Nama Guru & Jumlah Pelanggaran) -->
                                         <div @click="teacher.expanded = !teacher.expanded" class="p-3 flex justify-between items-center bg-gray-50 cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition select-none">
                                             <div class="flex items-center gap-3">
-                                                <!-- Badge Jumlah Pelanggaran -->
-                                                <div class="bg-red-100 text-red-600 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs border border-red-200 shadow-sm">
-                                                    {{ teacher.count }}
-                                                </div>
-                                                <div class="flex flex-col">
-                                                    <span class="font-bold text-gray-800 text-sm">{{ teacher.namaGuru }}</span>
-                                                    <span class="text-[10px] text-gray-500">{{ teacher.count }} kali berhalangan/terlambat</span>
-                                                </div>
+                                                <div class="bg-red-100 text-red-600 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs border border-red-200 shadow-sm">{{ teacher.count }}</div>
+                                                <div class="flex flex-col"><span class="font-bold text-gray-800 text-sm">{{ teacher.namaGuru }}</span><span class="text-[10px] text-gray-500">{{ teacher.count }} kali berhalangan</span></div>
                                             </div>
-                                            <!-- Ikon Panah -->
                                             <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 transform" :class="{'rotate-180': teacher.expanded}"></i>
                                         </div>
-
-                                        <!-- Body Accordion (Detail Pelanggaran) -->
                                         <div v-if="teacher.expanded" class="border-t border-gray-100 bg-white animate-fade">
                                             <div v-for="detail in teacher.details" :key="detail.id" class="p-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 flex flex-col gap-1">
-                                                <div class="flex justify-between items-start">
-                                                    <span class="font-bold text-xs text-gray-700">{{ detail.mapel }}</span>
-                                                    <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{{ detail.tanggal }}</span>
-                                                </div>
-                                                <div class="text-xs text-gray-600">
-                                                    Kelas <span class="font-bold">{{ detail.kelasNama }}</span>
-                                                </div>
-                                                <div class="mt-1 flex items-center gap-2">
-                                                    <span class="text-[10px] px-2 py-0.5 rounded border font-bold" 
-                                                        :class="detail.status === 'Terlambat' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-red-50 text-red-700 border-red-200'">
-                                                        {{ detail.status }}
-                                                    </span>
-                                                    <span class="text-xs text-gray-500 italic">"{{ detail.keterangan }}"</span>
-                                                </div>
+                                                <div class="flex justify-between items-start"><span class="font-bold text-xs text-gray-700">{{ detail.mapel }}</span><span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{{ detail.tanggal }}</span></div>
+                                                <div class="text-xs text-gray-600">Kelas <span class="font-bold">{{ detail.kelasNama }}</span></div>
+                                                <div class="mt-1 flex items-center gap-2"><span class="text-[10px] px-2 py-0.5 rounded border font-bold" :class="{'bg-yellow-50 text-yellow-700 border-yellow-200': detail.status === 'Terlambat', 'bg-blue-50 text-blue-700 border-blue-200': detail.status === 'Sakit', 'bg-orange-50 text-orange-700 border-orange-200': detail.status === 'Izin', 'bg-red-50 text-red-700 border-red-200': detail.status === 'Tanpa Ket' || detail.status === 'Tidak Hadir'}">{{ detail.status }}</span><span class="text-xs text-gray-500 italic">"{{ detail.keterangan }}"</span></div>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
-                                <div v-else class="text-xs text-gray-400 italic bg-gray-50 p-3 rounded text-center border border-dashed border-gray-200">
-                                    Tidak ada guru berhalangan di tingkat ini.
-                                </div>
+                                <div v-else class="text-xs text-gray-400 italic bg-gray-50 p-3 rounded text-center border border-dashed border-gray-200">Tidak ada guru berhalangan.</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </transition>
 
-            <!-- VIEW: DETAIL KELAS (FIXED FULL HEIGHT SCROLLABLE) -->
+            <transition name="slide-up">
+                <div v-if="view === 'recap-student'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
+                    <div class="w-full max-w-2xl mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
+                        <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+                            <h2 class="text-lg font-bold text-gray-800">Rekapan Siswa</h2>
+                            <button @click="view = 'admin'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 text-gray-600"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="flex-grow overflow-y-auto p-6 pb-40">
+                            <!-- Filter & Content (Kode Rekap Siswa Lama) -->
+                            <div class="flex bg-gray-100 p-1 rounded-lg mb-4 sticky top-0 z-10 shadow-sm">
+                                <button @click="loadStudentRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Minggu Ini</button>
+                                <button @click="loadStudentRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Bulan Ini</button>
+                            </div>
+                            <div class="flex gap-2 mb-6">
+                                <button @click="studentRecapMode = 'detail'" class="flex-1 py-2 rounded-lg border-2 text-xs font-bold transition flex items-center justify-center gap-1" :class="studentRecapMode === 'detail' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'"><i class="fas fa-list-ul"></i> Detail Harian</button>
+                                <button @click="studentRecapMode = 'total'" class="flex-1 py-2 rounded-lg border-2 text-xs font-bold transition flex items-center justify-center gap-1" :class="studentRecapMode === 'total' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'"><i class="fas fa-chart-bar"></i> Total Akumulasi</button>
+                            </div>
+                            <div v-if="(studentRecapMode === 'detail' && Object.keys(groupedStudentDetail).length > 0) || (studentRecapMode === 'total' && studentRecapTotalData.length > 0)" class="mb-6 animate-fade">
+                                <button @click="downloadStudentRecapExcel" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition transform active:scale-95"><i class="fas fa-file-excel text-lg"></i> Download Excel</button>
+                            </div>
+                            <div v-if="studentRecapMode === 'detail'">
+                                <div v-if="Object.keys(groupedStudentDetail).length > 0">
+                                    <div v-for="(dates, kelasName) in groupedStudentDetail" :key="kelasName" class="mb-6 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                        <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center"><span class="font-bold text-indigo-900">{{ kelasName }}</span></div>
+                                        <div class="divide-y divide-gray-100"><div v-for="(students, date) in dates" :key="date" class="p-3"><p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">{{ date }}</p><div v-for="s in students" :key="s.nama" class="flex justify-between items-start mb-2 last:mb-0"><div class="flex items-center gap-2"><span class="text-sm text-gray-700 font-medium">{{ s.nama }}</span></div><div class="text-right"><span v-if="s.isFullDay" class="px-2 py-0.5 rounded text-[10px] font-bold border" :class="{'bg-blue-100 text-blue-700 border-blue-200': s.status === 'Sakit', 'bg-yellow-100 text-yellow-700 border-yellow-200': s.status === 'Izin', 'bg-red-100 text-red-700 border-red-200': s.status === 'Alfa'}">{{ s.status }} Sehari Penuh</span><span v-else class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">{{ s.status }} ({{ s.jamList }})</span></div></div></div></div>
+                                    </div>
+                                </div>
+                                <div v-else class="flex flex-col items-center justify-center py-20 text-center"><p class="text-xs text-gray-500">Tidak ada data detail absensi.</p></div>
+                            </div>
+                            <div v-if="studentRecapMode === 'total'">
+                                <div v-if="studentRecapTotalData.length > 0" class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm"><table class="w-full text-left border-collapse"><thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase border-b border-gray-200"><th class="p-3 font-bold">Nama Siswa</th><th class="p-3 font-bold">Kelas</th><th class="p-3 font-bold text-center text-blue-600">S</th><th class="p-3 font-bold text-center text-yellow-600">I</th><th class="p-3 font-bold text-center text-red-600">A</th></tr></thead><tbody class="text-sm divide-y divide-gray-100 bg-white"><tr v-for="s in studentRecapTotalData" :key="s.id" class="hover:bg-gray-50"><td class="p-3 font-medium text-gray-800">{{ s.nama }}</td><td class="p-3 text-gray-500 text-xs">{{ s.kelas }}</td><td class="p-3 text-center font-bold" :class="s.sakit > 0 ? 'text-blue-600 bg-blue-50' : 'text-gray-300'">{{ s.sakit }}</td><td class="p-3 text-center font-bold" :class="s.izin > 0 ? 'text-yellow-600 bg-yellow-50' : 'text-gray-300'">{{ s.izin }}</td><td class="p-3 text-center font-bold" :class="s.alfa > 0 ? 'text-red-600 bg-red-50' : 'text-gray-300'">{{ s.alfa }}</td></tr></tbody></table></div>
+                                <div v-else class="flex flex-col items-center justify-center py-20 text-center"><p class="text-xs text-gray-500">Nihil (Semua siswa hadir).</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+
+            <!-- VIEW: DETAIL KELAS & FORM (Tetap) -->
             <transition name="slide-up">
                 <div v-if="view === 'class-detail'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
                     <div class="w-full max-w-md mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
                         <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10 shadow-sm">
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800">{{ selectedClass.nama }}</h2>
-                                <p class="text-xs text-gray-500">Timeline KBM Hari Ini</p>
-                            </div>
+                            <div><h2 class="text-xl font-bold text-gray-800">{{ selectedClass.nama }}</h2><p class="text-xs text-gray-500">Timeline KBM Hari Ini</p></div>
                             <button @click="view = 'dashboard'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition text-gray-600"><i class="fas fa-times"></i></button>
                         </div>
-
                         <div class="flex-grow overflow-y-auto p-6 pb-40">
                             <div v-if="classReports.length > 0" class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
                                 <div v-for="(report, index) in classReports" :key="index" class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active animate-fade">
                                     <div class="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-indigo-50 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 text-indigo-600 font-bold text-sm">{{ index + 1 }}</div>
                                     <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <h3 class="font-bold text-gray-800">{{ report.mapel }}</h3>
-                                            <span class="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{{ report.jamKe.join(', ') }} ({{ report.jamKe.length }}JP)</span>
-                                        </div>
+                                        <div class="flex justify-between items-start mb-1"><h3 class="font-bold text-gray-800">{{ report.mapel }}</h3><span class="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{{ report.jamKe.join(', ') }} ({{ report.jamKe.length }}JP)</span></div>
                                         <p class="text-xs text-gray-500 mb-2"><i class="fas fa-chalkboard-teacher mr-1"></i> {{ report.namaGuru }}</p>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="text-[10px] px-2 py-0.5 rounded-full border" :class="{'bg-green-50 text-green-700 border-green-200': report.statusGuru === 'Hadir', 'bg-yellow-50 text-yellow-700 border-yellow-200': report.statusGuru === 'Terlambat', 'bg-red-50 text-red-700 border-red-200': report.statusGuru === 'Tidak Hadir'}">Guru {{ report.statusGuru }}</span>
-                                            <span v-if="report.statusGuru!=='Hadir'" class="text-[10px] text-gray-500 italic">({{ report.keteranganKBM }})</span>
-                                        </div>
-                                        <div v-if="report.absensiSiswa && report.absensiSiswa.length > 0" class="mt-2 pt-2 border-t border-gray-100">
-                                            <p class="text-[10px] text-gray-400 mb-1">Absensi Siswa:</p>
-                                            <div class="flex flex-wrap gap-1">
-                                                <span v-for="absen in report.absensiSiswa" :key="absen.nama" class="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 mb-1 mr-1 inline-block">
-                                                    {{ absen.nama.split(' ')[0] }} <span class="font-bold ml-0.5" :class="{'text-red-500':absen.keterangan=='Alfa','text-blue-500':absen.keterangan=='Sakit','text-yellow-600':absen.keterangan=='Izin'}">({{ absen.keterangan[0] }})</span>
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <div class="flex items-center gap-2 mb-2"><span class="text-[10px] px-2 py-0.5 rounded-full border" :class="{'bg-green-50 text-green-700 border-green-200': report.statusGuru === 'Hadir', 'bg-yellow-50 text-yellow-700 border-yellow-200': report.statusGuru === 'Terlambat', 'bg-blue-50 text-blue-700 border-blue-200': report.statusGuru === 'Sakit', 'bg-orange-50 text-orange-700 border-orange-200': report.statusGuru === 'Izin', 'bg-red-50 text-red-700 border-red-200': report.statusGuru === 'Tanpa Ket' || report.statusGuru === 'Tidak Hadir'}">Guru {{ report.statusGuru }}</span><span v-if="report.statusGuru!=='Hadir'" class="text-[10px] text-gray-500 italic">({{ report.keteranganKBM }})</span></div>
+                                        <div v-if="report.absensiSiswa && report.absensiSiswa.length > 0" class="mt-2 pt-2 border-t border-gray-100"><p class="text-[10px] text-gray-400 mb-1">Absensi Siswa:</p><div class="flex flex-wrap gap-1"><span v-for="absen in report.absensiSiswa" :key="absen.nama" class="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 mb-1 mr-1 inline-block">{{ absen.nama.split(' ')[0] }} <span class="font-bold ml-0.5" :class="{'text-red-500':absen.keterangan=='Alfa','text-blue-500':absen.keterangan=='Sakit','text-yellow-600':absen.keterangan=='Izin'}">({{ absen.keterangan[0] }})</span></span></div></div>
                                     </div>
                                 </div>
                             </div>
-                            <div v-else class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
-                                <p class="text-gray-500 text-sm">Belum ada mata pelajaran tercatat hari ini.</p>
-                            </div>
+                            <div v-else class="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300"><i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i><p class="text-gray-500 text-sm">Belum ada mata pelajaran tercatat hari ini.</p></div>
                             <button @click="bukaFormTambah" class="w-full mt-6 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"><i class="fas fa-plus-circle"></i> Tambah Mapel Baru</button>
                         </div>
                     </div>
                 </div>
             </transition>
 
-            <!-- VIEW: FORM INPUT (FIXED FULL HEIGHT SCROLLABLE) -->
             <transition name="slide-up">
                 <div v-if="view === 'form'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
                     <div class="w-full max-w-md mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
-                        <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10">
-                            <div>
-                                <h2 class="text-lg font-bold text-indigo-900">Input Jurnal</h2>
-                                <p class="text-xs text-gray-500">{{ selectedClass.nama }}</p>
-                            </div>
-                            <button @click="view = 'class-detail'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i class="fas fa-arrow-left text-gray-600"></i></button>
-                        </div>
-
-                        <form @submit.prevent="kirimLaporan" class="flex-grow overflow-y-auto p-6 pb-40">
+                        <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10"><div><h2 class="text-lg font-bold text-indigo-900">Input Jurnal</h2><p class="text-xs text-gray-500">{{ selectedClass.nama }}</p></div><button @click="view = 'class-detail'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i class="fas fa-arrow-left text-gray-600"></i></button></div>
+                        <form @submit.prevent="kirimLaporan" class="flex-grow overflow-y-auto p-6 pb-40" @click="closeAllSuggestions">
                             
-                            <!-- JAM (SMART LOGIC) -->
-                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6">
-                                <div class="flex justify-between items-center mb-2">
-                                    <label class="text-sm font-bold text-indigo-900"><i class="fas fa-clock mr-1"></i> Jam Pelajaran</label>
-                                    <span v-if="form.jamKe.length > 0" class="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">{{ form.jamKe.length }} JP</span>
-                                </div>
-                                <div class="grid grid-cols-5 gap-2">
-                                    <button type="button" v-for="n in 10" :key="n" @click="toggleJamSmart(n)" class="h-10 rounded-lg font-bold text-sm transition-all border relative" :class="form.jamKe.includes(n) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'">
-                                        {{ n }}
+                            <!-- JAM -->
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6"><div class="flex justify-between items-center mb-2"><label class="text-sm font-bold text-indigo-900"><i class="fas fa-clock mr-1"></i> Jam Pelajaran</label><span v-if="form.jamKe.length > 0" class="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">{{ form.jamKe.length }} JP</span></div><div class="grid grid-cols-5 gap-2"><button type="button" v-for="n in 10" :key="n" @click.stop="toggleJamSmart(n)" class="h-10 rounded-lg font-bold text-sm transition-all border relative" :class="form.jamKe.includes(n) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'">{{ n }}</button></div></div>
+                            
+                            <!-- MAPEL (CUSTOM CLASSY DROPDOWN) -->
+                            <div class="mb-6 relative group"><label class="block text-sm font-semibold text-gray-700 mb-1">Mata Pelajaran</label><div class="relative"><input type="text" v-model="form.mapel" @focus="openMapelSuggestions" @click.stop="openMapelSuggestions" @input="openMapelSuggestions" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 bg-white" :class="showMapelSuggestions && suggestedSubjects.length > 0 ? 'rounded-t-xl rounded-b-none border-b-0 shadow-lg z-20' : 'rounded-xl'" required><i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 text-xs transition-transform duration-200" :class="{'rotate-180': showMapelSuggestions}"></i></div><div v-if="showMapelSuggestions && suggestedSubjects.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-200 shadow-xl rounded-b-xl z-50 max-h-60 overflow-y-auto custom-dropdown"><div v-for="(m, idx) in suggestedSubjects" :key="idx" @click.stop="pilihMapel(m)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors duration-150 group-hover:text-indigo-900"><div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">{{ m.charAt(0) }}</div><span>{{ m }}</span></div></div></div>
+                            
+                            <!-- GURU (CUSTOM CLASSY DROPDOWN) -->
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6"><label class="block text-sm font-semibold text-gray-700 mb-2">Guru Pengajar</label><div class="relative mb-3"><input type="text" v-model="form.namaGuru" @focus="openGuruSuggestions" @click.stop="openGuruSuggestions" @input="openGuruSuggestions" placeholder="Ketik nama guru..." class="w-full px-4 py-3 bg-white border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200" :class="showGuruSuggestions && suggestedTeachers.length > 0 ? 'rounded-t-lg rounded-b-none border-b-0 shadow-md z-20' : 'rounded-lg'" required><i class="fas fa-search absolute right-4 top-4 text-gray-400 text-xs"></i><div v-if="showGuruSuggestions && suggestedTeachers.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-300 shadow-xl rounded-b-lg z-50 max-h-60 overflow-y-auto custom-dropdown"><div v-for="(g, idx) in suggestedTeachers" :key="idx" @click.stop="pilihGuru(g)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"><div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center flex-shrink-0 text-xs"><i class="fas fa-user"></i></div><span>{{ g }}</span></div></div></div><div class="grid grid-cols-2 gap-2 mb-3"><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-green-500 peer-checked:text-white text-xs font-bold transition border-green-200">Hadir</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Terlambat" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-yellow-500 peer-checked:text-white text-xs font-bold transition border-yellow-200">Terlambat</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Sakit" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-blue-500 peer-checked:text-white text-xs font-bold transition border-blue-200">Sakit</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Izin" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-orange-500 peer-checked:text-white text-xs font-bold transition border-orange-200">Izin</div></label><label class="cursor-pointer col-span-2"><input type="radio" v-model="form.statusGuru" value="Tanpa Ket" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-red-500 peer-checked:text-white text-xs font-bold transition border-red-200">Tanpa Keterangan (Alpa)</div></label></div>
+                            
+                            <!-- Gemini AI Feature: Saran Kegiatan -->
+                            <div v-if="form.statusGuru !== 'Hadir'" class="mt-4 mb-6 animate-fade">
+                                <div v-if="!aiResponse" class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-center">
+                                    <p class="text-sm text-indigo-800 font-bold mb-2">Guru tidak hadir? Butuh ide?</p>
+                                    <button @click="askGeminiActivity" :disabled="isAiLoading" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition transform active:scale-95 flex items-center justify-center gap-2 mx-auto disabled:opacity-50">
+                                        <i v-if="isAiLoading" class="fas fa-spinner fa-spin"></i>
+                                        <i v-else class="fas fa-magic"></i>
+                                        {{ isAiLoading ? 'Mencari Ide...' : '✨ Minta Saran Kegiatan (AI)' }}
                                     </button>
                                 </div>
-                            </div>
-
-                            <!-- MAPEL & GURU (SMART AUTOCOMPLETE & FILTERING) -->
-                            <div class="mb-6">
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Mata Pelajaran</label>
-                                <input v-model="form.mapel" list="listMapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" required @change="form.namaGuru = ''">
-                                <datalist id="listMapel"><option v-for="m in masterData.subjects" :value="m"></option></datalist>
-                            </div>
-
-                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Guru Pengajar</label>
-                                <!-- Tampilkan Guru sesuai Mapel yang dipilih, jika mapel kosong tampilkan semua -->
-                                <input v-model="form.namaGuru" list="listGuru" placeholder="Ketik nama guru..." class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-3" required>
-                                <datalist id="listGuru">
-                                    <option v-for="g in filteredTeachers" :value="g"></option>
-                                </datalist>
+                                <div v-else class="p-4 bg-white border border-indigo-200 rounded-xl shadow-sm prose prose-sm max-w-none">
+                                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                                        <span class="font-bold text-indigo-700 text-xs flex items-center gap-1"><i class="fas fa-robot"></i> Saran Gemini AI</span>
+                                        <button @click="aiResponse = null" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div v-html="aiResponse" class="text-sm text-gray-700 leading-relaxed"></div>
+                                </div>
                                 
-                                <div class="grid grid-cols-3 gap-2">
-                                    <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-green-500 peer-checked:text-white text-xs font-bold transition">Hadir</div></label>
-                                    <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Terlambat" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-yellow-500 peer-checked:text-white text-xs font-bold transition">Terlambat</div></label>
-                                    <label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Tidak Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-red-500 peer-checked:text-white text-xs font-bold transition">Absen</div></label>
-                                </div>
-
-                                <div v-if="form.statusGuru !== 'Hadir'" class="mt-3 animate-fade">
-                                    <label class="text-xs text-gray-500 mb-1 block">Alasan / Keterangan (Opsional):</label>
-                                    <input v-model="form.keteranganKBM" list="listAlasan" placeholder="Contoh: Guru Izin ke Dinas..." class="w-full p-2 rounded border border-gray-300 text-sm focus:outline-none focus:border-red-400">
-                                    <datalist id="listAlasan">
-                                        <option value="Ada Tugas">
-                                        <option value="Jam Kosong">
-                                        <option value="Guru Inval">
-                                        <option value="Sakit">
-                                        <option value="Izin Dinas">
-                                    </datalist>
-                                </div>
+                                <label class="text-xs text-gray-500 mb-1 block mt-3">Detail Alasan (Opsional):</label>
+                                <input v-model="form.keteranganKBM" list="listAlasan" placeholder="Cth: Rapat Dinas, Sakit Demam, dll..." class="w-full p-2 rounded border border-gray-300 text-sm focus:outline-none focus:border-indigo-400"><datalist id="listAlasan"><option value="Ada Tugas"><option value="Jam Kosong"><option value="Sakit Demam"><option value="Izin Dinas Luar"><option value="Urusan Keluarga"></datalist>
+                            </div>
                             </div>
 
-                            <!-- ABSENSI SISWA (AUTO CARRY & SEARCH) -->
-                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-8">
-                                <div class="flex justify-between items-center mb-3">
-                                    <label class="block text-sm font-bold text-indigo-900"><i class="fas fa-user-check mr-1"></i> Absensi Siswa</label>
-                                    <span class="text-xs bg-white px-2 py-1 rounded text-indigo-600 border border-indigo-200">{{ form.absensiSiswa.length }} Siswa</span>
-                                </div>
-
-                                <!-- List Siswa Absen (Otomatis terisi dari jam sebelumnya) -->
-                                <div v-if="form.absensiSiswa.length > 0" class="space-y-2 mb-4">
-                                    <div v-for="(item, index) in form.absensiSiswa" :key="index" class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 text-sm shadow-sm">
-                                        <span class="font-medium text-gray-700">{{ item.nama }}</span>
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-2 py-0.5 rounded text-xs font-bold text-white" :class="{'bg-blue-500': item.keterangan === 'Sakit','bg-yellow-500': item.keterangan === 'Izin','bg-red-500': item.keterangan === 'Alfa'}">{{ item.keterangan }}</span>
-                                            <button type="button" @click="removeStudentFromAbsence(index)" class="text-gray-400 hover:text-red-500 ml-1 bg-gray-100 h-6 w-6 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Form Tambah Siswa -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                                    <div class="mb-2">
-                                        <input v-model="tempStudent.name" list="listSiswa" placeholder="Ketik nama siswa..." class="w-full p-2 border rounded text-sm bg-gray-50 focus:outline-none focus:border-indigo-500">
-                                        <datalist id="listSiswa"><option v-for="siswa in currentClassStudents" :value="siswa.nama"></option></datalist>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button type="button" @click="tempStudent.reason = 'Sakit'" :class="tempStudent.reason === 'Sakit' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Sakit</button>
-                                        <button type="button" @click="tempStudent.reason = 'Izin'" :class="tempStudent.reason === 'Izin' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Izin</button>
-                                        <button type="button" @click="tempStudent.reason = 'Alfa'" :class="tempStudent.reason === 'Alfa' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Alfa</button>
-                                    </div>
-                                    <button type="button" @click="addStudentToAbsence" :disabled="!tempStudent.name" class="w-full mt-2 bg-indigo-600 text-white text-xs py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50 transition">+ Tambahkan</button>
-                                </div>
-                            </div>
-
+                            <!-- ABSENSI SISWA (CUSTOM CLASSY DROPDOWN) -->
+                            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-8"><div class="flex justify-between items-center mb-3"><label class="block text-sm font-bold text-indigo-900"><i class="fas fa-user-check mr-1"></i> Absensi Siswa</label><span class="text-xs bg-white px-2 py-1 rounded text-indigo-600 border border-indigo-200">{{ form.absensiSiswa.length }} Siswa</span></div><div v-if="form.absensiSiswa.length > 0" class="space-y-2 mb-4"><div v-for="(item, index) in form.absensiSiswa" :key="index" class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 text-sm shadow-sm"><span class="font-medium text-gray-700">{{ item.nama }}</span><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-xs font-bold text-white" :class="{'bg-blue-500': item.keterangan === 'Sakit','bg-yellow-500': item.keterangan === 'Izin','bg-red-500': item.keterangan === 'Alfa'}">{{ item.keterangan }}</span><button type="button" @click="removeStudentFromAbsence(index)" class="text-gray-400 hover:text-red-500 ml-1 bg-gray-100 h-6 w-6 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button></div></div></div><div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm relative"><div class="relative mb-3"><input type="text" v-model="tempStudent.name" @focus="openSiswaSuggestions" @click.stop="openSiswaSuggestions" @input="openSiswaSuggestions" placeholder="Ketik nama siswa..." class="w-full px-4 py-3 bg-white border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200" :class="showSiswaSuggestions && suggestedStudents.length > 0 ? 'rounded-t-lg rounded-b-none border-b-0 shadow-md z-20' : 'rounded-lg'"><i class="fas fa-user-graduate absolute right-4 top-4 text-gray-400 text-xs"></i><div v-if="showSiswaSuggestions && suggestedStudents.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-300 shadow-xl rounded-b-lg z-50 max-h-40 overflow-y-auto custom-dropdown"><div v-for="(s, idx) in suggestedStudents" :key="idx" @click.stop="pilihSiswa(s.nama)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"><div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">{{ s.nama.charAt(0) }}</div><span>{{ s.nama }}</span></div></div></div><div class="flex gap-2"><button type="button" @click="tempStudent.reason = 'Sakit'" :class="tempStudent.reason === 'Sakit' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Sakit</button><button type="button" @click="tempStudent.reason = 'Izin'" :class="tempStudent.reason === 'Izin' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Izin</button><button type="button" @click="tempStudent.reason = 'Alfa'" :class="tempStudent.reason === 'Alfa' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Alfa</button></div><button type="button" @click="addStudentToAbsence" :disabled="!tempStudent.name" class="w-full mt-2 bg-indigo-600 text-white text-xs py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50 transition">+ Tambahkan</button></div></div>
                             <button type="submit" :disabled="isSubmitting" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-70">{{ isSubmitting ? 'Menyimpan...' : 'Simpan Laporan' }}</button>
                         </form>
                     </div>
@@ -393,7 +344,51 @@
                             </form>
                         </div>
                         <div v-else class="space-y-8 pb-40">
-                            <div class="flex justify-between bg-indigo-900/30 p-4 rounded"><p>Login: {{ adminUser.email }}</p><button @click="handleAdminLogout" class="bg-red-600 px-3 py-1 rounded text-xs">Keluar</button></div>
+                            <div class="flex justify-between bg-indigo-900/30 p-4 rounded">
+                                <div>
+                                    <p class="text-sm font-bold text-indigo-300">Admin Logged In</p>
+                                    <p class="text-xs text-indigo-200">{{ adminUser.email }}</p>
+                                </div>
+                                <button @click="handleAdminLogout" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded text-xs font-bold transition">Keluar</button>
+                            </div>
+
+                            <!-- AI Analysis Panel (NEW) -->
+                            <div class="bg-gradient-to-br from-purple-900 to-indigo-900 p-5 rounded-xl border border-purple-500/30 mb-6 shadow-xl relative overflow-hidden group">
+                                <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition"></div>
+                                <h3 class="text-white font-bold mb-2 flex items-center gap-2 text-lg">
+                                    <i class="fas fa-brain text-purple-300"></i> AI Analyst
+                                </h3>
+                                <p class="text-purple-200 text-xs mb-4">Dapatkan ringkasan eksekutif dan wawasan mendalam tentang KBM hari ini dengan kecerdasan buatan.</p>
+                                
+                                <button @click="analyzeReportsWithGemini" :disabled="isAiLoading" class="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 rounded-lg backdrop-blur-sm transition flex items-center justify-center gap-2">
+                                    <i v-if="isAiLoading" class="fas fa-spinner fa-spin"></i>
+                                    <i v-else class="fas fa-sparkles text-yellow-400"></i>
+                                    {{ isAiLoading ? 'Menganalisis Data...' : '✨ Analisis Laporan Hari Ini' }}
+                                </button>
+
+                                <div v-if="adminAiResponse" class="mt-4 p-4 bg-black/30 rounded-lg border border-white/10 text-gray-200 text-sm prose prose-invert prose-sm max-w-none animate-fade">
+                                    <div class="flex justify-between mb-2 border-b border-white/10 pb-2">
+                                        <span class="text-xs font-mono text-purple-300">RESULT_AI_GEMINI</span>
+                                        <button @click="adminAiResponse = null" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div v-html="adminAiResponse"></div>
+                                </div>
+                            </div>
+
+                            <!-- MENU REKAPAN & LAPORAN (BARU) -->
+                            <div class="bg-indigo-900/20 p-4 rounded border border-indigo-800/50 mb-6">
+                                <h3 class="text-indigo-400 font-bold mb-3"><i class="fas fa-chart-bar mr-2"></i>Pusat Data & Rekapan</h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button @click="bukaRekapan('guru')" class="bg-yellow-500 hover:bg-yellow-400 text-indigo-900 font-bold py-3 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1 transition transform active:scale-95">
+                                        <i class="fas fa-chalkboard-teacher text-xl"></i>
+                                        <span class="text-xs">Rekap Guru</span>
+                                    </button>
+                                    <button @click="bukaRekapan('siswa')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1 border border-indigo-400 transition transform active:scale-95">
+                                        <i class="fas fa-user-graduate text-xl"></i>
+                                        <span class="text-xs">Rekap Siswa</span>
+                                    </button>
+                                </div>
+                            </div>
                             
                             <!-- Menu Reset Database -->
                             <div class="bg-red-900/20 p-4 rounded border border-red-800">
@@ -450,47 +445,49 @@
             measurementId: "G-3L9ZP1ZJLW"
         };
 
+        // --- GEMINI AI CONFIG ---
+        const apiKey = ""; // Disuntikkan otomatis oleh environment
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         createApp({
             setup() {
-                // UI State
                 const view = ref('dashboard');
                 const loading = ref(true);
                 const loadingMessage = ref('Memuat Data...');
                 const isSubmitting = ref(false);
                 const searchQuery = ref('');
-
-                // Data
+                const showMapelSuggestions = ref(false);
+                const showGuruSuggestions = ref(false);
+                const showSiswaSuggestions = ref(false); 
                 const adminUser = ref(null);
                 const loginData = ref({ email: '', password: '' });
                 const loginError = ref('');
-                // Structure: teachers=[list of names], subjects=[list of names], map={ "Matematika": ["Guru A", "Guru B"] }
                 const masterData = ref({ teachers: [], subjects: [], map: {} });
                 const currentClassStudents = ref([]); 
                 const allReportsToday = ref([]); 
                 const selectedClass = ref({});
                 const classesList = ref([]);
-                
-                // Form
-                const form = ref({
-                    jamKe: [],
-                    mapel: '',
-                    namaGuru: '',
-                    statusGuru: 'Hadir',
-                    keteranganKBM: 'Ada Tugas',
-                    absensiSiswa: []
-                });
+                const form = ref({ jamKe: [], mapel: '', namaGuru: '', statusGuru: 'Hadir', keteranganKBM: 'Ada Tugas', absensiSiswa: [] });
                 const tempStudent = ref({ name: '', reason: 'Sakit' });
                 const adminForm = ref({ rawMasterData: '', rawStudents: '' });
+                
+                // AI State
+                const aiResponse = ref(null);
+                const adminAiResponse = ref(null);
+                const isAiLoading = ref(false);
 
-                // Rekapan
+                // Rekapan States
                 const recapFilter = ref('week');
+                const studentRecapMode = ref('detail'); 
                 const groupedRecap = ref({ 'X': [], 'XI': [], 'XII': [] });
+                const groupedStudentRecap = ref({});
+                const groupedStudentDetail = ref({});
+                const studentRecapTotalData = ref([]); 
+                const studentRecapRawData = ref([]); 
 
-                // UTILS DATE LOKAL
                 const getLocalDateString = (date = new Date()) => {
                     const year = date.getFullYear();
                     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -498,7 +495,6 @@
                     return `${year}-${month}-${day}`;
                 };
 
-                // Computed
                 const tanggalFormat = computed(() => new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
                 const todayQueryString = computed(() => getLocalDateString(new Date()));
 
@@ -507,13 +503,8 @@
                     if (total === 0) return { hadir: 0, terlambat: 0, absen: 0, persenHadir: 0, persenTerlambat: 0, persenAbsen: 0 };
                     const hadir = allReportsToday.value.filter(r => r.statusGuru === 'Hadir').length;
                     const terlambat = allReportsToday.value.filter(r => r.statusGuru === 'Terlambat').length;
-                    const absen = allReportsToday.value.filter(r => r.statusGuru === 'Tidak Hadir').length;
-                    return {
-                        hadir, terlambat, absen,
-                        persenHadir: Math.round((hadir / total) * 100),
-                        persenTerlambat: Math.round((terlambat / total) * 100),
-                        persenAbsen: Math.round((absen / total) * 100)
-                    };
+                    const absen = allReportsToday.value.filter(r => r.statusGuru !== 'Hadir' && r.statusGuru !== 'Terlambat').length;
+                    return { hadir, terlambat, absen, persenHadir: Math.round((hadir / total) * 100), persenTerlambat: Math.round((terlambat / total) * 100), persenAbsen: Math.round((absen / total) * 100) };
                 });
 
                 const filteredClasses = computed(() => {
@@ -521,330 +512,286 @@
                         const classReports = allReportsToday.value.filter(r => r.kelasId === cls.id);
                         return { ...cls, jumlahLaporan: classReports.length, laporanRingkas: classReports };
                     });
-                    if (searchQuery.value) {
-                        const q = searchQuery.value.toLowerCase();
-                        data = data.filter(c => c.nama.toLowerCase().includes(q));
-                    }
+                    if (searchQuery.value) { const q = searchQuery.value.toLowerCase(); data = data.filter(c => c.nama.toLowerCase().includes(q)); }
                     return data;
                 });
 
-                // COMPUTED UNTUK FILTER GURU BERDASARKAN MAPEL
-                const filteredTeachers = computed(() => {
-                    if (!form.value.mapel) return masterData.value.teachers; // Jika mapel kosong, tampilkan semua
-                    
-                    // Cek di Mapping
-                    const relatedTeachers = masterData.value.map[form.value.mapel];
-                    if (relatedTeachers && relatedTeachers.length > 0) {
-                        return relatedTeachers;
-                    }
-                    
-                    // Fallback jika mapping tidak ditemukan (misal mapel baru)
-                    return masterData.value.teachers;
-                });
-
+                const suggestedSubjects = computed(() => { if (!masterData.value.subjects) return []; const q = form.value.mapel.toLowerCase(); return masterData.value.subjects.filter(s => s.toLowerCase().includes(q)); });
+                const suggestedTeachers = computed(() => { let sourceList = masterData.value.teachers; if (form.value.mapel) { const mapped = masterData.value.map[form.value.mapel]; if (mapped && mapped.length > 0) sourceList = mapped; } const q = form.value.namaGuru.toLowerCase(); return sourceList.filter(g => g.toLowerCase().includes(q)); });
+                const suggestedStudents = computed(() => { if (!currentClassStudents.value) return []; const q = tempStudent.value.name.toLowerCase(); return currentClassStudents.value.filter(s => s.nama.toLowerCase().includes(q)); });
+                const filteredTeachers = computed(() => { if (!form.value.mapel) return masterData.value.teachers; const relatedTeachers = masterData.value.map[form.value.mapel]; return (relatedTeachers && relatedTeachers.length > 0) ? relatedTeachers : masterData.value.teachers; });
                 const totalLaporanHariIni = computed(() => allReportsToday.value.length);
                 const classesActiveToday = computed(() => new Set(allReportsToday.value.map(r => r.kelasId)).size);
+                const classReports = computed(() => { if (!selectedClass.value.id) return []; return allReportsToday.value.filter(r => r.kelasId === selectedClass.value.id).sort((a,b) => a.jamKe[0] - b.jamKe[0]); });
 
-                const classReports = computed(() => {
-                    if (!selectedClass.value.id) return [];
-                    return allReportsToday.value.filter(r => r.kelasId === selectedClass.value.id).sort((a,b) => a.jamKe[0] - b.jamKe[0]);
-                });
+                onMounted(async () => { onAuthStateChanged(auth, (user) => adminUser.value = user); const q = query(collection(db, "laporan_kbm"), where("tanggal", "==", todayQueryString.value)); onSnapshot(q, (snapshot) => { allReportsToday.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }); await fetchClassesFromDB(); await fetchMasterData(); loading.value = false; });
 
-                // Lifecycle
-                onMounted(async () => {
-                    onAuthStateChanged(auth, (user) => adminUser.value = user);
-                    const q = query(collection(db, "laporan_kbm"), where("tanggal", "==", todayQueryString.value));
-                    onSnapshot(q, (snapshot) => {
-                        allReportsToday.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    });
-                    await fetchClassesFromDB();
-                    await fetchMasterData();
-                    loading.value = false;
-                });
-
-                // --- FUNCTIONS ---
-                
-                const toggleJamSmart = (n) => {
-                    const current = form.value.jamKe;
-                    if (current.includes(n)) {
-                        form.value.jamKe = current.filter(j => j !== n);
-                        return;
-                    }
-                    if (current.length === 0) {
-                        form.value.jamKe.push(n);
-                        return;
-                    }
-                    const min = Math.min(...current);
-                    const max = Math.max(...current);
-                    if (n === min - 1 || n === max + 1) {
-                        if (current.length >= 3) { alert("Maksimal 3 JP."); return; }
-                        form.value.jamKe.push(n);
-                    } else {
-                        form.value.jamKe = [n];
-                    }
-                    form.value.jamKe.sort((a,b) => a - b);
-                };
-
-                const fetchClassesFromDB = async () => {
-                    try {
-                        const querySnapshot = await getDocs(collection(db, "master_students"));
-                        const loadedClasses = [];
-                        querySnapshot.forEach((doc) => {
-                            const data = doc.data();
-                            let displayName = data.className || (data.list && data.list.length > 0 ? data.list[0].kelas : doc.id.replace(/_/g, ' '));
-                            loadedClasses.push({ id: doc.id, nama: displayName });
-                        });
-                        loadedClasses.sort((a, b) => a.nama.localeCompare(b.nama));
-                        classesList.value = loadedClasses;
-                    } catch (e) { console.error(e); }
-                };
-
-                const fetchMasterData = async () => {
-                    try {
-                        const tDoc = await getDoc(doc(db, 'master_data', 'teachers'));
-                        if(tDoc.exists()) masterData.value.teachers = tDoc.data().list || [];
-                        const sDoc = await getDoc(doc(db, 'master_data', 'subjects'));
-                        if(sDoc.exists()) masterData.value.subjects = sDoc.data().list || [];
-                        
-                        // Fetch Mapping
-                        const mMap = await getDoc(doc(db, 'master_data', 'mapel_guru_map'));
-                        if(mMap.exists()) masterData.value.map = mMap.data();
-                        else masterData.value.map = {};
-
-                    } catch (e) { console.error(e); }
-                };
-
-                const bukaDetailKelas = async (kelas) => {
-                    selectedClass.value = kelas;
-                    try {
-                        const sDoc = await getDoc(doc(db, 'master_students', kelas.id));
-                        currentClassStudents.value = sDoc.exists() ? (sDoc.data().list || []) : [];
-                    } catch(e) { console.error(e); }
-                    view.value = 'class-detail';
-                };
-
-                const bukaFormTambah = () => {
-                    // Logic Smart Persistence
-                    const existingAbsences = new Map();
-                    if(classReports.value.length > 0) {
-                        classReports.value.forEach(report => {
-                            if(report.absensiSiswa && Array.isArray(report.absensiSiswa)) {
-                                report.absensiSiswa.forEach(siswa => {
-                                    existingAbsences.set(siswa.nama, siswa.keterangan);
-                                });
-                            }
-                        });
-                    }
-                    const carryOverAbsence = [];
-                    existingAbsences.forEach((keterangan, nama) => {
-                        carryOverAbsence.push({ nama, keterangan });
-                    });
-
-                    form.value = { 
-                        jamKe: [], mapel: '', namaGuru: '', statusGuru: 'Hadir', 
-                        keteranganKBM: '', absensiSiswa: carryOverAbsence 
-                    };
-                    view.value = 'form';
-                };
-
-                const addStudentToAbsence = () => {
-                    if (tempStudent.value.name && !form.value.absensiSiswa.find(s => s.nama === tempStudent.value.name)) {
-                        form.value.absensiSiswa.push({ nama: tempStudent.value.name, keterangan: tempStudent.value.reason });
-                        tempStudent.value.name = ''; 
-                    }
-                };
+                const openMapelSuggestions = () => { showMapelSuggestions.value = true; showGuruSuggestions.value = false; showSiswaSuggestions.value = false; };
+                const openGuruSuggestions = () => { showGuruSuggestions.value = true; showMapelSuggestions.value = false; showSiswaSuggestions.value = false; };
+                const openSiswaSuggestions = () => { showSiswaSuggestions.value = true; showMapelSuggestions.value = false; showGuruSuggestions.value = false; }; 
+                const closeAllSuggestions = () => { showMapelSuggestions.value = false; showGuruSuggestions.value = false; showSiswaSuggestions.value = false; };
+                const pilihMapel = (m) => { form.value.mapel = m; form.value.namaGuru = ''; showMapelSuggestions.value = false; };
+                const pilihGuru = (g) => { form.value.namaGuru = g; showGuruSuggestions.value = false; };
+                const pilihSiswa = (nama) => { tempStudent.value.name = nama; showSiswaSuggestions.value = false; };
+                const toggleJamSmart = (n) => { const current = form.value.jamKe; if (current.includes(n)) { form.value.jamKe = current.filter(j => j !== n); return; } if (current.length === 0) { form.value.jamKe.push(n); return; } const min = Math.min(...current); const max = Math.max(...current); if (n === min - 1 || n === max + 1) { if (current.length >= 3) { alert("Maksimal 3 JP."); return; } form.value.jamKe.push(n); } else { form.value.jamKe = [n]; } form.value.jamKe.sort((a,b) => a - b); };
+                const fetchClassesFromDB = async () => { try { const querySnapshot = await getDocs(collection(db, "master_students")); const loadedClasses = []; querySnapshot.forEach((doc) => { const data = doc.data(); let displayName = data.className || (data.list && data.list.length > 0 ? data.list[0].kelas : doc.id.replace(/_/g, ' ')); loadedClasses.push({ id: doc.id, nama: displayName }); }); loadedClasses.sort((a, b) => a.nama.localeCompare(b.nama)); classesList.value = loadedClasses; } catch (e) { console.error(e); } };
+                const fetchMasterData = async () => { try { const tDoc = await getDoc(doc(db, 'master_data', 'teachers')); if(tDoc.exists()) masterData.value.teachers = tDoc.data().list || []; const sDoc = await getDoc(doc(db, 'master_data', 'subjects')); if(sDoc.exists()) masterData.value.subjects = sDoc.data().list || []; const mMap = await getDoc(doc(db, 'master_data', 'mapel_guru_map')); if(mMap.exists()) masterData.value.map = mMap.data(); else masterData.value.map = {}; } catch (e) { console.error(e); } };
+                const bukaDetailKelas = async (kelas) => { selectedClass.value = kelas; try { const sDoc = await getDoc(doc(db, 'master_students', kelas.id)); currentClassStudents.value = sDoc.exists() ? (sDoc.data().list || []) : []; } catch(e) { console.error(e); } view.value = 'class-detail'; };
+                const bukaFormTambah = () => { const existingAbsences = new Map(); if(classReports.value.length > 0) { classReports.value.forEach(report => { if(report.absensiSiswa && Array.isArray(report.absensiSiswa)) { report.absensiSiswa.forEach(siswa => { existingAbsences.set(siswa.nama, siswa.keterangan); }); } }); } const carryOverAbsence = []; existingAbsences.forEach((keterangan, nama) => { carryOverAbsence.push({ nama, keterangan }); }); form.value = { jamKe: [], mapel: '', namaGuru: '', statusGuru: 'Hadir', keteranganKBM: '', absensiSiswa: carryOverAbsence }; view.value = 'form'; };
+                const addStudentToAbsence = () => { if (tempStudent.value.name && !form.value.absensiSiswa.find(s => s.nama === tempStudent.value.name)) { form.value.absensiSiswa.push({ nama: tempStudent.value.name, keterangan: tempStudent.value.reason }); tempStudent.value.name = ''; } };
                 const removeStudentFromAbsence = (idx) => form.value.absensiSiswa.splice(idx, 1);
-
-                const kirimLaporan = async () => {
-                    if(form.value.jamKe.length === 0) return alert("Pilih jam pelajaran.");
-                    if(!form.value.mapel || !form.value.namaGuru) return alert("Lengkapi data mapel dan guru.");
-                    const sortedJam = [...form.value.jamKe].sort((a,b) => a-b);
-                    for(let i = 0; i < sortedJam.length - 1; i++) {
-                        if (sortedJam[i+1] !== sortedJam[i] + 1) {
-                            alert("Jam harus berurutan!");
-                            return;
-                        }
-                    }
-                    isSubmitting.value = true;
-                    try {
-                        await addDoc(collection(db, "laporan_kbm"), {
-                            kelasId: selectedClass.value.id,
-                            kelasNama: selectedClass.value.nama,
-                            tanggal: todayQueryString.value,
-                            jamKe: sortedJam,
-                            mapel: form.value.mapel,
-                            namaGuru: form.value.namaGuru,
-                            statusGuru: form.value.statusGuru,
-                            keteranganKBM: form.value.statusGuru !== 'Hadir' ? form.value.keteranganKBM : '-',
-                            absensiSiswa: form.value.absensiSiswa, 
-                            createdAt: serverTimestamp()
-                        });
-                        view.value = 'class-detail';
-                    } catch (e) { alert("Gagal kirim: " + e.message); } 
-                    finally { isSubmitting.value = false; }
+                const kirimLaporan = async () => { if(form.value.jamKe.length === 0) return alert("Pilih jam pelajaran."); if(!form.value.mapel || !form.value.namaGuru) return alert("Lengkapi data mapel dan guru."); const sortedJam = [...form.value.jamKe].sort((a,b) => a-b); for(let i = 0; i < sortedJam.length - 1; i++) { if (sortedJam[i+1] !== sortedJam[i] + 1) { alert("Jam harus berurutan!"); return; } } isSubmitting.value = true; try { await addDoc(collection(db, "laporan_kbm"), { kelasId: selectedClass.value.id, kelasNama: selectedClass.value.nama, tanggal: todayQueryString.value, jamKe: sortedJam, mapel: form.value.mapel, namaGuru: form.value.namaGuru, statusGuru: form.value.statusGuru, keteranganKBM: form.value.statusGuru !== 'Hadir' ? form.value.keteranganKBM : '-', absensiSiswa: form.value.absensiSiswa, createdAt: serverTimestamp() }); view.value = 'class-detail'; } catch (e) { alert("Gagal kirim: " + e.message); } finally { isSubmitting.value = false; } };
+                
+                const bukaRekapan = async (type) => {
+                    if (type === 'guru') { view.value = 'recap'; loadRecap('week'); } 
+                    else { view.value = 'recap-student'; loadStudentRecap('week'); }
                 };
 
-                // --- REKAPAN LOGIC (REVISI GROUPING) ---
-                const bukaRekapan = async () => {
-                    view.value = 'recap';
-                    loadRecap('week');
-                };
+                const loadRecap = async (filterType) => { recapFilter.value = filterType; loading.value = true; loadingMessage.value = "Menarik data..."; groupedRecap.value = { 'X': [], 'XI': [], 'XII': [] }; const now = new Date(); let start = new Date(now); if (filterType === 'week') { const day = start.getDay() || 7; if (day !== 1) start.setDate(now.getDate() - (day - 1)); } else { start.setDate(1); } const startStr = getLocalDateString(start); const endStr = getLocalDateString(now); try { const q = query(collection(db, "laporan_kbm"), where("tanggal", ">=", startStr), where("tanggal", "<=", endStr)); const snapshot = await getDocs(q); const allData = snapshot.docs.map(d => ({id: d.id, ...d.data()})); const problems = allData.filter(d => d.statusGuru !== 'Hadir'); const tempLevels = { 'X': {}, 'XI': {}, 'XII': {} }; problems.forEach(p => { let level = 'X'; const className = p.kelasNama.toUpperCase(); if (className.startsWith('XII')) level = 'XII'; else if (className.startsWith('XI')) level = 'XI'; const teacherName = p.namaGuru; if (!tempLevels[level][teacherName]) { tempLevels[level][teacherName] = { namaGuru: teacherName, count: 0, expanded: false, details: [] }; } tempLevels[level][teacherName].count++; tempLevels[level][teacherName].details.push({ id: p.id, tanggal: p.tanggal, mapel: p.mapel, kelasNama: p.kelasNama, keterangan: p.keteranganKBM, status: p.statusGuru }); }); groupedRecap.value = { 'X': Object.values(tempLevels['X']), 'XI': Object.values(tempLevels['XI']), 'XII': Object.values(tempLevels['XII']) }; } catch(e) { console.error(e); } finally { loading.value = false; } };
 
-                const loadRecap = async (filterType) => {
+                // REKAP SISWA REVISI (DETAIL & TOTAL)
+                const loadStudentRecap = async (filterType) => {
                     recapFilter.value = filterType;
                     loading.value = true;
-                    loadingMessage.value = "Menarik data rekapan...";
-                    groupedRecap.value = { 'X': [], 'XI': [], 'XII': [] };
+                    loadingMessage.value = "Menganalisis absen...";
+                    
+                    // Reset Data
+                    groupedStudentDetail.value = {};
+                    studentRecapTotalData.value = [];
 
+                    // Range Tanggal
                     const now = new Date();
                     let start = new Date(now);
-                    if (filterType === 'week') {
-                        const day = start.getDay() || 7; 
-                        if (day !== 1) start.setDate(now.getDate() - (day - 1));
-                    } else {
-                        start.setDate(1);
-                    }
+                    if (filterType === 'week') { const day = start.getDay() || 7; if (day !== 1) start.setDate(now.getDate() - (day - 1)); } else { start.setDate(1); }
                     const startStr = getLocalDateString(start);
                     const endStr = getLocalDateString(now);
 
                     try {
-                        const q = query(
-                            collection(db, "laporan_kbm"), 
-                            where("tanggal", ">=", startStr),
-                            where("tanggal", "<=", endStr)
-                        );
-                        const snapshot = await getDocs(q);
-                        const allData = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                        const problems = allData.filter(d => d.statusGuru !== 'Hadir');
+                        // 1. FETCH SEMUA SISWA DARI MASTER DATA DULU (Agar yang rajin tetap muncul 0)
+                        const masterSnapshot = await getDocs(collection(db, "master_students"));
+                        const totalStats = {}; // { Key(Nama+Kelas): {nama, kelas, s, i, a} }
 
-                        // HELPER UNTUK GROUPING
-                        const tempLevels = { 'X': {}, 'XI': {}, 'XII': {} };
-
-                        problems.forEach(p => {
-                            // Tentukan Level
-                            let level = 'X'; // Default fallback
-                            const className = p.kelasNama.toUpperCase();
-                            if (className.startsWith('XII')) level = 'XII';
-                            else if (className.startsWith('XI')) level = 'XI';
-                            else if (className.startsWith('X')) level = 'X';
-
-                            // Grouping per Guru
-                            const teacherName = p.namaGuru;
-                            if (!tempLevels[level][teacherName]) {
-                                tempLevels[level][teacherName] = {
-                                    namaGuru: teacherName,
-                                    count: 0,
-                                    expanded: false, // State untuk accordion
-                                    details: []
-                                };
+                        masterSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            const className = data.className || doc.id.replace(/_/g, ' ');
+                            
+                            if (data.list && Array.isArray(data.list)) {
+                                data.list.forEach(student => {
+                                    const statsKey = `${className}_${student.nama}`;
+                                    totalStats[statsKey] = { 
+                                        id: statsKey, 
+                                        nama: student.nama, 
+                                        kelas: className, 
+                                        sakit: 0, izin: 0, alfa: 0 
+                                    };
+                                });
                             }
-
-                            // Tambah Data ke Group
-                            tempLevels[level][teacherName].count++;
-                            tempLevels[level][teacherName].details.push({
-                                id: p.id,
-                                tanggal: p.tanggal,
-                                mapel: p.mapel,
-                                kelasNama: p.kelasNama,
-                                keterangan: p.keteranganKBM,
-                                status: p.statusGuru
-                            });
                         });
 
-                        // Convert Object kembali ke Array untuk v-for
-                        groupedRecap.value = {
-                            'X': Object.values(tempLevels['X']),
-                            'XI': Object.values(tempLevels['XI']),
-                            'XII': Object.values(tempLevels['XII'])
-                        };
-
-                    } catch(e) { console.error(e); alert("Gagal memuat rekapan."); }
-                    finally { loading.value = false; }
-                };
-
-                // Admin Funcs
-                const handleAdminLogin = async () => { try { await signInWithEmailAndPassword(auth, loginData.value.email, loginData.value.password); } catch (e) { loginError.value = "Login Gagal."; } };
-                const handleAdminLogout = async () => { await signOut(auth); view.value = 'dashboard'; };
-                
-                // SAVE MASTER DATA (GURU & MAPEL DIGABUNG)
-                const saveMasterData = async () => {
-                    if(!adminForm.value.rawMasterData) return;
-                    loading.value = true;
-                    
-                    const rows = adminForm.value.rawMasterData.split('\n');
-                    const subjectsSet = new Set();
-                    const teachersSet = new Set();
-                    const mapelGuruMap = {};
-
-                    rows.forEach(row => {
-                        const cols = row.split('\t');
-                        if(cols.length >= 2) {
-                            const guru = cols[0].trim();
-                            const mapel = cols[1].trim();
-                            
-                            if(guru && mapel) {
-                                teachersSet.add(guru);
-                                subjectsSet.add(mapel);
-                                
-                                if(!mapelGuruMap[mapel]) mapelGuruMap[mapel] = [];
-                                if(!mapelGuruMap[mapel].includes(guru)) mapelGuruMap[mapel].push(guru);
-                            }
-                        }
-                    });
-
-                    try {
-                        // Simpan Daftar Guru
-                        await setDoc(doc(db, 'master_data', 'teachers'), { list: Array.from(teachersSet).sort() });
-                        // Simpan Daftar Mapel
-                        await setDoc(doc(db, 'master_data', 'subjects'), { list: Array.from(subjectsSet).sort() });
-                        // Simpan Mapping Mapel -> Guru
-                        await setDoc(doc(db, 'master_data', 'mapel_guru_map'), mapelGuruMap);
-                        
-                        alert("Master Data Berhasil Disimpan!");
-                        await fetchMasterData();
-                    } catch(e) {
-                        alert("Gagal simpan: " + e.message);
-                    } finally {
-                        loading.value = false;
-                    }
-                };
-
-                const saveStudents = async () => { if(!adminForm.value.rawStudents) return; loading.value = true; const studentsByClass = {}; adminForm.value.rawStudents.split('\n').forEach(row => { const cols = row.split('\t'); if(cols.length >= 2) { const clsId = cols[1].trim().replace(/\s+/g, '_').toUpperCase(); if(!studentsByClass[clsId]) studentsByClass[clsId] = []; studentsByClass[clsId].push({ nama: cols[0].trim(), kelas: cols[1].trim() }); } }); const batch = []; for (const [id, list] of Object.entries(studentsByClass)) { batch.push(setDoc(doc(db, 'master_students', id), { className: list[0].kelas, list })); } await Promise.all(batch); alert("Siswa tersimpan."); await fetchClassesFromDB(); loading.value = false; };
-
-                // RESET DATABASE
-                const resetLaporan = async () => {
-                    if(!confirm("PERINGATAN KERAS!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA JURNAL?\nTindakan ini tidak bisa dibatalkan.\n\nBiasanya dilakukan saat pergantian semester.")) return;
-                    
-                    loading.value = true;
-                    loadingMessage.value = "Menghapus data...";
-                    try {
-                        const q = query(collection(db, "laporan_kbm"));
+                        // 2. FETCH DATA LAPORAN & UPDATE NILAI
+                        const q = query(collection(db, "laporan_kbm"), where("tanggal", ">=", startStr), where("tanggal", "<=", endStr));
                         const snapshot = await getDocs(q);
                         
-                        // Hapus satu per satu (Firestore Web Client Limitasi)
-                        // Untuk data ribuan, sebaiknya pakai Cloud Functions, tapi ini cukup untuk ratusan.
-                        const batchPromises = snapshot.docs.map(d => deleteDoc(doc(db, "laporan_kbm", d.id)));
-                        await Promise.all(batchPromises);
+                        const classDateSessions = {}; 
+                        const studentAbsenceByDate = {}; 
+
+                        snapshot.forEach(doc => {
+                            const d = doc.data();
+                            const classDateKey = `${d.kelasNama}_${d.tanggal}`;
+                            
+                            // Hitung Total Sesi (Jam) per Kelas per Hari
+                            if (!classDateSessions[classDateKey]) classDateSessions[classDateKey] = new Set();
+                            if (d.jamKe && Array.isArray(d.jamKe)) d.jamKe.forEach(j => classDateSessions[classDateKey].add(j));
+
+                            // Process Absensi Siswa
+                            if (d.absensiSiswa && Array.isArray(d.absensiSiswa)) {
+                                d.absensiSiswa.forEach(s => {
+                                    // A. Update Data Total Akumulasi
+                                    const statsKey = `${d.kelasNama}_${s.nama}`;
+                                    
+                                    // Jika siswa tidak ada di master (mungkin data lama/pindahan), buat entry baru
+                                    if (!totalStats[statsKey]) {
+                                        totalStats[statsKey] = { id: statsKey, nama: s.nama, kelas: d.kelasNama, sakit: 0, izin: 0, alfa: 0 };
+                                    }
+                                    
+                                    if (s.keterangan === 'Sakit') totalStats[statsKey].sakit++;
+                                    else if (s.keterangan === 'Izin') totalStats[statsKey].izin++;
+                                    else if (s.keterangan === 'Alfa') totalStats[statsKey].alfa++;
+
+                                    // B. Data Detail Harian (Grouping)
+                                    const detailKey = `${d.kelasNama}_${d.tanggal}_${s.nama}`;
+                                    if (!studentAbsenceByDate[detailKey]) studentAbsenceByDate[detailKey] = { nama: s.nama, kelas: d.kelasNama, tanggal: d.tanggal, jams: [], statuses: [] };
+                                    
+                                    if (d.jamKe && Array.isArray(d.jamKe)) {
+                                        d.jamKe.forEach(j => studentAbsenceByDate[detailKey].jams.push(j));
+                                    }
+                                    studentAbsenceByDate[detailKey].statuses.push(s.keterangan);
+                                });
+                            }
+                        });
+
+                        // 3. Build TOTAL View (Convert Object to Array & Sort)
+                        // Urutkan berdasarkan Kelas lalu Nama
+                        studentRecapTotalData.value = Object.values(totalStats).sort((a,b) => {
+                            const kelasCompare = a.kelas.localeCompare(b.kelas, undefined, {numeric: true});
+                            if (kelasCompare !== 0) return kelasCompare;
+                            return a.nama.localeCompare(b.nama);
+                        });
+
+                        // 4. Build DETAIL View (Full Day Logic)
+                        const detailTemp = {}; 
+
+                        Object.values(studentAbsenceByDate).forEach(record => {
+                            const classDateKey = `${record.kelas}_${record.tanggal}`;
+                            const totalSessionsToday = classDateSessions[classDateKey] ? classDateSessions[classDateKey].size : 0;
+                            const studentAbsentSessions = new Set(record.jams).size; 
+
+                            const uniqueStatuses = [...new Set(record.statuses)];
+                            const mainStatus = uniqueStatuses.length === 1 ? uniqueStatuses[0] : uniqueStatuses.join('/');
+                            
+                            const isFullDay = (studentAbsentSessions >= totalSessionsToday && totalSessionsToday > 0);
+                            
+                            const item = {
+                                nama: record.nama,
+                                status: mainStatus,
+                                isFullDay: isFullDay,
+                                jamList: record.jams.sort((a,b)=>a-b).join(', ')
+                            };
+
+                            if (!detailTemp[record.kelas]) detailTemp[record.kelas] = {};
+                            if (!detailTemp[record.kelas][record.tanggal]) detailTemp[record.kelas][record.tanggal] = [];
+                            detailTemp[record.kelas][record.tanggal].push(item);
+                        });
+
+                        groupedStudentDetail.value = detailTemp;
+
+                    } catch(e) { console.error(e); } finally { loading.value = false; }
+                };
+
+                const downloadStudentRecapExcel = () => {
+                    const wb = XLSX.utils.book_new();
+                    const fileName = `Rekap_Siswa_${studentRecapMode.value}_${getLocalDateString()}.xlsx`;
+
+                    if (studentRecapMode.value === 'total') {
+                        // Export Table Total
+                        if (studentRecapTotalData.value.length === 0) return alert("Data kosong.");
+                        const ws = XLSX.utils.json_to_sheet(studentRecapTotalData.value);
+                        XLSX.utils.book_append_sheet(wb, ws, "Total Akumulasi");
+                    } else {
+                        // Export Detail Flat
+                        const flatData = [];
+                        for (const [kelas, dates] of Object.entries(groupedStudentDetail.value)) {
+                            for (const [tgl, students] of Object.entries(dates)) {
+                                students.forEach(s => {
+                                    flatData.push({
+                                        Tanggal: tgl,
+                                        Kelas: kelas,
+                                        Nama_Siswa: s.nama,
+                                        Status: s.isFullDay ? `${s.status} (Full Day)` : s.status,
+                                        Jam_Ke: s.jamList
+                                    });
+                                });
+                            }
+                        }
+                        if (flatData.length === 0) return alert("Data kosong.");
+                        const ws = XLSX.utils.json_to_sheet(flatData);
+                        XLSX.utils.book_append_sheet(wb, ws, "Detail Harian");
+                    }
+
+                    XLSX.writeFile(wb, fileName);
+                };
+
+                // --- GEMINI AI FUNCTIONS (NEW) ---
+                const callGemini = async (prompt) => {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }] }]
+                    };
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error("Gagal menghubungi AI");
+                    const data = await response.json();
+                    return data.candidates[0].content.parts[0].text;
+                };
+
+                const askGeminiActivity = async () => {
+                    isAiLoading.value = true;
+                    try {
+                        const prompt = `Anda adalah asisten pendidikan.
+                        Konteks: Guru mata pelajaran ${form.value.mapel} di kelas ${selectedClass.value.nama} sedang tidak hadir dengan status ${form.value.statusGuru} (${form.value.keteranganKBM || 'Tanpa Keterangan'}).
+                        Tugas: Berikan 3 ide kegiatan belajar mandiri yang spesifik, produktif, dan edukatif untuk siswa agar kelas tetap kondusif tanpa guru. Format output dalam HTML list sederhana.`;
                         
-                        alert("Database Jurnal Berhasil Direset!");
-                        allReportsToday.value = [];
+                        const text = await callGemini(prompt);
+                        aiResponse.value = marked.parse(text);
                     } catch (e) {
-                        alert("Gagal reset: " + e.message + "\nPastikan Anda Login sebagai Admin.");
+                        aiResponse.value = `<p class="text-red-500">Maaf, AI sedang sibuk. Coba lagi nanti.</p>`;
                     } finally {
-                        loading.value = false;
+                        isAiLoading.value = false;
                     }
                 };
+
+                const analyzeReportsWithGemini = async () => {
+                    isAiLoading.value = true;
+                    adminAiResponse.value = null;
+                    try {
+                        // Siapkan Data Ringkas untuk Prompt (Hemat Token)
+                        const reportSummary = allReportsToday.value.map(r => ({
+                            kelas: r.kelasNama,
+                            mapel: r.mapel,
+                            guru: r.namaGuru,
+                            status: r.statusGuru,
+                            ket: r.keteranganKBM
+                        }));
+
+                        const prompt = `Anda adalah kepala sekolah virtual SMAN 1 Soppeng.
+                        Data Jurnal Hari Ini (JSON): ${JSON.stringify(reportSummary)}.
+                        
+                        Tugas: Buatkan ringkasan eksekutif singkat (maksimal 3 paragraf poin-poin) tentang kondisi KBM hari ini.
+                        1. Berapa persen kehadiran guru secara umum?
+                        2. Identifikasi guru yang absen/terlambat dan alasannya.
+                        3. Apakah ada kelas yang kosong (semua jam kosong)?
+                        4. Berikan 1 rekomendasi singkat untuk besok.
+                        Format output dalam HTML yang rapi.`;
+
+                        const text = await callGemini(prompt);
+                        adminAiResponse.value = marked.parse(text);
+                    } catch (e) {
+                        adminAiResponse.value = `<p class="text-red-500">Gagal menganalisis data. Pastikan koneksi internet lancar.</p>`;
+                    } finally {
+                        isAiLoading.value = false;
+                    }
+                };
+
+                const handleAdminLogin = async () => { try { await signInWithEmailAndPassword(auth, loginData.value.email, loginData.value.password); } catch (e) { loginError.value = "Login Gagal."; } };
+                const handleAdminLogout = async () => { await signOut(auth); view.value = 'dashboard'; };
+                const saveMasterData = async () => { if(!adminForm.value.rawMasterData) return; loading.value = true; const rows = adminForm.value.rawMasterData.split('\n'); const subjectsSet = new Set(); const teachersSet = new Set(); const mapelGuruMap = {}; rows.forEach(row => { const cols = row.split('\t'); if(cols.length >= 2) { const guru = cols[0].trim(); const mapel = cols[1].trim(); if(guru && mapel) { teachersSet.add(guru); subjectsSet.add(mapel); if(!mapelGuruMap[mapel]) mapelGuruMap[mapel] = []; if(!mapelGuruMap[mapel].includes(guru)) mapelGuruMap[mapel].push(guru); } } }); try { await setDoc(doc(db, 'master_data', 'teachers'), { list: Array.from(teachersSet).sort() }); await setDoc(doc(db, 'master_data', 'subjects'), { list: Array.from(subjectsSet).sort() }); await setDoc(doc(db, 'master_data', 'mapel_guru_map'), mapelGuruMap); alert("Master Data Berhasil Disimpan!"); await fetchMasterData(); } catch(e) { alert("Gagal simpan: " + e.message); } finally { loading.value = false; } };
+                const saveStudents = async () => { if(!adminForm.value.rawStudents) return; loading.value = true; const studentsByClass = {}; adminForm.value.rawStudents.split('\n').forEach(row => { const cols = row.split('\t'); if(cols.length >= 2) { const clsId = cols[1].trim().replace(/\s+/g, '_').toUpperCase(); if(!studentsByClass[clsId]) studentsByClass[clsId] = []; studentsByClass[clsId].push({ nama: cols[0].trim(), kelas: cols[1].trim() }); } }); const batch = []; for (const [id, list] of Object.entries(studentsByClass)) { batch.push(setDoc(doc(db, 'master_students', id), { className: list[0].kelas, list })); } await Promise.all(batch); alert("Siswa tersimpan."); await fetchClassesFromDB(); loading.value = false; };
+                const resetLaporan = async () => { if(!confirm("PERINGATAN KERAS!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA JURNAL?\nTindakan ini tidak bisa dibatalkan.\n\nBiasanya dilakukan saat pergantian semester.")) return; loading.value = true; loadingMessage.value = "Menghapus data..."; try { const q = query(collection(db, "laporan_kbm")); const snapshot = await getDocs(q); const batchPromises = snapshot.docs.map(d => deleteDoc(doc(db, "laporan_kbm", d.id))); await Promise.all(batchPromises); alert("Database Jurnal Berhasil Direset!"); allReportsToday.value = []; } catch (e) { alert("Gagal reset: " + e.message + "\nPastikan Anda Login sebagai Admin."); } finally { loading.value = false; } };
 
                 return {
                     view, loading, loadingMessage, isSubmitting, searchQuery,
                     tanggalFormat, filteredClasses, selectedClass, classReports, statistics,
                     form, masterData, currentClassStudents, tempStudent, 
                     adminForm, adminUser, loginData, loginError, filteredTeachers,
-                    totalLaporanHariIni, classesActiveToday,
-                    recapFilter, groupedRecap, loadRecap, bukaRekapan,
+                    totalLaporanHariIni, classesActiveToday, studentRecapRawData,
+                    recapFilter, groupedRecap, groupedStudentRecap, studentRecapMode, groupedStudentDetail, studentRecapTotalData, // Exports
+                    
+                    // AI States
+                    aiResponse, adminAiResponse, isAiLoading,
+
+                    loadRecap, loadStudentRecap, bukaRekapan, downloadStudentRecapExcel,
                     bukaDetailKelas, bukaFormTambah, toggleJamSmart,
                     addStudentToAbsence, removeStudentFromAbsence, kirimLaporan,
-                    saveMasterData, saveStudents, handleAdminLogin, handleAdminLogout, resetLaporan
+                    saveMasterData, saveStudents, handleAdminLogin, handleAdminLogout, resetLaporan,
+                    showMapelSuggestions, showGuruSuggestions, showSiswaSuggestions, suggestedSubjects, suggestedTeachers, suggestedStudents, openMapelSuggestions, openGuruSuggestions, openSiswaSuggestions, closeAllSuggestions, pilihMapel, pilihGuru, pilihSiswa,
+                    
+                    // AI Functions
+                    askGeminiActivity, analyzeReportsWithGemini
                 };
             }
         }).mount('#app');

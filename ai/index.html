@@ -170,7 +170,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg md:text-xl font-bold text-gray-800 dark:text-white tracking-tight leading-tight">AjarAI <span class="text-indigo-600 dark:text-indigo-400">DL</span></h1>
-                    <p class="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider hidden xs:block">Deep Learning Edition v5.3</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider hidden xs:block">Deep Learning Edition v5.6</p>
                 </div>
             </div>
             
@@ -291,7 +291,6 @@
                                     <option>Bahasa Indonesia</option>
                                     <option>Bahasa Inggris</option>
                                     <option>Matematika</option>
-					<option>Matematika Tingkat Lanjut (Peminatan)</option>
                                     <option>PKn</option>
                                     <option>PAI & Budi Pekerti</option>
                                     <option>PJOK</option>
@@ -1055,21 +1054,33 @@
             - Lingkungan Pembelajaran: (Fisik & Virtual)
             - Pemanfaatan Digital/Media: ${d.media ? d.media : "(Media yang Anda pilihkan)"}
 
-            ## 4. PENGALAMAN BELAJAR (LANGKAH-LANGKAH) - PENDEKATAN DEEP LEARNING
-            Rincikan Pertemuan 1 s.d ${d.pertemuan}.
+            ## 4. PENGALAMAN BELAJAR (LANGKAH-LANGKAH) - ALUR DEEP LEARNING (3 Tahap Wajib)
+            Rincikan Pertemuan 1 s.d ${d.pertemuan} secara lengkap.
             
-            **ATURAN PENULISAN DEEP LEARNING:**
-            Anda WAJIB menandai setiap aktivitas utama dengan salah satu prinsip berikut dalam tanda kurung:
-            - **(Mindful)**: Untuk aktivitas fokus, refleksi, kesadaran diri.
-            - **(Meaningful)**: Untuk aktivitas relevan kehidupan, pemahaman konsep, diskusi mendalam.
-            - **(Joyful)**: Untuk aktivitas menyenangkan, ice breaking, perayaan hasil belajar.
+            **ATURAN KERAS (WAJIB DIPATUHI):**
+            1. **SETIAP PERTEMUAN** harus memuat 3 tahapan aktivitas: **Memahami**, **Mengaplikasi**, dan **Merefleksi**. Jangan ada pertemuan yang melewatkan salah satu tahap ini.
+            2. **PERTEMUAN TERAKHIR** (Pertemuan ke-${d.pertemuan}): Kegiatan **Merefleksi** harus bersifat **REFLEKSI TOTAL**. Ajak siswa merenungkan seluruh perjalanan belajar dari awal hingga akhir, perubahan apa yang dirasakan, dan bagaimana menerapkannya dalam hidup.
+            
+            **PANDUAN ISI SETIAP FASE:**
+            1. **Memahami (Berkesadaran, Bermakna):**
+               - Fokus: Menggali pengetahuan awal, pertanyaan pemantik yang menyentuh hati/pikiran, eksplorasi konsep.
+               - Contoh: "Siswa merenungkan pertanyaan: 'Apa yang membuat kita...?' (Mindful)."
+            2. **Mengaplikasi (Berkesadaran, Bermakna, Menyenangkan):**
+               - Fokus: Aksi nyata, kolaborasi, eksperimen, pembuatan produk/karya (sesuai model ${d.model}).
+               - Contoh: "Siswa dengan antusias merancang solusi... (Joyful)."
+            3. **Merefleksi (Berkesadaran, Bermakna, Menyenangkan):**
+               - Fokus: Menyimpulkan makna, internalisasi nilai, pesan moral, kutipan tokoh.
+               - Contoh: "Siswa menyimpulkan nilai persahabatan dari kegiatan tadi... (Meaningful)."
 
-            Buat Tabel untuk setiap pertemuan:
-            | Tahapan Pembelajaran | Deskripsi Kegiatan (Integrasi 3 Pilar) | Alokasi Waktu |
+            **FORMAT TABEL UNTUK SETIAP PERTEMUAN:**
+            Buat tabel terpisah untuk setiap pertemuan (Pertemuan 1, Pertemuan 2, dst).
+            
+            #### Pertemuan X
+            | Tahapan Deep Learning | Deskripsi Kegiatan (Integrasi 3 Pilar: Mindful, Meaningful, Joyful) | Alokasi Waktu |
             | :--- | :--- | :--- |
-            | **Pendahuluan** | Jelaskan aktivitas pembuka. <br>Contoh: Guru mengajak siswa hening sejenak **(Mindful)**. Melakukan apersepsi terkait berita terkini **(Meaningful)**. | 10' |
-            | **Kegiatan Inti** | Rincikan sintaks model ${d.model}. <br>Gunakan kalimat aktif. <br>Contoh: Siswa berdiskusi memecahkan masalah **(Meaningful)**. Siswa mempresentasikan karya dengan antusias **(Joyful)**. | ...' |
-            | **Penutup** | Refleksi dan penutup. <br>Contoh: Siswa menuliskan refleksi perasaan hari ini **(Mindful)**. | ...' |
+            | **1. Memahami** | (Jelaskan aktivitas eksplorasi & pemantik. Gunakan media ${d.media ? d.media : 'yang relevan'}. Wajib ada tag prinsip DL) | ...' |
+            | **2. Mengaplikasi** | (Jelaskan aktivitas inti/praktik sesuai model ${d.model}. Wajib ada tag prinsip DL) | ...' |
+            | **3. Merefleksi** | (Jelaskan refleksi & penutup. Wajib ada tag prinsip DL. *Ingat: Pertemuan terakhir refleksi total*) | ...' |
 
             ## 5. PENILAIAN & ASESMEN
             **A. Asesmen Diagnostik**
@@ -1141,8 +1152,8 @@
                 const htmlContent = marked.parse(rawText);
                 document.getElementById('print-area').innerHTML = `
                     <div class="text-center border-b-2 border-double border-gray-800 pb-6 mb-8">
-                        <h1 class="text-3xl font-serif font-bold uppercase tracking-widest">${d.sekolah}</h1>
-                        <p class="text-lg italic font-serif mt-2">Modul Ajar ${d.mapel} - ${d.semester}</p>
+                        <h1 class="text-2xl md:text-3xl font-serif font-bold uppercase tracking-widest">${d.sekolah}</h1>
+                        <p class="text-base md:text-lg italic font-serif mt-2">Modul Ajar ${d.mapel} - ${d.semester}</p>
                     </div>
                     ${htmlContent}
                 `;
@@ -1246,5 +1257,3 @@
     </script>
 </body>
 </html>
-
-
