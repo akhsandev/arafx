@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Personal Branding & Jejak Digital - SMAN 1 Soppeng</title>
+
+    <!-- Reveal.js & Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/black.min.css" id="theme">
+    
+    <!-- Tailwind CSS for custom styling within slides -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Custom Styles for SMAN 1 Soppeng Theme */
+        :root {
+            --primary: #00bcd4; /* Cyan - Tech feel */
+            --secondary: #ff4081; /* Pink - Accent */
+            --bg-dark: #1a1a1a;
+        }
+        
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .reveal h1 { color: var(--primary); text-shadow: 0 0 10px rgba(0,188,212,0.5); }
+        .reveal .accent { color: var(--secondary); font-weight: bold; }
+        .reveal .highlight { background: rgba(255, 255, 255, 0.1); padding: 5px 10px; border-radius: 5px; }
+        
+        /* Card Styling for Profiles */
+        .profile-card {
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #555;
+            transition: transform 0.3s;
+        }
+        .profile-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+
+        /* Code Block Styling */
+        .code-window {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-size: 1.2em; /* Perbesar font code */
+        }
+        
+        /* Global Font Bump for Reveal */
+        .reveal .slides {
+            font-size: 32px; /* Base font size increased */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- SLIDE 1: COVER -->
+            <section>
+                <div class="flex flex-col items-center justify-center h-full">
+                    <i class="fas fa-fingerprint text-6xl text-cyan-400 mb-4"></i>
+                    <h1 class="text-6xl font-bold mb-4">You Are Your Own CEO</h1>
+                    <h3 class="text-3xl text-white mb-6">Personal Branding & Jejak Digital di Era AI</h3>
+                    <p class="text-gray-400 text-2xl">Materi Latihan Kepemimpinan Siswa (Latpinwa)</p>
+                    <p class="text-cyan-300 font-bold mt-4 text-2xl">SMAN 1 Soppeng</p>
+                    <div class="mt-8 text-xl text-gray-500">
+                        Oleh: Akhsan Rian Anugrah, S.Pd., Gr.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 2: INTRO -->
+            <section>
+                <h2 class="text-cyan-400 text-5xl">Siapa Saya?</h2>
+                <div class="grid grid-cols-2 gap-8 items-center mt-8">
+                    <div class="text-left">
+                        <ul class="space-y-6 text-3xl">
+                            <li class="fragment"><i class="fas fa-chalkboard-teacher w-10"></i> Guru Fisika & Informatika</li>
+                            <li class="fragment"><i class="fas fa-code w-10"></i> App Developer (Sekolah & OSIS)</li>
+                            <li class="fragment"><i class="fas fa-robot w-10"></i> AI Enthusiast</li>
+                            <li class="fragment"><i class="fas fa-rocket w-10"></i> <em>"Tech Teacher"</em> SMAN 1 Soppeng</li>
+                        </ul>
+                    </div>
+                    <div class="code-window fragment text-xl">
+                        <span class="text-pink-400">const</span> guru = {<br>
+                        &nbsp;&nbsp;nama: <span class="text-green-400">"Pak Akhsan"</span>,<br>
+                        &nbsp;&nbsp;hobi: [<span class="text-green-400">"Coding"</span>, <span class="text-green-400">"Physics"</span>],<br>
+                        &nbsp;&nbsp;misi: <span class="text-green-400">"Mencetak Leader Masa Depan"</span><br>
+                        };
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 3: ICE BREAKING -->
+            <section data-background-color="#b91d47">
+                <h1 class="text-6xl"><i class="fas fa-gamepad"></i> GAME TIME!</h1>
+                <h2 class="text-white text-4xl">"The Stalker"</h2>
+                <div class="bg-black bg-opacity-50 p-8 rounded-lg mt-8">
+                    <ol class="text-left text-3xl space-y-6">
+                        <li>Cari pasangan (teman sebelah).</li>
+                        <li>Tukar Username Instagram/TikTok.</li>
+                        <li>Waktu: <strong>60 Detik</strong>.</li>
+                        <li>Misi: Temukan 1 fakta unik (hobi/makanan fav/lokasi liburan) tanpa bertanya!</li>
+                    </ol>
+                </div>
+                <p class="mt-8 text-yellow-300 text-3xl font-bold fragment">"Seberapa mudah orang lain 'membaca' hidupmu?"</p>
+            </section>
+
+            <!-- SLIDE 4: REALITA -->
+            <section>
+                <h2 class="text-5xl">Hukum Newton III</h2>
+                <h3 class="text-gray-400 text-3xl">Aksi = Reaksi</h3>
+                <div class="grid grid-cols-2 gap-6 mt-10">
+                    <div class="p-6 border border-cyan-500 rounded fragment">
+                        <h4 class="text-cyan-400 text-3xl mb-4">AKSI (Postingan)</h4>
+                        <p class="text-xl">Status Galau, Mengeluh, Foto Kegiatan, Karya.</p>
+                    </div>
+                    <div class="p-6 border border-pink-500 rounded fragment">
+                        <h4 class="text-pink-400 text-3xl mb-4">REAKSI (Branding)</h4>
+                        <p class="text-xl">Orang menilai kamu Labil? Aktif? Kreatif?</p>
+                    </div>
+                </div>
+                <p class="mt-8 fragment bg-gray-800 p-4 text-xl">"Kamu tidak bisa memilih untuk <strong>TIDAK</strong> punya branding. Diam pun adalah branding (misterius/pasif)."</p>
+            </section>
+
+            <!-- SLIDE 5: DEFINISI -->
+            <section>
+                <h2>Apa itu Personal Branding?</h2>
+                <blockquote class="text-4xl italic border-l-8 border-cyan-500 pl-6 my-10 leading-relaxed">
+                    "Personal branding adalah apa yang orang katakan tentangmu saat kamu <span class="accent">TIDAK ADA</span> di dalam ruangan."
+                </blockquote>
+                <p class="text-3xl fragment">Bukan pencitraan (bohong), tapi <span class="text-green-400">Reputasi (Jujur)</span>.</p>
+            </section>
+
+            <!-- SLIDE 6: RUMUS -->
+            <section>
+                <h2>Rumus Branding</h2>
+                <div class="code-window text-3xl mt-6">
+                    <span class="text-gray-400">// Logic.js</span><br><br>
+                    <span class="text-purple-400">var</span> Reputasi = <br>
+                    ( <span class="text-yellow-400">Skill</span> + <span class="text-yellow-400">Karakter</span> ) * <span class="text-cyan-400">Konsistensi</span>;
+                </div>
+                <div class="mt-8 text-left text-2xl space-y-4">
+                    <p class="fragment">🔹 <strong>Skill:</strong> Jago mimpin, jago desain, jago ngomong.</p>
+                    <p class="fragment">🔹 <strong>Karakter:</strong> Jujur, sopan, disiplin.</p>
+                    <p class="fragment">🔹 <strong>Konsistensi:</strong> Kalau Skill 100 tapi Konsistensi 0, hasilnya NOL.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 7: 3 PILAR -->
+            <section>
+                <h3>3 Pilar Branding Siswa SMA</h3>
+                <div class="flex justify-center gap-6 mt-10">
+                    <div class="w-1/3 bg-gray-800 p-6 rounded fragment">
+                        <i class="fas fa-graduation-cap text-5xl text-cyan-400 mb-4"></i>
+                        <h4 class="text-2xl">Akademis</h4>
+                        <p class="text-lg">Jurusan, Nilai, Prestasi Lomba.</p>
+                    </div>
+                    <div class="w-1/3 bg-gray-800 p-6 rounded fragment">
+                        <i class="fas fa-users text-5xl text-pink-400 mb-4"></i>
+                        <h4 class="text-2xl">Organisasi</h4>
+                        <p class="text-lg">OSIS, Ekskul, Kepanitiaan (Leadership).</p>
+                    </div>
+                    <div class="w-1/3 bg-gray-800 p-6 rounded fragment">
+                        <i class="fas fa-guitar text-5xl text-yellow-400 mb-4"></i>
+                        <h4 class="text-2xl">Minat</h4>
+                        <p class="text-lg">Sisi manusiawimu (Hobi, Musik, Game).</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 8: GAME TEBAK TOKOH -->
+            <section>
+                <h2><i class="fas fa-user-secret"></i> Siapa Ketua OSIS?</h2>
+                <p class="text-xl mb-6">Pilih berdasarkan profil IG mereka:</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="profile-card fragment">
+                        <h4 class="text-cyan-400 text-2xl">Si A</h4>
+                        <p class="text-base text-left mt-4 leading-normal">
+                            - Story: Keluhan PR Fisika 24 jam<br>
+                            - Feed: Kosong<br>
+                            - Bio: "No System is Safe"
+                        </p>
+                    </div>
+                    <div class="profile-card fragment">
+                        <h4 class="text-green-400 text-2xl">Si B</h4>
+                        <p class="text-base text-left mt-4 leading-normal">
+                            - Story: Dokumentasi Rapat<br>
+                            - Feed: Foto kegiatan + Caption inspiratif<br>
+                            - Bio: "SMAN 1 Soppeng | Student"
+                        </p>
+                    </div>
+                    <div class="profile-card fragment">
+                        <h4 class="text-red-400 text-2xl">Si C</h4>
+                        <p class="text-base text-left mt-4 leading-normal">
+                            - Story: Repost Hoax<br>
+                            - Feed: Foto motor tanpa helm<br>
+                            - Bio: "Yolo."
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 9: GOOGLE TEST -->
+            <section>
+                <h2>The Google Test</h2>
+                <div class="flex justify-center items-center gap-6 mt-8">
+                    <i class="fab fa-google text-8xl text-white"></i>
+                    <div class="text-left">
+                        <p class="text-3xl">Coba buka HP sekarang.</p>
+                        <p class="text-3xl">Ketik: <strong class="text-cyan-400">"Nama Lengkapmu"</strong></p>
+                    </div>
+                </div>
+                <h3 class="fragment mt-10 text-cyan-400 text-3xl">Apa yang muncul?</h3>
+                <ul class="text-2xl list-disc fragment mt-4">
+                    <li>Prestasi?</li>
+                    <li>Medsos lama yang alay?</li>
+                    <li>Atau... tidak ada sama sekali?</li>
+                </ul>
+            </section>
+
+            <!-- SLIDE 10: JEJAK DIGITAL -->
+            <section data-background-color="#1a202c">
+                <h2>Jejak Digital = Tato Digital</h2>
+                <p class="text-3xl">Sekali diposting, server mencatat selamanya.</p>
+                <div class="mt-10 grid grid-cols-2 gap-10 text-left">
+                    <div class="fragment">
+                        <h4 class="text-red-500 text-3xl"><i class="fas fa-trash"></i> Dihapus?</h4>
+                        <p class="text-xl mt-2">Bisa di-screenshot. Bisa di-archive oleh web crawler.</p>
+                    </div>
+                    <div class="fragment">
+                        <h4 class="text-green-500 text-3xl"><i class="fas fa-search"></i> Dampaknya?</h4>
+                        <p class="text-xl mt-2">HRD Perusahaan & Panitia Beasiswa mengecek sosmed pelamar!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 11: DIGITAL TRASH -->
+            <section>
+                <h2>Bahaya "Digital Sampah"</h2>
+                <div class="flex flex-wrap justify-center gap-4 mt-8">
+                    <span class="bg-red-900 text-white px-6 py-3 rounded text-xl fragment">Komentar Toxic</span>
+                    <span class="bg-red-900 text-white px-6 py-3 rounded text-xl fragment">Penyebaran Hoax</span>
+                    <span class="bg-red-900 text-white px-6 py-3 rounded text-xl fragment">Foto Tidak Pantas</span>
+                    <span class="bg-red-900 text-white px-6 py-3 rounded text-xl fragment">Oversharing</span>
+                </div>
+                <div class="mt-10 bg-gray-800 p-6 rounded fragment">
+                    <p class="text-yellow-400 text-2xl font-bold">Studi Kasus:</p>
+                    <p class="text-xl mt-2">Banyak calon mahasiswa gagal beasiswa karena ketahuan pernah bullying di Twitter 3 tahun lalu.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 12: PERSPEKTIF AI -->
+            <section>
+                <h2>Algoritma & AI</h2>
+                <p class="text-2xl">Kalian "melatih" AI setiap hari.</p>
+                <div class="grid grid-cols-2 gap-8 mt-8">
+                    <div class="fragment border-r border-gray-600">
+                        <h4 class="text-cyan-400 text-3xl">Input</h4>
+                        <p class="text-xl">Apa yang kamu Like, View, & Share.</p>
+                    </div>
+                    <div class="fragment">
+                        <h4 class="text-pink-400 text-3xl">Output</h4>
+                        <p class="text-xl">Isi FYP (For You Page) kamu.</p>
+                    </div>
+                </div>
+                <p class="mt-8 fragment text-xl border-t border-gray-600 pt-4">"Kalau FYP-mu isinya drama dan joget saja, berarti algoritma menganggap levelmu 'segitu' saja."</p>
+            </section>
+
+            <!-- SLIDE 13: GAME JUDGE -->
+            <section>
+                <h2><i class="fas fa-gavel"></i> Judge The Post</h2>
+                <div class="bg-white text-black p-6 rounded max-w-lg mx-auto mt-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-gray-400 rounded-full mr-3"></div>
+                        <span class="font-bold text-xl">AnakSekolah123</span>
+                    </div>
+                    <div class="bg-gray-200 h-40 flex items-center justify-center mb-4 text-xl">
+                        [FOTO NONGKRONG PAS JAM PELAJARAN]
+                    </div>
+                    <p class="text-lg text-left">Caption: "Bolos dulu bos, gurunya ngebosenin wkwk. #BadBoy"</p>
+                </div>
+                <p class="fragment mt-6 text-red-400 text-2xl font-bold">Resiko 5 Tahun ke Depan?</p>
+            </section>
+
+            <!-- SLIDE 14: POSITIVE CASE -->
+            <section>
+                <h2>Jejak Digital = Aset 💎</h2>
+                <p class="text-2xl">Ubah ancaman menjadi peluang.</p>
+                <ul class="text-left mt-8 space-y-6 text-2xl">
+                    <li class="fragment"><i class="fas fa-check text-green-400 mr-2"></i> Upload tugas video di YouTube = <span class="text-cyan-300">Portofolio Public Speaking</span>.</li>
+                    <li class="fragment"><i class="fas fa-check text-green-400 mr-2"></i> Upload desain poster OSIS = <span class="text-cyan-300">Portofolio Desain Grafis</span>.</li>
+                    <li class="fragment"><i class="fas fa-check text-green-400 mr-2"></i> Blog tulisan opini = <span class="text-cyan-300">Portofolio Literasi</span>.</li>
+                </ul>
+            </section>
+
+            <!-- SLIDE 15: EMPATHY -->
+            <section>
+                <h2>Cyberbullying</h2>
+                <h3 class="text-red-500 text-4xl">Stop di Kamu.</h3>
+                <p class="mt-6 text-2xl">Sebagai Pemimpin (OSIS), kalian adalah "Polisi Moral" di grup WhatsApp dan Sosmed.</p>
+                <blockquote class="fragment mt-8 text-4xl font-serif italic">
+                    "Jempolmu adalah Harimaumu."
+                </blockquote>
+            </section>
+
+            <!-- SLIDE 16: STRATEGI -->
+            <section>
+                <h2>Strategi: Clean Up & Build Up</h2>
+                <div class="grid grid-cols-2 gap-6 mt-8">
+                    <div class="bg-red-900 bg-opacity-30 p-6 rounded fragment">
+                        <h4 class="text-2xl">1. Clean Up 🧹</h4>
+                        <ul class="text-xl text-left list-disc pl-6 mt-4 space-y-2">
+                            <li>Hapus postingan alay masa lalu.</li>
+                            <li>Unfollow akun toxic/gosip.</li>
+                            <li>Kunci akun pribadi jika perlu.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-900 bg-opacity-30 p-6 rounded fragment">
+                        <h4 class="text-2xl">2. Build Up 🏗️</h4>
+                        <ul class="text-xl text-left list-disc pl-6 mt-4 space-y-2">
+                            <li>Follow akun edukasi/motivasi.</li>
+                            <li>Mulai posting kegiatan sekolah.</li>
+                            <li>Gunakan Bio yang jelas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 17: KONTEN 3E -->
+            <section>
+                <h2>Buat Konten yang "Daging"</h2>
+                <p class="text-2xl mb-6">Rumus 3E untuk Siswa SMAN 1 Soppeng:</p>
+                <div class="flex justify-center gap-4 mt-6">
+                    <div class="w-1/3 bg-blue-600 p-4 rounded fragment">
+                        <h4 class="text-2xl font-bold mb-2">Educate</h4>
+                        <p class="text-lg">Tips belajar, Tutorial Canva, Info Lomba.</p>
+                    </div>
+                    <div class="w-1/3 bg-purple-600 p-4 rounded fragment">
+                        <h4 class="text-2xl font-bold mb-2">Entertain</h4>
+                        <p class="text-lg">Meme sekolah sopan, Vlog ekskul, Pantun.</p>
+                    </div>
+                    <div class="w-1/3 bg-yellow-600 p-4 rounded fragment">
+                        <h4 class="text-2xl font-bold mb-2">Empower</h4>
+                        <p class="text-lg">Quote semangat, Dokumentasi Latpinwa.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 18: AI TOOLS -->
+            <section>
+                <h2>Tools AI untuk Branding 🤖</h2>
+                <p class="mb-8 text-2xl">Gunakan teknologi untuk membantumu, bukan menggantikanmu.</p>
+                <ul class="space-y-6 text-xl">
+                    <li class="fragment flex items-center gap-6">
+                        <i class="fas fa-robot text-green-400 text-4xl"></i>
+                        <div class="text-left">
+                            <strong class="text-2xl block text-green-300">ChatGPT / Gemini</strong>
+                            Cari ide caption atau perbaiki tata bahasa.
+                        </div>
+                    </li>
+                    <li class="fragment flex items-center gap-6">
+                        <i class="fas fa-paint-brush text-purple-400 text-4xl"></i>
+                        <div class="text-left">
+                            <strong class="text-2xl block text-purple-300">Canva</strong>
+                            Desain feed IG yang estetik.
+                        </div>
+                    </li>
+                    <li class="fragment flex items-center gap-6">
+                        <i class="fas fa-calendar-alt text-yellow-400 text-4xl"></i>
+                        <div class="text-left">
+                            <strong class="text-2xl block text-yellow-300">Notion</strong>
+                            Atur jadwal postingan OSIS.
+                        </div>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- SLIDE 19: CHALLENGE -->
+            <section>
+                <h2 class="text-5xl">🔥 Weekly Challenge</h2>
+                <div class="bg-gradient-to-r from-cyan-600 to-blue-600 p-8 rounded-xl mt-8">
+                    <h3 class="text-white text-3xl font-bold">"Posting Kebaikan"</h3>
+                    <p class="mt-6 text-2xl">Dalam 24 jam ini, upload 1 Story/Feed tentang kegiatan Latpinwa hari ini.</p>
+                    <p class="mt-4 text-xl">Wajib pakai Hashtag:</p>
+                    <h2 class="text-yellow-300 text-4xl my-4 font-bold tracking-wider">#Sman1SoppengLeaders</h2>
+                    <p class="text-xl">Tag akun OSIS dan Temanmu!</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 20: CLOSING -->
+            <section>
+                <h1 class="text-6xl mb-4">Terima Kasih!</h1>
+                <p class="text-3xl text-gray-400 italic">"Masa depan tidak diramalkan, tapi diciptakan."</p>
+                <p class="text-2xl mt-4">Mulai ketik masa depanmu hari ini.</p>
+                
+                <div class="mt-10 border-t border-gray-600 pt-8">
+                    <p class="font-bold text-cyan-400 text-3xl">Akhsan Rian Anugrah, S.Pd., Gr.</p>
+                    <div class="flex flex-col items-center justify-center gap-4 mt-6 text-2xl">
+                        <span><i class="fab fa-instagram text-pink-500"></i> _ara.v2</span>
+                        <span><i class="fas fa-envelope text-yellow-400"></i> akhsanriananugrah@gmail.com</span>
+                    </div>
+                </div>
+                <div class="mt-10">
+                     <button onclick="window.print()" class="px-6 py-3 bg-gray-700 text-white rounded text-lg hover:bg-gray-600 transition shadow-lg">
+                        <i class="fas fa-print"></i> Cetak ke PDF
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Reveal.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: false, // Changed to false to prevent SecurityError in sandboxed iframes
+            history: false, // Ensure history is disabled
+            transition: 'convex', // none/fade/slide/convex/concave/zoom
+            controls: true,
+            progress: true,
+            center: true,
+            // Learn about plugins: https://revealjs.com/plugins/
+            dependencies: []
+        });
+    </script>
+</body>
+</html>
