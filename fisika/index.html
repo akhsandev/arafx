@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy Crusader - Semester Quest</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (Updated CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font Awesome -->
@@ -47,7 +47,7 @@
         .title-font { font-family: 'Cinzel', serif; }
         .text-parchment { color: #f3e5ab; }
         
-        /* Custom Scrollbar styled like rough iron/wood */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 12px; }
         ::-webkit-scrollbar-track { background: #2c1810; border-left: 1px solid #5d4037; }
         ::-webkit-scrollbar-thumb { 
@@ -102,10 +102,11 @@
         .btn-gold { background: #fbc02d; color: #3e2723; border-color: #f57f17; box-shadow: 0 4px 0 #f57f17; }
         .btn-stone { background: #78909c; color: #263238; border-color: #37474f; box-shadow: 0 4px 0 #37474f; }
         .btn-blue { background: #1565c0; color: #e3f2fd; border-color: #0d47a1; box-shadow: 0 4px 0 #0d47a1; }
+        .btn-green { background: #2e7d32; color: white; border-color: #1b5e20; box-shadow: 0 4px 0 #1b5e20; }
 
         /* Map Styling */
         .map-wrapper {
-            background-color: #d7ccc8; /* Sand color fallback */
+            background-color: #d7ccc8; 
             border: 8px solid #3e2723;
             border-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0z' fill='%233e2723'/%3E%3C/svg%3E") 30 repeat;
             border-radius: 8px;
@@ -116,7 +117,6 @@
         }
 
         .map-scroll-content {
-            /* Using a desert/texture map or repeating pattern */
             background-color: #e6c288;
             background-image: url('https://arafx.vercel.app/bgmap.webp');
             background-size: cover;
@@ -157,7 +157,9 @@
         }
 
         /* Game Specific */
-        .photon { border-radius: 50%; cursor: pointer; animation: popIn 0.3s ease-out; box-shadow: 0 0 10px gold; }
+        .photon { 
+            position: absolute; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; animation: popIn 0.3s ease-out; box-shadow: 0 0 15px gold; background: radial-gradient(circle, #fff 30%, #ffd700 100%); z-index: 100;
+        }
         @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
         
         .battery-container { width: 200px; height: 30px; background: #212121; border: 3px solid #757575; border-radius: 4px; position: relative; overflow: hidden; }
@@ -272,6 +274,34 @@
         .hp-bar-fill { height: 100%; transition: width 0.3s; }
         .boss-hp { background: linear-gradient(90deg, #c62828, #ff5252); }
         .player-hp { background: linear-gradient(90deg, #2e7d32, #66bb6a); }
+
+        /* Pagination Controls */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #37474f;
+            border-top: 1px solid #263238;
+        }
+        .pagination-btn {
+            background-color: #546e7a;
+            color: white;
+            border: 1px solid #78909c;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination-info {
+            color: #cfd8dc;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -288,36 +318,53 @@
             appId: "1:87095823856:web:9d894e54734ec7eec0a135",
             measurementId: "G-DMVR71M6KR"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+        
+        let db, auth;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+        } catch (e) { console.error("Firebase init error:", e); }
 
         const SUPABASE_URL = "https://ggzbopqnncapbrhszagn.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnemJvcHFubmNhcGJyaHN6YWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTA4NzEsImV4cCI6MjA2OTQyNjg3MX0.NFfanxR8cMzhLNAQFvGQgArkmyxecD8rQZowCbHsgkQ";
         
         let supabaseClient = null;
         try {
-            if (SUPABASE_URL.includes("supabase.co")) {
+            if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             }
         } catch (e) { console.error("Supabase init error:", e); }
 
-        const GEMINI_API_KEY = ""; // Opsional
-
         let currentUserData = null;
         let currentUserDocId = null;
+        
+        // --- GLOBAL GAME TIMERS ---
+        let gameInterval = null;
+        let gameTimer = null;
 
-        // Medieval Sounds (Placeholder Logic, using same URLs for function)
+        // Medieval Sounds
         const sounds = {
             correct: new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'),
             wrong: new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3'),
             complete: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'),
-            bgm: new Audio('https://arafx.vercel.app/bgm.mp3') // You might want to change this to lute music later!
+            bgm: new Audio('https://arafx.vercel.app/bgm.mp3') 
         };
         sounds.bgm.loop = true; sounds.bgm.volume = 0.2; let isMuted = false;
 
         function playSound(name) { if(!isMuted && sounds[name]) { sounds[name].currentTime=0; sounds[name].play().catch(()=>{}); }}
         function toggleMute() { isMuted=!isMuted; isMuted?sounds.bgm.pause():sounds.bgm.play().catch(()=>{}); document.getElementById('mute-btn').innerHTML = isMuted?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>'; }
+
+        // --- GLOBAL VARIABLES FOR PAGINATION & DATA ---
+        window.allPendingTasks = [];
+        window.displayedTasks = [];
+        window.taskPage = 1;
+        const taskLimit = 10;
+
+        window.allStudentsList = [];
+        window.displayedStudents = [];
+        window.stdPage = 1;
+        const stdLimit = 10;
     </script>
 
     <!-- INTRO OVERLAY -->
@@ -330,8 +377,6 @@
 
     <!-- 1. LOGIN PAGE (CASTLE GATE) -->
     <div id="login-page" class="flex flex-col items-center justify-center min-h-screen px-4 bg-[url('https://www.transparenttextures.com/patterns/brick-wall.png')] bg-cover bg-stone-900">
-        
-        <!-- Login Form Container (Initially Hidden) -->
         <div id="login-form-container" class="relative w-full max-w-md p-8 text-center bg-stone-800/90 border-8 border-stone-600 rounded-t-full shadow-2xl">
             <!-- Torch decoration -->
             <div class="absolute -left-4 top-20 text-4xl animate-pulse text-orange-500"><i class="fas fa-fire"></i></div>
@@ -366,7 +411,6 @@
     <div id="student-dashboard" class="hidden min-h-screen flex flex-col h-screen overflow-hidden bg-[#2c1810]">
         <!-- Header / Castle Battlement -->
         <nav class="bg-[#3e2723] border-b-4 border-[#1a120b] p-3 z-50 shadow-xl relative">
-            <!-- decorative studs -->
             <div class="absolute bottom-0 left-0 w-full h-1 bg-repeat-x" style="background-image: linear-gradient(90deg, #1a120b 50%, transparent 50%); background-size: 20px 100%;"></div>
             
             <div class="container mx-auto flex justify-between items-center">
@@ -458,175 +502,38 @@
     <!-- 3. UNIVERSAL MODAL (THE SCROLL) -->
     <div id="game-modal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-[100]">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal()"></div>
-        
-        <!-- Parchment Container -->
         <div class="relative w-full max-w-2xl mx-4 modal-parchment rounded-sm flex flex-col max-h-[90vh]">
-            
-            <!-- Wax Seal Close Button -->
             <button onclick="closeModal()" class="absolute -top-4 -right-4 w-10 h-10 bg-red-800 rounded-full border-4 border-red-900 text-white flex items-center justify-center shadow-lg hover:bg-red-700 z-50">
                 <i class="fas fa-times"></i>
             </button>
-
+            <!-- Content Container -->
             <div class="p-6 border-b-2 border-[#a1887f] flex justify-between items-center bg-[#eefebe]/50">
                 <div>
                     <h3 id="modal-title" class="text-2xl font-bold text-[#3e2723] title-font drop-shadow-sm">Misi 1</h3>
                     <span id="modal-type-badge" class="text-[10px] bg-[#3e2723] text-amber-100 px-3 py-1 rounded-full uppercase tracking-wider font-bold">Quiz</span>
                 </div>
             </div>
-
             <div class="p-8 overflow-y-auto flex-grow custom-scrollbar">
-                <!-- Intro -->
-                <div id="view-intro">
-                    <p id="modal-desc" class="text-[#4e342e] mb-8 text-lg font-serif italic leading-relaxed text-center border-y border-[#d7ccc8] py-4"></p>
-                    <div id="modal-status-msg" class="hidden p-4 rounded mb-6 text-center text-sm font-bold border-2"></div>
-                    <button id="btn-start-action" onclick="startLevelAction()" class="w-full btn-medieval btn-red py-3 rounded shadow-lg text-lg flex items-center justify-center gap-3">
-                        <i class="fas fa-sword"></i> MULAI PERJUANGAN
-                    </button>
-                </div>
+                <!-- VIEWS (Intro, Quiz, Upload, etc.) remain mostly same logic, just hiding/showing -->
+                <div id="view-intro"><p id="modal-desc" class="text-[#4e342e] mb-8 text-lg font-serif italic leading-relaxed text-center border-y border-[#d7ccc8] py-4"></p><div id="modal-status-msg" class="hidden p-4 rounded mb-6 text-center text-sm font-bold border-2"></div><button id="btn-start-action" onclick="startLevelAction()" class="w-full btn-medieval btn-red py-3 rounded shadow-lg text-lg flex items-center justify-center gap-3"><i class="fas fa-sword"></i> MULAI PERJUANGAN</button></div>
+                
+                <div id="view-quiz" class="hidden"><div class="flex justify-between mb-4 text-xs font-bold text-[#5d4037] uppercase tracking-widest"><span>Tantangan <span id="q-curr">1</span>/<span id="q-total">0</span></span></div><p id="q-text" class="text-xl font-bold text-[#271c19] mb-8 font-serif">Memuat teka-teki...</p><div id="q-options" class="space-y-4"></div><div id="q-feedback" class="hidden mt-6 p-4 bg-[#d7ccc8] rounded border-l-4 border-[#3e2723]"><h4 id="fb-title" class="font-bold text-lg mb-2 title-font">Jawaban</h4><p id="fb-desc" class="text-sm text-[#3e2723] mb-4"></p><button onclick="nextQuestion()" class="btn-medieval btn-stone px-6 py-2 rounded text-sm w-full">Lanjut <i class="fas fa-arrow-right"></i></button></div></div>
 
-                <!-- Quiz -->
-                <div id="view-quiz" class="hidden">
-                    <div class="flex justify-between mb-4 text-xs font-bold text-[#5d4037] uppercase tracking-widest">
-                        <span>Tantangan <span id="q-curr">1</span>/<span id="q-total">0</span></span>
-                    </div>
-                    <p id="q-text" class="text-xl font-bold text-[#271c19] mb-8 font-serif">Memuat teka-teki...</p>
-                    <div id="q-options" class="space-y-4"></div>
-                    <div id="q-feedback" class="hidden mt-6 p-4 bg-[#d7ccc8] rounded border-l-4 border-[#3e2723]">
-                        <h4 id="fb-title" class="font-bold text-lg mb-2 title-font">Jawaban</h4>
-                        <p id="fb-desc" class="text-sm text-[#3e2723] mb-4"></p>
-                        <button onclick="nextQuestion()" class="btn-medieval btn-stone px-6 py-2 rounded text-sm w-full">Lanjut <i class="fas fa-arrow-right"></i></button>
-                    </div>
-                </div>
+                <div id="view-boss" class="hidden"><div class="boss-container text-center"><div class="relative w-full h-48 mb-4 rounded border-2 border-stone-600 bg-black overflow-hidden flex justify-center items-center"><img id="boss-image" src="" class="h-full object-cover" alt="Boss"><div class="absolute bottom-0 w-full bg-black/60 text-white font-bold py-1 title-font" id="boss-name">THE BOSS</div></div><div class="flex gap-4 mb-6"><div class="w-1/2"><div class="text-xs text-green-400 font-bold text-left mb-1">DARAHMU</div><div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill player-hp" style="width: 100%;"></div></div></div><div class="w-1/2"><div class="text-xs text-red-400 font-bold text-right mb-1">DARAH BOSS</div><div class="hp-bar-bg"><div id="boss-hp-bar" class="hp-bar-fill boss-hp" style="width: 100%;"></div></div></div></div><div class="bg-[#eefebe] p-4 rounded border border-[#8d6e63] mb-4"><p id="boss-q-text" class="text-[#3e2723] font-serif font-bold">Bersiap bertarung...</p></div><div id="boss-options" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div></div>
 
-                <!-- BOSS BATTLE VIEW -->
-                <div id="view-boss" class="hidden">
-                    <div class="boss-container text-center">
-                        <!-- Boss Image Area -->
-                        <div class="relative w-full h-48 mb-4 rounded border-2 border-stone-600 bg-black overflow-hidden flex justify-center items-center">
-                            <img id="boss-image" src="" class="h-full object-cover" alt="Boss">
-                            <div class="absolute bottom-0 w-full bg-black/60 text-white font-bold py-1 title-font" id="boss-name">THE BOSS</div>
-                        </div>
+                <div id="view-upload" class="hidden"><div id="project-form-container" class="hidden mb-6"><div class="bg-[#fff8e1] p-4 rounded border-2 border-[#8d6e63] text-[#3e2723]"><h4 class="font-bold border-b border-[#8d6e63] pb-2 mb-3"><i class="fas fa-users"></i> Form Laporan Kelompok</h4><div class="space-y-3"><input type="text" id="project-group-name" class="w-full p-2 text-sm border rounded bg-white" placeholder="Nama Kelompok (Contoh: Kelompok Newton)"><div id="project-members-area" class="bg-white border rounded p-2 text-xs h-32 overflow-y-auto"><p class="text-gray-500 italic">Memuat daftar teman sekelas...</p></div><p class="text-[10px] text-stone-500">*Kamu otomatis terdaftar sebagai ketua/pengirim.</p></div></div></div><div id="phet-container" class="hidden mb-6 w-full h-[400px] bg-[#3e2723] rounded border-4 border-[#5d4037] overflow-hidden relative shadow-inner"><div class="absolute inset-0 flex items-center justify-center text-amber-100/50 text-xs"><i class="fas fa-cog fa-spin mr-2"></i> Membangun Arena...</div><iframe id="phet-frame" src="" width="100%" height="100%" scrolling="no" allowfullscreen style="position:relative; z-index:10;"></iframe><a id="phet-fullscreen-btn" href="#" target="_blank" class="absolute top-2 right-2 z-20 btn-medieval btn-stone text-xs px-3 py-1 opacity-90 hover:opacity-100 flex items-center gap-2" title="Buka Layar Penuh"><i class="fas fa-expand"></i> Luaskan</a></div><div class="border-4 border-dashed border-[#8d6e63] rounded-lg p-8 text-center hover:bg-[#d7ccc8]/30 transition bg-[#efebe9]/50"><i class="fas fa-scroll text-5xl text-[#5d4037] mb-3"></i><p class="text-sm text-[#4e342e] mb-4 font-bold">Serahkan Laporan (PDF/Gambar/Link)</p><input type="file" id="file-input" class="hidden" accept=".pdf, .jpg, .jpeg, .png" onchange="previewFile()"><label for="file-input" class="cursor-pointer btn-medieval btn-stone px-4 py-2 rounded text-sm inline-block">Pilih Dokumen</label><p id="file-name" class="mt-2 text-xs text-red-700 font-bold"></p></div><textarea id="upload-note" class="w-full mt-4 p-3 bg-[#efebe9] border-2 border-[#8d6e63] rounded text-[#3e2723] font-serif" rows="3" placeholder="Pesan untuk Tuan Guru..."></textarea><button onclick="submitUpload()" id="btn-upload-submit" class="w-full mt-4 btn-medieval btn-green bg-[#2e7d32] text-white border-[#1b5e20] hover:bg-[#1b5e20] py-3 rounded font-bold">KIRIM MERPATI POS</button></div>
 
-                        <!-- HP Bars -->
-                        <div class="flex gap-4 mb-6">
-                            <div class="w-1/2">
-                                <div class="text-xs text-green-400 font-bold text-left mb-1">DARAHMU</div>
-                                <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill player-hp" style="width: 100%;"></div></div>
-                            </div>
-                            <div class="w-1/2">
-                                <div class="text-xs text-red-400 font-bold text-right mb-1">DARAH BOSS</div>
-                                <div class="hp-bar-bg"><div id="boss-hp-bar" class="hp-bar-fill boss-hp" style="width: 100%;"></div></div>
-                            </div>
-                        </div>
+                <div id="view-game" class="hidden text-center"><div id="game-canvas" class="bg-[#212121] border-4 border-[#424242] rounded p-4 min-h-[300px] flex flex-col items-center justify-center mb-4 relative overflow-hidden shadow-inner"></div><p id="game-instruction" class="text-xs text-[#5d4037] italic mb-2 font-bold"></p></div>
 
-                        <!-- Question Area -->
-                        <div class="bg-[#eefebe] p-4 rounded border border-[#8d6e63] mb-4">
-                            <p id="boss-q-text" class="text-[#3e2723] font-serif font-bold">Bersiap bertarung...</p>
-                        </div>
+                <div id="view-result" class="hidden text-center py-10"><div class="text-6xl mb-6 text-amber-600 drop-shadow-md" id="res-icon"><i class="fas fa-flag"></i></div><h2 class="text-3xl font-bold text-[#3e2723] mb-3 title-font" id="res-title">Kemenangan!</h2><p class="text-[#5d4037] text-lg mb-8 font-serif" id="res-msg"></p><button onclick="closeModal()" class="btn-medieval btn-stone px-8 py-3 rounded font-bold">Kembali ke Peta</button></div>
 
-                        <!-- Options -->
-                        <div id="boss-options" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <!-- Buttons injected by JS -->
-                        </div>
-                    </div>
-                </div>
+                <div id="view-shop" class="hidden"><div class="flex justify-between items-center mb-6 bg-[#3e2723] p-4 rounded border border-[#5d4037] shadow-lg"><span class="text-sm text-amber-100">Harta Karun:</span><span id="shop-balance" class="text-yellow-400 font-bold title-font text-xl">0 Gold</span></div><div class="grid grid-cols-2 md:grid-cols-3 gap-6" id="shop-items"></div></div>
 
-                <!-- Upload & Simulation (Level 5 PhET) -->
-                <div id="view-upload" class="hidden">
-                    <!-- PhET Container -->
-                    <div id="phet-container" class="hidden mb-6 w-full h-[400px] bg-[#3e2723] rounded border-4 border-[#5d4037] overflow-hidden relative shadow-inner">
-                        <div class="absolute inset-0 flex items-center justify-center text-amber-100/50 text-xs">
-                            <i class="fas fa-cog fa-spin mr-2"></i> Membangun Arena...
-                        </div>
-                        <iframe id="phet-frame" src="" width="100%" height="100%" scrolling="no" allowfullscreen style="position:relative; z-index:10;"></iframe>
-                        
-                        <a id="phet-fullscreen-btn" href="#" target="_blank" class="absolute top-2 right-2 z-20 btn-medieval btn-stone text-xs px-3 py-1 opacity-90 hover:opacity-100 flex items-center gap-2" title="Buka Layar Penuh">
-                            <i class="fas fa-expand"></i> Luaskan
-                        </a>
-                    </div>
+                <div id="view-castle" class="hidden"><div class="text-center mb-6"><h2 class="title-font text-[#3e2723] text-2xl font-bold">Markas Komando</h2><p class="text-[#5d4037] text-xs italic">Bangun bentengmu untuk kejayaan!</p></div><div id="castle-display" class="castle-level-card"></div><div class="bg-[#efebe9] p-4 rounded border border-[#8d6e63] text-sm text-[#3e2723] mb-4"><p><strong>Tips:</strong> Kumpulkan Gold (XP) dari misi untuk memperkuat benteng pertahananmu dari serangan ketidaktahuan!</p></div></div>
 
-                    <div class="border-4 border-dashed border-[#8d6e63] rounded-lg p-8 text-center hover:bg-[#d7ccc8]/30 transition bg-[#efebe9]/50">
-                        <i class="fas fa-scroll text-5xl text-[#5d4037] mb-3"></i>
-                        <p class="text-sm text-[#4e342e] mb-4 font-bold">Serahkan Laporan (PDF/Gambar)</p>
-                        <input type="file" id="file-input" class="hidden" accept=".pdf, .jpg, .jpeg, .png" onchange="previewFile()">
-                        <label for="file-input" class="cursor-pointer btn-medieval btn-stone px-4 py-2 rounded text-sm inline-block">Pilih Dokumen</label>
-                        <p id="file-name" class="mt-2 text-xs text-red-700 font-bold"></p>
-                    </div>
-                    <textarea id="upload-note" class="w-full mt-4 p-3 bg-[#efebe9] border-2 border-[#8d6e63] rounded text-[#3e2723] font-serif" rows="3" placeholder="Pesan untuk Tuan Guru..."></textarea>
-                    <button onclick="submitUpload()" id="btn-upload-submit" class="w-full mt-4 btn-medieval btn-green bg-[#2e7d32] text-white border-[#1b5e20] hover:bg-[#1b5e20] py-3 rounded font-bold">KIRIM MERPATI POS</button>
-                </div>
+                <div id="view-leaderboard" class="hidden"><div class="text-center mb-6"><i class="fas fa-crown text-5xl text-yellow-600 mb-2 drop-shadow-md"></i><h2 class="title-font text-[#3e2723] text-xl font-bold">Aula Para Pahlawan</h2><p class="text-[#5d4037] text-xs italic">Siapa yang terkuat di kerajaan?</p></div><div class="bg-[#fff8e1] rounded border-2 border-[#8d6e63] overflow-hidden shadow-inner"><div class="overflow-y-auto max-h-[400px] custom-scrollbar"><table class="w-full text-left text-sm text-[#3e2723]"><thead class="bg-[#d7ccc8] text-xs uppercase font-bold text-[#3e2723] sticky top-0 z-10"><tr><th class="p-3 text-center border-b border-[#a1887f]">#</th><th class="p-3 border-b border-[#a1887f]">Ksatria</th><th class="p-3 text-right border-b border-[#a1887f]">Kejayaan (XP)</th></tr></thead><tbody id="leaderboard-list" class="divide-y divide-[#d7ccc8]"><tr><td colspan="3" class="p-4 text-center text-xs italic">Scribe sedang mencatat...</td></tr></tbody></table></div></div></div>
 
-                <!-- Game Canvas -->
-                <div id="view-game" class="hidden text-center">
-                    <div id="game-canvas" class="bg-[#212121] border-4 border-[#424242] rounded p-4 min-h-[300px] flex flex-col items-center justify-center mb-4 relative overflow-hidden shadow-inner"></div>
-                    <p id="game-instruction" class="text-xs text-[#5d4037] italic mb-2 font-bold"></p>
-                </div>
-
-                <!-- Result -->
-                <div id="view-result" class="hidden text-center py-10">
-                    <div class="text-6xl mb-6 text-amber-600 drop-shadow-md" id="res-icon"><i class="fas fa-flag"></i></div>
-                    <h2 class="text-3xl font-bold text-[#3e2723] mb-3 title-font" id="res-title">Kemenangan!</h2>
-                    <p class="text-[#5d4037] text-lg mb-8 font-serif" id="res-msg"></p>
-                    <button onclick="closeModal()" class="btn-medieval btn-stone px-8 py-3 rounded font-bold">Kembali ke Peta</button>
-                </div>
-
-                <!-- Shop -->
-                <div id="view-shop" class="hidden">
-                    <div class="flex justify-between items-center mb-6 bg-[#3e2723] p-4 rounded border border-[#5d4037] shadow-lg">
-                        <span class="text-sm text-amber-100">Harta Karun:</span>
-                        <span id="shop-balance" class="text-yellow-400 font-bold title-font text-xl">0 Gold</span>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6" id="shop-items"></div>
-                </div>
-
-                <!-- NEW: View Castle (Base Building) -->
-                <div id="view-castle" class="hidden">
-                    <div class="text-center mb-6">
-                        <h2 class="title-font text-[#3e2723] text-2xl font-bold">Markas Komando</h2>
-                        <p class="text-[#5d4037] text-xs italic">Bangun bentengmu untuk kejayaan!</p>
-                    </div>
-                    
-                    <div id="castle-display" class="castle-level-card">
-                        <!-- Content Injected by JS -->
-                    </div>
-
-                    <div class="bg-[#efebe9] p-4 rounded border border-[#8d6e63] text-sm text-[#3e2723] mb-4">
-                        <p><strong>Tips:</strong> Kumpulkan Gold (XP) dari misi untuk memperkuat benteng pertahananmu dari serangan ketidaktahuan!</p>
-                    </div>
-                </div>
-
-                <!-- Leaderboard -->
-                <div id="view-leaderboard" class="hidden">
-                    <div class="text-center mb-6">
-                        <i class="fas fa-crown text-5xl text-yellow-600 mb-2 drop-shadow-md"></i>
-                        <h2 class="title-font text-[#3e2723] text-xl font-bold">Aula Para Pahlawan</h2>
-                        <p class="text-[#5d4037] text-xs italic">Siapa yang terkuat di kerajaan?</p>
-                    </div>
-                    <div class="bg-[#fff8e1] rounded border-2 border-[#8d6e63] overflow-hidden shadow-inner">
-                        <div class="overflow-y-auto max-h-[400px] custom-scrollbar">
-                            <table class="w-full text-left text-sm text-[#3e2723]">
-                                <thead class="bg-[#d7ccc8] text-xs uppercase font-bold text-[#3e2723] sticky top-0 z-10">
-                                    <tr>
-                                        <th class="p-3 text-center border-b border-[#a1887f]">#</th>
-                                        <th class="p-3 border-b border-[#a1887f]">Ksatria</th>
-                                        <th class="p-3 text-right border-b border-[#a1887f]">Kejayaan (XP)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="leaderboard-list" class="divide-y divide-[#d7ccc8]">
-                                    <tr><td colspan="3" class="p-4 text-center text-xs italic">Scribe sedang mencatat...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Material Viewer -->
-                <div id="view-material" class="hidden">
-                    <div id="mat-content-container" class="w-full h-[400px] bg-black rounded border-4 border-[#3e2723] flex items-center justify-center overflow-hidden"></div>
-                    <div class="mt-4 text-center">
-                        <a id="mat-open-link" href="#" target="_blank" class="text-[#880e4f] font-bold text-sm hover:underline"><i class="fas fa-external-link-alt"></i> Buka di Lembar Baru</a>
-                    </div>
-                </div>
+                <div id="view-material" class="hidden"><div id="mat-content-container" class="w-full h-[400px] bg-black rounded border-4 border-[#3e2723] flex items-center justify-center overflow-hidden"></div><div class="mt-4 text-center"><a id="mat-open-link" href="#" target="_blank" class="text-[#880e4f] font-bold text-sm hover:underline"><i class="fas fa-external-link-alt"></i> Buka di Lembar Baru</a></div></div>
             </div>
         </div>
     </div>
@@ -655,64 +562,70 @@
                     <h3 class="text-cyan-300 font-bold mb-4 flex items-center gap-2 title-font"><i class="fas fa-book"></i> Perpustakaan</h3>
                     <div class="space-y-3">
                         <select id="mat-level" class="w-full p-2 bg-[#263238] text-xs text-white border border-[#37474f] rounded"></select>
-                        <select id="mat-type" class="w-full p-2 bg-[#263238] text-xs text-white border border-[#37474f] rounded">
-                            <option value="youtube">Video (YouTube)</option>
-                            <option value="pdf">Dokumen (PDF)</option>
-                            <option value="web">Gulungan Web</option>
-                        </select>
+                        <select id="mat-type" class="w-full p-2 bg-[#263238] text-xs text-white border border-[#37474f] rounded"><option value="youtube">Video (YouTube)</option><option value="pdf">Dokumen (PDF)</option><option value="web">Gulungan Web</option></select>
                         <input id="mat-title" type="text" class="w-full p-2 bg-[#263238] text-xs text-white border border-[#37474f] rounded" placeholder="Judul Materi">
                         <input id="mat-link" type="text" class="w-full p-2 bg-[#263238] text-xs text-white border border-[#37474f] rounded" placeholder="Link (URL)">
-                        <button onclick="saveMaterial()" class="btn-medieval w-full py-2 text-xs font-bold bg-[#006064] text-cyan-100 border-[#00838f] hover:bg-[#00838f]">
-                            SIMPAN KE RAK
-                        </button>
+                        <button onclick="saveMaterial()" class="btn-medieval w-full py-2 text-xs font-bold bg-[#006064] text-cyan-100 border-[#00838f] hover:bg-[#00838f]">SIMPAN KE RAK</button>
                     </div>
                 </div>
 
-                <!-- Bank Soal -->
+                <!-- Bank Soal & Export -->
                 <div class="stone-border p-6">
                     <h3 class="text-green-400 font-bold mb-4 flex items-center gap-2 title-font"><i class="fas fa-scroll"></i> Gudang Soal</h3>
-                    <div class="mb-4">
-                        <button onclick="downloadQuestionTemplate()" class="text-xs text-blue-300 hover:underline mb-2 flex items-center gap-1"><i class="fas fa-download"></i> Unduh Cetakan</button>
-                        <input type="file" id="csv-questions" accept=".csv" class="w-full text-xs text-slate-400">
-                    </div>
+                    <div class="mb-4"><button onclick="downloadQuestionTemplate()" class="text-xs text-blue-300 hover:underline mb-2 flex items-center gap-1"><i class="fas fa-download"></i> Unduh Cetakan</button><input type="file" id="csv-questions" accept=".csv" class="w-full text-xs text-slate-400"></div>
                     <button onclick="processQuestionImport()" class="btn-medieval w-full py-2 text-xs font-bold bg-[#1b5e20] text-green-100 border-[#2e7d32] hover:bg-[#2e7d32] mb-4">IMPORT CSV</button>
-                    
                     <hr class="border-[#37474f] my-4">
-                    
                     <h3 class="text-purple-300 font-bold mb-2 flex items-center gap-2 title-font"><i class="fas fa-file-export"></i> Arsip Nilai</h3>
                     <button onclick="downloadGrades()" class="btn-medieval w-full py-2 text-xs font-bold bg-[#4a148c] text-purple-100 border-[#6a1b9a] hover:bg-[#6a1b9a]">UNDUH LAPORAN</button>
                 </div>
             </div>
 
             <div class="lg:col-span-2 space-y-8">
-                <!-- Validation -->
+                <!-- Validation (Improved Pagination & Cleanup) -->
                 <div class="stone-border p-0 overflow-hidden min-h-[300px]">
                     <div class="p-4 bg-[#37474f] border-b border-[#263238] flex justify-between items-center">
                         <h3 class="text-white font-bold title-font"><i class="fas fa-gavel mr-2"></i>Pengadilan Tugas</h3>
                         <div class="flex items-center gap-3">
-                            <button onclick="approveSelected()" class="btn-medieval bg-green-700 text-white px-3 py-1 rounded text-xs hover:bg-green-600 font-bold hidden" id="btn-bulk-acc">
-                                <i class="fas fa-check-circle mr-1"></i> ACC Massal
+                            <!-- NEW: Cleanup Button -->
+                            <button onclick="runDataCleanup()" id="btn-cleanup" class="btn-medieval bg-orange-700 text-white px-3 py-1 rounded text-xs hover:bg-orange-600 font-bold flex items-center gap-1" title="Sinkronisasi Ulang Data">
+                                <i class="fas fa-sync-alt"></i> Cek Ulang
                             </button>
+
+                            <select id="filter-class" onchange="loadAdminData()" class="bg-[#263238] border border-[#546e7a] text-xs text-white rounded px-2 py-1"><option value="">Semua Pasukan</option></select>
                             <span class="text-xs text-slate-300" id="adm-pending">0 Menunggu</span>
                         </div>
                     </div>
+                    <!-- Bulk Action Button -->
+                    <div id="bulk-action-area" class="bg-[#37474f] px-4 pb-2 hidden">
+                         <button onclick="approveSelected()" class="btn-medieval bg-green-700 text-white px-3 py-1 rounded text-xs hover:bg-green-600 font-bold w-full" id="btn-bulk-acc">
+                            <i class="fas fa-check-circle mr-1"></i> ACC Massal (Halaman Ini)
+                        </button>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-300">
                             <thead class="bg-[#263238] text-xs uppercase font-bold text-slate-400">
                                 <tr>
-                                    <th class="p-3 w-4"><input type="checkbox" id="check-all" onclick="toggleAll(this)" class="cursor-pointer"></th>
+                                    <th class="p-3 w-4">#</th>
                                     <th class="p-3">Siswa</th><th class="p-3">Misi</th><th class="p-3">Bukti</th><th class="p-3">Voniss</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-task-list" class="divide-y divide-[#37474f]"></tbody>
                         </table>
                     </div>
+                    <!-- Pagination Controls -->
+                    <div class="pagination-container" id="tasks-pagination">
+                        <button class="pagination-btn" onclick="changeTaskPage(-1)">Prev</button>
+                        <span class="pagination-info" id="tasks-page-info">Hal 1</span>
+                        <button class="pagination-btn" onclick="changeTaskPage(1)">Next</button>
+                    </div>
                 </div>
-                <!-- Progress -->
+                
+                <!-- Progress Table (Improved Pagination) -->
                 <div class="stone-border p-0 overflow-hidden">
                      <div class="p-4 bg-[#37474f] border-b border-[#263238] flex flex-col md:flex-row justify-between items-center">
                         <h3 class="text-white font-bold title-font">Kemajuan Pasukan</h3>
-                        <input type="text" id="search-student" onkeyup="renderStudentProgressTable()" placeholder="Cari Nama..." class="bg-[#263238] border border-[#546e7a] rounded px-2 py-1 text-xs text-white placeholder-slate-500">
+                        <input type="text" id="search-student" onkeyup="filterStudentList()" placeholder="Cari Nama..." class="bg-[#263238] border border-[#546e7a] rounded px-2 py-1 text-xs text-white placeholder-slate-500">
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-300">
@@ -732,57 +645,50 @@
                             <tbody id="student-progress-list" class="divide-y divide-[#37474f]"></tbody>
                         </table>
                     </div>
+                    <!-- Pagination Controls -->
+                    <div class="pagination-container" id="students-pagination">
+                        <button class="pagination-btn" onclick="changeStudentPage(-1)">Prev</button>
+                        <span class="pagination-info" id="students-page-info">Hal 1</span>
+                        <button class="pagination-btn" onclick="changeStudentPage(1)">Next</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- LOGIC (EXACT COPY OF ORIGINAL LOGIC) -->
+    <!-- LOGIC -->
     <script>
         // --- ANIMATION SCRIPT ---
-        // Menangani transisi dari Intro Screen ke Login Form
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const intro = document.getElementById('intro-overlay');
                 intro.style.opacity = '0';
-                
-                // Setelah fade out selesai (1.5s sesuai CSS), hilangkan elemen dan munculkan login form
                 setTimeout(() => {
                     intro.style.display = 'none';
                     const loginForm = document.getElementById('login-form-container');
                     loginForm.style.opacity = '1';
                     loginForm.style.transform = 'translateY(0)';
                 }, 1500); 
-            }, 3000); // Teks tampil selama 3 detik sebelum mulai fade out
+            }, 3000);
         });
 
         // --- DATA LEVEL ---
-        // UPDATED LEVELS 4, 9, 14 TO BOSS MODE
         const levels = [
             { id: 1, type: 'quiz', title: "Energi & Kehidupan", desc: "Konsep Dasar.", icon: "fa-leaf", top: "95%", left: "10%" },
             { id: 2, type: 'quiz', title: "Konsep Usaha", desc: "Definisi W = F.s.", icon: "fa-running", top: "89%", left: "30%" },
             { id: 3, type: 'game', gameType: 'word_scramble', title: "Game: Istilah", desc: "Susun kata.", icon: "fa-gamepad", top: "83%", left: "50%" },
-            
-            // BOSS 1
-            { id: 4, type: 'boss', title: "BOSS: Silent Assassins", desc: "Kalahkan pembunuh bayangan dengan ilmu Energi Mekanik!", icon: "fa-skull", top: "77%", left: "70%", bossImg: "https://arafx.vercel.app/thesilentassassins.jpg" },
-            
+            { id: 4, type: 'boss', title: "BOSS: Silent Assassins", desc: "Kalahkan pembunuh bayangan!", icon: "fa-skull", top: "77%", left: "70%", bossImg: "https://arafx.vercel.app/thesilentassassins.jpg" },
             { id: 5, type: 'upload', title: "Lab: Skate Park", desc: "Simulasi PhET & Analisis.", icon: "fa-skating", top: "71%", left: "50%" }, 
             { id: 6, type: 'quiz', title: "Daya & Efisiensi", desc: "Menghitung Daya.", icon: "fa-tachometer-alt", top: "65%", left: "30%" },
             { id: 7, type: 'game', gameType: 'energy_sort', title: "Game: Pilah", desc: "Pilah Energi.", icon: "fa-recycle", top: "59%", left: "10%" },
             { id: 8, type: 'quiz', title: "Energi Surya", desc: "Panel Surya.", icon: "fa-solar-panel", top: "53%", left: "30%" },
-            
-            // BOSS 2
-            { id: 9, type: 'boss', title: "BOSS: Black Tyrant", desc: "Hentikan tirani polusi dengan pengetahuan Angin & Air!", icon: "fa-dragon", top: "47%", left: "50%", bossImg: "https://arafx.vercel.app/theblacktyrant.jpg" },
-            
+            { id: 9, type: 'boss', title: "BOSS: Black Tyrant", desc: "Hentikan tirani polusi!", icon: "fa-dragon", top: "47%", left: "50%", bossImg: "https://arafx.vercel.app/theblacktyrant.jpg" },
             { id: 10, type: 'upload', title: "Prototipe", desc: "Desain alat.", icon: "fa-pencil-ruler", top: "41%", left: "70%" },
             { id: 11, type: 'quiz', title: "Biomassa", desc: "Energi Organik.", icon: "fa-fire", top: "35%", left: "50%" },
             { id: 12, type: 'game', gameType: 'click_target', title: "Game: Foton", desc: "Tangkap Foton.", icon: "fa-bolt", top: "29%", left: "30%" },
             { id: 13, type: 'quiz', title: "Lingkungan", desc: "Dampak Emisi.", icon: "fa-smog", top: "23%", left: "10%" },
-            
-            // BOSS 3
-            { id: 14, type: 'boss', title: "BOSS: Righteous Paladin", desc: "Buktikan kelayakanmu tentang Masa Depan!", icon: "fa-shield-alt", top: "17%", left: "30%", bossImg: "https://arafx.vercel.app/therighteouspaladin.jpg" },
-            
-            { id: 15, type: 'upload', title: "FINAL PROJECT", desc: "Laporan Akhir.", icon: "fa-flag-checkered", top: "8%", left: "50%" }
+            { id: 14, type: 'boss', title: "BOSS: Righteous Paladin", desc: "Buktikan kelayakanmu!", icon: "fa-shield-alt", top: "17%", left: "30%", bossImg: "https://arafx.vercel.app/therighteouspaladin.jpg" },
+            { id: 15, type: 'project', title: "Proyek Akhir Kelas", desc: "Presentasikan solusi!", icon: "fa-flag-checkered", top: "8%", left: "50%" }
         ];
 
         // --- SHOP DATA ---
@@ -858,10 +764,8 @@
             txt.innerText = st==='pending' ? "Menunggu titah raja..." : st==='rejected' ? "DITOLAK! Perbaiki segera." : `Misi Aktif: Wilayah ${max}`;
             txt.className = st==='rejected' ? "text-red-400 font-bold" : "text-amber-100 italic";
             
-            // LOAD MATERI UNTUK LEVEL AKTIF
             loadStudentMaterials(max);
             
-            // Show hint only on level 5
             const hint = document.getElementById('lkpd-hint');
             if(max === 5) hint.classList.remove('hidden');
             else hint.classList.add('hidden');
@@ -882,10 +786,10 @@
                 const node = document.createElement('div'); node.className = cls;
                 node.style.top = l.top; node.style.left = l.left;
                 node.onclick = () => openLevelModal(l.id);
-                // Changing icons to be more 'castle' like conceptually but keeping fontawesome
+                
                 let icon = l.icon;
-                if (l.type === 'boss') icon = "fa-skull-crossbones"; // Special icon for boss
-                if (st==='approved') icon = "fa-flag"; // Completed castles have flags
+                if (l.type === 'boss') icon = "fa-skull-crossbones";
+                if (st==='approved') icon = "fa-flag"; 
                 
                 node.innerHTML = `<i class="fas ${icon} text-2xl"></i><span class="absolute -bottom-8 w-32 text-center text-[10px] font-bold bg-black/70 px-2 py-1 rounded text-white left-1/2 -translate-x-1/2 border border-[#8d6e63] font-serif">${l.id}. ${l.title}</span>`;
                 c.appendChild(node);
@@ -968,7 +872,6 @@
                 return;
             }
 
-            // Hide other views
             ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-material').classList.remove('hidden');
             
@@ -1069,7 +972,6 @@
 
         // --- CASTLE BUILDING SYSTEM ---
         function openCastle() {
-            // Hide other views
             ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById('view-castle').classList.remove('hidden');
             
@@ -1077,7 +979,6 @@
             document.getElementById('modal-type-badge').innerText = "BASE";
             document.getElementById('game-modal').classList.remove('opacity-0', 'pointer-events-none');
 
-            // Calculate Balance
             let totalXP = 0;
             for(let i=1; i<=15; i++) if(currentUserData.stats[`level_${i}_status`] === 'approved') totalXP += (currentUserData.stats[`level_${i}_xp`] || 0);
             const spent = currentUserData.spent_xp || 0;
@@ -1128,6 +1029,73 @@
                 });
                 alert("Pembangunan selesai! Bentengmu semakin kuat.");
                 openCastle(); 
+            }
+        }
+
+        // --- NEW: LEADERBOARD SYSTEM (FIXED) ---
+        async function openLeaderboard() {
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById('view-leaderboard').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "Aula Para Pahlawan";
+            document.getElementById('modal-type-badge').innerText = "RANK";
+            document.getElementById('game-modal').classList.remove('opacity-0', 'pointer-events-none');
+            
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-xs italic"><i class="fas fa-spinner fa-spin"></i> Mencari yang terkuat...</td></tr>';
+
+            try {
+                const snap = await db.collection('users').get();
+                let users = [];
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.nisn === "ADMIN" || !d.nama) return;
+                    
+                    let xp = 0;
+                    for(let i=1; i<=15; i++) {
+                        if(d.stats && d.stats[`level_${i}_status`] === 'approved') {
+                            xp += (d.stats[`level_${i}_xp`] || 0);
+                        }
+                    }
+                    users.push({ name: d.nama, xp: xp, avatar: d.avatar || 'blue' });
+                });
+
+                // Sort descending
+                users.sort((a,b) => b.xp - a.xp);
+
+                list.innerHTML = "";
+                if(users.length === 0) {
+                     list.innerHTML = '<tr><td colspan="3" class="p-4 text-center italic">Belum ada pahlawan.</td></tr>';
+                     return;
+                }
+
+                users.forEach((u, i) => {
+                    let rankClass = "text-[#3e2723]";
+                    let icon = `#${i+1}`;
+                    let bgClass = "";
+                    
+                    if(i === 0) { rankClass = "rank-1"; icon = '<i class="fas fa-crown"></i>'; bgClass="bg-yellow-100/50"; }
+                    else if(i === 1) { rankClass = "rank-2"; bgClass="bg-gray-100/50"; }
+                    else if(i === 2) { rankClass = "rank-3"; bgClass="bg-orange-100/50"; }
+
+                    if(u.name === currentUserData.nama) bgClass += " current-user-row";
+
+                    list.innerHTML += `
+                        <tr class="border-b border-[#d7ccc8] ${bgClass}">
+                            <td class="p-3 text-center ${rankClass} font-bold">${icon}</td>
+                            <td class="p-3 font-serif flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-stone-400 flex items-center justify-center text-[10px] text-white border border-[#5d4037]">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                ${u.name}
+                            </td>
+                            <td class="p-3 text-right font-bold text-amber-700">${u.xp} XP</td>
+                        </tr>
+                    `;
+                });
+
+            } catch(e) {
+                console.error(e);
+                list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Gagal memuat tahta.</td></tr>';
             }
         }
 
@@ -1183,6 +1151,7 @@
         async function startLevelAction() {
             document.getElementById('view-intro').classList.add('hidden');
             const type = levels.find(l => l.id === activeLevel).type;
+            const lData = levels.find(l => l.id === activeLevel);
             
             if(type === 'quiz') {
                 await startQuiz();
@@ -1190,24 +1159,235 @@
             else if(type === 'boss') {
                 await startBossBattle();
             }
-            else if(type === 'upload') {
+            else if(type === 'upload' || type === 'project') {
                 document.getElementById('view-upload').classList.remove('hidden');
                 const phetContainer = document.getElementById('phet-container');
                 const phetFrame = document.getElementById('phet-frame');
                 const phetBtn = document.getElementById('phet-fullscreen-btn');
+                const projectForm = document.getElementById('project-form-container');
+                const uploadNote = document.getElementById('upload-note');
                 
+                // Reset display
+                phetContainer.classList.add('hidden');
+                projectForm.classList.add('hidden');
+                uploadNote.classList.remove('hidden'); // Default show note
+
                 if (activeLevel === 5) {
                     phetContainer.classList.remove('hidden');
                     const url = "https://phet.colorado.edu/sims/html/energy-skate-park/latest/energy-skate-park_en.html";
                     phetFrame.src = url;
                     if(phetBtn) phetBtn.href = url;
+                } else if (activeLevel === 15) {
+                    // NEW: Project Mode
+                    projectForm.classList.remove('hidden');
+                    uploadNote.classList.add('hidden'); // Hide default note, use specific fields
+                    
+                    const membersDiv = document.getElementById('project-members-area');
+                    membersDiv.innerHTML = '<p class="text-xs italic text-stone-500">Memuat pasukan sekelas...</p>';
+                    
+                    try {
+                        const snap = await db.collection('users').where('kelas', '==', currentUserData.kelas).get();
+                        let html = '<p class="text-xs font-bold mb-2">Pilih Anggota Tim:</p><div class="grid grid-cols-2 gap-2 text-xs max-h-40 overflow-y-auto">';
+                        
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            if(d.nisn === currentUserData.nisn) return; 
+                            html += `<label class="flex items-center gap-2 bg-white p-2 rounded border border-stone-300 cursor-pointer hover:bg-stone-100"><input type="checkbox" class="member-checkbox" value="${d.nama}"><span>${d.nama}</span></label>`;
+                        });
+                        html += '</div>';
+                        membersDiv.innerHTML = html;
+                    } catch(e) {
+                        console.error(e);
+                        membersDiv.innerHTML = '<textarea id="project-members-manual" class="w-full p-2 border" placeholder="Gagal memuat otomatis. Tulis manual nama anggota..."></textarea>';
+                    }
+                    phetFrame.src = ""; 
                 } else {
-                    phetContainer.classList.add('hidden');
                     phetFrame.src = ""; 
                 }
             }
-            else {
-                startGame(levels.find(l => l.id === activeLevel).gameType);
+            else if (type === 'game') {
+                startGame(lData.gameType);
+            }
+        }
+
+        // --- NEW: MINI GAMES LOGIC (FIXED) ---
+        function startGame(gameType) {
+            document.getElementById('view-game').classList.remove('hidden');
+            const canvas = document.getElementById('game-canvas');
+            const instr = document.getElementById('game-instruction');
+            canvas.innerHTML = "";
+            
+            if (gameType === 'word_scramble') {
+                instr.innerText = "Susunlah huruf-huruf acak di bawah ini menjadi istilah fisika yang benar!";
+                const words = ["ENERGI", "KINETIK", "POTENSIAL", "MEKANIK", "USAHA", "DAYA", "JOULE", "KEKEKALAN"];
+                const targetWord = words[Math.floor(Math.random() * words.length)];
+                const scrambled = targetWord.split('').sort(() => 0.5 - Math.random()).join('');
+                
+                canvas.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <div class="text-4xl font-mono text-amber-500 tracking-[0.5em] mb-6 font-bold drop-shadow-md text-center break-all">${scrambled}</div>
+                        <input type="text" id="game-input" class="p-3 w-3/4 text-center rounded bg-[#efebe9] text-[#3e2723] mb-4 uppercase font-bold border-2 border-[#8d6e63]" placeholder="Jawaban...">
+                        <button onclick="checkScramble('${targetWord}')" class="btn-medieval btn-gold px-6 py-2 rounded text-sm font-bold">KIRIM JAWABAN</button>
+                    </div>
+                `;
+            } 
+            else if (gameType === 'energy_sort') {
+                instr.innerText = "Tentukan apakah sumber energi di bawah ini Terbarukan atau Tak Terbarukan!";
+                const items = [
+                    { name: "Sinar Matahari", type: 1 }, { name: "Batubara", type: 0 },
+                    { name: "Angin", type: 1 }, { name: "Minyak Bumi", type: 0 },
+                    { name: "Air Terjun", type: 1 }, { name: "Gas Alam", type: 0 },
+                    { name: "Biomassa", type: 1 }, { name: "Nuklir", type: 0 }
+                ];
+                let currentIndex = 0;
+                let score = 0;
+                
+                window.renderSortItem = () => {
+                    if (currentIndex >= items.length) {
+                        finishLevel(Math.round((score/items.length)*100), 'game');
+                        return;
+                    }
+                    const item = items[currentIndex];
+                    canvas.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div class="text-xs text-stone-400 mb-2">Soal ${currentIndex+1}/${items.length}</div>
+                            <div class="w-48 h-32 flex items-center justify-center bg-[#3e2723] border-4 border-[#5d4037] rounded-lg mb-6 shadow-lg">
+                                <span class="text-xl font-bold text-amber-100 text-center px-2 title-font">${item.name}</span>
+                            </div>
+                            <div class="flex gap-4 w-full justify-center">
+                                <button onclick="checkSort(1, ${item.type})" class="btn-medieval btn-green w-1/3 py-3 rounded text-xs font-bold shadow-lg transform hover:scale-105 transition">TERBARUKAN</button>
+                                <button onclick="checkSort(0, ${item.type})" class="btn-medieval btn-red w-1/3 py-3 rounded text-xs font-bold shadow-lg transform hover:scale-105 transition">TAK TERBARUKAN</button>
+                            </div>
+                        </div>
+                    `;
+                };
+                
+                window.checkSort = (ans, correct) => {
+                    if (ans === correct) {
+                        score++; playSound('correct');
+                    } else {
+                        playSound('wrong');
+                    }
+                    currentIndex++;
+                    renderSortItem();
+                };
+                
+                renderSortItem();
+            }
+            else if (gameType === 'click_target') { 
+                instr.innerText = "Tangkap Foton! Klik bola cahaya yang muncul sebanyak-banyaknya dalam 15 detik!";
+                let score = 0;
+                let timeLeft = 15;
+                
+                const timerDisplay = document.createElement('div');
+                timerDisplay.className = "absolute top-2 right-2 text-white font-mono bg-black/50 px-2 rounded";
+                timerDisplay.innerText = "15s";
+                canvas.appendChild(timerDisplay);
+                
+                const scoreDisplay = document.createElement('div');
+                scoreDisplay.className = "absolute top-2 left-2 text-yellow-400 font-bold bg-black/50 px-2 rounded";
+                scoreDisplay.innerText = "Skor: 0";
+                canvas.appendChild(scoreDisplay);
+
+                gameTimer = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.innerText = `${timeLeft}s`;
+                    if(timeLeft <= 0) {
+                        clearInterval(gameTimer); 
+                        clearInterval(gameInterval);
+                        canvas.innerHTML = "";
+                        finishLevel(Math.min(100, score * 10), 'game'); // 10 click = 100 score
+                    }
+                }, 1000);
+
+                gameInterval = setInterval(() => {
+                    const el = document.createElement('div');
+                    el.className = "photon";
+                    // Random position within container (container is relative)
+                    el.style.left = Math.floor(Math.random() * 80 + 10) + "%";
+                    el.style.top = Math.floor(Math.random() * 80 + 10) + "%";
+                    
+                    el.onmousedown = (e) => {
+                        e.stopPropagation(); // prevent bubbling
+                        score++; 
+                        playSound('correct');
+                        scoreDisplay.innerText = `Skor: ${score}`;
+                        el.style.transform = "scale(1.5)";
+                        el.style.opacity = "0";
+                        setTimeout(() => el.remove(), 200);
+                    };
+                    canvas.appendChild(el);
+                    
+                    // Remove after 1.5s if not clicked
+                    setTimeout(() => { if(el.parentNode) el.remove(); }, 1500);
+                }, 800);
+            }
+        }
+
+        window.checkScramble = (realWord) => {
+            const val = document.getElementById('game-input').value.toUpperCase().trim();
+            if(val === realWord) { 
+                playSound('correct'); 
+                finishLevel(100, 'game'); 
+            } else { 
+                playSound('wrong'); 
+                alert("Salah! Coba susun lagi."); 
+                document.getElementById('game-input').value = ""; 
+                document.getElementById('game-input').focus();
+            }
+        }
+
+        // --- UPDATED FINISH LEVEL LOGIC (RESTORED ACC KING) ---
+        async function finishLevel(score, type) {
+            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById('view-result').classList.remove('hidden');
+            
+            const msgEl = document.getElementById('res-msg');
+            const iconEl = document.getElementById('res-icon');
+            const titleEl = document.getElementById('res-title');
+
+            if (score >= 70) {
+                playSound('complete');
+                titleEl.innerText = "MISI TUNTAS!";
+                iconEl.className = "fas fa-scroll text-6xl text-yellow-600 mb-6 drop-shadow-md"; 
+                msgEl.innerText = `Skor ${score} tercapai! Merpati pos dikirim ke Raja untuk verifikasi.`;
+                
+                // Save to Firestore as PENDING submission
+                try {
+                    const batch = db.batch();
+                    
+                    // 1. Create Submission for Admin to Approve
+                    const subRef = db.collection('submissions').doc();
+                    batch.set(subRef, {
+                        nisn: currentUserData.nisn,
+                        nama: currentUserData.nama,
+                        level: activeLevel,
+                        content: `Skor Akhir: ${score}`, 
+                        type: type, 
+                        note: "Menunggu pengesahan nilai.",
+                        status: 'pending',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // 2. Update User Level Status to Pending
+                    const userRef = db.collection('users').doc(currentUserDocId);
+                    const updateData = {};
+                    updateData[`stats.level_${activeLevel}_status`] = 'pending';
+                    updateData[`stats.level_${activeLevel}_xp`] = score; 
+                    
+                    batch.update(userRef, updateData);
+
+                    await batch.commit();
+                    
+                } catch(e) {
+                    console.error("Save failed", e);
+                    msgEl.innerText += " (Gagal mengirim laporan, cek koneksi).";
+                }
+            } else {
+                playSound('wrong');
+                titleEl.innerText = "KEKALAHAN";
+                iconEl.className = "fas fa-skull text-6xl text-red-500 mb-6 drop-shadow-md";
+                msgEl.innerText = `Skor ${score} belum cukup (Min 70). Kumpulkan tekadmu dan coba lagi!`;
             }
         }
 
@@ -1217,15 +1397,13 @@
         async function startBossBattle() {
             document.getElementById('view-boss').classList.remove('hidden');
             const levelData = levels.find(l => l.id === activeLevel);
-            
             document.getElementById('boss-image').src = levelData.bossImg;
             document.getElementById('boss-name').innerText = levelData.title;
             
-            // Fetch Questions
             bossState.questions = [];
             bossState.currentQ = 0;
             bossState.hp = 100;
-            bossState.playerHp = 3; 
+            bossState.playerHp = (activeLevel === 4 || activeLevel === 9 || activeLevel === 14) ? 5 : 3; 
             
             updateBossUI();
 
@@ -1245,15 +1423,14 @@
 
         function updateBossUI() {
             document.getElementById('boss-hp-bar').style.width = `${bossState.hp}%`;
-            document.getElementById('player-hp-bar').style.width = `${(bossState.playerHp/3)*100}%`;
+            const maxPlayerHp = (activeLevel === 4 || activeLevel === 9 || activeLevel === 14) ? 5 : 3;
+            document.getElementById('player-hp-bar').style.width = `${(bossState.playerHp/maxPlayerHp)*100}%`;
         }
 
         function renderBossQuestion() {
             if (bossState.currentQ >= bossState.questions.length) {
-                // Out of questions - loop or reshuffle? Let's loop for boss
                 bossState.currentQ = 0;
             }
-            
             const q = bossState.questions[bossState.currentQ];
             document.getElementById('boss-q-text').innerText = q.q;
             
@@ -1269,14 +1446,15 @@
 
         function handleBossAnswer(selected, correct) {
             const bossView = document.getElementById('view-boss');
-            
             if (selected === correct) {
-                // Player Hits Boss
                 playSound('correct');
-                const damage = 100 / Math.min(bossState.questions.length, 5); // Minimum 5 hits to kill or question count
+                let damage;
+                if (activeLevel === 4 || activeLevel === 9 || activeLevel === 14) {
+                    damage = 7;
+                } else {
+                    damage = 100 / Math.min(bossState.questions.length, 5);
+                }
                 bossState.hp = Math.max(0, bossState.hp - damage);
-                
-                // Animation
                 document.getElementById('boss-image').classList.add('shake-effect');
                 setTimeout(()=>document.getElementById('boss-image').classList.remove('shake-effect'), 500);
 
@@ -1285,7 +1463,6 @@
                     return;
                 }
             } else {
-                // Boss Hits Player
                 playSound('wrong');
                 bossState.playerHp--;
                 bossView.classList.add('shake-effect');
@@ -1297,42 +1474,35 @@
                     return;
                 }
             }
-            
             updateBossUI();
             bossState.currentQ++;
-            setTimeout(renderBossQuestion, 800); // Slight delay for impact
+            setTimeout(renderBossQuestion, 800); 
         }
 
         // --- QUIZ (Standard) ---
         async function startQuiz() {
             document.getElementById('view-quiz').classList.remove('hidden');
             document.getElementById('q-feedback').classList.add('hidden'); 
-            
             currentQs = []; quizScore = 0; currentQIdx = 0;
             try {
                 const snap = await db.collection('questions').where('level', '==', activeLevel).get();
                 snap.forEach(doc => currentQs.push(doc.data()));
             } catch(e) { console.error(e); }
-
             if(currentQs.length === 0) currentQs = [{q:"Soal belum tersedia di gudang senjata.", opts:["A","B","C","D"], a:0, exp:"-" }];
             renderQuestion(0);
         }
 
         function renderQuestion(idx) {
             document.getElementById('q-feedback').classList.add('hidden'); 
-            
             if(idx >= currentQs.length) { 
                 const finalScore = Math.round((quizScore / currentQs.length) * 100);
-                playSound('complete');
                 finishLevel(finalScore, 'quiz'); 
                 return; 
             }
-            
             const q = currentQs[idx];
             document.getElementById('q-curr').innerText = idx + 1;
             document.getElementById('q-total').innerText = currentQs.length;
             document.getElementById('q-text').innerText = q.q;
-            
             const div = document.getElementById('q-options'); div.innerHTML = "";
             q.opts.forEach((o, i) => {
                 const btn = document.createElement('button');
@@ -1346,7 +1516,6 @@
         function showFeedback(userAnswerIdx, questionData, currentIdx) {
             const opts = document.getElementById('q-options').children;
             for(let btn of opts) btn.disabled = true;
-
             const isCorrect = userAnswerIdx === questionData.a;
             if(isCorrect) {
                 quizScore++;
@@ -1357,13 +1526,10 @@
                 opts[userAnswerIdx].classList.add('bg-red-200', 'border-red-600', 'text-red-900');
                 opts[questionData.a].classList.add('bg-green-200', 'border-green-600', 'text-green-900'); 
             }
-
             const fbBox = document.getElementById('q-feedback');
             const fbTitle = document.getElementById('fb-title');
             const fbDesc = document.getElementById('fb-desc');
-            
             fbBox.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'border-green-600', 'border-red-600');
-            
             if(isCorrect) {
                 fbBox.classList.add('bg-green-100', 'border-l-green-600');
                 fbTitle.innerText = "TEPAT!";
@@ -1373,9 +1539,7 @@
                 fbTitle.innerText = "MELESET!";
                 fbTitle.className = "font-bold text-lg mb-2 title-font text-red-800";
             }
-            
             fbDesc.innerText = questionData.exp || "Tidak ada petunjuk tambahan.";
-            
             currentQIdx = currentIdx + 1; 
         }
 
@@ -1413,10 +1577,31 @@
 
         async function submitUpload() {
             let f = document.getElementById('file-input').files[0];
-            const note = document.getElementById('upload-note').value;
             const btn = document.getElementById('btn-upload-submit');
+            let note = document.getElementById('upload-note').value;
             
-            if(!f) return alert("Pilih dokumen terlebih dahulu!");
+            if (activeLevel === 15) {
+                const groupName = document.getElementById('project-group-name').value;
+                let members = "";
+                const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+                if (checkboxes.length > 0) {
+                    let memberNames = [currentUserData.nama + " (Ketua)"]; 
+                    checkboxes.forEach(cb => memberNames.push(cb.value));
+                    members = memberNames.join(", ");
+                } else {
+                    const manualInput = document.getElementById('project-members-manual');
+                    if (manualInput && manualInput.value) {
+                        members = currentUserData.nama + " (Ketua), " + manualInput.value;
+                    } else {
+                        members = currentUserData.nama + " (Ketua - Solo)";
+                    }
+                }
+                if (!groupName) return alert("Wajib mengisi Nama Kelompok!");
+                note = `[KELOMPOK: ${groupName}] - Anggota: ${members}`;
+            }
+            
+            if(!f && activeLevel !== 15) return alert("Pilih dokumen terlebih dahulu!");
+            if(!f) return alert("Silakan upload bukti/laporan proyek!");
             if(!supabaseClient) return alert("Koneksi Supabase Terputus!");
 
             btn.innerText = "Mengirim Merpati..."; btn.disabled = true;
@@ -1435,303 +1620,169 @@
                 if(error) throw error;
                 const { data: { publicUrl } } = supabaseClient.storage.from('tugas-uploads').getPublicUrl(path);
                 
-                await submitToFirestore(activeLevel, publicUrl, 'upload', note);
+                await submitToFirestore(activeLevel, publicUrl, activeLevel === 15 ? 'project' : 'upload', note);
                 playSound('complete');
                 showResult(100, "Laporan Diterima!");
             } catch(e) { alert("Gagal Kirim: " + e.message); } finally { btn.innerText = "KIRIM MERPATI POS"; btn.disabled = false; }
         }
 
-        // --- MINI GAMES ---
-        let gameInterval, gameTimer, gameState = {};
-
-        function startGame(type) {
-            document.getElementById('view-game').classList.remove('hidden');
-            const canvas = document.getElementById('game-canvas');
-            canvas.innerHTML = ""; 
-            
-            if (type === 'word_scramble') {
-                gameState = { words: ["ENERGI", "KINETIK", "POTENSIAL", "MEKANIK", "SURYA", "USAHA", "JOULE", "WATT", "NEWTON", "GRAVITASI", "TURBIN", "GENERATOR", "LISTRIK", "MAGNET", "GESEKAN", "FOSIL", "BATUBARA", "MINYAK", "NUKLIR", "URANIUM"], current: 0, score: 0, target: null, scrambled: null };
-                renderWordScramble();
-            } else if (type === 'energy_sort') {
-                gameState = { items: [{n:"Matahari",t:"ren"},{n:"Batu Bara",t:"non"},{n:"Angin",t:"ren"},{n:"Minyak",t:"non"},{n:"Gas",t:"non"}], idx: 0, score: 0 };
-                renderEnergySort();
-            } else if (type === 'click_target') {
-                gameState = { score: 0, time: 30 };
-                renderClickTarget();
-            }
-        }
-
-        function renderWordScramble() {
-            const canvas = document.getElementById('game-canvas');
-            if(gameState.current >= 3) { finishLevel(Math.round((gameState.score/3)*100), 'game'); return; }
-            if (!gameState.target) {
-                gameState.target = gameState.words[Math.floor(Math.random()*gameState.words.length)];
-                gameState.scrambled = gameState.target.split('').sort(()=>0.5-Math.random()).join('');
-            }
-            canvas.innerHTML = `
-                <div class="text-center">
-                    <p class="text-xs text-stone-400 mb-2">Kode Sandi ${gameState.current+1}/3</p>
-                    <h2 class="text-4xl font-bold text-amber-500 mb-6 font-mono tracking-widest">${gameState.scrambled}</h2>
-                    <div id="hint-display" class="mb-4 text-green-400 text-sm font-bold min-h-[20px]"></div>
-                    <input type="text" id="gm-input" class="bg-stone-800 border border-stone-600 p-2 text-center text-white uppercase rounded w-48 mb-4 focus:outline-none focus:border-amber-500" placeholder="JAWABAN...">
-                    <br>
-                    <div class="flex justify-center gap-2">
-                        <button id="gm-hint" class="btn-medieval bg-purple-700 text-white px-4 py-2 rounded text-xs">Petunjuk</button>
-                        <button id="gm-check" class="btn-medieval bg-blue-700 text-white px-6 py-2 rounded text-xs">Serang</button>
-                    </div>
-                </div>
-            `;
-            document.getElementById('gm-hint').onclick = () => document.getElementById('hint-display').innerText = `Huruf pertama: "${gameState.target[0]}"`;
-            document.getElementById('gm-check').onclick = () => {
-                const ans = document.getElementById('gm-input').value.toUpperCase();
-                if(ans === gameState.target) { playSound('correct'); gameState.score++; } else { playSound('wrong'); alert(`Gagal! Sandinya adalah: ${gameState.target}`); }
-                gameState.current++; gameState.target = null; renderWordScramble();
-            };
-        }
-
-        function renderEnergySort() {
-            const canvas = document.getElementById('game-canvas');
-            if(gameState.idx >= gameState.items.length) { finishLevel(Math.round((gameState.score/gameState.items.length)*100), 'game'); return; }
-            const item = gameState.items[gameState.idx];
-            canvas.innerHTML = `<div class="text-center w-full"><div class="mb-8"><span class="text-6xl animate-bounce inline-block text-amber-500"><i class="fas fa-box-open"></i></span><h2 class="text-2xl font-bold text-white mt-4 font-serif">${item.n}</h2></div><div class="flex gap-4 justify-center"><button onclick="checkSort('ren')" class="btn-medieval bg-green-700 text-white px-4 py-3 rounded w-1/2">Terbarukan</button><button onclick="checkSort('non')" class="btn-medieval bg-red-700 text-white px-4 py-3 rounded w-1/2">Tak Terbarukan</button></div></div>`;
-        }
-        window.checkSort = (t) => {
-            if(t === gameState.items[gameState.idx].t) { playSound('correct'); gameState.score++; } else playSound('wrong');
-            gameState.idx++; renderEnergySort();
-        };
-
-        function renderClickTarget() {
-            const canvas = document.getElementById('game-canvas');
-            canvas.innerHTML = `<div class="absolute top-2 right-2 text-yellow-400 font-mono text-xl" id="gm-timer">30s</div><div class="absolute top-2 left-2 battery-container"><div class="battery-fill" id="gm-battery"></div></div><div id="gm-play-area" class="w-full h-full relative"></div>`;
-            gameTimer = setInterval(() => {
-                gameState.time--; document.getElementById('gm-timer').innerText = gameState.time+'s';
-                if(gameState.time<=0) { clearInterval(gameTimer); clearInterval(gameInterval); playSound('complete'); finishLevel(Math.min(gameState.score,100), 'game'); }
-            }, 1000);
-            gameInterval = setInterval(() => spawnPhoton(), 800);
-        }
-        function spawnPhoton() {
-            const area = document.getElementById('gm-play-area'); if(!area) return;
-            const dot = document.createElement('div'); dot.className = "photon bg-yellow-400 shadow-[0_0_10px_yellow] absolute";
-            const size = Math.random()*30+20; dot.style.width=size+'px'; dot.style.height=size+'px';
-            dot.style.left = Math.random()*(area.clientWidth-50)+'px'; dot.style.top = Math.random()*(area.clientHeight-50)+'px';
-            dot.onclick = () => { playSound('correct'); gameState.score+=10; dot.remove(); document.getElementById('gm-battery').style.width = Math.min(gameState.score,100)+'%'; if(gameState.score>=100) { clearInterval(gameTimer); clearInterval(gameInterval); playSound('complete'); finishLevel(100,'game'); } };
-            area.appendChild(dot); setTimeout(()=>dot.remove(), 1500);
-        }
-
-        // --- SUBMISSION & RESULT ---
-        async function finishLevel(score, type) {
-            const duration = Math.round((Date.now() - levelStartTime) / 1000);
-            let speedBonus = type === 'upload' ? 0 : Math.max(0, 50 - duration);
-            const totalXP = Math.round(score + speedBonus);
-            await submitToFirestore(activeLevel, score, type, '-', totalXP, duration);
-            playSound('complete');
-            showResult(score, `Wilayah Ditaklukkan! (+${totalXP} Gold)`);
-        }
-
-        async function submitToFirestore(lvl, content, type, note, xp=0, time=0) {
-            await db.collection('submissions').add({
-                nisn: currentUserData.nisn, nama: currentUserData.nama, level: lvl,
-                content, type, note, xp, time, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        async function submitToFirestore(lvl, url, type, note) {
+            const batch = db.batch();
+            const subRef = db.collection('submissions').doc();
+            batch.set(subRef, {
+                nisn: currentUserData.nisn,
+                nama: currentUserData.nama,
+                level: lvl,
+                content: url,
+                type: type,
+                note: note,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            const upd = {}; 
+
+            const userRef = db.collection('users').doc(currentUserDocId);
+            const upd = {};
             upd[`stats.level_${lvl}_status`] = 'pending';
-            upd[`stats.level_${lvl}_xp`] = xp; 
-            upd[`stats.level_${lvl}_time`] = time;
-            await db.collection('users').doc(currentUserDocId).update(upd);
+            batch.update(userRef, upd);
+
+            await batch.commit();
         }
 
         function showResult(score, msg) {
-            ['intro','quiz','upload','game','result','shop','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
-            document.getElementById('view-result').classList.remove('hidden');
-            document.getElementById('res-msg').innerText = `${msg} (Skor Pertempuran: ${score})`;
+             ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+             document.getElementById('view-result').classList.remove('hidden');
+             document.getElementById('res-msg').innerText = msg;
         }
 
-        // --- LEADERBOARD LOGIC ---
-        async function openLeaderboard() {
-            ['intro','quiz','upload','game','result','shop','material','leaderboard','castle','boss'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
-            document.getElementById('view-leaderboard').classList.remove('hidden');
-            
-            document.getElementById('modal-title').innerText = "Aula Pahlawan";
-            document.getElementById('modal-type-badge').innerText = "RANK";
-            document.getElementById('game-modal').classList.remove('opacity-0', 'pointer-events-none');
-
-            const tbody = document.getElementById('leaderboard-list');
-            tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-xs italic">Scribe sedang menghitung...</td></tr>`;
-
-            try {
-                const snapshot = await db.collection('users').get();
-                const allUsers = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    let totalXP = 0;
-                    for(let i=1; i<=15; i++) {
-                        if(data.stats[`level_${i}_status`] === 'approved') totalXP += (data.stats[`level_${i}_xp`] || 0);
-                    }
-                    allUsers.push({ name: data.nama, class: data.kelas, avatar: data.avatar || 'blue', xp: totalXP, isMe: data.nisn === currentUserData.nisn });
-                });
-                allUsers.sort((a, b) => b.xp - a.xp);
-                tbody.innerHTML = "";
-                allUsers.slice(0, 50).forEach((u, index) => {
-                    let rankDisplay = index + 1;
-                    let rankClass = "text-stone-600 font-bold";
-                    let rowClass = "border-b border-[#a1887f] hover:bg-[#d7ccc8]";
-                    if (index === 0) { rankDisplay = '<i class="fas fa-crown"></i>'; rankClass = "rank-1"; }
-                    else if (index === 1) { rankDisplay = '2'; rankClass = "rank-2"; }
-                    else if (index === 2) { rankDisplay = '3'; rankClass = "rank-3"; }
-                    if (u.isMe) rowClass += " current-user-row";
-
-                    // Map avatars for display logic if needed, simplifed here
-                    const row = `
-                        <tr class="${rowClass}">
-                            <td class="p-3 text-center ${rankClass}">${rankDisplay}</td>
-                            <td class="p-3 flex items-center gap-3">
-                                <i class="fas fa-user-shield text-[#5d4037]"></i>
-                                <div>
-                                    <div class="font-bold text-[#3e2723] text-xs font-serif uppercase">${u.name} ${u.isMe ? '(Anda)' : ''}</div>
-                                    <div class="text-[10px] text-[#795548]">${u.class}</div>
-                                </div>
-                            </td>
-                            <td class="p-3 text-right font-bold text-[#bf360c] title-font text-xs">${u.xp} Gold</td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            } catch (e) { console.error(e); tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-xs text-red-700">Gagal memuat catatan.</td></tr>`; }
-        }
-
-        // --- ADMIN FUNCTIONS (Standard) ---
-        function downloadQuestionTemplate() {
-            const csv = "Level,Pertanyaan,Opsi A,Opsi B,Opsi C,Opsi D,Index Jawaban (0-3),Penjelasan (Opsional)\n1,Energi matahari?,Air,Surya,Angin,Tanah,1,Karena matahari memancarkan foton.";
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "template_soal_v2.csv"; a.click();
-        }
-        function downloadGrades() { 
-            let csv = "Nama,NISN,Kelas,Total XP,Nilai Akhir (Skala 100),Predikat,Waktu Total (detik)";
-            for(let i=1; i<=15; i++) csv += `,L${i}_Status,L${i}_Skor/Info,L${i}_Waktu(dtk)`;
-            csv += "\n";
+        // --- OPTIMIZED ADMIN DATA LOADING (PAGINATION) ---
+        window.loadAdminData = function() { 
             db.collection('users').get().then(snap => {
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    let totalXP = 0; let totalTime = 0;
-                    let row = `"${d.nama}",${d.nisn},${d.kelas}`;
-                    
-                    // Calc totals & detail columns
-                    let levelCols = "";
-                    for(let i=1; i<=15; i++) {
-                        const st = d.stats[`level_${i}_status`] || '-';
-                        const xp = d.stats[`level_${i}_xp`] || 0;
-                        const time = d.stats[`level_${i}_time`] || 0;
-                        if(st === 'approved') { totalXP += xp; totalTime += time; }
-                        levelCols += `,${st},${xp},${time}`;
-                    }
-                    
-                    // --- NILAI AKHIR CALCULATION ---
-                    // Base 70 + (TotalXP / MaxPossibleXP * 30)
-                    // Max XP approx: 15 levels * 140 avg XP = 2100
-                    const maxPossibleXP = 2100;
-                    let finalGrade = 70 + ((totalXP / maxPossibleXP) * 30);
-                    // Cap at 100
-                    finalGrade = Math.min(100, Math.max(70, finalGrade)).toFixed(2);
-                    
-                    let predikat = "C";
-                    if(finalGrade >= 90) predikat = "A (Sangat Baik)";
-                    else if(finalGrade >= 80) predikat = "B (Baik)";
-                    else predikat = "C (Cukup)";
+                const classes = new Set();
+                snap.forEach(doc => { const k = doc.data().kelas; if(k) classes.add(k); });
+                const filterSel = document.getElementById('filter-class');
+                const currentVal = filterSel.value;
+                filterSel.innerHTML = '<option value="">Semua Pasukan</option>';
+                // Sorting classes properly if possible, e.g. 10.1, 10.2
+                const sortedClasses = Array.from(classes).sort(); 
+                sortedClasses.forEach(c => { filterSel.innerHTML += `<option value="${c}">${c}</option>`; });
+                filterSel.value = currentVal;
+            });
 
-                    row += `,${totalXP},${finalGrade},"${predikat}",${totalTime}${levelCols}\n`;
-                    csv += row;
-                });
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = `Rekap_Nilai_Fisika_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-            });
-        }
-        async function processQuestionImport() { /* Same logic */
-            const file = document.getElementById('csv-questions').files[0];
-            if(!file) return alert("Pilih file!");
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const lines = e.target.result.split('\n');
-                const batch = db.batch();
-                let c = 0;
-                for(let i=1; i<lines.length; i++) {
-                    const l = lines[i].trim();
-                    if(!l) continue;
-                    const p = l.split(',');
-                    if(p.length >= 7) {
-                        const lvl = parseInt(p[0]);
-                        if(!isNaN(lvl)) {
-                            batch.set(db.collection('questions').doc(), { level: lvl, q: p[1], opts: [p[2],p[3],p[4],p[5]], a: parseInt(p[6]), exp: p[7]||"" });
-                            c++;
-                        }
-                    }
-                }
-                await batch.commit(); alert(`Berhasil import ${c} soal!`);
-            };
-            reader.readAsText(file);
-        }
-        function loadAdminData() { /* Same logic */
             db.collection('submissions').where('status','==','pending').onSnapshot(snap => {
-                const l = document.getElementById('admin-task-list'); l.innerHTML = "";
-                document.getElementById('adm-pending').innerText = `${snap.size} Menunggu`;
-                const bulkBtn = document.getElementById('btn-bulk-acc');
-                if (snap.size > 0) bulkBtn.classList.remove('hidden'); else bulkBtn.classList.add('hidden');
+                allPendingTasks = [];
                 snap.forEach(doc => {
-                    const d = doc.data();
-                    let ct = d.type === 'upload' ? `<a href="${d.content}" target="_blank" class="text-blue-400 underline">Lihat Bukti</a>` : `<span class="text-yellow-400 font-bold">${d.content}</span>`;
-                    l.innerHTML += `
-                    <tr class="border-b border-[#546e7a] hover:bg-[#455a64]">
-                        <td class="p-3"><input type="checkbox" class="task-cb cursor-pointer" value="${doc.id}" data-nisn="${d.nisn}" data-level="${d.level}" data-nama="${d.nama}"></td>
-                        <td class="p-3">${d.nama}<br><span class="text-xs text-slate-400">Wilayah ${d.level}</span></td>
-                        <td class="p-3 text-xs">${ct}</td>
-                        <td class="p-3 flex gap-2">
-                            <button onclick="admAct('${doc.id}','${d.nisn}',${d.level},'approved')" class="text-green-400 hover:text-green-300"><i class="fas fa-check"></i></button>
-                            <button onclick="admAct('${doc.id}','${d.nisn}',${d.level},'rejected')" class="text-red-400 hover:text-red-300"><i class="fas fa-times"></i></button>
-                        </td>
-                    </tr>`;
+                    allPendingTasks.push({ id: doc.id, ...doc.data() });
                 });
+                renderAdminTasks(); 
             });
-            db.collection('users').orderBy('nama').onSnapshot(snap => { window.allStd = []; snap.forEach(d=>window.allStd.push(d.data())); renderStudentProgressTable(); });
-        }
-        function toggleAll(source) { const checkboxes = document.querySelectorAll('.task-cb'); for(let i=0; i<checkboxes.length; i++) checkboxes[i].checked = source.checked; }
-        async function approveSelected() { /* Same logic */
-            const checkboxes = document.querySelectorAll('.task-cb:checked');
-            if(checkboxes.length === 0) return alert("Pilih tugas!");
-            if(!confirm(`ACC ${checkboxes.length} tugas?`)) return;
-            let promises = [];
-            checkboxes.forEach(cb => {
-                const id = cb.value; const nisn = cb.dataset.nisn; const level = parseInt(cb.dataset.level);
-                const p = (async () => {
-                    await db.collection('submissions').doc(id).update({status: 'approved'});
-                    const u = await db.collection('users').where('nisn','==',nisn).get();
-                    if(!u.empty) { const upd={}; upd[`stats.level_${level}_status`] = 'approved'; await u.docs[0].ref.update(upd); }
-                })();
-                promises.push(p);
-            });
-            try { await Promise.all(promises); alert("Berhasil ACC!"); document.getElementById('check-all').checked = false; } catch(e) { console.error(e); alert("Error."); }
-        }
-        async function admAct(id, nisn, lvl, act) { /* Same logic */
-            let note = ""; if(act==='rejected') note = prompt("Alasan penolakan:") || "Revisi";
-            const batch = db.batch();
-            batch.update(db.collection('submissions').doc(id), {status: act});
-            const u = await db.collection('users').where('nisn','==',nisn).get();
-            if(!u.empty) { const upd={}; upd[`stats.level_${lvl}_status`]=act; if(act==='rejected') upd[`stats.level_${lvl}_note`]=note; batch.update(u.docs[0].ref, upd); }
-            await batch.commit();
-        }
-        function renderStudentProgressTable() {
-            const k = document.getElementById('search-student').value.toLowerCase();
-            const l = document.getElementById('student-progress-list'); l.innerHTML = "";
             
-            // Helper for colors and icons
+            db.collection('users').orderBy('nama').onSnapshot(snap => { 
+                allStudentsList = []; 
+                snap.forEach(doc => allStudentsList.push({id: doc.id, ...doc.data()})); // Include ID for updates
+                renderStudentProgressTable(); 
+            });
+        }
+
+        window.renderAdminTasks = function() {
+            const l = document.getElementById('admin-task-list'); 
+            if (!l) return;
+            l.innerHTML = "";
+            const filterSel = document.getElementById('filter-class');
+            const selectedClass = filterSel ? filterSel.value : "";
+            
+            let filteredTasks = allPendingTasks;
+            if (selectedClass) {
+                filteredTasks = allPendingTasks.filter(t => {
+                    const student = allStudentsList.find(s => s.nisn === t.nisn);
+                    return student ? student.kelas === selectedClass : true; 
+                });
+            }
+
+            const pendingBadge = document.getElementById('adm-pending');
+            if(pendingBadge) pendingBadge.innerText = `${filteredTasks.length} Menunggu`;
+            
+            const bulkBtn = document.getElementById('btn-bulk-acc');
+            if(bulkBtn) {
+                 if (filteredTasks.length > 0) bulkBtn.classList.remove('hidden'); else bulkBtn.classList.add('hidden');
+            }
+
+            const totalPages = Math.ceil(filteredTasks.length / taskLimit) || 1;
+            if (taskPage > totalPages) taskPage = totalPages;
+            if (taskPage < 1) taskPage = 1;
+
+            const start = (taskPage - 1) * taskLimit;
+            const end = start + taskLimit;
+            const tasksToShow = filteredTasks.slice(start, end);
+
+            tasksToShow.forEach(d => {
+                let ct = d.type === 'upload' || d.type === 'project' ? `<a href="${d.content}" target="_blank" class="text-blue-400 underline">Lihat Bukti</a>` : `<span class="text-yellow-400 font-bold">${d.content}</span>`;
+                if(d.note && d.note.length > 5) ct += `<div class="text-[10px] text-stone-400 mt-1 italic">${d.note}</div>`;
+
+                const studentName = d.nama || d.nisn || "Tanpa Nama";
+
+                l.innerHTML += `
+                <tr class="border-b border-[#546e7a] hover:bg-[#455a64]">
+                    <td class="p-3"><input type="checkbox" class="task-cb cursor-pointer" value="${d.id}" data-nisn="${d.nisn}" data-level="${d.level}" data-nama="${d.nama}"></td>
+                    <td class="p-3">${studentName}<br><span class="text-xs text-slate-400">Wilayah ${d.level}</span></td>
+                    <td class="p-3 text-xs">${ct}</td>
+                    <td class="p-3 flex gap-2">
+                        <button onclick="admAct('${d.id}','${d.nisn}',${d.level},'approved', this)" class="text-green-400 hover:text-green-300"><i class="fas fa-check"></i></button>
+                        <button onclick="admAct('${d.id}','${d.nisn}',${d.level},'rejected', this)" class="text-red-400 hover:text-red-300"><i class="fas fa-times"></i></button>
+                    </td>
+                </tr>`;
+            });
+
+            const pageInfo = document.getElementById('tasks-page-info');
+            if(pageInfo) pageInfo.innerText = `Hal ${taskPage} dari ${totalPages}`;
+        }
+
+        window.changeTaskPage = function(delta) {
+            taskPage += delta;
+            renderAdminTasks();
+        }
+
+        window.filterStudentList = function() {
+            stdPage = 1; 
+            renderStudentProgressTable();
+        }
+
+        window.renderStudentProgressTable = function() {
+            const searchInput = document.getElementById('search-student');
+            if (!searchInput) return;
+            
+            const k = searchInput.value.toLowerCase();
+            const l = document.getElementById('student-progress-list'); 
+            if (!l) return;
+            l.innerHTML = "";
+            
             const getAvatarColor = (id) => avatars.find(a => a.id === id)?.color || 'bg-blue-800';
             const getCastleIcon = (lvl) => castleLevels.find(c => c.id === (lvl||1))?.icon || 'fa-campground';
 
-            window.allStd.filter(s=>s.nama.toLowerCase().includes(k)).forEach(s => {
+            // Filter locally
+            let filteredStudents = allStudentsList.filter(s => s.nama.toLowerCase().includes(k));
+            
+            // Sort by Class then Name (Requested Fix)
+            filteredStudents.sort((a, b) => {
+                if (a.kelas < b.kelas) return -1;
+                if (a.kelas > b.kelas) return 1;
+                return a.nama.localeCompare(b.nama);
+            });
+
+            // Pagination Logic
+            const totalPages = Math.ceil(filteredStudents.length / stdLimit) || 1;
+            if (stdPage > totalPages) stdPage = totalPages;
+            if (stdPage < 1) stdPage = 1;
+
+            const start = (stdPage - 1) * stdLimit;
+            const end = start + stdLimit;
+            const studentsToShow = filteredStudents.slice(start, end);
+
+            studentsToShow.forEach(s => {
                 let totalXP = 0;
                 let levelCols = "";
                 
-                // Calculate XP and build level dots
+                if (!s.stats) s.stats = {};
+
                 for(let i=1; i<=15; i++) {
                     const st = s.stats[`level_${i}_status`];
                     if(st === 'approved') totalXP += (s.stats[`level_${i}_xp`] || 0);
@@ -1739,7 +1790,6 @@
                     levelCols += `<td class="p-1 text-center ${c}">•</td>`;
                 }
                 
-                // Live Grade Calculation
                 const maxPossibleXP = 2100;
                 let finalGrade = 70 + ((totalXP / maxPossibleXP) * 30);
                 finalGrade = Math.min(100, Math.max(70, finalGrade)).toFixed(1);
@@ -1747,8 +1797,12 @@
                 const avColor = getAvatarColor(s.avatar);
                 const castleIcon = getCastleIcon(s.castle_level);
 
+                // Added Edit Button (Requested Fix)
                 const rowHTML = `
-                    <td class="p-3 sticky left-0 bg-[#37474f] text-white text-xs border-r border-[#263238] z-10 font-bold whitespace-nowrap">${s.nama}</td>
+                    <td class="p-3 sticky left-0 bg-[#37474f] text-white text-xs border-r border-[#263238] z-10 font-bold whitespace-nowrap">
+                        ${s.nama}
+                        <button onclick="resetStudentLevel('${s.id}', '${s.nama}')" class="ml-2 text-[10px] text-orange-400 hover:text-white" title="Reset Level"><i class="fas fa-edit"></i></button>
+                    </td>
                     <td class="p-3 text-center text-xs border-r border-[#263238] text-stone-300">${s.kelas || '-'}</td>
                     <td class="p-3 text-center border-r border-[#263238]">
                         <div class="w-6 h-6 rounded-full ${avColor} flex items-center justify-center border border-white mx-auto shadow-sm" title="${s.avatar || 'blue'}">
@@ -1765,15 +1819,263 @@
                 
                 l.innerHTML += `<tr class="border-b border-[#263238] hover:bg-[#455a64] transition-colors">${rowHTML}</tr>`;
             });
+
+            const pageInfo = document.getElementById('students-page-info');
+            if (pageInfo) pageInfo.innerText = `Hal ${stdPage} dari ${totalPages}`;
         }
-        async function processImport() { /* Same logic */
+
+        window.changeStudentPage = function(delta) {
+            stdPage += delta;
+            renderStudentProgressTable();
+        }
+
+        window.toggleAll = function(source) { const checkboxes = document.querySelectorAll('.task-cb'); for(let i=0; i<checkboxes.length; i++) checkboxes[i].checked = source.checked; }
+        
+        window.approveSelected = async function() { 
+            const checkboxes = document.querySelectorAll('.task-cb:checked');
+            if(checkboxes.length === 0) return alert("Pilih tugas!");
+            if(!confirm(`ACC ${checkboxes.length} tugas?`)) return;
+            
+            const btn = document.getElementById('btn-bulk-acc');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Memproses...";
+            btn.disabled = true;
+
+            let promises = [];
+            checkboxes.forEach(cb => {
+                const id = cb.value; const nisn = cb.dataset.nisn; const level = parseInt(cb.dataset.level);
+                
+                const student = allStudentsList.find(s => s.nisn === nisn);
+                if (student) {
+                    if (!student.stats) student.stats = {};
+                    student.stats[`level_${level}_status`] = 'approved';
+                }
+
+                const p = (async () => {
+                    await db.collection('submissions').doc(id).update({status: 'approved'});
+                    const u = await db.collection('users').where('nisn','==',nisn).get();
+                    if(!u.empty) { const upd={}; upd[`stats.level_${level}_status`] = 'approved'; await u.docs[0].ref.update(upd); }
+                })();
+                promises.push(p);
+            });
+            try { 
+                await Promise.all(promises); 
+                renderStudentProgressTable();
+                alert("Berhasil ACC!"); 
+                document.getElementById('check-all').checked = false; 
+            } catch(e) { 
+                console.error(e); 
+                alert("Error saat memproses beberapa data."); 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        window.admAct = async function(id, nisn, lvl, act, btnElement) { 
+            if(btnElement) {
+                btnElement.disabled = true;
+                btnElement.innerHTML = "<i class='fas fa-spinner fa-spin'></i>";
+            }
+
+            let note = ""; 
+            if(act==='rejected') {
+                note = prompt("Alasan penolakan:") || "Revisi";
+            }
+
+            try {
+                const student = allStudentsList.find(s => s.nisn === nisn);
+                if (student) {
+                    if (!student.stats) student.stats = {};
+                    student.stats[`level_${lvl}_status`] = act;
+                }
+                
+                const batch = db.batch();
+                batch.update(db.collection('submissions').doc(id), {status: act});
+                
+                const u = await db.collection('users').where('nisn','==',nisn).get();
+                if(!u.empty) { 
+                    const upd={}; 
+                    upd[`stats.level_${lvl}_status`]=act; 
+                    if(act==='rejected') upd[`stats.level_${lvl}_note`]=note; 
+                    batch.update(u.docs[0].ref, upd); 
+                }
+                
+                await batch.commit();
+                renderStudentProgressTable();
+                
+            } catch(e) {
+                console.error("Error updating status:", e);
+                alert("Gagal update status. Coba lagi.");
+                if(btnElement) btnElement.disabled = false; 
+            }
+        }
+
+        // --- NEW: LEVEL RESET FUNCTION ---
+        window.resetStudentLevel = async function(docId, name) {
+            const level = prompt(`Reset progress ${name} ke Level berapa? (1-15)\nMasukkan angka level tujuan (semua level di atasnya akan di-reset):`);
+            if(!level) return;
+            const lvlNum = parseInt(level);
+            if(isNaN(lvlNum) || lvlNum < 1 || lvlNum > 15) return alert("Level tidak valid!");
+
+            if(!confirm(`Yakin reset ${name} kembali ke Level ${lvlNum}?`)) return;
+
+            try {
+                const updateData = {};
+                for(let i = lvlNum; i <= 15; i++) {
+                    updateData[`stats.level_${i}_status`] = firebase.firestore.FieldValue.delete();
+                    updateData[`stats.level_${i}_xp`] = firebase.firestore.FieldValue.delete();
+                    updateData[`stats.level_${i}_time`] = firebase.firestore.FieldValue.delete();
+                }
+                
+                await db.collection('users').doc(docId).update(updateData);
+                alert(`Progress ${name} berhasil di-reset mulai Level ${lvlNum}.`);
+            } catch(e) {
+                console.error(e);
+                alert("Gagal reset level.");
+            }
+        }
+
+        window.runDataCleanup = async function() {
+            if(!confirm("Proses ini akan mencocokkan ulang status 'Pengajuan' dengan 'Profil Siswa'. Gunakan jika ada data yang tidak sinkron. Lanjutkan?")) return;
+            
+            const btn = document.getElementById('btn-cleanup');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "<i class='fas fa-cog fa-spin'></i> Sinkronisasi...";
+            btn.disabled = true;
+
+            try {
+                const submissionsSnap = await db.collection('submissions').where('status', '==', 'approved').get();
+                
+                const batch = db.batch();
+                let operationCount = 0;
+                
+                const usersSnap = await db.collection('users').get();
+                const userMap = new Map(); 
+                usersSnap.forEach(doc => userMap.set(doc.data().nisn, doc.ref));
+
+                for (const subDoc of submissionsSnap.docs) {
+                    const subData = subDoc.data();
+                    const userRef = userMap.get(subData.nisn);
+                    
+                    if (userRef) {
+                        const key = `stats.level_${subData.level}_status`;
+                        batch.update(userRef, { [key]: 'approved' });
+                        operationCount++;
+                        
+                        if (operationCount >= 450) { 
+                            await batch.commit();
+                            operationCount = 0;
+                        }
+                    }
+                }
+                
+                if (operationCount > 0) await batch.commit();
+                
+                alert(`Sinkronisasi Selesai! Data profil siswa telah diperbarui.`);
+                
+            } catch (e) {
+                console.error(e);
+                alert("Gagal melakukan sinkronisasi. Cek koneksi internet.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        window.processImport = async function() { 
             const r = document.getElementById('import-area').value.trim(); if(!r) return;
             const b = db.batch(); r.split('\n').forEach(l=>{const[n,k,ni]=l.split('\t'); if(ni) b.set(db.collection('users').doc(),{nama:n,kelas:k,nisn:ni,password:ni,stats:{}})});
             await b.commit(); alert("Siswa diimport");
         }
 
+        // --- NEW: ADMIN CSV FUNCTIONS ---
+        window.downloadQuestionTemplate = function() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Pertanyaan,Opsi A,Opsi B,Opsi C,Opsi D,Index Jawaban Benar (0-3),Penjelasan,Level (Angka)\n"
+                + "Apa satuan energi?,Joule,Newton,Watt,Volt,0,Joule adalah satuan energi,1";
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "template_soal_energy_crusader.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        window.processQuestionImport = function() {
+            const fileInput = document.getElementById('csv-questions');
+            const file = fileInput.files[0];
+            if (!file) return alert("Pilih file CSV terlebih dahulu!");
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1); // Skip header
+                const batch = db.batch();
+                let count = 0;
+
+                rows.forEach(row => {
+                    // Simple CSV parser (assuming no commas in text for simplicity, robust parsing recommended for prod)
+                    const cols = row.split(','); 
+                    if (cols.length >= 8) {
+                        const qData = {
+                            q: cols[0].trim(),
+                            opts: [cols[1].trim(), cols[2].trim(), cols[3].trim(), cols[4].trim()],
+                            a: parseInt(cols[5].trim()),
+                            exp: cols[6].trim(),
+                            level: parseInt(cols[7].trim())
+                        };
+                        const ref = db.collection('questions').doc();
+                        batch.set(ref, qData);
+                        count++;
+                    }
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                    alert(`Berhasil mengimpor ${count} soal ke database!`);
+                } else {
+                    alert("Gagal membaca CSV atau format salah.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        window.downloadGrades = async function() {
+            let csv = "Nama,Kelas,NISN,Total XP,Nilai Akhir\n";
+            try {
+                const snap = await db.collection('users').get();
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.nisn === "ADMIN") return;
+                    
+                    let xp = 0;
+                    for(let i=1; i<=15; i++) {
+                        if(d.stats && d.stats[`level_${i}_status`] === 'approved') xp += (d.stats[`level_${i}_xp`] || 0);
+                    }
+                    
+                    // Simple grading formula: (XP / MaxXP) * 100, clamped min 70 max 100 logic
+                    const maxXP = 2000; // Estimate
+                    let grade = 70 + ((xp / maxXP) * 30);
+                    grade = Math.min(100, Math.max(70, grade)).toFixed(1);
+
+                    csv += `"${d.nama}","${d.kelas}","${d.nisn}",${xp},${grade}\n`;
+                });
+
+                const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "rekap_nilai_siswa.csv");
+                document.body.appendChild(link);
+                link.click();
+            } catch (e) {
+                console.error(e);
+                alert("Gagal mengunduh nilai.");
+            }
+        }
+
         // --- MOBILE SIDEBAR TOGGLE ---
-        function toggleSidebar() {
+        window.toggleSidebar = function() {
             const sidebar = document.getElementById('sidebar-panel');
             sidebar.classList.toggle('hidden');
         }
