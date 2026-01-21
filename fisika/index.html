@@ -356,7 +356,6 @@
         function toggleMute() { isMuted=!isMuted; isMuted?sounds.bgm.pause():sounds.bgm.play().catch(()=>{}); document.getElementById('mute-btn').innerHTML = isMuted?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>'; }
 
         // --- GLOBAL VARIABLES FOR PAGINATION & DATA ---
-<<<<<<< HEAD
         window.allPendingTasks = [];
         window.displayedTasks = [];
         window.taskPage = 1;
@@ -365,16 +364,6 @@
         window.allStudentsList = [];
         window.displayedStudents = [];
         window.stdPage = 1;
-=======
-        let allPendingTasks = [];
-        let displayedTasks = [];
-        let taskPage = 1;
-        const taskLimit = 10;
-
-        let allStudentsList = [];
-        let displayedStudents = [];
-        let stdPage = 1;
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
         const stdLimit = 10;
     </script>
 
@@ -669,17 +658,6 @@
 
     <!-- LOGIC -->
     <script>
-        // --- GLOBAL VARIABLES FOR PAGINATION ---
-        let allPendingTasks = [];
-        let displayedTasks = [];
-        let taskPage = 1;
-        const taskLimit = 10;
-
-        let allStudentsList = [];
-        let displayedStudents = [];
-        let stdPage = 1;
-        const stdLimit = 10;
-
         // --- ANIMATION SCRIPT ---
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -1648,7 +1626,6 @@
             } catch(e) { alert("Gagal Kirim: " + e.message); } finally { btn.innerText = "KIRIM MERPATI POS"; btn.disabled = false; }
         }
 
-<<<<<<< HEAD
         async function submitToFirestore(lvl, url, type, note) {
             const batch = db.batch();
             const subRef = db.collection('submissions').doc();
@@ -1679,10 +1656,6 @@
 
         // --- OPTIMIZED ADMIN DATA LOADING (PAGINATION) ---
         window.loadAdminData = function() { 
-=======
-        // --- OPTIMIZED ADMIN DATA LOADING (PAGINATION) ---
-        function loadAdminData() { 
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             db.collection('users').get().then(snap => {
                 const classes = new Set();
                 snap.forEach(doc => { const k = doc.data().kelas; if(k) classes.add(k); });
@@ -1710,11 +1683,7 @@
             });
         }
 
-<<<<<<< HEAD
         window.renderAdminTasks = function() {
-=======
-        function renderAdminTasks() {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             const l = document.getElementById('admin-task-list'); 
             if (!l) return;
             l.innerHTML = "";
@@ -1767,29 +1736,17 @@
             if(pageInfo) pageInfo.innerText = `Hal ${taskPage} dari ${totalPages}`;
         }
 
-<<<<<<< HEAD
         window.changeTaskPage = function(delta) {
-=======
-        function changeTaskPage(delta) {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             taskPage += delta;
             renderAdminTasks();
         }
 
-<<<<<<< HEAD
         window.filterStudentList = function() {
-=======
-        function filterStudentList() {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             stdPage = 1; 
             renderStudentProgressTable();
         }
 
-<<<<<<< HEAD
         window.renderStudentProgressTable = function() {
-=======
-        function renderStudentProgressTable() {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             const searchInput = document.getElementById('search-student');
             if (!searchInput) return;
             
@@ -1804,11 +1761,7 @@
             // Filter locally
             let filteredStudents = allStudentsList.filter(s => s.nama.toLowerCase().includes(k));
             
-<<<<<<< HEAD
             // Sort by Class then Name (Requested Fix)
-=======
-            // Sort by Class then Name
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             filteredStudents.sort((a, b) => {
                 if (a.kelas < b.kelas) return -1;
                 if (a.kelas > b.kelas) return 1;
@@ -1871,24 +1824,14 @@
             if (pageInfo) pageInfo.innerText = `Hal ${stdPage} dari ${totalPages}`;
         }
 
-<<<<<<< HEAD
         window.changeStudentPage = function(delta) {
-=======
-        function changeStudentPage(delta) {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             stdPage += delta;
             renderStudentProgressTable();
         }
 
-<<<<<<< HEAD
         window.toggleAll = function(source) { const checkboxes = document.querySelectorAll('.task-cb'); for(let i=0; i<checkboxes.length; i++) checkboxes[i].checked = source.checked; }
         
         window.approveSelected = async function() { 
-=======
-        function toggleAll(source) { const checkboxes = document.querySelectorAll('.task-cb'); for(let i=0; i<checkboxes.length; i++) checkboxes[i].checked = source.checked; }
-        
-        async function approveSelected() { 
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             const checkboxes = document.querySelectorAll('.task-cb:checked');
             if(checkboxes.length === 0) return alert("Pilih tugas!");
             if(!confirm(`ACC ${checkboxes.length} tugas?`)) return;
@@ -1929,11 +1872,7 @@
             }
         }
 
-<<<<<<< HEAD
         window.admAct = async function(id, nisn, lvl, act, btnElement) { 
-=======
-        async function admAct(id, nisn, lvl, act, btnElement) { 
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             if(btnElement) {
                 btnElement.disabled = true;
                 btnElement.innerHTML = "<i class='fas fa-spinner fa-spin'></i>";
@@ -1973,11 +1912,7 @@
         }
 
         // --- NEW: LEVEL RESET FUNCTION ---
-<<<<<<< HEAD
         window.resetStudentLevel = async function(docId, name) {
-=======
-        async function resetStudentLevel(docId, name) {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             const level = prompt(`Reset progress ${name} ke Level berapa? (1-15)\nMasukkan angka level tujuan (semua level di atasnya akan di-reset):`);
             if(!level) return;
             const lvlNum = parseInt(level);
@@ -1987,12 +1922,6 @@
 
             try {
                 const updateData = {};
-<<<<<<< HEAD
-=======
-                // Reset stats for levels >= targeted level
-                // Actually usually reset implies clearing progress from that level onwards so they can redo it?
-                // Or setting that level as 'locked'? Let's assume we clear status for levels >= lvlNum
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
                 for(let i = lvlNum; i <= 15; i++) {
                     updateData[`stats.level_${i}_status`] = firebase.firestore.FieldValue.delete();
                     updateData[`stats.level_${i}_xp`] = firebase.firestore.FieldValue.delete();
@@ -2001,21 +1930,13 @@
                 
                 await db.collection('users').doc(docId).update(updateData);
                 alert(`Progress ${name} berhasil di-reset mulai Level ${lvlNum}.`);
-<<<<<<< HEAD
-=======
-                // UI will auto-update via snapshot listener
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             } catch(e) {
                 console.error(e);
                 alert("Gagal reset level.");
             }
         }
 
-<<<<<<< HEAD
         window.runDataCleanup = async function() {
-=======
-        async function runDataCleanup() {
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             if(!confirm("Proses ini akan mencocokkan ulang status 'Pengajuan' dengan 'Profil Siswa'. Gunakan jika ada data yang tidak sinkron. Lanjutkan?")) return;
             
             const btn = document.getElementById('btn-cleanup');
@@ -2062,11 +1983,7 @@
             }
         }
 
-<<<<<<< HEAD
         window.processImport = async function() { 
-=======
-        async function processImport() { /* Same logic */
->>>>>>> 447fe2cc0035ea11838ba13f83d6a369de6677d7
             const r = document.getElementById('import-area').value.trim(); if(!r) return;
             const b = db.batch(); r.split('\n').forEach(l=>{const[n,k,ni]=l.split('\t'); if(ni) b.set(db.collection('users').doc(),{nama:n,kelas:k,nisn:ni,password:ni,stats:{}})});
             await b.commit(); alert("Siswa diimport");
