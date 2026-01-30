@@ -3,24 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jurnal KBM Digital - SMAN 1 Soppeng</title>
+    <title>SITIROANG DALLEK - SMAN 1 Soppeng</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- SheetJS untuk Export Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Chart.js untuk Grafik Keren -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Cinzel+Decorative:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Markdown Parser untuk Tampilan AI yang Rapi -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #f0f4f8; overscroll-behavior: none; }
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        /* Font utama aplikasi */
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; overscroll-behavior: none; }
+        
+        /* Font khusus Judul Kearifan Lokal */
+        .font-bugis { font-family: 'Cinzel Decorative', cursive; }
+
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.8s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
         .slide-up-enter-active { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); }
@@ -28,128 +33,183 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 10px; }
         
-        .bar-container { position: relative; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
-        .bar-fill { height: 100%; transition: width 1s ease-in-out; }
-
         /* Custom Scrollbar untuk Dropdown */
         .custom-dropdown::-webkit-scrollbar { width: 4px; }
         .custom-dropdown::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-dropdown::-webkit-scrollbar-track { background: transparent; }
-        
-        /* AI Response Styling */
-        .prose h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.5em; color: #3730a3; }
-        .prose ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.5em; }
-        .prose li { margin-bottom: 0.2em; }
-        .prose strong { color: #1e1b4b; }
+
+        /* Animasi Loading Bar Splash Screen */
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        .animate-progress {
+            animation: progress 2.8s ease-out forwards;
+        }
+
+        /* Pattern Bugis Halus (CSS Pattern) */
+        .bg-bugis-pattern {
+            background-image: repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.03) 0px, rgba(255, 215, 0, 0.03) 2px, transparent 2px, transparent 10px),
+                              repeating-linear-gradient(-45deg, rgba(255, 215, 0, 0.03) 0px, rgba(255, 215, 0, 0.03) 2px, transparent 2px, transparent 10px);
+        }
     </style>
 </head>
 <body>
 
-    <div id="app" class="h-screen w-full flex flex-col relative overflow-hidden bg-gray-50">
+    <div id="app" class="h-screen w-full flex flex-col relative overflow-hidden bg-slate-50">
         
-        <!-- Loading Overlay -->
-        <div v-if="loading" class="fixed inset-0 bg-white/90 z-[70] flex flex-col items-center justify-center backdrop-blur-sm">
+        <!-- SPLASH SCREEN (LOADING ESTETIK) -->
+        <transition name="fade">
+            <div v-if="showSplash" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center overflow-hidden">
+                <!-- Background Elements -->
+                <div class="absolute inset-0 bg-bugis-pattern"></div>
+                <div class="absolute w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl -top-20 -left-20 animate-pulse"></div>
+                <div class="absolute w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -bottom-20 -right-20 animate-pulse" style="animation-delay: 1s;"></div>
+                
+                <!-- Center Content -->
+                <div class="relative z-10 flex flex-col items-center text-center p-8">
+                    <!-- Icon dengan Efek Glow -->
+                    <div class="mb-8 relative">
+                        <div class="absolute inset-0 bg-yellow-400 blur-2xl opacity-20 rounded-full"></div>
+                        <i class="fas fa-book-reader text-6xl text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-600 drop-shadow-lg"></i>
+                    </div>
+
+                    <!-- Title dengan Font Bugis -->
+                    <h1 class="text-4xl md:text-6xl font-bugis text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 tracking-widest mb-4 drop-shadow-md">
+                        SITIROANG DALLEK
+                    </h1>
+                    
+                    <!-- Subtitle -->
+                    <p class="text-indigo-200 text-xs md:text-sm tracking-[0.4em] font-light border-y border-indigo-500/30 py-2 mb-12 uppercase">
+                        Digitalisasi Jurnal SMAN 1 Soppeng
+                    </p>
+
+                    <!-- Loading Bar Emas -->
+                    <div class="w-64 h-1 bg-gray-800 rounded-full overflow-hidden relative shadow-inner">
+                        <div class="absolute inset-0 bg-gradient-to-r from-yellow-600 via-yellow-300 to-yellow-600 animate-progress"></div>
+                    </div>
+                    
+                    <p class="mt-4 text-[10px] text-gray-500 font-mono animate-pulse">Memuat Data Sekolah...</p>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Loading Overlay (Untuk proses data setelah masuk) -->
+        <div v-if="loading && !showSplash" class="fixed inset-0 bg-white/90 z-[70] flex flex-col items-center justify-center backdrop-blur-sm">
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600 mb-4"></div>
             <p class="text-indigo-800 font-semibold animate-pulse">{{ loadingMessage }}</p>
         </div>
 
         <!-- HEADER -->
-        <header class="bg-gradient-to-r from-indigo-800 to-blue-700 px-6 py-6 pb-16 text-white shadow-xl relative z-10 flex-shrink-0">
-            <div class="flex justify-between items-start mb-4">
+        <header class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 px-6 py-8 pb-24 text-white shadow-2xl relative z-10 flex-shrink-0 rounded-b-[3rem] border-b-4 border-yellow-500/50">
+            <!-- Pattern Hiasan Tipis (Opsional) -->
+            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+            
+            <div class="relative flex justify-between items-start mb-2">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight">Jurnal KBM</h1>
-                    <p class="text-indigo-200 text-sm opacity-90">SMAN 1 Soppeng</p>
+                    <!-- Judul dengan Font Khas -->
+                    <h1 class="text-3xl md:text-4xl font-bugis tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 drop-shadow-sm">
+                        SITIROANG DALLEK
+                    </h1>
+                    <p class="text-indigo-200 text-sm opacity-90 font-light mt-1 tracking-widest">SMAN 1 SOPPENG</p>
                 </div>
                 <div class="flex flex-col items-end gap-2">
-                    <div class="bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/20 text-right">
-                        <p class="text-[10px] font-light text-indigo-100 uppercase tracking-widest">Hari ini</p>
-                        <p class="font-semibold text-sm">{{ tanggalFormat }}</p>
+                    <div class="bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-right shadow-sm group hover:bg-white/20 transition-all cursor-default">
+                        <p class="text-[10px] font-medium text-yellow-100 uppercase tracking-widest">Hari ini</p>
+                        <p class="font-bold text-sm text-white">{{ tanggalFormat }}</p>
                     </div>
                 </div>
             </div>
         </header>
 
         <!-- KONTEN UTAMA (SCROLLABLE) -->
-        <main class="relative z-20 flex-grow px-4 -mt-12 pb-20 overflow-y-auto">
+        <main class="relative z-20 flex-grow px-4 -mt-20 pb-20 overflow-y-auto">
             
             <!-- VIEW: DASHBOARD -->
             <div v-if="view === 'dashboard'" class="max-w-7xl mx-auto pb-20">
                 
-                <!-- 1. Statistik / Grafik Guru -->
-                <div class="bg-white rounded-xl shadow-lg p-5 mb-6 border border-indigo-50">
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-gray-800 font-bold flex items-center gap-2">
-                            <i class="fas fa-chart-pie text-indigo-500"></i> Monitoring KBM
+                <!-- 1. Statistik & Grafik (Redesigned) -->
+                <div class="bg-white rounded-3xl shadow-xl p-6 mb-8 border border-slate-100 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                    
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-gray-800 font-bold flex items-center gap-2 text-lg">
+                            <i class="fas fa-chart-pie text-indigo-600 bg-indigo-100 p-2 rounded-lg"></i> Pantauan Hari Ini
                         </h2>
-                        <span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full animate-pulse">
-                            <i class="fas fa-circle text-[8px] mr-1"></i>Live
+                        <span class="text-xs font-bold text-green-600 bg-green-50 border border-green-100 px-3 py-1 rounded-full animate-pulse flex items-center gap-1">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> Live
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="col-span-1 grid grid-cols-2 gap-3">
-                            <div class="text-center p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                                <div class="text-2xl font-bold text-indigo-700">{{ totalLaporanHariIni }}</div>
-                                <div class="text-[10px] text-gray-500 uppercase tracking-wide">Total Sesi</div>
+                    <!-- Layout Grid Grafik -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Kolom Kiri: Kartu Stat -->
+                        <div class="col-span-1 grid grid-cols-2 gap-4 h-fit">
+                            <div class="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-200 transform transition hover:scale-[1.02]">
+                                <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                                <div class="text-3xl font-bold mb-1">{{ totalLaporanHariIni }}</div>
+                                <div class="text-xs font-medium opacity-80 uppercase tracking-wider">Jurnal Masuk</div>
+                                <i class="fas fa-file-signature absolute bottom-4 right-4 text-white/20 text-4xl"></i>
                             </div>
-                            <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                <div class="text-2xl font-bold text-blue-700">{{ classesActiveToday }}</div>
-                                <div class="text-[10px] text-gray-500 uppercase tracking-wide">Kelas Aktif</div>
+                            <div class="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-200 transform transition hover:scale-[1.02]">
+                                <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                                <div class="text-3xl font-bold mb-1">{{ classesActiveToday }}</div>
+                                <div class="text-xs font-medium opacity-80 uppercase tracking-wider">Kelas Aktif</div>
+                                <i class="fas fa-school absolute bottom-4 right-4 text-white/20 text-4xl"></i>
                             </div>
                         </div>
 
-                        <div class="col-span-1 md:col-span-2 space-y-3">
-                            <!-- Grafik Batang -->
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-gray-600 font-medium">Guru Hadir ({{ statistics.hadir }})</span>
-                                    <span class="font-bold text-green-600">{{ statistics.persenHadir }}%</span>
-                                </div>
-                                <div class="bar-container"><div class="bar-fill bg-green-500" :style="{ width: statistics.persenHadir + '%' }"></div></div>
+                        <!-- Kolom Tengah: Grafik Guru -->
+                        <div class="col-span-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center relative min-h-[220px]">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Kehadiran Guru</h3>
+                            <div class="relative w-full h-40">
+                                <canvas id="attendanceChart"></canvas>
                             </div>
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-gray-600 font-medium">Guru Terlambat ({{ statistics.terlambat }})</span>
-                                    <span class="font-bold text-yellow-600">{{ statistics.persenTerlambat }}%</span>
-                                </div>
-                                <div class="bar-container"><div class="bar-fill bg-yellow-400" :style="{ width: statistics.persenTerlambat + '%' }"></div></div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-gray-600 font-medium">Guru Berhalangan ({{ statistics.absen }})</span>
-                                    <span class="font-bold text-red-600">{{ statistics.persenAbsen }}%</span>
-                                </div>
-                                <div class="bar-container"><div class="bar-fill bg-red-500" :style="{ width: statistics.persenAbsen + '%' }"></div></div>
+                        </div>
+
+                        <!-- Kolom Kanan: Grafik Siswa (BARU) -->
+                        <div class="col-span-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center relative min-h-[220px]">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Absensi Siswa (S/I/A)</h3>
+                            <div class="relative w-full h-40">
+                                <canvas id="studentChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. Pencarian Kelas -->
-                <div class="mb-4 relative">
+                <!-- 2. Pencarian Kelas (Modern) -->
+                <div class="mb-6 relative group">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                    </div>
                     <input v-model="searchQuery" type="text" placeholder="Cari Kelas (Contoh: XII MIPA 1)..." 
-                        class="w-full p-4 pl-12 rounded-xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-                    <i class="fas fa-search absolute left-4 top-4.5 text-gray-400"></i>
+                        class="w-full p-4 pl-12 rounded-2xl border border-slate-200 shadow-sm focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white text-gray-700 placeholder-gray-400">
                 </div>
 
-                <!-- 3. Grid Kelas (5 Kolom) -->
+                <!-- 3. Grid Kelas (Modern Cards) -->
                 <div v-if="filteredClasses.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <button 
                         v-for="kelas in filteredClasses" 
                         :key="kelas.id"
                         @click="bukaDetailKelas(kelas)"
-                        class="relative bg-white rounded-xl shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all duration-200 text-left overflow-hidden group flex flex-col h-40"
+                        class="group relative bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-indigo-200 transition-all duration-300 text-left overflow-hidden flex flex-col h-40"
                     >
-                        <div class="p-3 border-b border-gray-100 bg-gray-50 group-hover:bg-indigo-50 transition-colors flex justify-between items-start">
-                            <span class="font-bold text-gray-700 group-hover:text-indigo-700 text-sm leading-tight">{{ kelas.nama }}</span>
-                            <div v-if="kelas.jumlahLaporan > 0" class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                                {{ kelas.jumlahLaporan }} JP
+                        <!-- Header Card with Gradient on Hover -->
+                        <div class="p-4 border-b border-slate-50 bg-slate-50/50 group-hover:bg-gradient-to-r group-hover:from-indigo-500 group-hover:to-blue-500 group-hover:border-transparent transition-all duration-300">
+                            <div class="flex justify-between items-start">
+                                <span class="font-bold text-gray-700 group-hover:text-white text-base leading-tight transition-colors">{{ kelas.nama }}</span>
+                                <div v-if="kelas.jumlahLaporan > 0" class="bg-white text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm group-hover:bg-white/20 group-hover:text-white transition-colors">
+                                    {{ kelas.jumlahLaporan }} JP
+                                </div>
                             </div>
                         </div>
-                        <div class="p-2 flex-grow overflow-y-auto scrollbar-hide">
-                            <div v-if="kelas.laporanRingkas.length > 0" class="space-y-1.5">
-                                <div v-for="lap in kelas.laporanRingkas" :key="lap.id" class="flex items-center text-[10px] text-gray-500">
-                                    <div class="w-1.5 h-1.5 rounded-full mr-1.5 flex-shrink-0"
+
+                        <!-- Body Card -->
+                        <div class="p-3 flex-grow overflow-y-auto scrollbar-hide bg-white">
+                            <div v-if="kelas.laporanRingkas.length > 0" class="space-y-2">
+                                <div v-for="lap in kelas.laporanRingkas" :key="lap.id" class="flex items-center text-[11px] text-gray-500">
+                                    <span class="w-2 h-2 rounded-full mr-2 flex-shrink-0 shadow-sm"
                                          :class="{
                                             'bg-green-500': lap.statusGuru === 'Hadir', 
                                             'bg-yellow-400': lap.statusGuru === 'Terlambat', 
@@ -157,59 +217,68 @@
                                             'bg-orange-500': lap.statusGuru === 'Izin',
                                             'bg-red-500': lap.statusGuru === 'Tanpa Ket' || lap.statusGuru === 'Tidak Hadir'
                                          }">
-                                    </div>
-                                    <span class="truncate">{{ lap.mapel }}</span>
+                                    </span>
+                                    <span class="truncate font-medium">{{ lap.mapel }}</span>
                                 </div>
                             </div>
-                            <div v-else class="h-full flex items-center justify-center text-[10px] text-gray-300 italic">Belum ada data</div>
+                            <div v-else class="h-full flex flex-col items-center justify-center text-gray-300">
+                                <i class="fas fa-clipboard-list text-2xl mb-1 opacity-20"></i>
+                                <span class="text-[10px] italic">Belum ada data</span>
+                            </div>
                         </div>
-                        <div class="p-2 bg-gray-50 text-[10px] text-center text-indigo-500 font-medium group-hover:bg-indigo-100 transition-colors">
-                            Buka Jurnal &rarr;
-                        </div>
+                        
+                        <!-- Hover Indicator -->
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                     </button>
                 </div>
 
-                <div v-else class="text-center py-10 px-4 bg-white rounded-xl border border-dashed border-gray-300">
-                    <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
-                    <h3 class="font-bold text-gray-700">Kelas tidak ditemukan</h3>
+                <div v-else class="text-center py-16 px-4 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-search text-3xl text-slate-300"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-700 text-lg">Kelas tidak ditemukan</h3>
+                    <p class="text-sm text-gray-400 mt-1">Coba kata kunci lain atau periksa data admin.</p>
                 </div>
             </div>
 
-            <!-- VIEW: REKAPAN GURU & SISWA (Sama seperti sebelumnya, disembunyikan dalam Admin) -->
-            <transition name="slide-up">
+            <!-- VIEW: REKAPAN & DETAIL & FORM & ADMIN (Tetap, hanya UI Global berubah) -->
+            <!-- ... (Kode View Lain Tetap Sama) ... -->
+             <!-- VIEW: REKAPAN GURU (EXPANDABLE) -->
+             <transition name="slide-up">
                 <div v-if="view === 'recap'" class="fixed inset-0 z-[60] flex flex-col items-end justify-end pointer-events-none">
                     <div class="w-full max-w-2xl mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
                         <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10 shadow-sm">
                             <h2 class="text-lg font-bold text-gray-800">Rekapan Guru Berhalangan</h2>
                             <button @click="view = 'admin'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 text-gray-600"><i class="fas fa-times"></i></button>
                         </div>
+                        
                         <div class="flex-grow overflow-y-auto p-6 pb-40">
-                            <!-- Filter & Content (Kode Rekap Guru Lama) -->
-                            <div class="flex bg-gray-100 p-1 rounded-lg mb-6 sticky top-0 z-10 shadow-sm">
-                                <button @click="loadRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Minggu Ini</button>
-                                <button @click="loadRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Bulan Ini</button>
+                            <!-- Filter Toggle -->
+                            <div class="flex bg-slate-100 p-1 rounded-xl mb-6 sticky top-0 z-10 shadow-sm">
+                                <button @click="loadRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-lg transition">Minggu Ini</button>
+                                <button @click="loadRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-lg transition">Bulan Ini</button>
                             </div>
                             <div v-for="level in ['X', 'XI', 'XII']" :key="level" class="mb-8">
-                                <h3 class="text-lg font-bold text-gray-800 mb-3 border-l-4 border-indigo-500 pl-2">Tingkat Kelas {{ level }}</h3>
+                                <h3 class="text-lg font-bold text-gray-800 mb-3 border-l-4 border-indigo-500 pl-3">Tingkat Kelas {{ level }}</h3>
                                 <div v-if="groupedRecap[level] && groupedRecap[level].length > 0" class="space-y-3">
-                                    <div v-for="teacher in groupedRecap[level]" :key="teacher.namaGuru" class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all">
-                                        <div @click="teacher.expanded = !teacher.expanded" class="p-3 flex justify-between items-center bg-gray-50 cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition select-none">
+                                    <div v-for="teacher in groupedRecap[level]" :key="teacher.namaGuru" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+                                        <div @click="teacher.expanded = !teacher.expanded" class="p-4 flex justify-between items-center bg-slate-50/50 cursor-pointer hover:bg-slate-100 active:bg-slate-200 transition select-none">
                                             <div class="flex items-center gap-3">
                                                 <div class="bg-red-100 text-red-600 font-bold w-8 h-8 rounded-full flex items-center justify-center text-xs border border-red-200 shadow-sm">{{ teacher.count }}</div>
                                                 <div class="flex flex-col"><span class="font-bold text-gray-800 text-sm">{{ teacher.namaGuru }}</span><span class="text-[10px] text-gray-500">{{ teacher.count }} kali berhalangan</span></div>
                                             </div>
                                             <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300 transform" :class="{'rotate-180': teacher.expanded}"></i>
                                         </div>
-                                        <div v-if="teacher.expanded" class="border-t border-gray-100 bg-white animate-fade">
-                                            <div v-for="detail in teacher.details" :key="detail.id" class="p-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 flex flex-col gap-1">
-                                                <div class="flex justify-between items-start"><span class="font-bold text-xs text-gray-700">{{ detail.mapel }}</span><span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{{ detail.tanggal }}</span></div>
+                                        <div v-if="teacher.expanded" class="border-t border-slate-100 bg-white animate-fade">
+                                            <div v-for="detail in teacher.details" :key="detail.id" class="p-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 flex flex-col gap-1">
+                                                <div class="flex justify-between items-start"><span class="font-bold text-xs text-gray-700">{{ detail.mapel }}</span><span class="text-[10px] bg-slate-100 text-gray-500 px-2 py-0.5 rounded-full">{{ detail.tanggal }}</span></div>
                                                 <div class="text-xs text-gray-600">Kelas <span class="font-bold">{{ detail.kelasNama }}</span></div>
                                                 <div class="mt-1 flex items-center gap-2"><span class="text-[10px] px-2 py-0.5 rounded border font-bold" :class="{'bg-yellow-50 text-yellow-700 border-yellow-200': detail.status === 'Terlambat', 'bg-blue-50 text-blue-700 border-blue-200': detail.status === 'Sakit', 'bg-orange-50 text-orange-700 border-orange-200': detail.status === 'Izin', 'bg-red-50 text-red-700 border-red-200': detail.status === 'Tanpa Ket' || detail.status === 'Tidak Hadir'}">{{ detail.status }}</span><span class="text-xs text-gray-500 italic">"{{ detail.keterangan }}"</span></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else class="text-xs text-gray-400 italic bg-gray-50 p-3 rounded text-center border border-dashed border-gray-200">Tidak ada guru berhalangan.</div>
+                                <div v-else class="text-xs text-gray-400 italic bg-slate-50 p-4 rounded-xl text-center border border-dashed border-slate-200">Tidak ada guru berhalangan.</div>
                             </div>
                         </div>
                     </div>
@@ -225,9 +294,9 @@
                         </div>
                         <div class="flex-grow overflow-y-auto p-6 pb-40">
                             <!-- Filter & Content (Kode Rekap Siswa Lama) -->
-                            <div class="flex bg-gray-100 p-1 rounded-lg mb-4 sticky top-0 z-10 shadow-sm">
-                                <button @click="loadStudentRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Minggu Ini</button>
-                                <button @click="loadStudentRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-md transition">Bulan Ini</button>
+                            <div class="flex bg-slate-100 p-1 rounded-xl mb-4 sticky top-0 z-10 shadow-sm">
+                                <button @click="loadStudentRecap('week')" :class="recapFilter==='week'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-lg transition">Minggu Ini</button>
+                                <button @click="loadStudentRecap('month')" :class="recapFilter==='month'?'bg-white shadow text-indigo-700':'text-gray-500'" class="flex-1 py-2 text-sm font-bold rounded-lg transition">Bulan Ini</button>
                             </div>
                             <div class="flex gap-2 mb-6">
                                 <button @click="studentRecapMode = 'detail'" class="flex-1 py-2 rounded-lg border-2 text-xs font-bold transition flex items-center justify-center gap-1" :class="studentRecapMode === 'detail' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'"><i class="fas fa-list-ul"></i> Detail Harian</button>
@@ -238,15 +307,15 @@
                             </div>
                             <div v-if="studentRecapMode === 'detail'">
                                 <div v-if="Object.keys(groupedStudentDetail).length > 0">
-                                    <div v-for="(dates, kelasName) in groupedStudentDetail" :key="kelasName" class="mb-6 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div v-for="(dates, kelasName) in groupedStudentDetail" :key="kelasName" class="mb-6 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                                         <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center"><span class="font-bold text-indigo-900">{{ kelasName }}</span></div>
-                                        <div class="divide-y divide-gray-100"><div v-for="(students, date) in dates" :key="date" class="p-3"><p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">{{ date }}</p><div v-for="s in students" :key="s.nama" class="flex justify-between items-start mb-2 last:mb-0"><div class="flex items-center gap-2"><span class="text-sm text-gray-700 font-medium">{{ s.nama }}</span></div><div class="text-right"><span v-if="s.isFullDay" class="px-2 py-0.5 rounded text-[10px] font-bold border" :class="{'bg-blue-100 text-blue-700 border-blue-200': s.status === 'Sakit', 'bg-yellow-100 text-yellow-700 border-yellow-200': s.status === 'Izin', 'bg-red-100 text-red-700 border-red-200': s.status === 'Alfa'}">{{ s.status }} Sehari Penuh</span><span v-else class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">{{ s.status }} ({{ s.jamList }})</span></div></div></div></div>
+                                        <div class="divide-y divide-slate-100"><div v-for="(students, date) in dates" :key="date" class="p-3"><p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">{{ date }}</p><div v-for="s in students" :key="s.nama" class="flex justify-between items-start mb-2 last:mb-0"><div class="flex items-center gap-2"><span class="text-sm text-gray-700 font-medium">{{ s.nama }}</span></div><div class="text-right"><span v-if="s.isFullDay" class="px-2 py-0.5 rounded text-[10px] font-bold border" :class="{'bg-blue-100 text-blue-700 border-blue-200': s.status === 'Sakit', 'bg-yellow-100 text-yellow-700 border-yellow-200': s.status === 'Izin', 'bg-red-100 text-red-700 border-red-200': s.status === 'Alfa'}">{{ s.status }} Sehari Penuh</span><span v-else class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-gray-600 border border-slate-200">{{ s.status }} ({{ s.jamList }})</span></div></div></div></div>
                                     </div>
                                 </div>
                                 <div v-else class="flex flex-col items-center justify-center py-20 text-center"><p class="text-xs text-gray-500">Tidak ada data detail absensi.</p></div>
                             </div>
                             <div v-if="studentRecapMode === 'total'">
-                                <div v-if="studentRecapTotalData.length > 0" class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm"><table class="w-full text-left border-collapse"><thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase border-b border-gray-200"><th class="p-3 font-bold">Nama Siswa</th><th class="p-3 font-bold">Kelas</th><th class="p-3 font-bold text-center text-blue-600">S</th><th class="p-3 font-bold text-center text-yellow-600">I</th><th class="p-3 font-bold text-center text-red-600">A</th></tr></thead><tbody class="text-sm divide-y divide-gray-100 bg-white"><tr v-for="s in studentRecapTotalData" :key="s.id" class="hover:bg-gray-50"><td class="p-3 font-medium text-gray-800">{{ s.nama }}</td><td class="p-3 text-gray-500 text-xs">{{ s.kelas }}</td><td class="p-3 text-center font-bold" :class="s.sakit > 0 ? 'text-blue-600 bg-blue-50' : 'text-gray-300'">{{ s.sakit }}</td><td class="p-3 text-center font-bold" :class="s.izin > 0 ? 'text-yellow-600 bg-yellow-50' : 'text-gray-300'">{{ s.izin }}</td><td class="p-3 text-center font-bold" :class="s.alfa > 0 ? 'text-red-600 bg-red-50' : 'text-gray-300'">{{ s.alfa }}</td></tr></tbody></table></div>
+                                <div v-if="studentRecapTotalData.length > 0" class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-left border-collapse"><thead><tr class="bg-slate-50 text-gray-600 text-xs uppercase border-b border-slate-200"><th class="p-3 font-bold">Nama Siswa</th><th class="p-3 font-bold">Kelas</th><th class="p-3 font-bold text-center text-blue-600">S</th><th class="p-3 font-bold text-center text-yellow-600">I</th><th class="p-3 font-bold text-center text-red-600">A</th></tr></thead><tbody class="text-sm divide-y divide-slate-100 bg-white"><tr v-for="s in studentRecapTotalData" :key="s.id" class="hover:bg-slate-50"><td class="p-3 font-medium text-gray-800">{{ s.nama }}</td><td class="p-3 text-gray-500 text-xs">{{ s.kelas }}</td><td class="p-3 text-center font-bold" :class="s.sakit > 0 ? 'text-blue-600 bg-blue-50' : 'text-gray-300'">{{ s.sakit }}</td><td class="p-3 text-center font-bold" :class="s.izin > 0 ? 'text-yellow-600 bg-yellow-50' : 'text-gray-300'">{{ s.izin }}</td><td class="p-3 text-center font-bold" :class="s.alfa > 0 ? 'text-red-600 bg-red-50' : 'text-gray-300'">{{ s.alfa }}</td></tr></tbody></table></div>
                                 <div v-else class="flex flex-col items-center justify-center py-20 text-center"><p class="text-xs text-gray-500">Nihil (Semua siswa hadir).</p></div>
                             </div>
                         </div>
@@ -286,40 +355,10 @@
                     <div class="w-full max-w-md mx-auto h-[92vh] bg-white rounded-t-3xl shadow-2xl pointer-events-auto flex flex-col overflow-hidden">
                         <div class="flex-shrink-0 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10"><div><h2 class="text-lg font-bold text-indigo-900">Input Jurnal</h2><p class="text-xs text-gray-500">{{ selectedClass.nama }}</p></div><button @click="view = 'class-detail'" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><i class="fas fa-arrow-left text-gray-600"></i></button></div>
                         <form @submit.prevent="kirimLaporan" class="flex-grow overflow-y-auto p-6 pb-40" @click="closeAllSuggestions">
-                            
-                            <!-- JAM -->
+                            <!-- ... (FORM JAM, MAPEL, GURU SAMA SEPERTI SEBELUMNYA) ... -->
                             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6"><div class="flex justify-between items-center mb-2"><label class="text-sm font-bold text-indigo-900"><i class="fas fa-clock mr-1"></i> Jam Pelajaran</label><span v-if="form.jamKe.length > 0" class="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded font-bold">{{ form.jamKe.length }} JP</span></div><div class="grid grid-cols-5 gap-2"><button type="button" v-for="n in 10" :key="n" @click.stop="toggleJamSmart(n)" class="h-10 rounded-lg font-bold text-sm transition-all border relative" :class="form.jamKe.includes(n) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'">{{ n }}</button></div></div>
-                            
-                            <!-- MAPEL (CUSTOM CLASSY DROPDOWN) -->
                             <div class="mb-6 relative group"><label class="block text-sm font-semibold text-gray-700 mb-1">Mata Pelajaran</label><div class="relative"><input type="text" v-model="form.mapel" @focus="openMapelSuggestions" @click.stop="openMapelSuggestions" @input="openMapelSuggestions" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 bg-white" :class="showMapelSuggestions && suggestedSubjects.length > 0 ? 'rounded-t-xl rounded-b-none border-b-0 shadow-lg z-20' : 'rounded-xl'" required><i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 text-xs transition-transform duration-200" :class="{'rotate-180': showMapelSuggestions}"></i></div><div v-if="showMapelSuggestions && suggestedSubjects.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-200 shadow-xl rounded-b-xl z-50 max-h-60 overflow-y-auto custom-dropdown"><div v-for="(m, idx) in suggestedSubjects" :key="idx" @click.stop="pilihMapel(m)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors duration-150 group-hover:text-indigo-900"><div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">{{ m.charAt(0) }}</div><span>{{ m }}</span></div></div></div>
-                            
-                            <!-- GURU (CUSTOM CLASSY DROPDOWN) -->
-                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6"><label class="block text-sm font-semibold text-gray-700 mb-2">Guru Pengajar</label><div class="relative mb-3"><input type="text" v-model="form.namaGuru" @focus="openGuruSuggestions" @click.stop="openGuruSuggestions" @input="openGuruSuggestions" placeholder="Ketik nama guru..." class="w-full px-4 py-3 bg-white border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200" :class="showGuruSuggestions && suggestedTeachers.length > 0 ? 'rounded-t-lg rounded-b-none border-b-0 shadow-md z-20' : 'rounded-lg'" required><i class="fas fa-search absolute right-4 top-4 text-gray-400 text-xs"></i><div v-if="showGuruSuggestions && suggestedTeachers.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-300 shadow-xl rounded-b-lg z-50 max-h-60 overflow-y-auto custom-dropdown"><div v-for="(g, idx) in suggestedTeachers" :key="idx" @click.stop="pilihGuru(g)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"><div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center flex-shrink-0 text-xs"><i class="fas fa-user"></i></div><span>{{ g }}</span></div></div></div><div class="grid grid-cols-2 gap-2 mb-3"><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-green-500 peer-checked:text-white text-xs font-bold transition border-green-200">Hadir</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Terlambat" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-yellow-500 peer-checked:text-white text-xs font-bold transition border-yellow-200">Terlambat</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Sakit" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-blue-500 peer-checked:text-white text-xs font-bold transition border-blue-200">Sakit</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Izin" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-orange-500 peer-checked:text-white text-xs font-bold transition border-orange-200">Izin</div></label><label class="cursor-pointer col-span-2"><input type="radio" v-model="form.statusGuru" value="Tanpa Ket" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-red-500 peer-checked:text-white text-xs font-bold transition border-red-200">Tanpa Keterangan (Alpa)</div></label></div>
-                            
-                            <!-- Gemini AI Feature: Saran Kegiatan -->
-                            <div v-if="form.statusGuru !== 'Hadir'" class="mt-4 mb-6 animate-fade">
-                                <div v-if="!aiResponse" class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-center">
-                                    <p class="text-sm text-indigo-800 font-bold mb-2">Guru tidak hadir? Butuh ide?</p>
-                                    <button @click="askGeminiActivity" :disabled="isAiLoading" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition transform active:scale-95 flex items-center justify-center gap-2 mx-auto disabled:opacity-50">
-                                        <i v-if="isAiLoading" class="fas fa-spinner fa-spin"></i>
-                                        <i v-else class="fas fa-magic"></i>
-                                        {{ isAiLoading ? 'Mencari Ide...' : '✨ Minta Saran Kegiatan (AI)' }}
-                                    </button>
-                                </div>
-                                <div v-else class="p-4 bg-white border border-indigo-200 rounded-xl shadow-sm prose prose-sm max-w-none">
-                                    <div class="flex justify-between items-center mb-2 border-b pb-2">
-                                        <span class="font-bold text-indigo-700 text-xs flex items-center gap-1"><i class="fas fa-robot"></i> Saran Gemini AI</span>
-                                        <button @click="aiResponse = null" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
-                                    </div>
-                                    <div v-html="aiResponse" class="text-sm text-gray-700 leading-relaxed"></div>
-                                </div>
-                                
-                                <label class="text-xs text-gray-500 mb-1 block mt-3">Detail Alasan (Opsional):</label>
-                                <input v-model="form.keteranganKBM" list="listAlasan" placeholder="Cth: Rapat Dinas, Sakit Demam, dll..." class="w-full p-2 rounded border border-gray-300 text-sm focus:outline-none focus:border-indigo-400"><datalist id="listAlasan"><option value="Ada Tugas"><option value="Jam Kosong"><option value="Sakit Demam"><option value="Izin Dinas Luar"><option value="Urusan Keluarga"></datalist>
-                            </div>
-                            </div>
-
-                            <!-- ABSENSI SISWA (CUSTOM CLASSY DROPDOWN) -->
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6"><label class="block text-sm font-semibold text-gray-700 mb-2">Guru Pengajar</label><div class="relative mb-3"><input type="text" v-model="form.namaGuru" @focus="openGuruSuggestions" @click.stop="openGuruSuggestions" @input="openGuruSuggestions" placeholder="Ketik nama guru..." class="w-full px-4 py-3 bg-white border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200" :class="showGuruSuggestions && suggestedTeachers.length > 0 ? 'rounded-t-lg rounded-b-none border-b-0 shadow-md z-20' : 'rounded-lg'" required><i class="fas fa-search absolute right-4 top-4 text-gray-400 text-xs"></i><div v-if="showGuruSuggestions && suggestedTeachers.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-300 shadow-xl rounded-b-lg z-50 max-h-60 overflow-y-auto custom-dropdown"><div v-for="(g, idx) in suggestedTeachers" :key="idx" @click.stop="pilihGuru(g)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"><div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center flex-shrink-0 text-xs"><i class="fas fa-user"></i></div><span>{{ g }}</span></div></div></div><div class="grid grid-cols-2 gap-2 mb-3"><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Hadir" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-green-500 peer-checked:text-white text-xs font-bold transition border-green-200">Hadir</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Terlambat" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-yellow-500 peer-checked:text-white text-xs font-bold transition border-yellow-200">Terlambat</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Sakit" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-blue-500 peer-checked:text-white text-xs font-bold transition border-blue-200">Sakit</div></label><label class="cursor-pointer"><input type="radio" v-model="form.statusGuru" value="Izin" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-orange-500 peer-checked:text-white text-xs font-bold transition border-orange-200">Izin</div></label><label class="cursor-pointer col-span-2"><input type="radio" v-model="form.statusGuru" value="Tanpa Ket" class="peer sr-only"><div class="py-2 text-center rounded-lg border bg-white peer-checked:bg-red-500 peer-checked:text-white text-xs font-bold transition border-red-200">Tanpa Keterangan (Alpa)</div></label></div><div v-if="form.statusGuru !== 'Hadir'" class="mt-3 animate-fade"><label class="text-xs text-gray-500 mb-1 block">Detail Alasan (Opsional):</label><input v-model="form.keteranganKBM" list="listAlasan" placeholder="Cth: Rapat Dinas, Sakit Demam, dll..." class="w-full p-2 rounded border border-gray-300 text-sm focus:outline-none focus:border-indigo-400"><datalist id="listAlasan"><option value="Ada Tugas"><option value="Jam Kosong"><option value="Sakit Demam"><option value="Izin Dinas Luar"><option value="Urusan Keluarga"></datalist></div></div>
                             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-8"><div class="flex justify-between items-center mb-3"><label class="block text-sm font-bold text-indigo-900"><i class="fas fa-user-check mr-1"></i> Absensi Siswa</label><span class="text-xs bg-white px-2 py-1 rounded text-indigo-600 border border-indigo-200">{{ form.absensiSiswa.length }} Siswa</span></div><div v-if="form.absensiSiswa.length > 0" class="space-y-2 mb-4"><div v-for="(item, index) in form.absensiSiswa" :key="index" class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 text-sm shadow-sm"><span class="font-medium text-gray-700">{{ item.nama }}</span><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-xs font-bold text-white" :class="{'bg-blue-500': item.keterangan === 'Sakit','bg-yellow-500': item.keterangan === 'Izin','bg-red-500': item.keterangan === 'Alfa'}">{{ item.keterangan }}</span><button type="button" @click="removeStudentFromAbsence(index)" class="text-gray-400 hover:text-red-500 ml-1 bg-gray-100 h-6 w-6 rounded-full flex items-center justify-center"><i class="fas fa-times"></i></button></div></div></div><div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm relative"><div class="relative mb-3"><input type="text" v-model="tempStudent.name" @focus="openSiswaSuggestions" @click.stop="openSiswaSuggestions" @input="openSiswaSuggestions" placeholder="Ketik nama siswa..." class="w-full px-4 py-3 bg-white border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200" :class="showSiswaSuggestions && suggestedStudents.length > 0 ? 'rounded-t-lg rounded-b-none border-b-0 shadow-md z-20' : 'rounded-lg'"><i class="fas fa-user-graduate absolute right-4 top-4 text-gray-400 text-xs"></i><div v-if="showSiswaSuggestions && suggestedStudents.length > 0" class="absolute top-full left-0 w-full bg-white border border-t-0 border-gray-300 shadow-xl rounded-b-lg z-50 max-h-40 overflow-y-auto custom-dropdown"><div v-for="(s, idx) in suggestedStudents" :key="idx" @click.stop="pilihSiswa(s.nama)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors"><div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">{{ s.nama.charAt(0) }}</div><span>{{ s.nama }}</span></div></div></div><div class="flex gap-2"><button type="button" @click="tempStudent.reason = 'Sakit'" :class="tempStudent.reason === 'Sakit' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Sakit</button><button type="button" @click="tempStudent.reason = 'Izin'" :class="tempStudent.reason === 'Izin' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Izin</button><button type="button" @click="tempStudent.reason = 'Alfa'" :class="tempStudent.reason === 'Alfa' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'" class="flex-1 py-1 rounded text-xs font-bold transition">Alfa</button></div><button type="button" @click="addStudentToAbsence" :disabled="!tempStudent.name" class="w-full mt-2 bg-indigo-600 text-white text-xs py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50 transition">+ Tambahkan</button></div></div>
                             <button type="submit" :disabled="isSubmitting" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-70">{{ isSubmitting ? 'Menyimpan...' : 'Simpan Laporan' }}</button>
                         </form>
@@ -327,7 +366,6 @@
                 </div>
             </transition>
 
-            <!-- ADMIN AREA -->
             <transition name="slide-up">
                 <div v-if="view === 'admin'" class="fixed inset-0 z-[80] bg-gray-900 text-white overflow-y-auto flex flex-col">
                     <div class="p-6 flex-grow">
@@ -351,30 +389,7 @@
                                 </div>
                                 <button @click="handleAdminLogout" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded text-xs font-bold transition">Keluar</button>
                             </div>
-
-                            <!-- AI Analysis Panel (NEW) -->
-                            <div class="bg-gradient-to-br from-purple-900 to-indigo-900 p-5 rounded-xl border border-purple-500/30 mb-6 shadow-xl relative overflow-hidden group">
-                                <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition"></div>
-                                <h3 class="text-white font-bold mb-2 flex items-center gap-2 text-lg">
-                                    <i class="fas fa-brain text-purple-300"></i> AI Analyst
-                                </h3>
-                                <p class="text-purple-200 text-xs mb-4">Dapatkan ringkasan eksekutif dan wawasan mendalam tentang KBM hari ini dengan kecerdasan buatan.</p>
-                                
-                                <button @click="analyzeReportsWithGemini" :disabled="isAiLoading" class="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 rounded-lg backdrop-blur-sm transition flex items-center justify-center gap-2">
-                                    <i v-if="isAiLoading" class="fas fa-spinner fa-spin"></i>
-                                    <i v-else class="fas fa-sparkles text-yellow-400"></i>
-                                    {{ isAiLoading ? 'Menganalisis Data...' : '✨ Analisis Laporan Hari Ini' }}
-                                </button>
-
-                                <div v-if="adminAiResponse" class="mt-4 p-4 bg-black/30 rounded-lg border border-white/10 text-gray-200 text-sm prose prose-invert prose-sm max-w-none animate-fade">
-                                    <div class="flex justify-between mb-2 border-b border-white/10 pb-2">
-                                        <span class="text-xs font-mono text-purple-300">RESULT_AI_GEMINI</span>
-                                        <button @click="adminAiResponse = null" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-                                    </div>
-                                    <div v-html="adminAiResponse"></div>
-                                </div>
-                            </div>
-
+                            
                             <!-- MENU REKAPAN & LAPORAN (BARU) -->
                             <div class="bg-indigo-900/20 p-4 rounded border border-indigo-800/50 mb-6">
                                 <h3 class="text-indigo-400 font-bold mb-3"><i class="fas fa-chart-bar mr-2"></i>Pusat Data & Rekapan</h3>
@@ -389,7 +404,7 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Menu Reset Database -->
                             <div class="bg-red-900/20 p-4 rounded border border-red-800">
                                 <h3 class="text-red-400 font-bold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Zona Bahaya (Reset Data)</h3>
@@ -430,7 +445,7 @@
 
     <!-- SCRIPT UTAMA -->
     <script type="module">
-        import { createApp, ref, computed, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import { createApp, ref, computed, onMounted, watch } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, updateDoc, query, where, onSnapshot, serverTimestamp, orderBy, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
@@ -444,9 +459,6 @@
             appId: "1:559680318322:web:5908ff13efa65257748beb",
             measurementId: "G-3L9ZP1ZJLW"
         };
-
-        // --- GEMINI AI CONFIG ---
-        const apiKey = ""; // Disuntikkan otomatis oleh environment
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -473,12 +485,8 @@
                 const form = ref({ jamKe: [], mapel: '', namaGuru: '', statusGuru: 'Hadir', keteranganKBM: 'Ada Tugas', absensiSiswa: [] });
                 const tempStudent = ref({ name: '', reason: 'Sakit' });
                 const adminForm = ref({ rawMasterData: '', rawStudents: '' });
+                const showSplash = ref(true); // State untuk Splash Screen
                 
-                // AI State
-                const aiResponse = ref(null);
-                const adminAiResponse = ref(null);
-                const isAiLoading = ref(false);
-
                 // Rekapan States
                 const recapFilter = ref('week');
                 const studentRecapMode = ref('detail'); 
@@ -487,6 +495,10 @@
                 const groupedStudentDetail = ref({});
                 const studentRecapTotalData = ref([]); 
                 const studentRecapRawData = ref([]); 
+
+                // Chart.js Instances
+                let chartInstance = null;
+                let studentChartInstance = null;
 
                 const getLocalDateString = (date = new Date()) => {
                     const year = date.getFullYear();
@@ -507,6 +519,72 @@
                     return { hadir, terlambat, absen, persenHadir: Math.round((hadir / total) * 100), persenTerlambat: Math.round((terlambat / total) * 100), persenAbsen: Math.round((absen / total) * 100) };
                 });
 
+                const renderChart = () => {
+                    if (view.value !== 'dashboard') return;
+                    
+                    // 1. Chart Guru
+                    const ctx = document.getElementById('attendanceChart');
+                    if (ctx) {
+                        if (chartInstance) chartInstance.destroy();
+                        const hadir = allReportsToday.value.filter(r => r.statusGuru === 'Hadir').length;
+                        const terlambat = allReportsToday.value.filter(r => r.statusGuru === 'Terlambat').length;
+                        const sakit = allReportsToday.value.filter(r => r.statusGuru === 'Sakit').length;
+                        const izin = allReportsToday.value.filter(r => r.statusGuru === 'Izin').length;
+                        const alpa = allReportsToday.value.filter(r => r.statusGuru === 'Tanpa Ket' || r.statusGuru === 'Tidak Hadir').length;
+
+                        chartInstance = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpa'],
+                                datasets: [{
+                                    data: [hadir, terlambat, sakit, izin, alpa],
+                                    backgroundColor: ['#22c55e', '#eab308', '#3b82f6', '#f97316', '#ef4444'],
+                                    borderWidth: 0, hoverOffset: 5
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+                        });
+                    }
+
+                    // 2. Chart Siswa (NEW)
+                    const ctxStudent = document.getElementById('studentChart');
+                    if (ctxStudent) {
+                        if (studentChartInstance) studentChartInstance.destroy();
+                        
+                        let totalSakit = 0, totalIzin = 0, totalAlfa = 0;
+                        
+                        allReportsToday.value.forEach(r => {
+                            if (r.absensiSiswa && Array.isArray(r.absensiSiswa)) {
+                                r.absensiSiswa.forEach(s => {
+                                    if (s.keterangan === 'Sakit') totalSakit++;
+                                    else if (s.keterangan === 'Izin') totalIzin++;
+                                    else if (s.keterangan === 'Alfa') totalAlfa++;
+                                });
+                            }
+                        });
+
+                        studentChartInstance = new Chart(ctxStudent, {
+                            type: 'pie',
+                            data: {
+                                labels: ['Sakit', 'Izin', 'Alfa'],
+                                datasets: [{
+                                    data: [totalSakit, totalIzin, totalAlfa],
+                                    backgroundColor: ['#3b82f6', '#f97316', '#ef4444'],
+                                    borderWidth: 0, hoverOffset: 5
+                                }]
+                            },
+                            options: { 
+                                responsive: true, 
+                                maintainAspectRatio: false, 
+                                plugins: { 
+                                    legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 8 } },
+                                    tooltip: { callbacks: { label: function(context) { return context.label + ': ' + context.raw + ' Siswa'; } } }
+                                } 
+                            }
+                        });
+                    }
+                };
+
                 const filteredClasses = computed(() => {
                     let data = classesList.value.map(cls => {
                         const classReports = allReportsToday.value.filter(r => r.kelasId === cls.id);
@@ -524,7 +602,22 @@
                 const classesActiveToday = computed(() => new Set(allReportsToday.value.map(r => r.kelasId)).size);
                 const classReports = computed(() => { if (!selectedClass.value.id) return []; return allReportsToday.value.filter(r => r.kelasId === selectedClass.value.id).sort((a,b) => a.jamKe[0] - b.jamKe[0]); });
 
-                onMounted(async () => { onAuthStateChanged(auth, (user) => adminUser.value = user); const q = query(collection(db, "laporan_kbm"), where("tanggal", "==", todayQueryString.value)); onSnapshot(q, (snapshot) => { allReportsToday.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }); await fetchClassesFromDB(); await fetchMasterData(); loading.value = false; });
+                onMounted(async () => { 
+                    // Splash Screen Timer
+                    setTimeout(() => {
+                        showSplash.value = false;
+                    }, 3000);
+
+                    onAuthStateChanged(auth, (user) => adminUser.value = user); 
+                    const q = query(collection(db, "laporan_kbm"), where("tanggal", "==", todayQueryString.value)); 
+                    onSnapshot(q, (snapshot) => { 
+                        allReportsToday.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+                        setTimeout(renderChart, 300); // Delay render chart slightly to ensure DOM is ready
+                    }); 
+                    await fetchClassesFromDB(); 
+                    await fetchMasterData(); 
+                    loading.value = false; 
+                });
 
                 const openMapelSuggestions = () => { showMapelSuggestions.value = true; showGuruSuggestions.value = false; showSiswaSuggestions.value = false; };
                 const openGuruSuggestions = () => { showGuruSuggestions.value = true; showMapelSuggestions.value = false; showSiswaSuggestions.value = false; };
@@ -701,72 +794,6 @@
                     XLSX.writeFile(wb, fileName);
                 };
 
-                // --- GEMINI AI FUNCTIONS (NEW) ---
-                const callGemini = async (prompt) => {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: prompt }] }]
-                    };
-                    
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) throw new Error("Gagal menghubungi AI");
-                    const data = await response.json();
-                    return data.candidates[0].content.parts[0].text;
-                };
-
-                const askGeminiActivity = async () => {
-                    isAiLoading.value = true;
-                    try {
-                        const prompt = `Anda adalah asisten pendidikan.
-                        Konteks: Guru mata pelajaran ${form.value.mapel} di kelas ${selectedClass.value.nama} sedang tidak hadir dengan status ${form.value.statusGuru} (${form.value.keteranganKBM || 'Tanpa Keterangan'}).
-                        Tugas: Berikan 3 ide kegiatan belajar mandiri yang spesifik, produktif, dan edukatif untuk siswa agar kelas tetap kondusif tanpa guru. Format output dalam HTML list sederhana.`;
-                        
-                        const text = await callGemini(prompt);
-                        aiResponse.value = marked.parse(text);
-                    } catch (e) {
-                        aiResponse.value = `<p class="text-red-500">Maaf, AI sedang sibuk. Coba lagi nanti.</p>`;
-                    } finally {
-                        isAiLoading.value = false;
-                    }
-                };
-
-                const analyzeReportsWithGemini = async () => {
-                    isAiLoading.value = true;
-                    adminAiResponse.value = null;
-                    try {
-                        // Siapkan Data Ringkas untuk Prompt (Hemat Token)
-                        const reportSummary = allReportsToday.value.map(r => ({
-                            kelas: r.kelasNama,
-                            mapel: r.mapel,
-                            guru: r.namaGuru,
-                            status: r.statusGuru,
-                            ket: r.keteranganKBM
-                        }));
-
-                        const prompt = `Anda adalah kepala sekolah virtual SMAN 1 Soppeng.
-                        Data Jurnal Hari Ini (JSON): ${JSON.stringify(reportSummary)}.
-                        
-                        Tugas: Buatkan ringkasan eksekutif singkat (maksimal 3 paragraf poin-poin) tentang kondisi KBM hari ini.
-                        1. Berapa persen kehadiran guru secara umum?
-                        2. Identifikasi guru yang absen/terlambat dan alasannya.
-                        3. Apakah ada kelas yang kosong (semua jam kosong)?
-                        4. Berikan 1 rekomendasi singkat untuk besok.
-                        Format output dalam HTML yang rapi.`;
-
-                        const text = await callGemini(prompt);
-                        adminAiResponse.value = marked.parse(text);
-                    } catch (e) {
-                        adminAiResponse.value = `<p class="text-red-500">Gagal menganalisis data. Pastikan koneksi internet lancar.</p>`;
-                    } finally {
-                        isAiLoading.value = false;
-                    }
-                };
-
                 const handleAdminLogin = async () => { try { await signInWithEmailAndPassword(auth, loginData.value.email, loginData.value.password); } catch (e) { loginError.value = "Login Gagal."; } };
                 const handleAdminLogout = async () => { await signOut(auth); view.value = 'dashboard'; };
                 const saveMasterData = async () => { if(!adminForm.value.rawMasterData) return; loading.value = true; const rows = adminForm.value.rawMasterData.split('\n'); const subjectsSet = new Set(); const teachersSet = new Set(); const mapelGuruMap = {}; rows.forEach(row => { const cols = row.split('\t'); if(cols.length >= 2) { const guru = cols[0].trim(); const mapel = cols[1].trim(); if(guru && mapel) { teachersSet.add(guru); subjectsSet.add(mapel); if(!mapelGuruMap[mapel]) mapelGuruMap[mapel] = []; if(!mapelGuruMap[mapel].includes(guru)) mapelGuruMap[mapel].push(guru); } } }); try { await setDoc(doc(db, 'master_data', 'teachers'), { list: Array.from(teachersSet).sort() }); await setDoc(doc(db, 'master_data', 'subjects'), { list: Array.from(subjectsSet).sort() }); await setDoc(doc(db, 'master_data', 'mapel_guru_map'), mapelGuruMap); alert("Master Data Berhasil Disimpan!"); await fetchMasterData(); } catch(e) { alert("Gagal simpan: " + e.message); } finally { loading.value = false; } };
@@ -780,18 +807,11 @@
                     adminForm, adminUser, loginData, loginError, filteredTeachers,
                     totalLaporanHariIni, classesActiveToday, studentRecapRawData,
                     recapFilter, groupedRecap, groupedStudentRecap, studentRecapMode, groupedStudentDetail, studentRecapTotalData, // Exports
-                    
-                    // AI States
-                    aiResponse, adminAiResponse, isAiLoading,
-
                     loadRecap, loadStudentRecap, bukaRekapan, downloadStudentRecapExcel,
                     bukaDetailKelas, bukaFormTambah, toggleJamSmart,
                     addStudentToAbsence, removeStudentFromAbsence, kirimLaporan,
                     saveMasterData, saveStudents, handleAdminLogin, handleAdminLogout, resetLaporan,
-                    showMapelSuggestions, showGuruSuggestions, showSiswaSuggestions, suggestedSubjects, suggestedTeachers, suggestedStudents, openMapelSuggestions, openGuruSuggestions, openSiswaSuggestions, closeAllSuggestions, pilihMapel, pilihGuru, pilihSiswa,
-                    
-                    // AI Functions
-                    askGeminiActivity, analyzeReportsWithGemini
+                    showMapelSuggestions, showGuruSuggestions, showSiswaSuggestions, suggestedSubjects, suggestedTeachers, suggestedStudents, openMapelSuggestions, openGuruSuggestions, openSiswaSuggestions, closeAllSuggestions, pilihMapel, pilihGuru, pilihSiswa, showSplash
                 };
             }
         }).mount('#app');
