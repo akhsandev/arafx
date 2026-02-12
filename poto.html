@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Camera Editor V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for UI Buttons only -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .canvas-bg {
+            background-image: 
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-10">
+
+    <div class="max-w-6xl mx-auto p-4 md:p-6">
+        
+        <header class="mb-8 flex flex-col md:flex-row items-center justify-between border-b pb-4 border-slate-300">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-camera-retro text-blue-600"></i> GeoStamp <span class="text-blue-600">Pro</span>
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Editor Timestamp Foto dengan Lokasi & Ikon Realistis</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Controls Sidebar -->
+            <div class="lg:col-span-4 space-y-5 h-fit">
+                
+                <!-- 1. Upload -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="font-bold text-slate-700 mb-4 flex items-center text-sm uppercase tracking-wide">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs">1</span> 
+                        Upload Foto
+                    </h2>
+                    <label class="block w-full cursor-pointer bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:bg-blue-50 hover:border-blue-400 transition group">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 group-hover:text-blue-500 mb-2"></i>
+                        <span class="block text-sm font-medium text-slate-600">Klik untuk pilih foto</span>
+                        <input type="file" id="imageInput" accept="image/*" class="hidden"/>
+                    </label>
+                </div>
+
+                <!-- 2. Waktu -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                     <h2 class="font-bold text-slate-700 mb-4 flex items-center text-sm uppercase tracking-wide">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs">2</span> 
+                        Waktu & Tanggal
+                    </h2>
+                    <input type="datetime-local" id="datetimeInput" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <!-- 3. Lokasi -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                     <h2 class="font-bold text-slate-700 mb-4 flex items-center text-sm uppercase tracking-wide">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs">3</span> 
+                        Lokasi GPS
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="addressSearch" placeholder="Cari: Monas, Jakarta..." class="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <button id="btnSearchLoc" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                        </div>
+                        <p id="locStatus" class="text-xs text-slate-400 h-4"></p>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Latitude</label>
+                                <input type="text" id="latInput" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Longitude</label>
+                                <input type="text" id="longInput" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs">
+                            </div>
+                        </div>
+                        
+                        <div>
+                             <label class="text-[10px] font-bold text-slate-400 uppercase">Alamat Lengkap (Ditampilkan)</label>
+                             <textarea id="fullAddressDisplay" rows="3" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-2 text-xs mt-1"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Styling -->
+                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                     <h2 class="font-bold text-slate-700 mb-4 flex items-center text-sm uppercase tracking-wide">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs">4</span> 
+                        Tampilan
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Warna -->
+                        <div>
+                            <label class="text-xs font-semibold text-slate-500 mb-2 block">Warna Teks</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="w-8 h-8 rounded-full bg-white border border-slate-300 ring-2 ring-transparent hover:ring-blue-500 color-btn" data-color="#FFFFFF" title="Putih"></button>
+                                <button class="w-8 h-8 rounded-full bg-yellow-400 border border-slate-300 ring-2 ring-transparent hover:ring-blue-500 color-btn" data-color="#FFD700" title="Kuning"></button>
+                                <button class="w-8 h-8 rounded-full bg-cyan-400 border border-slate-300 ring-2 ring-transparent hover:ring-blue-500 color-btn" data-color="#00FFFF" title="Cyan"></button>
+                                <button class="w-8 h-8 rounded-full bg-black border border-slate-300 ring-2 ring-transparent hover:ring-blue-500 color-btn" data-color="#000000" title="Hitam"></button>
+                            </div>
+                        </div>
+
+                        <!-- Sliders -->
+                        <div>
+                            <div class="flex justify-between">
+                                <label class="text-xs font-semibold text-slate-500">Ukuran Font</label>
+                                <span id="fontSizeVal" class="text-xs text-blue-600 font-mono">20</span>
+                            </div>
+                            <input type="range" id="fontSizeRange" min="10" max="80" value="25" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between">
+                                <label class="text-xs font-semibold text-slate-500">Lebar Area Teks (%)</label>
+                                <span id="widthVal" class="text-xs text-blue-600 font-mono">50%</span>
+                            </div>
+                            <input type="range" id="textWidthRange" min="30" max="90" value="50" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        </div>
+
+                        <!-- Checkboxes & Select -->
+                        <div class="flex items-center gap-2">
+                             <input type="checkbox" id="bgBoxCheck" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" checked>
+                             <label for="bgBoxCheck" class="text-sm text-slate-700">Background Gelap Transparan</label>
+                        </div>
+
+                         <div>
+                            <label class="text-xs font-semibold text-slate-500 block mb-1">Posisi</label>
+                            <select id="positionSelect" class="w-full border border-slate-300 rounded px-2 py-2 text-sm bg-slate-50">
+                                <option value="bottom-left">Kiri Bawah (Standard)</option>
+                                <option value="bottom-right">Kanan Bawah</option>
+                                <option value="top-left">Kiri Atas</option>
+                                <option value="top-right">Kanan Atas</option>
+                                <option value="center">Tengah (Watermark)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Area -->
+            <div class="lg:col-span-8 flex flex-col">
+                <div class="bg-white p-2 rounded-xl shadow-lg border border-slate-200 flex-grow flex flex-col relative">
+                    
+                    <div class="flex justify-between items-center mb-2 px-2">
+                        <h3 class="font-bold text-slate-700 text-sm">Preview Hasil</h3>
+                        <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg shadow flex items-center transition opacity-50 cursor-not-allowed" disabled>
+                            <i class="fa-solid fa-download mr-2"></i> Simpan Foto
+                        </button>
+                    </div>
+
+                    <div class="flex-grow flex items-center justify-center bg-slate-100 rounded-lg overflow-hidden canvas-bg min-h-[500px] border border-slate-300 relative">
+                        
+                        <div id="placeholder" class="text-center p-10">
+                            <i class="fa-regular fa-image text-6xl text-slate-300 mb-4"></i>
+                            <p class="text-slate-400 font-medium">Upload foto untuk melihat preview</p>
+                        </div>
+
+                        <canvas id="canvas" class="max-w-full max-h-[80vh] object-contain shadow-2xl hidden"></canvas>
+                        
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2 text-center italic">*Kualitas foto asli dipertahankan saat diunduh.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl translate-y-[-150%] transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toastMsg">Notification</span>
+    </div>
+
+    <script>
+        // --- SVG PATHS FOR CANVAS ICONS ---
+        // Kita menggunakan path SVG agar ikon tajam di resolusi berapapun
+        const ICONS = {
+            pin: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z", // Google Maps style pin
+            clock: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z", // Analog clock
+            globe: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" // Globe/Coords
+        };
+
+        // --- STATE & DOM ---
+        const state = {
+            image: null,
+            date: new Date(),
+            address: '',
+            lat: '',
+            long: '',
+            color: '#FFFFFF',
+            fontSize: 25,
+            textWidthPercent: 50,
+            hasBackground: true,
+            position: 'bottom-left'
+        };
+
+        // UI Elements
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const elements = {
+            imageInput: document.getElementById('imageInput'),
+            datetimeInput: document.getElementById('datetimeInput'),
+            addressSearch: document.getElementById('addressSearch'),
+            btnSearchLoc: document.getElementById('btnSearchLoc'),
+            locStatus: document.getElementById('locStatus'),
+            fullAddressDisplay: document.getElementById('fullAddressDisplay'),
+            latInput: document.getElementById('latInput'),
+            longInput: document.getElementById('longInput'),
+            fontSizeRange: document.getElementById('fontSizeRange'),
+            textWidthRange: document.getElementById('textWidthRange'),
+            bgBoxCheck: document.getElementById('bgBoxCheck'),
+            positionSelect: document.getElementById('positionSelect'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            placeholder: document.getElementById('placeholder'),
+            toast: document.getElementById('toast'),
+            toastMsg: document.getElementById('toastMsg'),
+            colorBtns: document.querySelectorAll('.color-btn'),
+            fontSizeVal: document.getElementById('fontSizeVal'),
+            widthVal: document.getElementById('widthVal')
+        };
+
+        // --- INITIALIZATION ---
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        elements.datetimeInput.value = now.toISOString().slice(0, 16);
+
+        // --- EVENT LISTENERS ---
+        elements.imageInput.addEventListener('change', handleImageUpload);
+        elements.datetimeInput.addEventListener('change', (e) => { state.date = new Date(e.target.value); draw(); });
+        
+        elements.btnSearchLoc.addEventListener('click', searchLocation);
+        elements.addressSearch.addEventListener('keypress', (e) => { if(e.key === 'Enter') searchLocation(); });
+        
+        // Live Updates
+        ['latInput', 'longInput', 'fullAddressDisplay'].forEach(id => {
+            elements[id].addEventListener('input', (e) => {
+                if(id === 'latInput') state.lat = e.target.value;
+                if(id === 'longInput') state.long = e.target.value;
+                if(id === 'fullAddressDisplay') state.address = e.target.value;
+                draw();
+            });
+        });
+
+        // Styling Updates
+        elements.fontSizeRange.addEventListener('input', (e) => { 
+            state.fontSize = parseInt(e.target.value); 
+            elements.fontSizeVal.innerText = state.fontSize;
+            draw(); 
+        });
+        elements.textWidthRange.addEventListener('input', (e) => { 
+            state.textWidthPercent = parseInt(e.target.value); 
+            elements.widthVal.innerText = state.textWidthPercent + '%';
+            draw(); 
+        });
+        elements.bgBoxCheck.addEventListener('change', (e) => { state.hasBackground = e.target.checked; draw(); });
+        elements.positionSelect.addEventListener('change', (e) => { state.position = e.target.value; draw(); });
+
+        elements.colorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                elements.colorBtns.forEach(b => b.classList.remove('ring-offset-2', 'ring-2', 'ring-blue-500'));
+                btn.classList.add('ring-offset-2', 'ring-2', 'ring-blue-500');
+                state.color = btn.dataset.color;
+                draw();
+            });
+        });
+
+        elements.downloadBtn.addEventListener('click', downloadImage);
+
+        // --- CORE FUNCTIONS ---
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    state.image = img;
+                    elements.placeholder.classList.add('hidden');
+                    canvas.classList.remove('hidden');
+                    elements.downloadBtn.disabled = false;
+                    elements.downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    draw();
+                    showToast("Foto berhasil dimuat");
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function searchLocation() {
+            const query = elements.addressSearch.value;
+            if (!query) return;
+
+            elements.locStatus.textContent = "Mencari...";
+            elements.locStatus.className = "text-xs text-blue-500 font-bold animate-pulse";
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const place = data[0];
+                    state.lat = parseFloat(place.lat).toFixed(6);
+                    state.long = parseFloat(place.lon).toFixed(6);
+                    state.address = place.display_name;
+                    
+                    elements.latInput.value = state.lat;
+                    elements.longInput.value = state.long;
+                    elements.fullAddressDisplay.value = state.address;
+                    
+                    elements.locStatus.textContent = "Lokasi ditemukan!";
+                    elements.locStatus.className = "text-xs text-green-600 font-bold";
+                    draw();
+                } else {
+                    elements.locStatus.textContent = "Tidak ditemukan";
+                    elements.locStatus.className = "text-xs text-red-500 font-bold";
+                }
+            } catch (error) {
+                elements.locStatus.textContent = "Error koneksi";
+                elements.locStatus.className = "text-xs text-red-500 font-bold";
+            }
+        }
+
+        // --- DRAWING LOGIC (THE MAGIC) ---
+        function draw() {
+            if (!state.image) return;
+
+            // 1. Reset Canvas & Draw Image
+            canvas.width = state.image.width;
+            canvas.height = state.image.height;
+            ctx.drawImage(state.image, 0, 0);
+
+            // 2. Constants & Scaling
+            const baseSize = Math.max(canvas.width, canvas.height);
+            // Font size relative to image size. Slider 25 = 2.5% of max dimension
+            const relFontSize = baseSize * (state.fontSize / 1000); 
+            const lineHeight = relFontSize * 1.3;
+            const iconSize = relFontSize * 1.2; // Icons slightly larger
+            const padding = relFontSize * 0.8;
+            const iconGap = relFontSize * 0.5; // Gap between icon and text
+
+            // Limit text width
+            const maxTextWidth = (canvas.width * (state.textWidthPercent / 100)) - (padding * 2) - iconSize - iconGap;
+
+            ctx.font = `bold ${relFontSize}px 'Roboto', sans-serif`;
+            ctx.textBaseline = 'middle'; // Easier for icon alignment
+
+            // 3. Prepare Content Lines
+            // Structure: Array of objects { icon: pathString, lines: [string, string] }
+            
+            const contentBlocks = [];
+
+            // Block 1: Address
+            if (state.address) {
+                const addressLines = wrapText(ctx, state.address, maxTextWidth);
+                contentBlocks.push({ icon: ICONS.pin, lines: addressLines });
+            }
+
+            // Block 2: Coords
+            if (state.lat || state.long) {
+                const coordText = `Lat ${state.lat || '?'}  Long ${state.long || '?'}`;
+                contentBlocks.push({ icon: ICONS.globe, lines: [coordText] });
+            }
+
+            // Block 3: Date
+            const dateStr = formatDate(state.date);
+            contentBlocks.push({ icon: ICONS.clock, lines: [dateStr] });
+
+            // 4. Calculate Box Size
+            let totalContentHeight = 0;
+            contentBlocks.forEach((block, i) => {
+                const blockHeight = block.lines.length * lineHeight;
+                // If single line, ensure height accommodates icon size
+                const actualHeight = Math.max(blockHeight, iconSize);
+                totalContentHeight += actualHeight;
+                // Add spacing between blocks
+                if (i < contentBlocks.length - 1) totalContentHeight += (relFontSize * 0.5); 
+            });
+
+            const boxWidth = (canvas.width * (state.textWidthPercent / 100));
+            const boxHeight = totalContentHeight + (padding * 2);
+
+            // 5. Determine Position
+            let startX, startY;
+            const margin = relFontSize; // Margin from edge of photo
+
+            if (state.position.includes('left')) startX = margin;
+            else if (state.position.includes('center')) startX = (canvas.width - boxWidth) / 2;
+            else startX = canvas.width - boxWidth - margin;
+
+            if (state.position.includes('bottom')) startY = canvas.height - boxHeight - margin;
+            else if (state.position.includes('center')) startY = (canvas.height - boxHeight) / 2;
+            else startY = margin;
+
+            // 6. Draw Background Box
+            if (state.hasBackground) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Dark semi-transparent
+                // Rounded corners
+                const radius = relFontSize * 0.5;
+                ctx.beginPath();
+                ctx.roundRect(startX, startY, boxWidth, boxHeight, radius);
+                ctx.fill();
+            } else {
+                // Shadow for text readability without box
+                ctx.shadowColor = "black";
+                ctx.shadowBlur = relFontSize * 0.3;
+                ctx.lineWidth = relFontSize * 0.1;
+                ctx.strokeStyle = 'black';
+            }
+
+            // 7. Draw Content
+            let currentY = startY + padding;
+
+            contentBlocks.forEach(block => {
+                const iconX = startX + padding;
+                // Center icon vertically relative to the first line of text or the block center
+                // Let's center it relative to the first line for better visual flow
+                const iconY = currentY + (lineHeight / 2) - (iconSize / 2);
+
+                // Draw Icon
+                ctx.fillStyle = state.color;
+                drawPath(ctx, block.icon, iconX, iconY, iconSize);
+
+                // Draw Text Lines
+                const textX = iconX + iconSize + iconGap;
+                
+                block.lines.forEach((line, lineIdx) => {
+                    const textY = currentY + (lineHeight / 2);
+                    
+                    if (!state.hasBackground) {
+                        ctx.strokeText(line, textX, textY);
+                        ctx.fillText(line, textX, textY);
+                    } else {
+                        ctx.fillText(line, textX, textY);
+                    }
+                    
+                    currentY += lineHeight; // Move down for next line
+                });
+
+                // Add block gap
+                currentY += (relFontSize * 0.5);
+            });
+        }
+
+        // Helper: Word Wrap
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split(' ');
+            let lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // Helper: Draw SVG Path on Canvas
+        function drawPath(ctx, pathStr, x, y, size) {
+            const path = new Path2D(pathStr);
+            ctx.save();
+            ctx.translate(x, y);
+            // SVG paths are usually defined on a 24x24 grid. Scale to desired size.
+            const scale = size / 24; 
+            ctx.scale(scale, scale);
+            ctx.fill(path);
+            if (!state.hasBackground) ctx.stroke(path); // Stroke icon if no bg
+            ctx.restore();
+        }
+
+        function formatDate(date) {
+            const d = date.getDate().toString().padStart(2, '0');
+            const m = (date.getMonth() + 1).toString().padStart(2, '0');
+            const y = date.getFullYear();
+            const h = date.getHours().toString().padStart(2, '0');
+            const min = date.getMinutes().toString().padStart(2, '0');
+            
+            return `${d}/${m}/${y} ${h}:${min}`;
+        }
+
+        function downloadImage() {
+            if (!state.image) return;
+            const link = document.createElement('a');
+            link.download = `GeoStamp_${Date.now()}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+            showToast("Foto tersimpan di galeri!");
+        }
+
+        function showToast(msg) {
+            elements.toastMsg.innerText = msg;
+            elements.toast.classList.remove('translate-y-[-150%]');
+            setTimeout(() => {
+                elements.toast.classList.add('translate-y-[-150%]');
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>
+
