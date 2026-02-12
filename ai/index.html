@@ -1020,7 +1020,7 @@
             - Kelas/Fase: ${d.fase} | Semester: ${d.semester}
             - Topik: ${d.topik}
             - CP (Capaian Pembelajaran): ${d.cp ? d.cp : "(Tolong carikan CP yang paling sesuai dengan Kurikulum Merdeka untuk topik dan jenjang ini)"}
-            - Alokasi: ${d.pertemuan} Pertemuan (@ ${d.durasi} menit)
+            - Alokasi: ${d.alokasi_waktu_string}
             - Karakteristik Murid: ${d.murid}
             - Model: ${d.model}
             - Dimensi Profil Lulusan (8 Poin): ${d.profil}
@@ -1047,7 +1047,7 @@
             **Jenjang/Kelas** : ${d.jenjang} / ${d.fase}  
             **Mata Pelajaran** : ${d.mapel}  
             **Semester** : ${d.semester}  
-            **Alokasi Waktu** : ${d.pertemuan} Pertemuan (@ ${d.durasi} Menit)  
+            **Alokasi Waktu** : ${d.alokasi_waktu_string}
             **Guru Mata Pelajaran** : ${d.guru}  
 
             ## 1. IDENTIFIKASI
