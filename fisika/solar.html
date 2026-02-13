@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Simulator Pro - Scientific Lab</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f9d423;
+            --danger: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #020617;
+        }
+
+        canvas { display: block; }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .font-mono-lab { font-family: 'JetBrains Mono', monospace; }
+
+        .neon-text { text-shadow: 0 0 10px rgba(79, 172, 254, 0.5); }
+
+        .tab-active {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.4);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Scanline Animation */
+        @keyframes scan {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            animation: scan 1.5s infinite linear;
+            display: none;
+        }
+
+        .measure-btn {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border: 2px solid var(--primary);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .measure-btn:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);
+            transform: scale(1.05);
+        }
+        .measure-btn:active { transform: scale(0.95); }
+
+        .loading-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #data-overlay { pointer-events: none; }
+        .interactive { pointer-events: auto; }
+
+        /* Blurred Values */
+        .value-blur {
+            filter: blur(8px);
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+        .value-show {
+            filter: blur(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- UI Overlay -->
+    <div id="data-overlay" class="fixed inset-0 flex flex-col justify-between p-4 z-10 text-white">
+        
+        <!-- HEADER & MODE SELECTOR -->
+        <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+            <div class="glass p-4 rounded-3xl interactive flex flex-col gap-3">
+                <h1 class="text-xl font-extrabold tracking-tighter neon-text">SOLAR<span class="text-cyan-400 font-light">EXPERT</span></h1>
+                
+                <div class="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+                    <button onclick="setMode('A')" id="btn-mode-A" class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all">Kelompok A</button>
+                    <button onclick="setMode('B')" id="btn-mode-B" class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all">Kelompok B</button>
+                    <button onclick="setMode('C')" id="btn-mode-C" class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all">Kelompok C</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="flex flex-col items-end gap-3">
+                <div class="flex gap-4">
+                    <div class="glass p-4 rounded-2xl text-center min-w-[120px] relative overflow-hidden">
+                        <div id="scan-line-v" class="scanner-line"></div>
+                        <div class="text-[9px] font-bold uppercase opacity-50 mb-1">Tegangan (V)</div>
+                        <div id="val-voltage" class="text-3xl font-black text-cyan-300 font-mono-lab value-blur">0.00</div>
+                    </div>
+                    <div class="glass p-4 rounded-2xl text-center min-w-[120px] relative overflow-hidden">
+                        <div id="scan-line-i" class="scanner-line"></div>
+                        <div class="text-[9px] font-bold uppercase opacity-50 mb-1">Arus (I)</div>
+                        <div id="val-current" class="text-3xl font-black text-purple-400 font-mono-lab value-blur">0.00</div>
+                    </div>
+                    <div class="glass p-4 rounded-2xl text-center min-w-[120px] relative overflow-hidden">
+                        <div id="scan-line-e" class="scanner-line"></div>
+                        <div class="text-[9px] font-bold uppercase opacity-50 mb-1">Efisiensi</div>
+                        <div id="val-efficiency" class="text-3xl font-black text-yellow-400 font-mono-lab value-blur">0%</div>
+                    </div>
+                </div>
+                
+                <!-- Measurement Trigger -->
+                <div class="flex flex-col items-end gap-2 interactive">
+                    <button onclick="startMeasurement()" id="main-measure-btn" class="measure-btn px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-primary flex items-center gap-3">
+                        <span id="btn-icon">⚡</span>
+                        <span id="btn-text">Ukur Sekarang</span>
+                    </button>
+                    <div id="measure-loading" class="loading-bar-container">
+                        <div id="loading-progress" class="h-full bg-primary transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div id="status-text" class="text-[10px] font-bold text-primary italic opacity-0">Processing Signal...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPERIMENT SPECIFIC PANELS -->
+        <div class="flex flex-1 items-center justify-between pointer-events-none">
+            
+            <div id="panel-group-A" class="glass p-5 rounded-3xl interactive w-64 hidden flex flex-col gap-4">
+                <h3 class="text-xs font-black uppercase text-cyan-400">Eksperimen Kelompok A</h3>
+                <p class="text-[10px] opacity-70">Uji nyala lampu dengan hambatan fisik:</p>
+                <div class="flex flex-col gap-2">
+                    <button onclick="setObstruction('none')" class="obs-btn bg-white/10 p-2 rounded-xl text-xs font-bold hover:bg-white/20">☀️ Terang Penuh</button>
+                    <button onclick="setObstruction('tissue')" class="obs-btn bg-white/10 p-2 rounded-xl text-xs font-bold hover:bg-white/20">☁️ Mendung (Tisu)</button>
+                    <button onclick="setObstruction('cardboard')" class="obs-btn bg-white/10 p-2 rounded-xl text-xs font-bold hover:bg-white/20">🌑 Gelap (Karton)</button>
+                </div>
+                <div class="mt-4 p-4 bg-black/40 rounded-2xl flex flex-col items-center gap-3">
+                    <div id="led-indicator" class="h-12 w-12 rounded-full bg-slate-700 shadow-[0_0_0px_#fff]"></div>
+                    <div class="text-[9px] font-bold uppercase text-white/50">Nyala Lampu LED</div>
+                </div>
+            </div>
+
+            <div id="panel-group-B" class="glass p-5 rounded-3xl interactive w-80 hidden flex flex-col gap-4">
+                <h3 class="text-xs font-black uppercase text-purple-400">Eksperimen Kelompok B</h3>
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] opacity-70">Data Terukur:</span>
+                    <button onclick="recordData()" class="bg-purple-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase">Simpan Data</button>
+                </div>
+                <div class="overflow-y-auto max-h-48 bg-black/30 rounded-xl p-2">
+                    <table class="w-full text-[9px] text-center border-collapse">
+                        <thead class="sticky top-0 bg-slate-800">
+                            <tr>
+                                <th class="p-1 border border-white/10">Sudut</th>
+                                <th class="p-1 border border-white/10">V (V)</th>
+                                <th class="p-1 border border-white/10">I (A)</th>
+                                <th class="p-1 border border-white/10">P (W)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                    <button onclick="setTilt(0)" class="bg-white/5 p-1 rounded text-[9px]">0°</button>
+                    <button onclick="setTilt(30)" class="bg-white/5 p-1 rounded text-[9px]">30°</button>
+                    <button onclick="setTilt(45)" class="bg-white/5 p-1 rounded text-[9px]">45°</button>
+                    <button onclick="setTilt(60)" class="bg-white/5 p-1 rounded text-[9px]">60°</button>
+                    <button onclick="setTilt(90)" class="bg-white/5 p-1 rounded text-[9px]">90°</button>
+                </div>
+            </div>
+
+            <div id="panel-group-C" class="glass p-5 rounded-3xl interactive w-64 hidden flex flex-col gap-4">
+                <h3 class="text-xs font-black uppercase text-green-400">Eksperimen Kelompok C</h3>
+                <p class="text-[10px] opacity-70">Bandingkan 2 Panel Surya:</p>
+                <div class="flex p-1 bg-white/5 rounded-xl border border-white/10">
+                    <button onclick="setCircuit('series')" id="btn-seri" class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all">Seri</button>
+                    <button onclick="setCircuit('parallel')" id="btn-paralel" class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all">Paralel</button>
+                </div>
+                <div class="text-[10px] bg-green-950/30 p-3 rounded-xl border border-green-500/20 italic">
+                    <span id="circuit-info">Seri meningkatkan Tegangan (V), Arus tetap.</span>
+                </div>
+            </div>
+
+            <div class="glass p-5 rounded-3xl interactive w-72">
+                <h3 class="text-[10px] font-black uppercase opacity-60 mb-3 tracking-widest">Produksi 24 Jam</h3>
+                <div class="h-40">
+                    <canvas id="productionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM CONTROLS -->
+        <div class="flex justify-center items-center gap-6">
+            <div class="glass px-6 py-4 rounded-full interactive flex items-center gap-6 border border-white/10">
+                <button id="play-pause-btn" class="h-10 w-10 rounded-full bg-cyan-500 flex items-center justify-center text-white active-glow">
+                    <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                
+                <div class="flex gap-8 items-center">
+                    <div class="w-40">
+                        <div class="flex justify-between text-[9px] font-black uppercase mb-1 text-cyan-300">Waktu Simulasi</div>
+                        <input type="range" id="time-range" min="0" max="23.9" step="0.01" value="12" class="w-full">
+                    </div>
+                    <div class="text-xl font-mono-lab font-black w-24 text-center" id="time-display">12:00</div>
+                </div>
+            </div>
+            
+            <div class="glass p-4 px-6 rounded-full interactive flex gap-8 items-center">
+                 <div class="w-40">
+                    <div class="flex justify-between text-[9px] font-black uppercase mb-1 text-purple-400">Tilt Angle (Sudut)</div>
+                    <input type="range" id="tilt-range" min="0" max="90" value="30" class="w-full">
+                </div>
+                <div class="w-40">
+                    <div class="flex justify-between text-[9px] font-black uppercase mb-1 text-green-400">Azimuth (Arah)</div>
+                    <input type="range" id="azimuth-range" min="0" max="360" value="180" class="w-full">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE ---
+        let scene, camera, renderer, controls, sun, sunLight, sky, stars, particleSystem, ground, scanPlane;
+        let panels = [];
+        let chart;
+        
+        const state = {
+            mode: 'A',
+            azimuth: 180, tilt: 30, latitude: 0, time: 12,
+            obstruction: 'none',
+            circuit: 'series',
+            isPlaying: false,
+            isMeasuring: false,
+            isDataReady: false,
+            timeSpeed: 0.015,
+            efficiency: 0,
+            v_ref: 12.0,
+            i_ref: 5.0,
+            logs: []
+        };
+
+        // --- INITIALIZATION ---
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+            // Posisi awal kamera diubah agar lebih mudah melihat ke atas
+            camera.position.set(20, 25, 20); 
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // KONFIGURASI KAMERA TANPA BATAS
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            // Menghapus batasan polar angle agar bisa berputar bebas ke segala arah
+            controls.maxPolarAngle = Math.PI; // Bisa melihat sampai ke bawah ground (ground sudah transparan)
+            controls.minPolarAngle = 0;       // Bisa melihat tepat dari atas (zenith)
+            controls.minDistance = 5;
+            controls.maxDistance = 100;
+
+            setupWorld();
+            setupStars();
+            setupParticles();
+            setupScannerEffect();
+            initChart();
+            setupDOMEvents();
+            
+            setMode('A'); 
+            animate();
+        }
+
+        function setupWorld() {
+            scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+            sunLight = new THREE.DirectionalLight(0xffffff, 2);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.set(2048, 2048);
+            scene.add(sunLight);
+
+            ground = new THREE.Mesh(
+                new THREE.CircleGeometry(100, 64),
+                new THREE.MeshStandardMaterial({ color: 0x0a0a0f, transparent: true, opacity: 0.7 })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            scene.add(new THREE.GridHelper(100, 50, 0x1e293b, 0x0f172a));
+
+            sky = new THREE.Mesh(
+                new THREE.SphereGeometry(1000, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0x0ea5e9, side: THREE.BackSide })
+            );
+            scene.add(sky);
+
+            sun = new THREE.Mesh(
+                new THREE.SphereGeometry(2, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0xfff9c4 })
+            );
+            scene.add(sun);
+        }
+
+        function setupStars() {
+            const starGeom = new THREE.BufferGeometry();
+            const pos = new Float32Array(3000 * 3);
+            for (let i = 0; i < 9000; i++) pos[i] = (Math.random() - 0.5) * 1500;
+            starGeom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            stars = new THREE.Points(starGeom, new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, transparent: true, opacity: 0 }));
+            scene.add(stars);
+        }
+
+        function setupScannerEffect() {
+            const scanGeom = new THREE.PlaneGeometry(7, 4);
+            const scanMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0, side: THREE.DoubleSide });
+            scanPlane = new THREE.Mesh(scanGeom, scanMat);
+            scanPlane.rotation.x = -Math.PI / 2;
+            scene.add(scanPlane);
+        }
+
+        function createPanel(offsetX = 0) {
+            const group = new THREE.Group();
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(5, 0.2, 3), new THREE.MeshPhysicalMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.1 }));
+            frame.castShadow = true;
+            group.add(frame);
+            const cells = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 2.8), new THREE.MeshPhysicalMaterial({ color: 0x000000, emissive: 0x00f2fe, emissiveIntensity: 0, metalness: 1, roughness: 0.05 }));
+            cells.rotation.x = -Math.PI / 2;
+            cells.position.y = 0.15;
+            group.add(cells);
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.5), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+            pole.position.y = -1.25;
+            const finalGroup = new THREE.Group();
+            finalGroup.add(group);
+            finalGroup.add(pole);
+            finalGroup.position.x = offsetX;
+            scene.add(finalGroup);
+            return { group: finalGroup, panel: group };
+        }
+
+        function setupParticles() {
+            const particleGeom = new THREE.BufferGeometry();
+            const count = 100;
+            const pos = new Float32Array(count * 3);
+            particleGeom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            particleSystem = new THREE.Points(particleGeom, new THREE.PointsMaterial({ color: 0xf9d423, size: 0.3, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending }));
+            particleSystem.visible = false;
+            scene.add(particleSystem);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('productionChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+            gradient.addColorStop(0, 'rgba(0, 242, 254, 0.5)');
+            gradient.addColorStop(1, 'rgba(0, 242, 254, 0)');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        data: new Array(24).fill(0),
+                        borderColor: '#00f2fe',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false, min: 0, max: 1.1 },
+                        x: { ticks: { color: 'rgba(255,255,255,0.3)', maxTicksLimit: 6, font: { size: 9, weight: 'bold' } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function startMeasurement() {
+            if (state.isMeasuring) return;
+            state.isMeasuring = true;
+            state.isDataReady = false;
+            const loader = document.getElementById('measure-loading');
+            const progress = document.getElementById('loading-progress');
+            document.getElementById('btn-text').innerText = "SENSING...";
+            loader.style.display = "block";
+            document.getElementById('status-text').style.opacity = "1";
+            ['val-voltage', 'val-current', 'val-efficiency'].forEach(id => {
+                document.getElementById(id).classList.add('value-blur');
+            });
+            ['scan-line-v', 'scan-line-i', 'scan-line-e'].forEach(id => {
+                document.getElementById(id).style.display = "block";
+            });
+            scanPlane.position.copy(panels[0].group.position);
+            scanPlane.position.y = 1;
+            scanPlane.material.opacity = 0.3;
+            gsap.to(scanPlane.position, { y: 3, duration: 1, repeat: 1, yoyo: true });
+            let loadVal = 0;
+            const interval = setInterval(() => {
+                loadVal += Math.random() * 5;
+                if (loadVal >= 100) {
+                    loadVal = 100;
+                    clearInterval(interval);
+                    finishMeasurement();
+                }
+                progress.style.width = `${loadVal}%`;
+                if (loadVal < 100) {
+                    document.getElementById('val-voltage').innerText = (Math.random() * 24).toFixed(2);
+                    document.getElementById('val-current').innerText = (Math.random() * 10).toFixed(2);
+                    document.getElementById('val-efficiency').innerText = `${Math.floor(Math.random() * 100)}%`;
+                }
+            }, 50);
+        }
+
+        function finishMeasurement() {
+            state.isMeasuring = false;
+            state.isDataReady = true;
+            document.getElementById('btn-text').innerText = "Ukur Ulang";
+            document.getElementById('measure-loading').style.display = "none";
+            document.getElementById('status-text').style.opacity = "0";
+            ['val-voltage', 'val-current', 'val-efficiency'].forEach(id => {
+                document.getElementById(id).classList.remove('value-blur');
+                document.getElementById(id).classList.add('value-show');
+            });
+            ['scan-line-v', 'scan-line-i', 'scan-line-e'].forEach(id => {
+                document.getElementById(id).style.display = "none";
+            });
+            scanPlane.material.opacity = 0;
+            panels.forEach(p => {
+                gsap.to(p.panel.children[1].material, { emissiveIntensity: 5, duration: 0.2, yoyo: true, repeat: 1 });
+            });
+            updateSimulation();
+        }
+
+        function updateSimulation() {
+            const angle = Math.PI * (state.time - 6) / 12;
+            const radius = 60;
+            sun.position.set(-Math.cos(angle)*radius, Math.sin(angle)*radius, 0);
+            sunLight.position.copy(sun.position);
+            const sunDir = new THREE.Vector3().copy(sun.position).normalize();
+            panels.forEach(p => {
+                p.panel.rotation.set(0, 0, 0);
+                p.panel.rotation.y = THREE.MathUtils.degToRad(state.azimuth);
+                p.panel.rotation.z = THREE.MathUtils.degToRad(state.tilt);
+            });
+            const panelNormal = new THREE.Vector3(0, 1, 0);
+            panelNormal.applyEuler(panels[0].panel.rotation);
+            let rawEfficiency = Math.max(0, panelNormal.dot(sunDir));
+            let obsMult = 1.0;
+            if (state.mode === 'A') {
+                if (state.obstruction === 'tissue') obsMult = 0.4;
+                if (state.obstruction === 'cardboard') obsMult = 0.05;
+            }
+            state.efficiency = rawEfficiency * obsMult;
+            let v_out, i_out;
+            if (state.mode === 'C') {
+                if (state.circuit === 'series') {
+                    v_out = (state.v_ref * state.efficiency) * 2;
+                    i_out = (state.i_ref * state.efficiency);
+                } else {
+                    v_out = (state.v_ref * state.efficiency);
+                    i_out = (state.i_ref * state.efficiency) * 2;
+                }
+            } else {
+                v_out = state.v_ref * state.efficiency;
+                i_out = state.i_ref * state.efficiency;
+            }
+            updateAtmosphere(state.time);
+            updateParticles();
+            if (state.isDataReady && !state.isMeasuring) {
+                document.getElementById('val-voltage').innerText = v_out.toFixed(2);
+                document.getElementById('val-current').innerText = i_out.toFixed(2);
+                document.getElementById('val-efficiency').innerText = `${Math.round(state.efficiency * 100)}%`;
+            }
+            if (state.mode === 'A') {
+                const led = document.getElementById('led-indicator');
+                const brightness = Math.min(255, state.efficiency * 255);
+                led.style.backgroundColor = `rgb(${brightness}, ${brightness}, ${brightness*0.5})`;
+                led.style.boxShadow = `0 0 ${state.efficiency * 40}px rgb(255, 255, 200)`;
+            }
+            const hours = Math.floor(state.time);
+            const mins = Math.floor((state.time % 1) * 60).toString().padStart(2, '0');
+            document.getElementById('time-display').innerText = `${hours.toString().padStart(2, '0')}:${mins}`;
+            document.getElementById('tilt-range').value = state.tilt;
+            document.getElementById('azimuth-range').value = state.azimuth;
+            if(state.isPlaying) document.getElementById('time-range').value = state.time;
+            updateChart();
+        }
+
+        function updateAtmosphere(time) {
+            let skyCol = new THREE.Color();
+            let starOp = 0;
+            if (time < 5 || time > 19) { skyCol.setHex(0x020617); starOp = 1; }
+            else if (time < 7 || time > 17) { skyCol.setHex(0xf97316); starOp = 0.2; }
+            else { skyCol.setHex(0x0ea5e9); starOp = 0; }
+            gsap.to(sky.material.color, { r: skyCol.r, g: skyCol.g, b: skyCol.b, duration: 0.5 });
+            gsap.to(stars.material, { opacity: starOp, duration: 1 });
+            panels.forEach(p => { p.panel.children[1].material.emissiveIntensity = state.efficiency * 2; });
+        }
+
+        function updateParticles() {
+            if (state.efficiency > 0.1 && state.time >= 6 && state.time <= 18) {
+                particleSystem.visible = true;
+                const pos = particleSystem.geometry.attributes.position.array;
+                for (let i = 0; i < 100; i++) {
+                    const t = (Date.now() * 0.0003 + i * 0.1) % 1;
+                    const p = new THREE.Vector3().lerpVectors(sun.position, new THREE.Vector3(0,0,0), t);
+                    pos[i*3] = p.x + (Math.sin(i + t*8)) * 3;
+                    pos[i*3+1] = p.y + (Math.cos(i + t*8)) * 3;
+                    pos[i*3+2] = p.z + (Math.sin(i*0.5 + t*8)) * 3;
+                }
+                particleSystem.geometry.attributes.position.needsUpdate = true;
+            } else { particleSystem.visible = false; }
+        }
+
+        function updateChart() {
+            const dataArr = [];
+            for (let h = 0; h < 24; h++) {
+                const angle = Math.PI * (h - 6) / 12;
+                const sDir = new THREE.Vector3(-Math.cos(angle), Math.sin(angle), 0).normalize();
+                const pNorm = new THREE.Vector3(0, 1, 0).applyEuler(panels[0].panel.rotation);
+                const eff = Math.max(0, pNorm.dot(sDir));
+                dataArr.push(eff);
+            }
+            chart.data.datasets[0].data = dataArr;
+            chart.update('none');
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            state.isDataReady = false;
+            ['A', 'B', 'C'].forEach(m => {
+                document.getElementById(`btn-mode-${m}`).className = m === mode ? 'px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all tab-active' : 'px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all border border-white/10 hover:bg-white/5';
+                document.getElementById(`panel-group-${m}`).classList.toggle('hidden', m !== mode);
+            });
+            panels.forEach(p => scene.remove(p.group));
+            panels = [];
+            if (mode === 'C') { panels.push(createPanel(-4)); panels.push(createPanel(4)); }
+            else { panels.push(createPanel(0)); }
+            ['val-voltage', 'val-current', 'val-efficiency'].forEach(id => {
+                document.getElementById(id).classList.add('value-blur');
+                document.getElementById(id).innerText = (id === 'val-efficiency') ? "0%" : "0.00";
+            });
+            document.getElementById('btn-text').innerText = "Ukur Sekarang";
+            updateSimulation();
+        }
+
+        function setObstruction(type) { state.obstruction = type; state.isDataReady = false; updateSimulation(); }
+
+        function recordData() {
+            if (!state.isDataReady) { alert("Lakukan pengukuran (Sensing) terlebih dahulu!"); return; }
+            const v = parseFloat(document.getElementById('val-voltage').innerText);
+            const i = parseFloat(document.getElementById('val-current').innerText);
+            const row = `<tr><td class="p-1 border border-white/5 font-mono-lab">${state.tilt}°</td><td class="p-1 border border-white/5 text-cyan-400 font-mono-lab">${v}</td><td class="p-1 border border-white/5 text-purple-400 font-mono-lab">${i}</td><td class="p-1 border border-white/5 text-yellow-400 font-bold font-mono-lab">${(v * i).toFixed(2)}</td></tr>`;
+            document.getElementById('data-table-body').innerHTML = row + document.getElementById('data-table-body').innerHTML;
+        }
+
+        function setCircuit(type) {
+            state.circuit = type; state.isDataReady = false;
+            document.getElementById('btn-seri').className = type === 'series' ? 'flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tab-active' : 'flex-1 py-2 rounded-lg text-[10px] font-bold uppercase';
+            document.getElementById('btn-paralel').className = type === 'parallel' ? 'flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tab-active' : 'flex-1 py-2 rounded-lg text-[10px] font-bold uppercase';
+            document.getElementById('circuit-info').innerText = type === 'series' ? "Seri meningkatkan Tegangan (V), Arus tetap." : "Paralel meningkatkan Arus (I), Tegangan tetap.";
+            updateSimulation();
+        }
+
+        function setTilt(val) { state.tilt = val; state.isDataReady = false; updateSimulation(); }
+
+        function setupDOMEvents() {
+            const bind = (id, key) => { document.getElementById(id).addEventListener('input', (e) => { state[key] = parseFloat(e.target.value); state.isDataReady = false; updateSimulation(); }); };
+            bind('azimuth-range', 'azimuth'); bind('tilt-range', 'tilt'); bind('time-range', 'time');
+            document.getElementById('play-pause-btn').addEventListener('click', () => { state.isPlaying = !state.isPlaying; document.getElementById('play-icon').classList.toggle('hidden', state.isPlaying); document.getElementById('pause-icon').classList.toggle('hidden', !state.isPlaying); });
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (state.isPlaying) { state.time += state.timeSpeed; if (state.time >= 24) state.time = 0; updateSimulation(); }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
