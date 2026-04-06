@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGRI KOMINFO // NEWS GENERATOR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(120deg, #0f172a, #1e1b4b, #001e36);
+            background-size: 200% 200%;
+            animation: gradientBG 15s ease infinite;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Abstract Floating Orbs for Glassmorphism Effect - OPTIMIZED FOR PERFORMANCE */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 10s infinite ease-in-out;
+            will-change: transform;
+        }
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%);
+            top: -200px; left: -200px;
+        }
+        .orb-2 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.2) 0%, transparent 70%);
+            bottom: -250px; right: -200px;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(52, 211, 153, 0.15) 0%, transparent 70%);
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-duration: 15s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 1.5rem;
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(56, 189, 248, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
+        }
+
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .glass-btn:hover {
+            background: var(--glass-highlight);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-btn:active {
+            transform: translateY(0);
+        }
+
+        .glass-btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            color: white;
+        }
+
+        .glass-btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .loader-glow {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 1rem;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+            font-weight: 600;
+            letter-spacing: 2px;
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+            50% { opacity: 0.6; box-shadow: 0 0 5px rgba(56, 189, 248, 0.05); }
+        }
+
+        /* Custom Select */
+        select.glass-input option {
+            background-color: #1e1b4b;
+            color: white;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col min-h-screen">
+    
+    <!-- Background Orbs Wrapper (Mencegah overflow di mobile) -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-8 pb-6 border-b border-white/10 flex-col md:flex-row gap-6 z-10 relative">
+        <div class="flex items-center gap-4 md:gap-6 w-full md:w-auto">
+            <!-- Logo PGRI dengan Latar Putih Solid & Soft Glow -->
+            <div class="p-2 bg-white rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] shrink-0">
+                <img src="https://arafx.vercel.app/asset/pgri.png" alt="Logo PGRI" class="w-12 h-12 md:w-16 md:h-16 object-contain" onerror="this.src='https://via.placeholder.com/80?text=PGRI'">
+            </div>
+            
+            <div class="min-w-0 flex-1">
+                <!-- Ukuran teks disesuaikan untuk layar kecil -->
+                <h1 class="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-purple-200 truncate md:overflow-visible md:whitespace-normal">
+                    PGRI KOMINFO
+                </h1>
+                <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-blue-400 mt-1 tracking-wide truncate md:overflow-visible md:whitespace-normal">
+                    News Generator
+                </h2>
+                <p class="text-[10px] sm:text-xs md:text-sm tracking-widest uppercase mt-2 text-zinc-400 flex items-center gap-1 sm:gap-2 font-medium">
+                    <i class="ph ph-shield-check text-green-400 text-base sm:text-lg shrink-0"></i> 
+                    <span class="truncate">AI Powered // 5W1H (Secured)</span>
+                </p>
+            </div>
+        </div>
+        <button id="btn-settings" class="glass-btn px-5 py-3 flex items-center justify-center gap-2 text-white w-full md:w-auto">
+            <i class="ph ph-sliders-horizontal text-xl"></i>
+            <span>Pengaturan</span>
+        </button>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 z-10 relative">
+        
+        <!-- Left: Input Form (5W1H) -->
+        <section class="flex flex-col gap-6">
+            <div class="glass-panel p-5 sm:p-6 relative mt-4 md:mt-0">
+                <div class="absolute -top-3 left-4 sm:left-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg border border-white/20 uppercase tracking-widest">
+                    <i class="ph ph-database mr-1"></i> Data Fakta
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-6">
+                    <!-- Siapa -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-blue-200 uppercase tracking-wider ml-1">Siapa (Who)</label>
+                        <input type="text" id="in-who" class="glass-input p-3 sm:p-3.5 w-full text-sm" placeholder="Cth: Presiden RI..." required>
+                    </div>
+                    <!-- Apa -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-blue-200 uppercase tracking-wider ml-1">Apa (What)</label>
+                        <input type="text" id="in-what" class="glass-input p-3 sm:p-3.5 w-full text-sm" placeholder="Cth: Meresmikan jalan tol..." required>
+                    </div>
+                    <!-- Kapan -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-blue-200 uppercase tracking-wider ml-1">Kapan (When)</label>
+                        <input type="text" id="in-when" class="glass-input p-3 sm:p-3.5 w-full text-sm" placeholder="Cth: Senin pagi, 12 Agustus..." required>
+                    </div>
+                    <!-- Di mana -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-blue-200 uppercase tracking-wider ml-1">Di Mana (Where)</label>
+                        <input type="text" id="in-where" class="glass-input p-3 sm:p-3.5 w-full text-sm" placeholder="Cth: Makassar, Sulsel..." required>
+                    </div>
+                    <!-- Mengapa -->
+                    <div class="flex flex-col gap-1.5 md:col-span-2">
+                        <label class="text-xs font-semibold text-blue-200 uppercase tracking-wider ml-1">Mengapa (Why)</label>
+                        <textarea id="in-why" class="glass-input p-3 sm:p-3.5 w-full resize-none h-20 text-sm" placeholder="Alasan kejadian tersebut..." required></textarea>
+                    </div>
+                    <!-- Bagaimana -->
+                    <div class="flex flex-col gap-1.5 md:col-span-2">
+                        <label class="text-xs font-semibold text-blue-200 uppercase tracking-wider ml-1">Bagaimana (How)</label>
+                        <textarea id="in-how" class="glass-input p-3 sm:p-3.5 w-full resize-none h-24 text-sm" placeholder="Proses terjadinya peristiwa secara detail..." required></textarea>
+                    </div>
+                    <!-- Tambahan -->
+                    <div class="flex flex-col gap-1.5 md:col-span-2 mt-2">
+                        <label class="text-xs font-semibold text-purple-300 uppercase tracking-wider ml-1 flex items-center gap-1">
+                            <i class="ph ph-chat-circle-text"></i> Informasi Tambahan / Kutipan
+                        </label>
+                        <textarea id="in-extra" class="glass-input p-3 sm:p-3.5 w-full resize-none h-20 text-sm" placeholder="Kutipan narasumber, opini publik, atau info relevan lainnya..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex flex-col xl:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8">
+                    <button id="btn-generate-judul" class="glass-btn xl:w-1/3 text-purple-200 hover:text-white text-sm sm:text-base p-3 sm:p-4 flex justify-center items-center gap-2">
+                        <i class="ph ph-text-t text-xl"></i>
+                        CARI IDE JUDUL
+                    </button>
+                    <button id="btn-generate" class="glass-btn glass-btn-primary xl:w-2/3 text-base sm:text-lg p-3 sm:p-4 flex justify-center items-center gap-2">
+                        <i class="ph ph-magic-wand text-2xl"></i>
+                        GENERATE BERITA
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Output Area -->
+        <section class="flex flex-col h-full">
+            <div class="glass-panel p-5 sm:p-6 h-full flex flex-col relative mt-4 md:mt-0" style="min-height: 400px; md:min-height: 500px;">
+                <div class="absolute -top-3 right-4 sm:right-6 bg-white/10 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> LIVE OUTPUT
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loading-indicator" class="loader-glow absolute top-8 sm:top-10 left-4 right-4 sm:left-6 sm:right-6 z-10 text-xs sm:text-sm">
+                    <i class="ph ph-spinner-gap animate-spin text-lg sm:text-xl inline-block mr-2 align-middle"></i>
+                    <span class="align-middle">MEMPROSES DATA AI...</span>
+                </div>
+
+                <!-- Action buttons for output -->
+                <div class="flex justify-end gap-2 mb-4">
+                    <button id="btn-copy" class="glass-btn px-3 sm:px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 hidden text-white">
+                        <i class="ph ph-copy"></i> Salin Teks
+                    </button>
+                </div>
+
+                <!-- Generated Text Content (Menambahkan break-words agar teks panjang tidak meluber) -->
+                <div id="output-area" class="flex-1 overflow-y-auto whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed text-zinc-200 p-1 sm:p-2">
+                    <div class="h-full flex flex-col items-center justify-center text-white/30 space-y-4">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center rounded-full bg-white/5 border border-white/10 mx-auto">
+                            <i class="ph ph-newspaper text-5xl sm:text-6xl leading-none"></i>
+                        </div>
+                        <p class="text-center font-medium tracking-widest text-xs sm:text-sm uppercase">Ruang Redaksi AI Siap</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal (ditambahkan padding p-4 untuk wadah agar modal tidak menyentuh ujung layar) -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-lg p-6 sm:p-8 relative transform scale-95 transition-transform duration-300" id="settings-panel">
+            <!-- Posisi tombol close disesuaikan agar tidak melampaui batas layar -->
+            <button id="btn-close-settings" class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 bg-[#1e1b4b] text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/20 transition shadow-lg z-10">
+                <i class="ph ph-x text-lg sm:text-xl font-bold"></i>
+            </button>
+            
+            <h2 class="text-xl sm:text-2xl font-bold mb-5 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300 border-b border-white/10 pb-4">
+                Konfigurasi Sistem
+            </h2>
+            
+            <div class="space-y-5 sm:space-y-6">
+                <!-- Secured API Info -->
+                <div class="bg-green-500/10 border border-green-500/30 p-3 sm:p-4 rounded-xl flex gap-3 sm:gap-4 items-center">
+                    <div class="p-2 bg-green-500/20 rounded-lg shrink-0">
+                        <i class="ph ph-shield-check text-green-400 text-xl sm:text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-green-300 text-xs sm:text-sm uppercase tracking-wider">API Secured</p>
+                        <p class="text-[10px] sm:text-xs text-green-100/70 mt-0.5">Sistem terhubung aman via GAS Proxy.</p>
+                    </div>
+                </div>
+
+                <!-- Model Parameter: Tone -->
+                <div>
+                    <label class="block text-xs font-semibold text-blue-200 uppercase tracking-wider mb-2">Gaya Bahasa (Tone)</label>
+                    <div class="relative">
+                        <select id="set-tone" class="glass-input p-3 sm:p-3.5 w-full appearance-none cursor-pointer text-xs sm:text-sm">
+                            <option value="Jurnalistik Formal">Jurnalistik Formal (Berita Standar)</option>
+                            <option value="Investigasi Mendalam">Investigasi Mendalam (Serius & Tajam)</option>
+                            <option value="Santai & Milenial">Santai & Milenial (Gaya Populer)</option>
+                            <option value="Sensasional / Clickbait">Sensasional / Clickbait (Drama & Heboh)</option>
+                            <option value="Satir / Komedi">Satir / Komedi (Menyindir)</option>
+                            <option value="custom">Lainnya (Kustom)...</option>
+                        </select>
+                        <i class="ph ph-caret-down absolute right-4 top-1/2 transform -translate-y-1/2 text-white/50 pointer-events-none"></i>
+                    </div>
+                    <input type="text" id="set-tone-custom" class="glass-input p-3 sm:p-3.5 w-full hidden mt-3 text-xs sm:text-sm" placeholder="Ketik gaya kustom (misal: Ala Anak Twitter)...">
+                </div>
+
+                <!-- Word Count -->
+                <div>
+                    <label class="flex justify-between items-center text-xs font-semibold text-blue-200 uppercase tracking-wider mb-3">
+                        <span>Jumlah Kata</span>
+                        <span id="word-count-display" class="bg-blue-500/20 text-blue-200 px-2 sm:px-3 py-1 rounded-full border border-blue-500/30 text-[10px] sm:text-xs">400 Kata</span>
+                    </label>
+                    <input type="range" id="set-wordcount" min="100" max="1000" step="50" value="400" class="w-full accent-blue-400 cursor-pointer h-2 bg-white/10 rounded-lg appearance-none">
+                </div>
+                
+                <!-- Format Output -->
+                <div>
+                    <label class="block text-xs font-semibold text-blue-200 uppercase tracking-wider mb-3">Format Output</label>
+                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-zinc-300 hover:text-white transition">
+                            <input type="radio" name="format" value="Artikel Lengkap" checked class="accent-blue-400 w-4 h-4"> Artikel Lengkap
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-zinc-300 hover:text-white transition">
+                            <input type="radio" name="format" value="Ringkasan Poin" class="accent-blue-400 w-4 h-4"> Ringkasan Poin
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-4 mt-4 sm:mt-6 border-t border-white/10">
+                    <button id="btn-save-settings" class="glass-btn glass-btn-primary w-full py-3 sm:py-3.5 text-xs sm:text-sm uppercase tracking-wider">
+                        Simpan Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error/Alert Modal -->
+    <div id="alert-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 hidden">
+        <div class="glass-panel max-w-sm w-full p-6 sm:p-8 text-center border-red-500/30 bg-red-900/20 relative">
+            <div class="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4 border border-red-500/30">
+                <i class="ph ph-warning-octagon text-3xl sm:text-4xl text-red-400"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold uppercase mb-2 text-red-300" id="alert-title">ERROR!</h3>
+            <p id="alert-message" class="text-xs sm:text-sm text-red-100 mb-6 break-words">Pesan error di sini.</p>
+            <button id="btn-close-alert" class="glass-btn w-full py-2 sm:py-2.5 bg-white/10 text-white hover:bg-white/20 text-xs sm:text-sm">TUTUP</button>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const AppState = {
+            apiKey: null,
+            settings: {
+                tone: 'Jurnalistik Formal',
+                wordCount: 400,
+                format: 'Artikel Lengkap'
+            }
+        };
+
+        // GANTI URL INI DENGAN URL WEB APP GOOGLE APPS SCRIPT-MU NANTI
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiZVouQdIpCmNET_ZQ1JR1eyFK0EJ14UTaj4eCeWsQqE55QaP8-zS-urtWHLhito3Q/exec"; 
+
+        // --- DOM Elements ---
+        const els = {
+            btnSettings: document.getElementById('btn-settings'),
+            btnCloseSettings: document.getElementById('btn-close-settings'),
+            btnSaveSettings: document.getElementById('btn-save-settings'),
+            modalSettings: document.getElementById('settings-modal'),
+            panelSettings: document.getElementById('settings-panel'),
+            
+            toneInput: document.getElementById('set-tone'),
+            toneCustomInput: document.getElementById('set-tone-custom'),
+            wordCountInput: document.getElementById('set-wordcount'),
+            wordCountDisplay: document.getElementById('word-count-display'),
+            formatInputs: document.getElementsByName('format'),
+            
+            btnGenerateJudul: document.getElementById('btn-generate-judul'),
+            btnGenerate: document.getElementById('btn-generate'),
+            outputArea: document.getElementById('output-area'),
+            loadingIndicator: document.getElementById('loading-indicator'),
+            btnCopy: document.getElementById('btn-copy'),
+
+            alertModal: document.getElementById('alert-modal'),
+            alertTitle: document.getElementById('alert-title'),
+            alertMessage: document.getElementById('alert-message'),
+            btnCloseAlert: document.getElementById('btn-close-alert')
+        };
+
+        // --- UI Interactions ---
+        
+        // Show Alert
+        function showAlert(title, message) {
+            els.alertTitle.innerText = title;
+            els.alertMessage.innerText = message;
+            els.alertModal.classList.remove('hidden');
+        }
+        els.btnCloseAlert.addEventListener('click', () => els.alertModal.classList.add('hidden'));
+
+        // Settings Modal
+        function openSettings() {
+            els.modalSettings.classList.remove('hidden');
+            setTimeout(() => {
+                els.modalSettings.classList.remove('opacity-0');
+                els.panelSettings.classList.remove('scale-95');
+            }, 10);
+            
+            const predefinedTones = ["Jurnalistik Formal", "Investigasi Mendalam", "Santai & Milenial", "Sensasional / Clickbait", "Satir / Komedi"];
+            if (predefinedTones.includes(AppState.settings.tone)) {
+                els.toneInput.value = AppState.settings.tone;
+                els.toneCustomInput.classList.add('hidden');
+                els.toneCustomInput.value = '';
+            } else {
+                els.toneInput.value = 'custom';
+                els.toneCustomInput.value = AppState.settings.tone;
+                els.toneCustomInput.classList.remove('hidden');
+            }
+            
+            els.wordCountInput.value = AppState.settings.wordCount;
+            els.wordCountDisplay.innerText = `${AppState.settings.wordCount} Kata`;
+            
+            Array.from(els.formatInputs).forEach(radio => {
+                if(radio.value === AppState.settings.format) radio.checked = true;
+            });
+        }
+
+        function closeSettings() {
+            els.modalSettings.classList.add('opacity-0');
+            els.panelSettings.classList.add('scale-95');
+            setTimeout(() => {
+                els.modalSettings.classList.add('hidden');
+            }, 300);
+        }
+
+        els.btnSettings.addEventListener('click', openSettings);
+        els.btnCloseSettings.addEventListener('click', closeSettings);
+        
+        // Toggle input kustom jika "Lainnya" dipilih
+        els.toneInput.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') {
+                els.toneCustomInput.classList.remove('hidden');
+                els.toneCustomInput.focus();
+            } else {
+                els.toneCustomInput.classList.add('hidden');
+            }
+        });
+
+        els.wordCountInput.addEventListener('input', (e) => {
+            els.wordCountDisplay.innerText = `${e.target.value} Kata`;
+        });
+
+        // Save Settings
+        els.btnSaveSettings.addEventListener('click', () => {
+            if (els.toneInput.value === 'custom') {
+                AppState.settings.tone = els.toneCustomInput.value.trim() || 'Jurnalistik Formal';
+            } else {
+                AppState.settings.tone = els.toneInput.value;
+            }
+            AppState.settings.wordCount = els.wordCountInput.value;
+            
+            Array.from(els.formatInputs).forEach(radio => {
+                if(radio.checked) AppState.settings.format = radio.value;
+            });
+
+            closeSettings();
+            
+            const originalText = els.btnSettings.innerHTML;
+            els.btnSettings.innerHTML = `<i class="ph ph-check text-xl text-green-400"></i><span class="hidden md:inline">Tersimpan!</span>`;
+            setTimeout(() => {
+                els.btnSettings.innerHTML = originalText;
+            }, 2000);
+        });
+
+        // Copy Feature
+        els.btnCopy.addEventListener('click', () => {
+            const textToCopy = els.outputArea.innerText;
+            if(!textToCopy) return;
+
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                els.btnCopy.innerHTML = `<i class="ph ph-check text-green-400"></i> Berhasil Disalin`;
+                setTimeout(() => {
+                    els.btnCopy.innerHTML = `<i class="ph ph-copy"></i> Salin Teks`;
+                }, 2000);
+            } catch (err) {
+                showAlert("COPY GAGAL", "Browser tidak mendukung fitur copy otomatis.");
+            }
+            document.body.removeChild(textArea);
+        });
+
+        // --- Core Application Logic ---
+
+        async function getApiKeyFromGAS() {
+            if (AppState.apiKey) return AppState.apiKey; 
+
+            if (GOOGLE_APPS_SCRIPT_URL === "MASUKKAN_URL_GAS_DISINI" || !GOOGLE_APPS_SCRIPT_URL) {
+                throw new Error("GAS_URL_MISSING");
+            }
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "get_key" })
+                });
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                
+                AppState.apiKey = data.apiKey;
+                return AppState.apiKey;
+            } catch (err) {
+                console.error("Fetch GAS Error:", err);
+                throw new Error("FETCH_GAS_FAILED");
+            }
+        }
+
+        async function callGeminiAPI(promptText) {
+            const apiKey = await getApiKeyFromGAS();
+
+            if (!apiKey) {
+                throw new Error("API_KEY_KOSONG");
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{
+                    parts: [{ text: promptText }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: "Anda adalah jurnalis dan penulis berita profesional. Buatlah berita yang terstruktur (Headline, Lead, Body) sesuai instruksi dan parameter yang diberikan pengguna. Jangan berikan kata pengantar, langsung berikan hasil artikel beritanya." }]
+                }
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Gemini API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates.length > 0) {
+                return data.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Respon API Gemini kosong.");
+            }
+        }
+
+        // Logic untuk Tombol IDE JUDUL
+        els.btnGenerateJudul.addEventListener('click', async () => {
+            const inputs = {
+                who: document.getElementById('in-who').value.trim(),
+                what: document.getElementById('in-what').value.trim(),
+                when: document.getElementById('in-when').value.trim(),
+                where: document.getElementById('in-where').value.trim(),
+                why: document.getElementById('in-why').value.trim(),
+                how: document.getElementById('in-how').value.trim()
+            };
+
+            for (const [key, val] of Object.entries(inputs)) {
+                if (!val) {
+                    showAlert("DATA TIDAK LENGKAP", `Mohon isi field "${key.toUpperCase()}" agar judul bisa digenerate dengan baik.`);
+                    return;
+                }
+            }
+
+            const extra = document.getElementById('in-extra').value.trim();
+
+            const prompt = `
+Berdasarkan data 5W 1H berikut, buatlah 5 opsi JUDUL BERITA (Headline) yang sangat menarik.
+Jangan buat isi beritanya, HANYA JUDUL saja.
+
+DATA FAKTA:
+- Siapa (Who): ${inputs.who}
+- Apa (What): ${inputs.what}
+- Kapan (When): ${inputs.when}
+- Di Mana (Where): ${inputs.where}
+- Mengapa (Why): ${inputs.why}
+- Bagaimana (How): ${inputs.how}
+- Info Tambahan/Kutipan: ${extra ? extra : 'Tidak ada.'}
+
+PARAMETER PENULISAN:
+- Gaya Bahasa / Nada (Tone): ${AppState.settings.tone}
+- Bahasa: Indonesia.
+
+Hanya berikan daftar judul menggunakan list angka atau bullet point. Jangan berikan teks pembuka atau penutup.
+`;
+
+            els.btnGenerateJudul.disabled = true;
+            els.btnGenerate.disabled = true;
+            els.btnGenerateJudul.innerHTML = `<i class="ph ph-spinner-gap animate-spin text-xl"></i> MEMPROSES...`;
+            els.btnGenerateJudul.classList.add('opacity-70');
+            
+            els.loadingIndicator.style.display = 'block';
+            els.outputArea.innerHTML = '';
+            els.btnCopy.classList.add('hidden');
+
+            try {
+                const generatedText = await callGeminiAPI(prompt);
+                
+                els.outputArea.innerHTML = `
+                    <div class="mb-4 flex items-center gap-2 text-purple-300 border-b border-white/10 pb-3">
+                        <i class="ph ph-lightbulb text-xl sm:text-2xl"></i>
+                        <h2 class="text-lg sm:text-xl font-bold uppercase tracking-wider">Ide Judul Berita</h2>
+                    </div>
+                    <div class="text-base sm:text-lg font-medium space-y-2">
+                        ${formatOutput(generatedText)}
+                    </div>`;
+                els.btnCopy.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                if (error.message === "GAS_URL_MISSING") {
+                    showAlert("URL GAS BELUM DIISI", "Silakan buka kode HTML dan masukkan URL Google Apps Script kamu.");
+                } else if (error.message === "FETCH_GAS_FAILED") {
+                    showAlert("KONEKSI DITOLAK", "Gagal menghubungi Proxy. Pastikan URL benar.");
+                } else if (error.message === "API_KEY_KOSONG") {
+                    showAlert("API KEY KOSONG", "GAS berhasil dihubungi tapi API Key kosong.");
+                } else {
+                    showAlert("KONEKSI GAGAL", "Terjadi kesalahan saat menghubungi API Gemini. \nDetail: " + error.message);
+                }
+            } finally {
+                els.btnGenerateJudul.disabled = false;
+                els.btnGenerate.disabled = false;
+                els.btnGenerateJudul.classList.remove('opacity-70');
+                els.btnGenerateJudul.innerHTML = `<i class="ph ph-text-t text-xl"></i> CARI IDE JUDUL`;
+                els.loadingIndicator.style.display = 'none';
+            }
+        });
+
+        // Logic untuk Tombol GENERATE BERITA
+        els.btnGenerate.addEventListener('click', async () => {
+            const inputs = {
+                who: document.getElementById('in-who').value.trim(),
+                what: document.getElementById('in-what').value.trim(),
+                when: document.getElementById('in-when').value.trim(),
+                where: document.getElementById('in-where').value.trim(),
+                why: document.getElementById('in-why').value.trim(),
+                how: document.getElementById('in-how').value.trim()
+            };
+
+            for (const [key, val] of Object.entries(inputs)) {
+                if (!val) {
+                    showAlert("DATA TIDAK LENGKAP", `Mohon isi field "${key.toUpperCase()}" agar berita bisa digenerate dengan baik.`);
+                    return;
+                }
+            }
+
+            const extra = document.getElementById('in-extra').value.trim();
+
+            const prompt = `
+Berdasarkan data 5W 1H berikut, buatlah sebuah artikel berita.
+
+DATA FAKTA:
+- Siapa (Who): ${inputs.who}
+- Apa (What): ${inputs.what}
+- Kapan (When): ${inputs.when}
+- Di Mana (Where): ${inputs.where}
+- Mengapa (Why): ${inputs.why}
+- Bagaimana (How): ${inputs.how}
+- Info Tambahan/Kutipan: ${extra ? extra : 'Tidak ada.'}
+
+PARAMETER PENULISAN:
+- Gaya Bahasa / Nada (Tone): ${AppState.settings.tone}
+- Format Hasil: ${AppState.settings.format}
+- Target Jumlah Kata: Kurang lebih ${AppState.settings.wordCount} kata.
+- Bahasa: Indonesia.
+
+Pastikan gaya bahasanya sangat sesuai dengan parameter "Gaya Bahasa" yang diminta. Buatlah Judul (Headline) yang menarik di awal teks.
+`;
+
+            els.btnGenerate.disabled = true;
+            els.btnGenerateJudul.disabled = true;
+            els.btnGenerate.innerHTML = `<i class="ph ph-spinner-gap animate-spin text-xl sm:text-2xl"></i> MERAKIT BERITA...`;
+            els.btnGenerate.classList.add('opacity-70');
+            
+            els.loadingIndicator.style.display = 'block';
+            els.outputArea.innerHTML = '';
+            els.btnCopy.classList.add('hidden');
+
+            try {
+                const generatedText = await callGeminiAPI(prompt);
+                
+                els.outputArea.innerHTML = `<div class="font-normal space-y-2 break-words">${formatOutput(generatedText)}</div>`;
+                els.btnCopy.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                if (error.message === "GAS_URL_MISSING") {
+                    showAlert("URL GAS BELUM DIISI", "Silakan buka kode HTML dan masukkan URL Google Apps Script kamu di variabel GOOGLE_APPS_SCRIPT_URL.");
+                } else if (error.message === "FETCH_GAS_FAILED") {
+                    showAlert("KONEKSI DITOLAK", "Gagal mengambil API Key dari Proxy. Pastikan URL sudah benar.");
+                } else if (error.message === "API_KEY_KOSONG") {
+                    showAlert("API KEY KOSONG", "GAS berhasil dihubungi tapi API Key kosong.");
+                } else {
+                    showAlert("KONEKSI GAGAL", "Terjadi kesalahan saat menghubungi server Gemini. \nDetail: " + error.message);
+                }
+                els.outputArea.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-red-400 space-y-4">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center rounded-full bg-red-500/10 border border-red-500/20 mx-auto">
+                            <i class="ph ph-warning text-5xl sm:text-6xl leading-none"></i>
+                        </div>
+                        <p class="text-center font-bold tracking-widest text-xs sm:text-sm uppercase">Generasi Berita Gagal</p>
+                    </div>`;
+            } finally {
+                els.btnGenerate.disabled = false;
+                els.btnGenerateJudul.disabled = false;
+                els.btnGenerate.classList.remove('opacity-70');
+                els.btnGenerate.innerHTML = `<i class="ph ph-magic-wand text-xl sm:text-2xl"></i> GENERATE BERITA`;
+                els.loadingIndicator.style.display = 'none';
+            }
+        });
+
+        function formatOutput(text) {
+            // Bold
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
+            // Italic
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-zinc-300">$1</em>');
+            
+            // Format Heading untuk Glassmorphism
+            formatted = formatted.replace(/^### (.*$)/gim, '<h3 class="text-base sm:text-lg font-semibold text-blue-300 mt-4 sm:mt-5 mb-2">$1</h3>');
+            formatted = formatted.replace(/^## (.*$)/gim, '<h2 class="text-lg sm:text-xl font-bold text-purple-300 mt-5 sm:mt-6 mb-3">$1</h2>');
+            formatted = formatted.replace(/^# (.*$)/gim, '<h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-2 mb-4 sm:mb-6 border-b border-white/10 pb-3 sm:pb-4 leading-tight">$1</h1>');
+            
+            // Line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            // Clean up multiple line breaks
+            formatted = formatted.replace(/(<br>\s*){3,}/g, '<br><br>');
+
+            return formatted;
+        }
+    </script>
+</body>
+</html>
