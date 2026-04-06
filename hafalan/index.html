@@ -2,176 +2,237 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aplikasi Monitoring Hafalan (Guru & Siswa)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tambahkan Library SheetJS untuk Export Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .table-container { max-height: 65vh; overflow-y: auto; overflow-x: auto; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+        }
+        /* Mobile-friendly table container */
+        .table-container { 
+            max-height: 65vh; 
+            overflow-y: auto; 
+            overflow-x: auto; 
+            width: 100%; 
+            display: block;
+            -webkit-overflow-scrolling: touch; /* Smooth scroll di iOS/Android */
+        }
         .mode-btn.active { background-color: #0d9488; color: white; }
         .mode-btn:not(.active) { background-color: #f0fdfa; color: #115e59; }
         textarea { resize: vertical; }
         .progress-bar { background-color: #e0e0e0; border-radius: 9999px; overflow: hidden; }
         .progress-bar-inner { background-color: #10b981; height: 100%; border-radius: 9999px; transition: width 0.3s ease-in-out; }
         
-        /* Style khusus untuk tabel rekap yang lebar */
-        .sticky-col-header { position: sticky; left: 0; z-index: 20; background-color: #f9fafb; }
-        .sticky-col-cell { position: sticky; left: 0; z-index: 10; background-color: white; border-right: 2px solid #e5e7eb; }
+        /* Cegah teks kolom patah/berantakan */
         th, td { white-space: nowrap; }
+        input, select, textarea { max-width: 100%; }
+        
+        /* Custom scrollbar untuk tampilan yang lebih bersih */
+        .table-container::-webkit-scrollbar { height: 8px; width: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 overflow-x-hidden w-full">
 
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl sm:text-4xl font-bold text-teal-700">Aplikasi Monitoring Hafalan</h1>
-            <p class="text-gray-600 mt-2">SMA Negeri 1 Soppeng</p>
+    <div class="container mx-auto p-3 sm:p-6 lg:p-8 w-full max-w-[100vw]">
+        <header class="text-center mb-6 mt-2">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-teal-700 leading-tight">Aplikasi Monitoring Hafalan</h1>
+            <p class="text-gray-600 mt-1 text-sm sm:text-base">SMA Negeri 1 Soppeng</p>
         </header>
 
         <!-- Mode Selector -->
-        <div class="flex justify-center mb-6 bg-white p-2 rounded-xl shadow-sm max-w-sm mx-auto">
-            <button id="guru-mode-btn" class="mode-btn active w-1/2 text-center font-semibold py-2 px-4 rounded-lg transition-colors">Monitoring Guru</button>
-            <button id="siswa-mode-btn" class="mode-btn w-1/2 text-center font-semibold py-2 px-4 rounded-lg transition-colors">Monitoring Siswa</button>
+        <div class="flex justify-center mb-6 bg-white p-1.5 sm:p-2 rounded-xl shadow-sm max-w-sm mx-auto w-full border border-gray-100">
+            <button id="guru-mode-btn" class="mode-btn active w-1/2 text-center text-sm sm:text-base font-semibold py-2.5 px-2 rounded-lg transition-colors">Monitoring Guru</button>
+            <button id="siswa-mode-btn" class="mode-btn w-1/2 text-center text-sm sm:text-base font-semibold py-2.5 px-2 rounded-lg transition-colors">Monitoring Siswa</button>
         </div>
 
         <!-- Main Content -->
-        <main class="bg-white p-6 rounded-2xl shadow-lg min-h-[500px]">
+        <main class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg min-h-[500px] w-full border border-gray-50 relative">
 
             <!-- GURU VIEW -->
             <div id="guru-view">
                 
-                <!-- Container Pencarian & Import -->
-                <div id="guru-main-interface">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Monitoring Hafalan Guru</h2>
-                    
-                    <div id="import-guru-container" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <label for="import-guru-textarea" class="block mb-2 font-semibold text-gray-700">Import Data Guru</label>
-                        <textarea id="import-guru-textarea" rows="4" class="w-full p-2 border rounded-md" placeholder="Paste daftar nama guru di sini (satu nama per baris)."></textarea>
-                        <button id="import-guru-btn" class="mt-2 bg-teal-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-teal-700">Import Guru</button>
-                    </div>
+                <!-- Passcode Section -->
+                <div id="guru-passcode-section" class="w-full max-w-sm mx-auto mt-6 sm:mt-10 p-5 sm:p-6 bg-gray-50 rounded-xl border border-gray-200 shadow-sm text-center">
+                    <div class="text-4xl mb-3">🔒</div>
+                    <h3 class="text-lg sm:text-xl font-bold text-teal-700 mb-2">Akses Terkunci</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm mb-5">Masukkan sandi guru untuk mengelola data.</p>
+                    <input type="password" id="guru-passcode-input" placeholder="Masukkan sandi..." class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 mb-4 text-center tracking-widest font-mono text-lg outline-none transition-all">
+                    <button id="guru-passcode-btn" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">Buka Akses</button>
+                    <p id="guru-passcode-error" class="text-red-500 text-xs sm:text-sm mt-3 font-medium hidden">Sandi salah, silakan coba lagi!</p>
+                </div>
 
-                    <div id="guru-filters" class="mb-4 space-y-4">
-                         <!-- Button Rekap -->
-                        <div class="flex justify-end">
-                            <button id="btn-view-recap" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 shadow flex items-center gap-2 transition-all">
+                <!-- Content Section (Sembunyikan default) -->
+                <div id="guru-content-section" class="hidden">
+                    <!-- Container Pencarian & Import -->
+                    <div id="guru-main-interface">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Monitoring Hafalan Guru</h2>
+                        
+                        <div id="import-guru-container" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <label for="import-guru-textarea" class="block mb-2 text-sm sm:text-base font-semibold text-gray-700">Import Data Guru</label>
+                            <textarea id="import-guru-textarea" rows="4" class="w-full p-3 border rounded-md text-sm outline-none focus:ring-2 focus:ring-teal-500" placeholder="Paste daftar nama guru di sini (satu nama per baris)."></textarea>
+                            <button id="import-guru-btn" class="mt-3 w-full sm:w-auto bg-teal-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-teal-700 transition-colors">Import Data</button>
+                        </div>
+
+                        <div id="guru-filters" class="mb-4 space-y-4">
+                            <!-- Button Rekap -->
+                            <div class="flex flex-col sm:flex-row justify-end mb-2">
+                                <button id="btn-view-recap" class="w-full sm:w-auto bg-indigo-600 text-white px-5 py-3 sm:py-2.5 rounded-lg font-semibold hover:bg-indigo-700 shadow flex items-center justify-center gap-2 transition-all active:scale-95">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    <span>Lihat Rekap Detail</span>
+                                </button>
+                            </div>
+
+                            <div class="relative w-full">
+                                <label for="search-guru-input" class="block mb-2 text-sm sm:text-base font-semibold text-gray-700">Cari Nama Guru:</label>
+                                <input type="text" id="search-guru-input" placeholder="Ketik nama untuk mencari..." class="w-full p-3.5 sm:p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm sm:text-base shadow-sm" autocomplete="off">
+                                <div id="search-guru-results-container" class="absolute z-30 w-full bg-white border border-gray-200 shadow-lg rounded-b-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                            </div>
+                        </div>
+
+                        <!-- Zona Bahaya Reset Data Guru -->
+                        <div class="mt-8 pt-6 border-t border-red-100 hidden" id="guru-danger-zone">
+                            <h4 class="text-sm font-bold text-red-600 mb-2 uppercase tracking-wider">Zona Bahaya</h4>
+                            <button id="btn-reset-guru" class="w-full sm:w-auto bg-white text-red-600 border border-red-200 font-semibold px-5 py-2.5 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors flex items-center justify-center gap-2 active:scale-95">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
-                                Lihat Rekap Detail Per Surat
-                            </button>
-                        </div>
-
-                        <div class="relative">
-                            <label for="search-guru-input" class="block mb-2 font-semibold text-gray-700">Cari Nama Guru:</label>
-                            <input type="text" id="search-guru-input" placeholder="Ketik nama untuk mencari..." class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" autocomplete="off">
-                            <div id="search-guru-results-container" class="absolute z-10 w-full bg-white border rounded-b-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Container Detail Satu Guru -->
-                <div id="guru-tracker-section" class="hidden mt-4">
-                    <div class="mb-4">
-                        <button id="back-to-guru-search" class="text-teal-600 font-semibold hover:underline flex items-center gap-1 mb-2">
-                            &larr; Kembali ke Pencarian
-                        </button>
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
-                            <h3 id="selected-guru-name" class="text-xl font-semibold text-teal-700"></h3>
-                            <button id="export-guru-excel-btn" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 flex items-center gap-2 shadow-sm transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Download Excel Guru Ini
+                                Hapus Semua Data Guru
                             </button>
                         </div>
                     </div>
 
-                    <div id="guru-table-container" class="table-container">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Surat</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/4">Jml Ayat Dihafal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/3">Ketuntasan</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tgl Lulus</th>
-                                </tr>
-                            </thead>
-                            <tbody id="guru-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Container Rekap Semua Guru (Detail Per Surat) -->
-                <div id="guru-recap-section" class="hidden mt-4">
-                     <div class="mb-4">
-                        <button id="back-from-recap" class="text-teal-600 font-semibold hover:underline flex items-center gap-1 mb-2">
-                            &larr; Kembali ke Menu Utama
-                        </button>
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
-                            <h3 class="text-xl font-bold text-indigo-700">Rekap Detail Hafalan Per Surat</h3>
-                            <button id="export-recap-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 flex items-center gap-2 shadow-sm transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Export Rekap (Excel)
+                    <!-- Container Detail Satu Guru -->
+                    <div id="guru-tracker-section" class="hidden mt-4">
+                        <div class="mb-4">
+                            <button id="back-to-guru-search" class="text-teal-600 font-semibold hover:bg-teal-50 p-2 -ml-2 rounded-lg flex items-center gap-1 mb-3 transition-colors text-sm sm:text-base">
+                                &larr; Kembali ke Pencarian
                             </button>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-100 pb-4">
+                                <h3 id="selected-guru-name" class="text-lg sm:text-xl font-bold text-teal-800 break-words w-full"></h3>
+                                <button id="export-guru-excel-btn" class="w-full sm:w-auto bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Download Excel
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex gap-4 text-xs mt-2">
-                             <div class="flex items-center gap-1"><div class="w-3 h-3 bg-emerald-100 border border-emerald-300"></div> Tuntas (Sempurna)</div>
-                             <div class="flex items-center gap-1"><div class="w-3 h-3 bg-yellow-50 border border-yellow-200"></div> Proses (Sebagian)</div>
-                             <div class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-50 border border-gray-200"></div> Belum (0 Ayat)</div>
+
+                        <div id="guru-table-container" class="table-container border border-gray-200 rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[120px]">Surat</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[140px]">Ayat Dihafal</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[180px]">Ketuntasan</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[140px]">Tgl Lulus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="guru-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <div class="table-container border rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 sticky top-0 z-20 shadow-sm">
-                                <tr id="recap-table-head-row">
-                                    <!-- Header akan di-generate via JS -->
-                                </tr>
-                            </thead>
-                            <tbody id="recap-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
+                    <!-- Container Rekap Semua Guru (Detail Per Surat) -->
+                    <div id="guru-recap-section" class="hidden mt-4">
+                         <div class="mb-4">
+                            <button id="back-from-recap" class="text-teal-600 font-semibold hover:bg-teal-50 p-2 -ml-2 rounded-lg flex items-center gap-1 mb-3 transition-colors text-sm sm:text-base">
+                                &larr; Kembali ke Menu Utama
+                            </button>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
+                                <h3 class="text-lg sm:text-xl font-bold text-indigo-800">Rekap Detail Per Surat</h3>
+                                <button id="export-recap-btn" class="w-full sm:w-auto bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-green-700 flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Export Rekap (Excel)
+                                </button>
+                            </div>
+                            
+                            <!-- Legenda Warna -->
+                            <div class="flex flex-wrap gap-3 sm:gap-4 text-xs mt-4">
+                                 <div class="flex items-center gap-1.5"><div class="w-3.5 h-3.5 bg-emerald-100 border border-emerald-300 rounded-sm"></div> <span class="text-gray-600 font-medium">Tuntas</span></div>
+                                 <div class="flex items-center gap-1.5"><div class="w-3.5 h-3.5 bg-yellow-50 border border-yellow-200 rounded-sm"></div> <span class="text-gray-600 font-medium">Proses</span></div>
+                                 <div class="flex items-center gap-1.5"><div class="w-3.5 h-3.5 bg-gray-50 border border-gray-200 rounded-sm"></div> <span class="text-gray-600 font-medium">Belum</span></div>
+                            </div>
+                        </div>
 
+                        <div class="table-container border border-gray-200 rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200 relative">
+                                <thead class="bg-gray-50 sticky top-0 z-30 shadow-sm">
+                                    <tr id="recap-table-head-row">
+                                        <!-- Header akan di-generate via JS -->
+                                    </tr>
+                                </thead>
+                                <tbody id="recap-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                
+                </div> <!-- Penutup guru-content-section -->
             </div>
 
             <!-- SISWA VIEW -->
             <div id="siswa-view" class="hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Monitoring Hafalan Siswa</h2>
-                <div id="import-siswa-container" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <label for="import-siswa-textarea" class="block mb-2 font-semibold text-gray-700">Import Data Siswa</label>
-                    <textarea id="import-siswa-textarea" rows="4" class="w-full p-2 border rounded-md" placeholder="Paste daftar siswa di sini. Format: Nama Siswa, Kelas"></textarea>
-                    <button id="import-siswa-btn" class="mt-2 bg-teal-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-teal-700">Import Siswa</button>
-                </div>
-                
-                <div id="siswa-filters" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="relative">
-                        <label for="search-siswa-input" class="block mb-2 font-semibold text-gray-700">Cari Nama Siswa:</label>
-                        <input type="text" id="search-siswa-input" placeholder="Ketik nama untuk mencari..." class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" autocomplete="off">
-                        <div id="search-siswa-results-container" class="absolute z-10 w-full bg-white border rounded-b-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                <div id="siswa-main-interface">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Monitoring Hafalan Siswa</h2>
+                    
+                    <div id="import-siswa-container" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <label for="import-siswa-textarea" class="block mb-2 text-sm sm:text-base font-semibold text-gray-700">Import Data Siswa</label>
+                        <textarea id="import-siswa-textarea" rows="4" class="w-full p-3 border rounded-md text-sm outline-none focus:ring-2 focus:ring-teal-500" placeholder="Paste langsung 2 kolom dari Excel (Kolom 1: Nama Siswa, Kolom 2: Kelas) atau ketik manual dengan format: Nama, Kelas"></textarea>
+                        <button id="import-siswa-btn" class="mt-3 w-full sm:w-auto bg-teal-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-teal-700 transition-colors">Import Data</button>
                     </div>
-                    <div>
-                        <label for="class-filter-select" class="block mb-2 font-semibold text-gray-700">Filter Berdasarkan Kelas:</label>
-                        <select id="class-filter-select" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500"></select>
+                    
+                    <div id="siswa-filters" class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="relative w-full flex-1">
+                            <label for="search-siswa-input" class="block mb-2 text-sm font-semibold text-gray-700">Cari Nama Siswa:</label>
+                            <input type="text" id="search-siswa-input" placeholder="Ketik nama untuk mencari..." class="w-full p-3.5 sm:p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm sm:text-base shadow-sm" autocomplete="off">
+                            <div id="search-siswa-results-container" class="absolute z-30 w-full bg-white border border-gray-200 shadow-lg rounded-b-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                        <div class="w-full flex-1">
+                            <label for="class-filter-select" class="block mb-2 text-sm font-semibold text-gray-700">Filter Kelas:</label>
+                            <select id="class-filter-select" class="w-full p-3.5 sm:p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm sm:text-base shadow-sm bg-white"></select>
+                        </div>
+                    </div>
+
+                    <!-- Zona Bahaya Reset Data Siswa -->
+                    <div class="mt-8 pt-6 border-t border-red-100 hidden" id="siswa-danger-zone">
+                        <h4 class="text-sm font-bold text-red-600 mb-2 uppercase tracking-wider">Zona Bahaya</h4>
+                        <button id="btn-reset-siswa" class="w-full sm:w-auto bg-white text-red-600 border border-red-200 font-semibold px-5 py-2.5 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors flex items-center justify-center gap-2 active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Hapus Semua Data Siswa
+                        </button>
                     </div>
                 </div>
 
                 <div id="siswa-tracker-section" class="hidden">
-                     <h3 id="selected-student-name" class="text-xl font-semibold text-teal-700 mb-4"></h3>
-                    <div id="siswa-table-container" class="table-container">
+                    <div class="mb-4">
+                        <button id="back-to-siswa-search" class="text-teal-600 font-semibold hover:bg-teal-50 p-2 -ml-2 rounded-lg flex items-center gap-1 mb-3 transition-colors text-sm sm:text-base">
+                            &larr; Kembali ke Pencarian
+                        </button>
+                        <h3 id="selected-student-name" class="text-lg sm:text-xl font-bold text-teal-800 break-words w-full mb-4 border-b border-gray-100 pb-3"></h3>
+                    </div>
+                    
+                    <div id="siswa-table-container" class="table-container border border-gray-200 rounded-lg">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Surat</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelancaran</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paraf</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[120px]">Surat</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[120px]">Ayat Dihafal</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[160px]">Ketuntasan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[120px]">Kelancaran</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[140px]">Keterangan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[140px]">Paraf</th>
                                 </tr>
                             </thead>
                             <tbody id="siswa-table-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -180,8 +241,48 @@
                 </div>
             </div>
             
-            <div id="no-selection-msg" class="text-center p-8 bg-gray-50 rounded-lg">
-                <p class="text-gray-600">Pilih mode di atas, lalu import dan pilih nama untuk melihat progres.</p>
+            <div id="no-selection-msg" class="text-center p-6 sm:p-8 bg-gray-50 rounded-xl mt-4 border border-gray-100">
+                <div class="text-3xl mb-3 opacity-50">📂</div>
+                <p class="text-gray-500 text-sm sm:text-base">Pilih menu di atas, lalu cari atau import nama untuk melihat progres hafalan.</p>
+            </div>
+
+            <!-- MODAL INFO GLOBAL (Pengganti Alert) -->
+            <div id="info-modal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+                <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center transform transition-transform">
+                    <div class="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Informasi</h3>
+                    <p id="info-modal-text" class="text-gray-600 text-sm mb-6">Pesan informasi di sini.</p>
+                    <button id="btn-close-info" class="w-full bg-teal-600 text-white rounded-xl py-3 font-semibold hover:bg-teal-700 transition-colors active:scale-95">Tutup</button>
+                </div>
+            </div>
+
+            <!-- MODAL KONFIRMASI HAPUS DATA -->
+            <div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+                <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transform transition-transform">
+                    <div class="flex items-center gap-3 mb-4 text-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <h3 class="text-xl font-bold">Peringatan!</h3>
+                    </div>
+                    <p id="delete-modal-text" class="text-gray-600 text-sm mb-5 leading-relaxed">Anda yakin ingin menghapus semua data? Tindakan ini tidak dapat dibatalkan.</p>
+                    
+                    <div class="mb-6 bg-red-50 p-4 rounded-xl border border-red-100">
+                        <label class="block text-xs font-bold text-red-800 mb-2 uppercase tracking-wide">Ketik "HAPUS" untuk konfirmasi</label>
+                        <input type="text" id="delete-modal-input" placeholder="HAPUS" class="w-full p-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-center font-bold tracking-widest uppercase bg-white text-red-600 shadow-sm" autocomplete="off">
+                    </div>
+                    
+                    <div class="flex flex-col-reverse sm:flex-row justify-end gap-3">
+                        <button id="btn-cancel-delete" class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors active:scale-95">Batal</button>
+                        <button id="btn-confirm-delete" class="w-full sm:w-auto px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-600 flex items-center justify-center gap-2 active:scale-95" disabled>
+                            Hapus Semua
+                        </button>
+                    </div>
+                </div>
             </div>
 
         </main>
@@ -189,7 +290,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, onSnapshot, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIG & STATE ---
@@ -202,12 +303,20 @@
             appId: "1:1095592882407:web:d58f0bf94a1efd7c84b242",
             measurementId: "G-MNX10FRJQ2"
         };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
         const appId = 'hafalan-quran-smansa-soppeng';
+
         let currentMode = 'guru';
+        let isGuruAuthenticated = false; 
+        const GURU_PASSCODE = "hafalan2026"; 
         let allTeachers = [];
         let allStudents = [];
         let selectedGuruId = null;
         let selectedSiswaId = null;
+        let targetResetType = ''; // 'teachers' atau 'students'
         
         // --- DATA CONSTANTS ---
         const juz30Surahs = [
@@ -223,12 +332,33 @@
         const siswaView = document.getElementById('siswa-view');
         const noSelectionMsg = document.getElementById('no-selection-msg');
         
+        // Modal UI Elements
+        const infoModal = document.getElementById('info-modal');
+        const infoModalText = document.getElementById('info-modal-text');
+        const btnCloseInfo = document.getElementById('btn-close-info');
+        
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteModalText = document.getElementById('delete-modal-text');
+        const deleteModalInput = document.getElementById('delete-modal-input');
+        const btnCancelDelete = document.getElementById('btn-cancel-delete');
+        const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+
+        // Passcode Elements
+        const guruPasscodeSection = document.getElementById('guru-passcode-section');
+        const guruContentSection = document.getElementById('guru-content-section');
+        const guruPasscodeInput = document.getElementById('guru-passcode-input');
+        const guruPasscodeBtn = document.getElementById('guru-passcode-btn');
+        const guruPasscodeError = document.getElementById('guru-passcode-error');
+
         // Guru Elements
         const guruMainInterface = document.getElementById('guru-main-interface');
         const importGuruContainer = document.getElementById('import-guru-container');
         const importGuruBtn = document.getElementById('import-guru-btn');
         const searchGuruInput = document.getElementById('search-guru-input');
         const searchGuruResultsContainer = document.getElementById('search-guru-results-container');
+        const guruDangerZone = document.getElementById('guru-danger-zone');
+        const btnResetGuru = document.getElementById('btn-reset-guru');
+        
         const guruTrackerSection = document.getElementById('guru-tracker-section');
         const selectedGuruName = document.getElementById('selected-guru-name');
         const guruTableBody = document.getElementById('guru-table-body');
@@ -244,28 +374,41 @@
         const exportRecapBtn = document.getElementById('export-recap-btn');
 
         // Siswa Elements
+        const siswaMainInterface = document.getElementById('siswa-main-interface');
         const importSiswaContainer = document.getElementById('import-siswa-container');
         const importSiswaBtn = document.getElementById('import-siswa-btn');
         const searchSiswaInput = document.getElementById('search-siswa-input');
         const searchResultsContainer = document.getElementById('search-siswa-results-container');
         const classFilterSelect = document.getElementById('class-filter-select');
+        const siswaDangerZone = document.getElementById('siswa-danger-zone');
+        const btnResetSiswa = document.getElementById('btn-reset-siswa');
+        
         const siswaTrackerSection = document.getElementById('siswa-tracker-section');
         const selectedStudentName = document.getElementById('selected-student-name');
         const siswaTableBody = document.getElementById('siswa-table-body');
+        const backToSiswaSearchBtn = document.getElementById('back-to-siswa-search');
 
-        // --- FIREBASE ---
-        let db;
         let guruUnsubscribe, siswaUnsubscribe, guruDataUnsubscribe, siswaDataUnsubscribe;
 
-        async function initializeFirebase() {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            const auth = getAuth(app);
+        async function initializeFirebaseAuth() {
             onAuthStateChanged(auth, user => {
-                if (!user) signInAnonymously(auth);
-                else updateViewForMode();
+                if (!user) {
+                    signInAnonymously(auth).catch(error => console.error("Autentikasi Firebase gagal:", error));
+                } else {
+                    updateViewForMode();
+                }
             });
         }
+
+        // --- UTILITY MODALS ---
+        function showInfoModal(message) {
+            infoModalText.textContent = message;
+            infoModal.classList.remove('hidden');
+        }
+
+        btnCloseInfo.addEventListener('click', () => {
+            infoModal.classList.add('hidden');
+        });
 
         // --- MODE & VIEW MANAGEMENT ---
         function updateViewForMode() {
@@ -275,35 +418,43 @@
             guruModeBtn.classList.toggle('active', isGuruMode);
             siswaModeBtn.classList.toggle('active', !isGuruMode);
             
-            // Reset Guru Views
             if(isGuruMode) {
-                guruMainInterface.classList.remove('hidden');
-                guruTrackerSection.classList.add('hidden');
-                guruRecapSection.classList.add('hidden');
-                noSelectionMsg.style.display = 'block';
+                if (!isGuruAuthenticated) {
+                    guruPasscodeSection.classList.remove('hidden');
+                    guruContentSection.classList.add('hidden');
+                    noSelectionMsg.style.display = 'none';
+                } else {
+                    guruPasscodeSection.classList.add('hidden');
+                    guruContentSection.classList.remove('hidden');
+                    guruMainInterface.classList.remove('hidden');
+                    guruTrackerSection.classList.add('hidden');
+                    guruRecapSection.classList.add('hidden');
+                    noSelectionMsg.style.display = 'block';
+                }
             } else {
                 noSelectionMsg.style.display = 'block';
+                siswaMainInterface.classList.remove('hidden');
+                siswaTrackerSection.classList.add('hidden');
             }
             
-            siswaTrackerSection.style.display = 'none';
-
             if (guruUnsubscribe) guruUnsubscribe();
             if (siswaUnsubscribe) siswaUnsubscribe();
             if (guruDataUnsubscribe) guruDataUnsubscribe();
             if (siswaDataUnsubscribe) siswaDataUnsubscribe();
             
-            if (isGuruMode) {
+            if (isGuruMode && isGuruAuthenticated) {
                 listenForGuru();
-            } else {
+            } else if (!isGuruMode) {
                 listenForSiswa();
             }
         }
         
         // --- DATA IMPORT ---
         async function handleImport(type, textareaId) {
+            if (!auth.currentUser) return showInfoModal("Anda belum terotentikasi di sistem.");
             const textarea = document.getElementById(textareaId);
             const text = textarea.value.trim();
-            if (!text) return alert("Textarea import tidak boleh kosong.");
+            if (!text) return showInfoModal("Kolom import tidak boleh kosong ya!");
 
             const lines = text.split('\n').filter(line => line.trim() !== '');
             if (lines.length === 0) return;
@@ -318,7 +469,8 @@
                     if (type === 'teachers') {
                         data = { name: line.trim(), createdAt: new Date() };
                     } else {
-                        const parts = line.split(',');
+                        // Deteksi pemisah: Tab (jika paste dari Excel) atau koma (jika ketik manual)
+                        const parts = line.includes('\t') ? line.split('\t') : line.split(',');
                         data = { name: parts[0]?.trim() || 'N/A', class: parts[1]?.trim() || 'N/A', createdAt: new Date() };
                     }
                     batch.set(newDocRef, data);
@@ -326,28 +478,114 @@
 
                 await batch.commit();
                 textarea.value = '';
-                alert(`${lines.length} data berhasil diimport!`);
+                showInfoModal(`Yeay! ${lines.length} data berhasil ditambahkan! ✨`);
             } catch (error) {
                 console.error(`Error importing ${type}:`, error);
-                alert(`Gagal mengimport data.`);
+                showInfoModal(`Ups! Gagal mengimport data. Coba lagi nanti ya.`);
             }
         }
 
+        // --- DATA RESET (HAPUS SEMUA) ---
+        function openResetModal(type) {
+            targetResetType = type;
+            const labelStr = type === 'teachers' ? 'GURU' : 'SISWA';
+            deleteModalText.innerHTML = `Anda yakin ingin menghapus <b>SEMUA DATA ${labelStr}</b> beserta progres hafalannya?<br><br>Tindakan ini permanen dan tidak dapat dibatalkan.`;
+            deleteModalInput.value = '';
+            btnConfirmDelete.disabled = true;
+            deleteModal.classList.remove('hidden');
+        }
+
+        deleteModalInput.addEventListener('input', (e) => {
+            // Aktifkan tombol Hapus hanya jika input sama persis dengan "HAPUS"
+            btnConfirmDelete.disabled = e.target.value.toUpperCase() !== 'HAPUS';
+        });
+
+        btnCancelDelete.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+        });
+
+        btnConfirmDelete.addEventListener('click', async () => {
+            deleteModal.classList.add('hidden');
+            await executeReset(targetResetType);
+        });
+
+        async function executeReset(type) {
+            if (!auth.currentUser) return showInfoModal("Akses ditolak. Anda belum terotentikasi.");
+            
+            const dataToReset = type === 'teachers' ? allTeachers : allStudents;
+            const labelStr = type === 'teachers' ? 'Guru' : 'Siswa';
+
+            if (dataToReset.length === 0) {
+                return showInfoModal(`Tidak ada data ${labelStr} yang perlu dihapus.`);
+            }
+
+            try {
+                btnConfirmDelete.innerHTML = `<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menghapus...`;
+                
+                // Firestore batch delete. Maximum 500 per batch.
+                let batch = writeBatch(db);
+                let count = 0;
+
+                for (const item of dataToReset) {
+                    const docRef = doc(db, `artifacts/${appId}/public/data/${type}/${item.id}`);
+                    batch.delete(docRef);
+                    count++;
+                    
+                    if (count === 490) {
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        count = 0;
+                    }
+                }
+                
+                if (count > 0) {
+                    await batch.commit();
+                }
+
+                showInfoModal(`Sukses! Semua data ${labelStr} sudah dibersihkan kembali ke nol. 🧹✨`);
+                
+                // Kembalikan view ke posisi awal
+                if (type === 'teachers') {
+                    guruTrackerSection.classList.add('hidden');
+                    guruRecapSection.classList.add('hidden');
+                    guruMainInterface.classList.remove('hidden');
+                    searchGuruInput.value = '';
+                } else {
+                    siswaTrackerSection.classList.add('hidden');
+                    siswaMainInterface.classList.remove('hidden');
+                    searchSiswaInput.value = '';
+                }
+                noSelectionMsg.style.display = 'block';
+
+            } catch (error) {
+                console.error("Gagal mereset data:", error);
+                showInfoModal("Aduh, terjadi kesalahan sistem saat menghapus data. Silakan coba lagi.");
+            } finally {
+                btnConfirmDelete.innerHTML = "Hapus Semua";
+            }
+        }
+
+
         // --- GURU LOGIC ---
         function listenForGuru() {
+            if (!auth.currentUser) return;
             const ref = collection(db, `artifacts/${appId}/public/data/teachers`);
             guruUnsubscribe = onSnapshot(ref, (snapshot) => {
-                // Map all data directly
                 allTeachers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 const hasData = allTeachers.length > 0;
                 importGuruContainer.style.display = hasData ? 'none' : 'block';
                 document.getElementById('guru-filters').style.display = hasData ? 'block' : 'none';
                 
-                // Update recap if view is active
+                // Tampilkan atau Sembunyikan tombol reset sesuai ketersediaan data
+                if(hasData) guruDangerZone.classList.remove('hidden');
+                else guruDangerZone.classList.add('hidden');
+                
                 if(!guruRecapSection.classList.contains('hidden')) {
                     renderGuruRecap();
                 }
+            }, (error) => {
+                console.error("Gagal mendengarkan data guru:", error);
             });
         }
 
@@ -365,7 +603,7 @@
             if (filteredTeachers.length > 0) {
                 filteredTeachers.forEach(teacher => {
                     const resultItem = document.createElement('div');
-                    resultItem.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                    resultItem.className = 'p-3 hover:bg-teal-50 border-b border-gray-100 cursor-pointer text-sm font-medium';
                     resultItem.textContent = teacher.name;
                     resultItem.dataset.id = teacher.id;
                     resultItem.dataset.name = teacher.name;
@@ -382,12 +620,11 @@
             searchGuruInput.value = name;
             searchGuruResultsContainer.classList.add('hidden');
             
-            // Switch Views
             guruMainInterface.classList.add('hidden');
             guruTrackerSection.classList.remove('hidden');
             noSelectionMsg.style.display = 'none';
             
-            selectedGuruName.textContent = `Progres Hafalan: ${name}`;
+            selectedGuruName.textContent = name;
             listenForMemorizationData('teachers', id);
         }
 
@@ -401,19 +638,16 @@
         }
 
         function renderGuruRecap() {
-            // 1. Generate Dynamic Header
             recapTableHeadRow.innerHTML = `
-                <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase w-10 sticky-col-header">No</th>
-                <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase w-48 sticky-col-header" style="left: 50px;">Nama Guru</th>
-                <th class="px-4 py-3 text-center text-xs font-bold text-indigo-700 uppercase bg-indigo-50 border-l border-r border-indigo-100">Total %</th>
+                <th class="px-2 py-3 text-center text-xs font-bold text-gray-700 uppercase min-w-[40px] sticky left-0 z-20 bg-gray-100 border-r border-gray-200">No</th>
+                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase min-w-[140px] sticky left-[40px] z-20 bg-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Nama Guru</th>
+                <th class="px-3 py-3 text-center text-xs font-bold text-indigo-700 uppercase min-w-[80px] bg-indigo-50 border-r border-indigo-100">Total %</th>
             `;
             
-            // Add headers for each Surah
             juz30Surahs.forEach(surah => {
-                recapTableHeadRow.innerHTML += `<th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase border-b" title="${surah.name}">${surah.name} <span class="text-[10px] text-gray-400">(${surah.verseCount})</span></th>`;
+                recapTableHeadRow.innerHTML += `<th class="px-2 py-3 text-center text-xs font-semibold text-gray-500 uppercase border-b border-r border-gray-100 min-w-[70px] leading-tight" title="${surah.name}">${surah.name} <br><span class="text-[10px] text-gray-400 font-normal">(${surah.verseCount})</span></th>`;
             });
 
-            // 2. Calculate & Sort Data
             const recapData = allTeachers.map(teacher => {
                 const mem = teacher.memorization || {};
                 let totalHafalan = 0;
@@ -429,33 +663,30 @@
                 };
             });
 
-            // Sort by highest total memorized
             recapData.sort((a, b) => b.totalAyat - a.totalAyat);
 
-            // 3. Render Table Body
             recapTableBody.innerHTML = '';
             recapData.forEach((teacher, index) => {
                 const mem = teacher.memorization || {};
                 
                 let rowHtml = `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 text-sm text-gray-500 sticky-col-cell border-r">${index + 1}</td>
-                        <td class="px-4 py-3 text-sm font-medium text-gray-900 sticky-col-cell" style="left: 50px; border-right: 2px solid #e5e7eb;">${teacher.name}</td>
-                        <td class="px-4 py-3 text-center text-sm font-bold text-indigo-700 bg-indigo-50 border-r border-indigo-100">${Math.round(teacher.pct)}%</td>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-2 py-3 text-center text-xs text-gray-500 sticky left-0 z-10 bg-white border-r border-gray-100">${index + 1}</td>
+                        <td class="px-3 py-3 text-xs sm:text-sm font-medium text-gray-800 sticky left-[40px] z-10 bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-gray-200 truncate max-w-[140px]">${teacher.name}</td>
+                        <td class="px-3 py-3 text-center text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50 border-r border-indigo-100">${Math.round(teacher.pct)}%</td>
                 `;
 
                 juz30Surahs.forEach(surah => {
                     const ayat = mem[surah.id]?.ayatDihafal ? Number(mem[surah.id].ayatDihafal) : 0;
-                    let bgClass = "bg-gray-50 text-gray-300"; // Default (0/kosong)
-                    let textClass = "text-gray-400";
-
+                    let bgClass = "bg-gray-50 text-gray-300";
+                    
                     if (ayat === surah.verseCount && surah.verseCount > 0) {
-                        bgClass = "bg-emerald-100 text-emerald-700 font-bold border border-emerald-200"; // Tuntas
+                        bgClass = "bg-emerald-100 text-emerald-700 font-bold border border-emerald-200"; 
                     } else if (ayat > 0) {
-                        bgClass = "bg-yellow-50 text-yellow-700 border border-yellow-200"; // Proses
+                        bgClass = "bg-yellow-50 text-yellow-700 border border-yellow-200 font-medium"; 
                     }
 
-                    rowHtml += `<td class="px-2 py-3 text-center text-xs ${bgClass}">${ayat}</td>`;
+                    rowHtml += `<td class="px-2 py-3 text-center text-xs border-r border-gray-100 ${bgClass}">${ayat}</td>`;
                 });
 
                 rowHtml += `</tr>`;
@@ -471,12 +702,22 @@
 
         // --- SISWA LOGIC ---
         function listenForSiswa() {
+            if (!auth.currentUser) return;
             const ref = collection(db, `artifacts/${appId}/public/data/students`);
             siswaUnsubscribe = onSnapshot(ref, (snapshot) => {
                 allStudents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                importSiswaContainer.style.display = allStudents.length > 0 ? 'none' : 'block';
-                document.getElementById('siswa-filters').style.display = allStudents.length > 0 ? 'grid' : 'none';
+                
+                const hasData = allStudents.length > 0;
+                importSiswaContainer.style.display = hasData ? 'none' : 'block';
+                document.getElementById('siswa-filters').style.display = hasData ? 'flex' : 'none';
+                
+                // Tampilkan Zona bahaya untuk Reset jika ada data
+                if(hasData) siswaDangerZone.classList.remove('hidden');
+                else siswaDangerZone.classList.add('hidden');
+
                 populateClassFilter(allStudents);
+            }, (error) => {
+                console.error("Gagal mendengarkan data siswa:", error);
             });
         }
 
@@ -505,7 +746,7 @@
             if (filteredStudents.length > 0) {
                 filteredStudents.forEach(student => {
                     const resultItem = document.createElement('div');
-                    resultItem.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                    resultItem.className = 'p-3 hover:bg-teal-50 border-b border-gray-100 cursor-pointer text-sm font-medium';
                     resultItem.textContent = `${student.name} (${student.class})`;
                     resultItem.dataset.id = student.id;
                     resultItem.dataset.name = student.name;
@@ -523,15 +764,17 @@
             searchSiswaInput.value = `${name} (${studentClass})`;
             searchResultsContainer.classList.add('hidden');
             
-            siswaTrackerSection.style.display = 'block';
+            siswaMainInterface.classList.add('hidden');
+            siswaTrackerSection.classList.remove('hidden');
             noSelectionMsg.style.display = 'none';
-            selectedStudentName.textContent = `Progres Hafalan: ${name}`;
+            
+            selectedStudentName.textContent = `${name} - ${studentClass}`;
             listenForMemorizationData('students', id);
         }
 
         // --- SHARED DATA LOGIC ---
         function listenForMemorizationData(type, personId) {
-            if (!personId) return;
+            if (!personId || !auth.currentUser) return;
             const dataUnsubscribe = type === 'teachers' ? guruDataUnsubscribe : siswaDataUnsubscribe;
             if (dataUnsubscribe) dataUnsubscribe();
 
@@ -540,6 +783,8 @@
                 const data = docSnap.data()?.memorization || {};
                 if (type === 'teachers') renderGuruTable(data);
                 else renderSiswaTable(data);
+            }, (error) => {
+                console.error("Gagal membaca detail data:", error);
             });
 
             if (type === 'teachers') guruDataUnsubscribe = newUnsubscribe;
@@ -547,7 +792,7 @@
         }
         
         async function updateMemorization(type, personId, surahId, field, value) {
-            if (!personId) return;
+            if (!personId || !auth.currentUser) return;
             const docRef = doc(db, `artifacts/${appId}/public/data/${type}/${personId}`);
             await setDoc(docRef, { memorization: { [surahId]: { [field]: value } } }, { merge: true });
         }
@@ -560,16 +805,16 @@
                 const percentage = surah.verseCount > 0 ? Math.round((ayatDihafal / surah.verseCount) * 100) : 0;
                 
                 guruTableBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${surah.name}</td>
-                        <td class="px-6 py-4"><input type="number" data-surah-id="${surah.id}" data-verse-count="${surah.verseCount}" data-field="ayatDihafal" value="${ayatDihafal}" class="w-full p-2 border rounded-md" min="0" max="${surah.verseCount}"></td>
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">${surah.name}</td>
+                        <td class="px-4 py-3"><input type="number" data-surah-id="${surah.id}" data-verse-count="${surah.verseCount}" data-field="ayatDihafal" value="${ayatDihafal}" class="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-sm" min="0" max="${surah.verseCount}"></td>
+                        <td class="px-4 py-3">
                             <div class="flex items-center">
-                                <div class="w-full bg-gray-200 rounded-full h-4 mr-3"><div class="bg-teal-500 h-4 rounded-full progress-bar-inner" style="width: ${percentage}%"></div></div>
-                                <span class="text-sm font-medium text-gray-700 percentage-text">${percentage}%</span>
+                                <div class="w-full bg-gray-200 rounded-full h-3.5 mr-3"><div class="bg-teal-500 h-3.5 rounded-full progress-bar-inner shadow-sm" style="width: ${percentage}%"></div></div>
+                                <span class="text-xs font-bold text-gray-600 percentage-text w-10 text-right">${percentage}%</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4"><input type="date" data-surah-id="${surah.id}" data-field="tglLulus" value="${d.tglLulus || ''}" class="w-full p-2 border rounded-md"></td>
+                        <td class="px-4 py-3"><input type="date" data-surah-id="${surah.id}" data-field="tglLulus" value="${d.tglLulus || ''}" class="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-sm text-gray-600"></td>
                     </tr>`;
             });
         }
@@ -578,30 +823,34 @@
             siswaTableBody.innerHTML = '';
             juz30Surahs.forEach(surah => {
                 const d = data[surah.id] || {};
+                const ayatDihafal = Number(d.ayatDihafal) || 0;
+                const percentage = surah.verseCount > 0 ? Math.round((ayatDihafal / surah.verseCount) * 100) : 0;
+                
                 siswaTableBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${surah.name}</td>
-                        <td class="px-6 py-4"><select data-surah-id="${surah.id}" data-field="status" class="w-full p-2 border rounded-md"><option value="Belum Hafal" ${d.status !== 'Sudah Hafal' ? 'selected' : ''}>Belum Hafal</option><option value="Sudah Hafal" ${d.status === 'Sudah Hafal' ? 'selected' : ''}>Sudah Hafal</option></select></td>
-                        <td class="px-6 py-4"><select data-surah-id="${surah.id}" data-field="kelancaran" class="w-full p-2 border rounded-md"><option value="" ${!d.kelancaran ? 'selected' : ''}>--</option><option value="Rendah" ${d.kelancaran === 'Rendah' ? 'selected' : ''}>Rendah</option><option value="Sedang" ${d.kelancaran === 'Sedang' ? 'selected' : ''}>Sedang</option><option value="Tinggi" ${d.kelancaran === 'Tinggi' ? 'selected' : ''}>Tinggi</option></select></td>
-                        <td class="px-6 py-4"><input type="text" data-surah-id="${surah.id}" data-field="keterangan" value="${d.keterangan || ''}" class="w-full p-2 border rounded-md"></td>
-                        <td class="px-6 py-4"><select data-surah-id="${surah.id}" data-field="paraf" class="w-full p-2 border rounded-md">${parafGurus.map(g => `<option value="${g}" ${g === (d.paraf || '') ? 'selected' : ''}>${g || '-- Pilih Paraf --'}</option>`).join('')}</select></td>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800">${surah.name}</td>
+                        <td class="px-4 py-3"><input type="number" data-surah-id="${surah.id}" data-verse-count="${surah.verseCount}" data-field="ayatDihafal" value="${ayatDihafal}" class="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-sm" min="0" max="${surah.verseCount}"></td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center">
+                                <div class="w-full bg-gray-200 rounded-full h-3.5 mr-2"><div class="bg-teal-500 h-3.5 rounded-full progress-bar-inner shadow-sm" style="width: ${percentage}%"></div></div>
+                                <span class="text-xs font-bold text-gray-600 percentage-text w-10 text-right">${percentage}%</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3"><select data-surah-id="${surah.id}" data-field="kelancaran" class="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white"><option value="" ${!d.kelancaran ? 'selected' : ''}>--</option><option value="Rendah" ${d.kelancaran === 'Rendah' ? 'selected' : ''}>Rendah</option><option value="Sedang" ${d.kelancaran === 'Sedang' ? 'selected' : ''}>Sedang</option><option value="Tinggi" ${d.kelancaran === 'Tinggi' ? 'selected' : ''}>Tinggi</option></select></td>
+                        <td class="px-4 py-3"><input type="text" data-surah-id="${surah.id}" data-field="keterangan" value="${d.keterangan || ''}" class="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-sm" placeholder="-"></td>
+                        <td class="px-4 py-3"><select data-surah-id="${surah.id}" data-field="paraf" class="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white">${parafGurus.map(g => `<option value="${g}" ${g === (d.paraf || '') ? 'selected' : ''}>${g || '-- Pilih Paraf --'}</option>`).join('')}</select></td>
                     </tr>`;
             });
         }
 
-        // --- EXPORT LOGIC (INDIVIDUAL GURU) ---
+        // --- EXPORT LOGIC ---
         if(exportGuruExcelBtn) {
             exportGuruExcelBtn.addEventListener('click', () => {
-                if (!selectedGuruId) return alert("Pilih guru terlebih dahulu!");
+                if (!selectedGuruId) return showInfoModal("Pilih guru terlebih dahulu!");
                 const rawName = selectedGuruName.textContent; 
-                const cleanName = rawName.replace('Progres Hafalan: ', '').trim();
-
+                
                 let dataToExport = [
-                    ["Laporan Monitoring Hafalan Guru"],
-                    ["Sekolah", "SMA Negeri 1 Soppeng"],
-                    ["Nama Guru", cleanName],
-                    ["Tanggal Export", new Date().toLocaleDateString('id-ID')],
-                    [""], 
+                    ["Laporan Monitoring Hafalan Guru"], ["Sekolah", "SMA Negeri 1 Soppeng"], ["Nama Guru", rawName], ["Tanggal Export", new Date().toLocaleDateString('id-ID')], [""], 
                     ["No", "Nama Surat", "Total Ayat", "Ayat Dihafal", "Persentase", "Tanggal Lulus"] 
                 ];
 
@@ -612,73 +861,46 @@
                     const tglVal = tglInput ? (tglInput.value || '-') : '-';
                     const percentage = surah.verseCount > 0 ? Math.round((ayatVal / surah.verseCount) * 100) : 0;
 
-                    dataToExport.push([
-                        index + 1, surah.name, surah.verseCount, parseInt(ayatVal), percentage + "%", tglVal
-                    ]);
+                    dataToExport.push([ index + 1, surah.name, surah.verseCount, parseInt(ayatVal), percentage + "%", tglVal ]);
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(dataToExport);
                 ws['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Hafalan Guru");
-                const safeFileName = cleanName.replace(/[^a-zA-Z0-9]/g, '_');
-                XLSX.writeFile(wb, `Hafalan_Guru_${safeFileName}.xlsx`);
+                XLSX.writeFile(wb, `Hafalan_Guru_${rawName.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
             });
         }
         
-        // --- EXPORT LOGIC (RECAP ALL GURU DETAIL PER SURAT) ---
         if(exportRecapBtn) {
             exportRecapBtn.addEventListener('click', () => {
-                if(allTeachers.length === 0) return alert("Tidak ada data guru untuk diexport.");
-                
-                // 1. Setup Header
+                if(allTeachers.length === 0) return showInfoModal("Tidak ada data guru untuk diexport.");
                 const surahHeaders = juz30Surahs.map(s => s.name);
                 const mainHeader = ["No", "Nama Guru", "Total %", ...surahHeaders];
                 
                 let dataToExport = [
-                    ["Rekapitulasi Detail Hafalan Per Surat - Guru"],
-                    ["Sekolah", "SMA Negeri 1 Soppeng"],
-                    ["Tanggal Export", new Date().toLocaleDateString('id-ID')],
-                    [""],
-                    mainHeader // Row 5 is the header
+                    ["Rekapitulasi Detail Hafalan Per Surat - Guru"], ["Sekolah", "SMA Negeri 1 Soppeng"], ["Tanggal Export", new Date().toLocaleDateString('id-ID')], [""],
+                    mainHeader
                 ];
                 
-                // 2. Calculate Data (Same logic as render)
                  const recapData = allTeachers.map(teacher => {
                     const mem = teacher.memorization || {};
                     let totalHafalan = 0;
-                    juz30Surahs.forEach(s => {
-                        if(mem[s.id] && mem[s.id].ayatDihafal) totalHafalan += Number(mem[s.id].ayatDihafal);
-                    });
+                    juz30Surahs.forEach(s => { if(mem[s.id] && mem[s.id].ayatDihafal) totalHafalan += Number(mem[s.id].ayatDihafal); });
                     return { ...teacher, totalAyat: totalHafalan, pct: (totalHafalan / totalAyatJuz30) * 100 };
                 });
-
-                // Sort Descending
                 recapData.sort((a, b) => b.totalAyat - a.totalAyat);
                 
-                // 3. Fill Rows
                 recapData.forEach((t, i) => {
                     const mem = t.memorization || {};
-                    const row = [
-                        i+1,
-                        t.name,
-                        Math.round(t.pct) + "%"
-                    ];
-                    
-                    // Add Surah Columns
-                    juz30Surahs.forEach(s => {
-                        const ayat = mem[s.id]?.ayatDihafal ? Number(mem[s.id].ayatDihafal) : 0;
-                        row.push(ayat);
-                    });
-                    
+                    const row = [ i+1, t.name, Math.round(t.pct) + "%" ];
+                    juz30Surahs.forEach(s => row.push(mem[s.id]?.ayatDihafal ? Number(mem[s.id].ayatDihafal) : 0));
                     dataToExport.push(row);
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(dataToExport);
-                
-                // Adjust widths
                 const wscols = [{ wch: 5 }, { wch: 30 }, { wch: 10 }];
-                juz30Surahs.forEach(() => wscols.push({ wch: 8 })); // Small width for each surah column
+                juz30Surahs.forEach(() => wscols.push({ wch: 8 }));
                 ws['!cols'] = wscols;
                 
                 const wb = XLSX.utils.book_new();
@@ -691,16 +913,40 @@
         guruModeBtn.addEventListener('click', () => { currentMode = 'guru'; updateViewForMode(); });
         siswaModeBtn.addEventListener('click', () => { currentMode = 'siswa'; updateViewForMode(); });
 
+        function handlePasscodeSubmit() {
+            if (guruPasscodeInput.value === GURU_PASSCODE) {
+                isGuruAuthenticated = true;
+                guruPasscodeError.classList.add('hidden');
+                guruPasscodeInput.value = ''; 
+                updateViewForMode(); 
+            } else {
+                guruPasscodeError.classList.remove('hidden');
+            }
+        }
+        
+        guruPasscodeBtn.addEventListener('click', handlePasscodeSubmit);
+        guruPasscodeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasscodeSubmit(); });
+
         importGuruBtn.addEventListener('click', () => handleImport('teachers', 'import-guru-textarea'));
         importSiswaBtn.addEventListener('click', () => handleImport('students', 'import-siswa-textarea'));
         
-        // Navigation Listeners
+        btnResetGuru.addEventListener('click', () => openResetModal('teachers'));
+        btnResetSiswa.addEventListener('click', () => openResetModal('students'));
+
         backToGuruSearchBtn.addEventListener('click', () => {
             guruTrackerSection.classList.add('hidden');
             guruMainInterface.classList.remove('hidden');
             noSelectionMsg.style.display = 'block';
-            searchGuruInput.value = ''; // clear search text
-            searchGuruResultsContainer.innerHTML = ''; // clear results
+            searchGuruInput.value = ''; 
+            searchGuruResultsContainer.innerHTML = ''; 
+        });
+
+        backToSiswaSearchBtn.addEventListener('click', () => {
+            siswaTrackerSection.classList.add('hidden');
+            siswaMainInterface.classList.remove('hidden');
+            noSelectionMsg.style.display = 'block';
+            searchSiswaInput.value = ''; 
+            searchResultsContainer.innerHTML = ''; 
         });
         
         btnViewRecap.addEventListener('click', openRecapView);
@@ -709,9 +955,7 @@
         searchGuruInput.addEventListener('input', handleGuruSearch);
         searchGuruResultsContainer.addEventListener('click', (e) => {
             const target = e.target.closest('div');
-            if(target && target.dataset.id) {
-                selectGuru(target.dataset.id, target.dataset.name);
-            }
+            if(target && target.dataset.id) selectGuru(target.dataset.id, target.dataset.name);
         });
 
         searchSiswaInput.addEventListener('input', handleStudentSearch);
@@ -719,9 +963,7 @@
         
         searchResultsContainer.addEventListener('click', (e) => {
             const target = e.target.closest('div');
-            if(target && target.dataset.id) {
-                selectStudent(target.dataset.id, target.dataset.name, target.dataset.class);
-            }
+            if(target && target.dataset.id) selectStudent(target.dataset.id, target.dataset.name, target.dataset.class);
         });
         
         document.addEventListener('click', (e) => {
@@ -753,8 +995,22 @@
             updateMemorization('students', selectedSiswaId, e.target.dataset.surahId, e.target.dataset.field, e.target.value);
         });
 
+        siswaTableBody.addEventListener('input', e => {
+            if (e.target.dataset.field === 'ayatDihafal') {
+                const input = e.target;
+                const totalAyat = Number(input.dataset.verseCount);
+                let ayatDihafal = Number(input.value);
+                if (ayatDihafal > totalAyat) input.value = ayatDihafal = totalAyat;
+                if (ayatDihafal < 0) input.value = ayatDihafal = 0;
+                const percentage = totalAyat > 0 ? Math.round((ayatDihafal / totalAyat) * 100) : 0;
+                const row = input.closest('tr');
+                row.querySelector('.progress-bar-inner').style.width = `${percentage}%`;
+                row.querySelector('.percentage-text').textContent = `${percentage}%`;
+            }
+        });
+
         // --- INITIALIZATION ---
-        initializeFirebase();
+        initializeFirebaseAuth();
     </script>
 </body>
 </html>
