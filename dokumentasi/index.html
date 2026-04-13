@@ -78,10 +78,8 @@
             const n = Math.pow(2, zoom);
             const x_f = (lon + 180) / 360 * n;
             const y_f = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n;
-            
             const centerTileX = Math.floor(x_f);
             const centerTileY = Math.floor(y_f);
-            
             const offsetX = (x_f - centerTileX) * 256;
             const offsetY = (y_f - centerTileY) * 256;
 
@@ -89,7 +87,6 @@
             mapCanvas.width = width;
             mapCanvas.height = height;
             const mCtx = mapCanvas.getContext('2d');
-
             const startX = (width / 2) - offsetX;
             const startY = (height / 2) - offsetY;
 
@@ -108,14 +105,8 @@
                     promises.push(p);
                 }
             }
-
             const tiles = await Promise.all(promises);
-            tiles.forEach(t => {
-                if(t.img) {
-                    mCtx.drawImage(t.img, startX + (t.i * 256), startY + (t.j * 256), 256, 256);
-                }
-            });
-
+            tiles.forEach(t => { if(t.img) mCtx.drawImage(t.img, startX + (t.i * 256), startY + (t.j * 256), 256, 256); });
             return mapCanvas;
         }
 
@@ -125,7 +116,7 @@
                     video: { facingMode: "environment", width: { ideal: 1080 }, height: { ideal: 1440 } }
                 });
                 video.srcObject = stream;
-            } catch (err) { alert("Akses kamera ditolak. Pastikan izin kamera aktif."); }
+            } catch (err) { alert("Akses kamera ditolak."); }
         }
 
         function startSensors() {
@@ -134,7 +125,6 @@
                     currentLat = position.coords.latitude;
                     currentLong = position.coords.longitude;
                     document.getElementById('uiLocation').innerText = `${currentLat.toFixed(5)}, ${currentLong.toFixed(5)}`;
-                    
                     if(!map) {
                         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([currentLat, currentLong], 16);
                         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -150,7 +140,7 @@
 
         captureBtn.addEventListener('click', async () => {
             if (!ketInput.value) return alert("Isi keterangan foto dulu ya Pak!");
-            if (currentLat === null) return alert("Menunggu GPS mendeteksi lokasi...");
+            if (currentLat === null) return alert("Menunggu GPS...");
 
             loading.classList.remove('hidden');
 
@@ -159,56 +149,46 @@
             canvas.width = targetWidth;
             canvas.height = targetHeight;
 
-            const sourceWidth = video.videoWidth;
-            const sourceHeight = video.videoHeight;
-            const sourceAR = sourceWidth / sourceHeight;
-            const targetAR = targetWidth / targetHeight;
+            const sWidth = video.videoWidth;
+            const sHeight = video.videoHeight;
+            const sAR = sWidth / sHeight;
+            const tAR = targetWidth / targetHeight;
 
-            let sX, sY, sW, sH;
-
-            if (sourceAR > targetAR) {
-                sH = sourceHeight;
-                sW = sH * targetAR;
-                sX = (sourceWidth - sW) / 2;
-                sY = 0;
+            let sX, sY, sw, sh;
+            if (sAR > tAR) {
+                sh = sHeight; sw = sh * tAR;
+                sX = (sWidth - sw) / 2; sY = 0;
             } else {
-                sW = sourceWidth;
-                sH = sW / targetAR;
-                sX = 0;
-                sY = (sourceHeight - sH) / 2;
+                sw = sWidth; sh = sw / tAR;
+                sX = 0; sY = (sHeight - sh) / 2;
             }
 
-            ctx.drawImage(video, sX, sY, sW, sH, 0, 0, targetWidth, targetHeight);
+            ctx.drawImage(video, sX, sY, sw, sh, 0, 0, targetWidth, targetHeight);
 
             const boxWidth = canvas.width * 0.92;
             const boxHeight = 240;
             const boxX = (canvas.width - boxWidth) / 2;
             const boxY = canvas.height - boxHeight - 40;
             
-            // --- INI PERBAIKAN BUG KOTAK TRANSPARAN ---
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)"; // Hitam dengan opacity 70%
+            // --- BOX WATERMARK HITAM SEMI-TRANSPARAN ---
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 16); // Bikin sudut melengkung
-            } else {
-                ctx.rect(boxX, boxY, boxWidth, boxHeight); // Fallback browser lama
-            }
-            ctx.fill(); // INI YANG SEBELUMNYA GAGAL JALAN
+            if (ctx.roundRect) ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 16);
+            else ctx.rect(boxX, boxY, boxWidth, boxHeight);
+            ctx.fill();
             
             ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
             ctx.lineWidth = 2;
-            ctx.stroke(); // Gambar garis putih luarnya
-            // ------------------------------------------
+            ctx.stroke();
 
+            // --- TEKS INFO ---
             ctx.fillStyle = "white";
             ctx.font = "bold 32px Arial";
             ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
-
             ctx.font = "24px Arial";
             ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
             ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 100);
             ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 135);
-            
             const timeStr = formatTanggalIndo(new Date());
             const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
             ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 175);
@@ -216,21 +196,28 @@
             ctx.fillStyle = "#60a5fa"; 
             ctx.fillText(`ASET UPT SMA NEGERI 1 SOPPENG`, boxX + 30, boxY + 210);
 
+            // --- LOGO (TIDAK GEPENG & RAPAT KE BAWAH) ---
             if(logoImg.complete) {
-                const logoSize = 140;
-                ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
+                const logoAR = logoImg.width / logoImg.height;
+                const logoW = 140; // Lebar tetap
+                const logoH = logoW / logoAR; // Tinggi menyesuaikan agar tidak gepeng
+                
+                // Posisi: boxX + boxWidth (area kanan) minus lebar logo, minus padding.
+                // Posisi Y: boxY + boxHeight (area bawah) minus tinggi logo, minus padding kecil.
+                const logoPosX = boxX + boxWidth - logoW - 30;
+                const logoPosY = boxY + boxHeight - logoH - 25; 
+                
+                ctx.drawImage(logoImg, logoPosX, logoPosY, logoW, logoH);
             }
             
+            // --- PETA ---
             const mapSize = 160;
             const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
             const mapPosX = boxX + boxWidth - mapSize - 200;
             const mapPosY = boxY + 45;
-            
             ctx.fillStyle = "white";
             ctx.fillRect(mapPosX - 4, mapPosY - 4, mapSize + 8, mapSize + 8);
-            
             ctx.drawImage(mapCanvas, mapPosX, mapPosY, mapSize, mapSize);
-            
             ctx.fillStyle = "#ef4444"; 
             ctx.beginPath();
             ctx.arc(mapPosX + (mapSize / 2), mapPosY + (mapSize / 2), 8, 0, 2 * Math.PI);
@@ -238,7 +225,6 @@
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
-
             try {
                 await fetch(WEB_APP_URL, {
                     method: 'POST',
@@ -249,9 +235,9 @@
                     }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-                alert("Data Aset Berhasil Terkirim ke Drive!");
+                alert("Data Aset Berhasil Terkirim!");
                 ketInput.value = ""; 
-            } catch (err) { alert("Terjadi kesalahan jaringan."); } 
+            } catch (err) { alert("Gagal koneksi."); } 
             finally { loading.classList.add('hidden'); }
         });
 
