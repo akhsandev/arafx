@@ -36,7 +36,7 @@
         <div class="p-6 space-y-5">
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Keterangan Aset / Nama Alat</label>
-                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-300 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-slate-900 font-medium text-slate-100 shadow-inner" placeholder="Tuliskan detail aset di sini..."></textarea>
+                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-300 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-white font-medium text-slate-800 shadow-inner" placeholder="Tuliskan detail aset di sini..."></textarea>
             </div>
             
             <button id="captureBtn" class="w-full bg-[#1e3a8a] active:scale-95 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all uppercase tracking-wider">
@@ -54,7 +54,7 @@
     </div>
 
     <script>
-        // Masukkan URL Web App Google Apps Script Anda yang baru di sini
+        // Masukkan URL Web App Google Apps Script Anda di sini
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyNxwlHW5Z3yz4gFAdQW6iaDZGDVqHgdzcdnMhjiwTjW85OtsoRnV1tS75MSNqWhYg/exec";
         
         const video = document.getElementById('videoElement');
@@ -122,7 +122,7 @@
 
         async function startCamera() {
             try {
-                // Dimodifikasi meminta resolusi tinggi (ideal: 1080p potret) agar tampilan di HP tidak buram
+                // Meminta resolusi tinggi (ideal: 1080p potret) agar tampilan di HP tidak buram
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: "environment", width: { ideal: 1080 }, height: { ideal: 1440 } }
                 });
@@ -156,59 +156,59 @@
 
             loading.classList.remove('hidden');
 
-            // --- PERBAIKAN FINAL ASPEK RASIO: CROP & FIT LOGIC ---
+            // --- ASPEK RASIO: CROP & FIT LOGIC (Apa yang dilihat di preview = yang tercetak) ---
             
-            // 1. Tentukan target resolusi potret (3:4, lebar: 1080)
+            // Tentukan target resolusi potret (3:4, lebar: 1080)
             const targetWidth = 1080;
             const targetHeight = 1440; // Tepat 4/3 dari lebar (1080)
             
             canvas.width = targetWidth;
             canvas.height = targetHeight;
 
-            // 2. Hitung Dimensi Video Asli
+            // Hitung Dimensi Video Asli
             const sourceWidth = video.videoWidth;
             const sourceHeight = video.videoHeight;
             const sourceAR = sourceWidth / sourceHeight;
             
-            // 3. Tentukan Dimensi Target (3:4 Potret)
+            // Tentukan Dimensi Target (3:4 Potret)
             const targetAR = targetWidth / targetHeight; // 0.75
 
             let sX, sY, sW, sH;
 
-            // 4. Logika CROP: Ambil potongan di tengah video asli agar jadi format potret 3:4
+            // Logika CROP: Ambil potongan di tengah video asli agar jadi format potret 3:4
             if (sourceAR > targetAR) {
-                // Jika video asli terlalu LEBAR (lanskap), potong sisi kiri dan kanannya
+                // Video asli terlalu LEBAR (lanskap)
                 sH = sourceHeight; // Tinggi penuh
                 sW = sH * targetAR; // Lebar ikut rasio target
-                sX = (sourceWidth - sW) / 2; // Potong kiri/kanan sama besar (tengah)
+                sX = (sourceWidth - sW) / 2; // Potong kiri/kanan
                 sY = 0;
             } else {
-                // Jika video asli terlalu TINGGI (potret kaku/square), potong sisi atas dan bawahnya
+                // Video asli terlalu TINGGI (potret kaku/square)
                 sW = sourceWidth; // Lebar penuh
                 sH = sW / targetAR; // Tinggi ikut rasio target
                 sX = 0;
-                sY = (sourceHeight - sH) / 2; // Potong atas/bawah sama besar (tengah)
+                sY = (sourceHeight - sH) / 2; // Potong atas/bawah
             }
 
-            // 5. CROP VIDEO KE CANVAS (Sekarang apa yang Anda lihat di preview = apa yang tercetak)
+            // CROP VIDEO KE CANVAS
             ctx.drawImage(video, sX, sY, sW, sH, 0, 0, targetWidth, targetHeight);
 
             // --- SELESAI PERBAIKAN ASPEK RASIO ---
 
-            // 6. Setup Box Watermark ala Survey (diubah agar background tidak transparan)
+            // --- PERBAIKAN UTAMA: Setup Box Watermark ala Survey (Maksud Bapak adalah hasil foto di Drive) ---
             const boxWidth = canvas.width * 0.92;
             const boxHeight = 240;
             const boxX = (canvas.width - boxWidth) / 2;
             const boxY = canvas.height - boxHeight - 40;
             
-            // PERBAIKAN: Background dibuat HITAM PEKAT (opacity 0.95) agar tidak transparan
-            ctx.fillStyle = "rgba(0, 0, 0, 0.95)";
+            // PERBAIKAN: Background kotak watermark di foto diubah menjadi HITAM SEMI-TRANSPARAN (opacity 0.7) agar foto di belakangnya masih sedikit terlihat
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.roundRect ? ctx.fillRoundRect : ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
             ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
             ctx.lineWidth = 2;
             ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
-            // 7. Gambar Teks Info
+            // Gambar Teks Info (Teks tetap putih agar kontras)
             ctx.fillStyle = "white";
             ctx.font = "bold 32px Arial";
             ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
@@ -230,7 +230,7 @@
                 ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
             }
             
-            // 8. Peta Statis Terpusat
+            // Peta Statis Terpusat
             const mapSize = 160;
             const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
             const mapPosX = boxX + boxWidth - mapSize - 200;
@@ -247,7 +247,7 @@
             ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
 
-            // 9. Kompres ke JPEG (Quality 0.6 untuk file < 200kb)
+            // Kompres ke JPEG (Quality 0.6 untuk file < 200kb)
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
             try {
