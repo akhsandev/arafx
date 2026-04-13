@@ -163,7 +163,7 @@
             ctx.drawImage(video, sX, sY, sw, sh, 0, 0, targetWidth, targetHeight);
 
             const boxWidth = canvas.width * 0.92;
-            const boxHeight = 240;
+            const boxHeight = 220; // Disesuaikan sedikit tingginya karena tulisan berkurang
             const boxX = (canvas.width - boxWidth) / 2;
             const boxY = canvas.height - boxHeight - 40;
             
@@ -178,20 +178,19 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // --- TEKS INFO ---
+            // --- TEKS INFO (Tanpa Tulisan SMAN 1 Soppeng) ---
             ctx.fillStyle = "white";
             ctx.font = "bold 32px Arial";
             ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
+            
             ctx.font = "24px Arial";
             ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-            ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 100);
-            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 135);
+            ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 110);
+            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 145);
+            
             const timeStr = formatTanggalIndo(new Date());
             const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-            ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 175);
-            ctx.font = "bold 20px Arial";
-            ctx.fillStyle = "#60a5fa"; 
-            ctx.fillText(`ASET UPT SMA NEGERI 1 SOPPENG`, boxX + 30, boxY + 210);
+            ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 185);
 
             // --- PETA (Tampil Sendiri Tanpa Logo, Digeser ke Kanan) ---
             const mapSize = 140; 
