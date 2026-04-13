@@ -74,25 +74,54 @@
             return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
         }
 
-        // FUNGSI MATEMATIKA PERBAIKAN TITIK PETA
-        function getMapInfo(lat, lon, zoom, mapSize) {
+        // FUNGSI BARU: Menggabungkan 3x3 Tile dan memotongnya tepat di tengah koordinat GPS
+        async function getStaticMapCentered(lat, lon, zoom, width, height) {
             const n = Math.pow(2, zoom);
             const x_f = (lon + 180) / 360 * n;
             const y_f = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n;
             
-            // x, y untuk URL Tile
-            const x = Math.floor(x_f);
-            const y = Math.floor(y_f);
+            const centerTileX = Math.floor(x_f);
+            const centerTileY = Math.floor(y_f);
             
-            // Hitung pixel tepat di dalam kepingan tile (0-255 px) lalu di-scale ke mapSize
-            const relX = (x_f - x) * mapSize;
-            const relY = (y_f - y) * mapSize;
+            // Hitung pixel offset dari sudut kiri atas kepingan tile utama
+            const offsetX = (x_f - centerTileX) * 256;
+            const offsetY = (y_f - centerTileY) * 256;
 
-            return {
-                url: `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`,
-                relX: relX,
-                relY: relY
-            };
+            // Buat canvas virtual untuk merender peta gabungan
+            const mapCanvas = document.createElement('canvas');
+            mapCanvas.width = width;
+            mapCanvas.height = height;
+            const mCtx = mapCanvas.getContext('2d');
+
+            // Geser posisi draw gambar agar koordinat (offsetX, offsetY) jatuh TEPAT di tengah (width/2, height/2)
+            const startX = (width / 2) - offsetX;
+            const startY = (height / 2) - offsetY;
+
+            // Ambil 9 kepingan peta di sekitar posisi untuk mencegah ada area putih jika titik ada di pinggir tile
+            const promises = [];
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const tileX = centerTileX + i;
+                    const tileY = centerTileY + j;
+                    const p = new Promise(resolve => {
+                        const img = new Image();
+                        img.crossOrigin = "Anonymous";
+                        img.onload = () => resolve({img, i, j});
+                        img.onerror = () => resolve({img: null, i, j});
+                        img.src = `https://tile.openstreetmap.org/${zoom}/${tileX}/${tileY}.png`;
+                    });
+                    promises.push(p);
+                }
+            }
+
+            const tiles = await Promise.all(promises);
+            tiles.forEach(t => {
+                if(t.img) {
+                    mCtx.drawImage(t.img, startX + (t.i * 256), startY + (t.j * 256), 256, 256);
+                }
+            });
+
+            return mapCanvas;
         }
 
         async function startCamera() {
@@ -144,7 +173,7 @@
             const boxX = (canvas.width - boxWidth) / 2;
             const boxY = canvas.height - boxHeight - 40;
             
-            ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; // Slate 900 transparan
+            ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
             ctx.roundRect ? ctx.fillRoundRect : ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
             ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
             ctx.lineWidth = 2;
@@ -173,28 +202,26 @@
                 ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
             }
             
-            // 5. Gambar Peta Statis yang AKURAT (Fix Titik Melenceng)
+            // 5. Gambar Peta Statis Terpusat
             const mapSize = 160;
-            const mapInfo = getMapInfo(currentLat, currentLong, 16, mapSize);
             
-            const mapImg = new Image();
-            mapImg.crossOrigin = "Anonymous";
-            mapImg.src = mapInfo.url;
-            
-            await new Promise(r => mapImg.onload = r);
+            // Tunggu render peta gabungan selesai
+            const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
             
             const mapPosX = boxX + boxWidth - mapSize - 200;
             const mapPosY = boxY + 45;
             
-            // Gambar Frame Peta
+            // Frame Peta
             ctx.fillStyle = "white";
             ctx.fillRect(mapPosX - 4, mapPosY - 4, mapSize + 8, mapSize + 8);
-            ctx.drawImage(mapImg, mapPosX, mapPosY, mapSize, mapSize);
             
-            // Gambar Titik Merah (Berdasarkan relX dan relY hasil kalkulasi)
+            // Tempel hasil render peta ke canvas utama
+            ctx.drawImage(mapCanvas, mapPosX, mapPosY, mapSize, mapSize);
+            
+            // Gambar Titik Merah PASTI di Tengah (karena petanya sudah digeser sesuai koordinat)
             ctx.fillStyle = "#ef4444"; // Red 500
             ctx.beginPath();
-            ctx.arc(mapPosX + mapInfo.relX, mapPosY + mapInfo.relY, 8, 0, 2 * Math.PI);
+            ctx.arc(mapPosX + (mapSize / 2), mapPosY + (mapSize / 2), 8, 0, 2 * Math.PI);
             ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
 
