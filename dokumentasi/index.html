@@ -74,7 +74,7 @@
             return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
         }
 
-        // FUNGSI BARU: Menggabungkan 3x3 Tile dan memotongnya tepat di tengah koordinat GPS
+        // --- INI FUNGSI BARU YANG BENAR, MENGGABUNGKAN 9 KOTAK PETA ---
         async function getStaticMapCentered(lat, lon, zoom, width, height) {
             const n = Math.pow(2, zoom);
             const x_f = (lon + 180) / 360 * n;
@@ -83,21 +83,19 @@
             const centerTileX = Math.floor(x_f);
             const centerTileY = Math.floor(y_f);
             
-            // Hitung pixel offset dari sudut kiri atas kepingan tile utama
+            // Hitung jarak pixel dari ujung tile
             const offsetX = (x_f - centerTileX) * 256;
             const offsetY = (y_f - centerTileY) * 256;
 
-            // Buat canvas virtual untuk merender peta gabungan
             const mapCanvas = document.createElement('canvas');
             mapCanvas.width = width;
             mapCanvas.height = height;
             const mCtx = mapCanvas.getContext('2d');
 
-            // Geser posisi draw gambar agar koordinat (offsetX, offsetY) jatuh TEPAT di tengah (width/2, height/2)
+            // Agar lokasi koordinat tepat di tengah kotak canvas
             const startX = (width / 2) - offsetX;
             const startY = (height / 2) - offsetY;
 
-            // Ambil 9 kepingan peta di sekitar posisi untuk mencegah ada area putih jika titik ada di pinggir tile
             const promises = [];
             for (let i = -1; i <= 1; i++) {
                 for (let j = -1; j <= 1; j++) {
@@ -123,6 +121,7 @@
 
             return mapCanvas;
         }
+        // -------------------------------------------------------------
 
         async function startCamera() {
             try {
@@ -164,10 +163,8 @@
             canvas.width = targetWidth;
             canvas.height = video.videoHeight * scale;
 
-            // 1. Gambar Video Utama
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 2. Setup Box Watermark ala Survey
             const boxWidth = canvas.width * 0.92;
             const boxHeight = 240;
             const boxX = (canvas.width - boxWidth) / 2;
@@ -179,7 +176,6 @@
             ctx.lineWidth = 2;
             ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
-            // 3. Gambar Teks Info
             ctx.fillStyle = "white";
             ctx.font = "bold 32px Arial";
             ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
@@ -193,37 +189,32 @@
             const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
             ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 175);
             ctx.font = "bold 20px Arial";
-            ctx.fillStyle = "#60a5fa"; // Blue 400
+            ctx.fillStyle = "#60a5fa"; 
             ctx.fillText(`ASET UPT SMA NEGERI 1 SOPPENG`, boxX + 30, boxY + 210);
 
-            // 4. Logo SMAN 1 Soppeng
             if(logoImg.complete) {
                 const logoSize = 140;
                 ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
             }
             
-            // 5. Gambar Peta Statis Terpusat
+            // --- PEMANGGILAN FUNGSI PETA YANG BENAR ---
             const mapSize = 160;
-            
-            // Tunggu render peta gabungan selesai
             const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
-            
             const mapPosX = boxX + boxWidth - mapSize - 200;
             const mapPosY = boxY + 45;
             
-            // Frame Peta
             ctx.fillStyle = "white";
             ctx.fillRect(mapPosX - 4, mapPosY - 4, mapSize + 8, mapSize + 8);
             
-            // Tempel hasil render peta ke canvas utama
             ctx.drawImage(mapCanvas, mapPosX, mapPosY, mapSize, mapSize);
             
-            // Gambar Titik Merah PASTI di Tengah (karena petanya sudah digeser sesuai koordinat)
-            ctx.fillStyle = "#ef4444"; // Red 500
+            // TITIK MERAH DIJAMIN DI TENGAH
+            ctx.fillStyle = "#ef4444"; 
             ctx.beginPath();
             ctx.arc(mapPosX + (mapSize / 2), mapPosY + (mapSize / 2), 8, 0, 2 * Math.PI);
             ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
+            // ------------------------------------------
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
