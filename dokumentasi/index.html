@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Dokumentasi Aset - SMAN 1 Soppeng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        video { object-fit: cover; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl relative pb-20">
+        <div class="bg-[#1e3a8a] text-white p-4 flex items-center gap-4 shadow-md">
+            <img src="https://arafx.vercel.app/logo.png" alt="Logo" class="w-10 h-10">
+            <div>
+                <h1 class="text-lg font-bold leading-tight">Dokumentasi Aset</h1>
+                <p class="text-xs text-gray-200">SMAN 1 Soppeng</p>
+            </div>
+        </div>
+
+        <div class="relative w-full aspect-[3/4] bg-black overflow-hidden">
+            <video id="videoElement" autoplay playsinline class="w-full h-full"></video>
+            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent text-white text-xs">
+                <p id="uiLocation">Mencari lokasi GPS...</p>
+                <p id="uiTime"></p>
+            </div>
+        </div>
+
+        <div class="p-4 space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Keterangan / Nama Aset</label>
+                <textarea id="keterangan" rows="2" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#1e3a8a] outline-none" placeholder="Contoh: Router Ruang Guru kondisinya normal..."></textarea>
+            </div>
+            
+            <button id="captureBtn" class="w-full bg-[#1e3a8a] hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Ambil Foto & Simpan
+            </button>
+        </div>
+
+        <div id="loading" class="hidden absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-50">
+            <div class="w-12 h-12 border-4 border-blue-800 border-t-transparent rounded-full animate-spin mb-2"></div>
+            <p class="font-semibold text-blue-800">Menyimpan ke Drive...</p>
+        </div>
+
+        <canvas id="canvas" class="hidden"></canvas>
+    </div>
+
+    <script>
+        // --- KONFIGURASI ---
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyNxwlHW5Z3yz4gFAdQW6iaDZGDVqHgdzcdnMhjiwTjW85OtsoRnV1tS75MSNqWhYg/exec";
+        
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const captureBtn = document.getElementById('captureBtn');
+        const ketInput = document.getElementById('keterangan');
+        const loading = document.getElementById('loading');
+        
+        let currentLat = "-";
+        let currentLong = "-";
+        let logoImg = new Image();
+        logoImg.crossOrigin = "Anonymous";
+        logoImg.src = "https://arafx.vercel.app/logo.png";
+
+        // 1. Inisialisasi Kamera Belakang
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("Kamera tidak dapat diakses. Pastikan izin kamera diberikan.");
+            }
+        }
+
+        // 2. Dapatkan Lokasi GPS & Update UI Waktu
+        function startSensors() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition((position) => {
+                    currentLat = position.coords.latitude.toFixed(6);
+                    currentLong = position.coords.longitude.toFixed(6);
+                    document.getElementById('uiLocation').innerText = `Lat: ${currentLat}, Long: ${currentLong}`;
+                }, (error) => {
+                    document.getElementById('uiLocation').innerText = "Gagal mengambil GPS";
+                }, { enableHighAccuracy: true });
+            }
+
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('uiTime').innerText = now.toLocaleString('id-ID');
+            }, 1000);
+        }
+
+        // 3. Eksekusi Capture & Watermark
+        captureBtn.addEventListener('click', async () => {
+            if (!ketInput.value) {
+                alert("Mohon isi keterangan foto terlebih dahulu!");
+                ketInput.focus();
+                return;
+            }
+
+            loading.classList.remove('hidden');
+
+            // Setup Canvas (Resize max width 1080 untuk hemat ukuran file)
+            const targetWidth = 1080;
+            const scale = targetWidth / video.videoWidth;
+            canvas.width = targetWidth;
+            canvas.height = video.videoHeight * scale;
+
+            // Gambar frame video ke canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Setup Watermark Box di bawah
+            const boxHeight = 220;
+            ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; // Transparan gelap
+            ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
+
+            // Text Style
+            ctx.fillStyle = "white";
+            ctx.shadowColor = "black";
+            ctx.shadowBlur = 4;
+            
+            // Gambar Teks (Keterangan)
+            ctx.font = "bold 32px Arial";
+            ctx.fillText(ketInput.value.substring(0, 50), 30, canvas.height - 160);
+
+            // Gambar Teks (Lokasi & Waktu)
+            ctx.font = "24px Arial";
+            const timeStr = new Date().toLocaleString('id-ID');
+            ctx.fillText(`Lokasi: Lat ${currentLat}, Long ${currentLong}`, 30, canvas.height - 110);
+            ctx.fillText(`Waktu: ${timeStr}`, 30, canvas.height - 70);
+            ctx.fillText(`Dokumentasi Aset - SMAN 1 Soppeng`, 30, canvas.height - 30);
+
+            // Gambar Logo di sudut kanan bawah watermark
+            if(logoImg.complete) {
+                const logoSize = 120;
+                ctx.drawImage(logoImg, canvas.width - logoSize - 30, canvas.height - boxHeight + 30, logoSize, logoSize);
+            }
+
+            // Kompres ke JPEG (Quality 0.6 biasanya menghasilkan gambar < 200kb untuk resolusi ini)
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6);
+
+            // Kirim ke Google Apps Script
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        image: base64Image,
+                        keterangan: ketInput.value,
+                        lokasi: `${currentLat}, ${currentLong}`
+                    }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain hindari preflight ribet di beberapa browser
+                });
+
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert("Berhasil disimpan!");
+                    ketInput.value = ""; // Reset form
+                } else {
+                    alert("Gagal: " + result.message);
+                }
+            } catch (err) {
+                alert("Terjadi kesalahan jaringan.");
+            } finally {
+                loading.classList.add('hidden');
+            }
+        });
+
+        // Jalankan saat load
+        window.onload = () => {
+            startCamera();
+            startSensors();
+        };
+    </script>
+</body>
+</html>
