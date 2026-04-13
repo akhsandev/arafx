@@ -5,30 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Dokumentasi Aset - SMAN 1 Soppeng</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         video { object-fit: cover; }
+        #map { height: 100px; width: 100px; border-radius: 8px; } /* Peta Statis UI */
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans text-gray-800">
 
-    <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl relative pb-20">
-        <div class="bg-[#1e3a8a] text-white p-4 flex items-center gap-4 shadow-md">
-            <img src="https://arafx.vercel.app/logo.png" alt="Logo" class="w-10 h-10">
-            <div>
-                <h1 class="text-lg font-bold leading-tight">Dokumentasi Aset</h1>
-                <p class="text-xs text-gray-200">SMAN 1 Soppeng</p>
+    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl relative pb-20">
+        <div class="bg-[#1e3a8a] text-white p-4 flex items-center justify-between shadow-md">
+            <div class="flex items-center gap-4">
+                <img src="https://arafx.vercel.app/logo.png" alt="Logo" class="w-12 h-12">
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">Dokumentasi Aset</h1>
+                    <p class="text-sm text-gray-200">SMAN 1 Soppeng</p>
+                </div>
             </div>
         </div>
 
-        <div class="relative w-full aspect-[3/4] bg-black overflow-hidden">
-            <video id="videoElement" autoplay playsinline class="w-full h-full"></video>
-            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent text-white text-xs">
-                <p id="uiLocation">Mencari lokasi GPS...</p>
-                <p id="uiTime"></p>
+        <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex">
+            <video id="videoElement" autoplay playsinline class="flex-grow h-full"></video>
+            <div id="uiMap" class="p-2 bg-white/80 rounded-lg shadow-md absolute bottom-4 left-4 z-10 hidden">
+                <div id="map"></div>
+                <p id="uiLocation" class="text-center text-xs text-gray-800 mt-1">Mencari GPS...</p>
             </div>
         </div>
 
-        <div class="p-4 space-y-4">
+        <div class="p-5 space-y-4">
             <div>
                 <label class="block text-sm font-semibold mb-1">Keterangan / Nama Aset</label>
                 <textarea id="keterangan" rows="2" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#1e3a8a] outline-none" placeholder="Contoh: Router Ruang Guru kondisinya normal..."></textarea>
@@ -51,6 +56,7 @@
     <script>
         // --- KONFIGURASI ---
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyNxwlHW5Z3yz4gFAdQW6iaDZGDVqHgdzcdnMhjiwTjW85OtsoRnV1tS75MSNqWhYg/exec";
+        const WEATHER_API_KEY = "e8a5cefec5f4053dfe4f18765c2cd25c";
         
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvas');
@@ -59,17 +65,45 @@
         const ketInput = document.getElementById('keterangan');
         const loading = document.getElementById('loading');
         
-        let currentLat = "-";
-        let currentLong = "-";
+        let currentLat = null;
+        let currentLong = null;
+        let map = null;
+        let marker = null;
+        let weatherData = { temp: "-", icon: "-", windSpeed: "-" };
+        
         let logoImg = new Image();
         logoImg.crossOrigin = "Anonymous";
         logoImg.src = "https://arafx.vercel.app/logo.png";
+
+        // Fungsi Format Tanggal Bahasa Indonesia
+        function formatTanggalIndo(date) {
+            const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+            const bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
+        }
+
+        // Fungsi Panggil API Cuaca OpenWeatherMap
+        async function getWeatherData(lat, lon) {
+            try {
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric&lang=id`);
+                const data = await response.json();
+                if (data.cod === 200) {
+                    weatherData.temp = Math.round(data.main.temp);
+                    weatherData.icon = data.weather[0].icon;
+                    weatherData.windSpeed = data.wind.speed.toFixed(1);
+                    return true;
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data cuaca:", error);
+            }
+            return false;
+        }
 
         // 1. Inisialisasi Kamera Belakang
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } }
                 });
                 video.srcObject = stream;
             } catch (err) {
@@ -77,22 +111,34 @@
             }
         }
 
-        // 2. Dapatkan Lokasi GPS & Update UI Waktu
+        // 2. Dapatkan Lokasi GPS & Inisialisasi Peta Statis UI
         function startSensors() {
             if ("geolocation" in navigator) {
-                navigator.geolocation.watchPosition((position) => {
-                    currentLat = position.coords.latitude.toFixed(6);
-                    currentLong = position.coords.longitude.toFixed(6);
-                    document.getElementById('uiLocation').innerText = `Lat: ${currentLat}, Long: ${currentLong}`;
+                navigator.geolocation.watchPosition(async (position) => {
+                    currentLat = position.coords.latitude;
+                    currentLong = position.coords.longitude;
+                    document.getElementById('uiLocation').innerText = `Lat: ${currentLat.toFixed(6)}, Long: ${currentLong.toFixed(6)}`;
+                    
+                    // Inisialisasi/Update Peta Leaflet UI
+                    if(!map) {
+                        map = L.map('map', {zoomControl: false, attributionControl: false}).setView([currentLat, currentLong], 15);
+                        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                        marker = L.marker([currentLat, currentLong]).addTo(map);
+                        document.getElementById('uiMap').classList.remove('hidden');
+                    } else {
+                        map.setView([currentLat, currentLong]);
+                        marker.setLatLng([currentLat, currentLong]);
+                    }
+                    
+                    // Ambil Cuaca saat lokasi berubah
+                    await getWeatherData(currentLat, currentLong);
+                    
                 }, (error) => {
                     document.getElementById('uiLocation').innerText = "Gagal mengambil GPS";
                 }, { enableHighAccuracy: true });
+            } else {
+                alert("Browser Anda tidak mendukung geolokasi.");
             }
-
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('uiTime').innerText = now.toLocaleString('id-ID');
-            }, 1000);
         }
 
         // 3. Eksekusi Capture & Watermark
@@ -102,10 +148,14 @@
                 ketInput.focus();
                 return;
             }
+            if (currentLat === null || currentLong === null) {
+                alert("Mohon tunggu GPS mendeteksi lokasi.");
+                return;
+            }
 
             loading.classList.remove('hidden');
 
-            // Setup Canvas (Resize max width 1080 untuk hemat ukuran file)
+            // Setup Canvas (Resize max width 1080 untuk hemat ukuran file <200kb)
             const targetWidth = 1080;
             const scale = targetWidth / video.videoWidth;
             canvas.width = targetWidth;
@@ -114,34 +164,46 @@
             // Gambar frame video ke canvas
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Setup Watermark Box di bawah
-            const boxHeight = 220;
-            ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; // Transparan gelap
-            ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
-
-            // Text Style
-            ctx.fillStyle = "white";
-            ctx.shadowColor = "black";
-            ctx.shadowBlur = 4;
+            // --- Mulai Buat Watermark ---
             
-            // Gambar Teks (Keterangan)
-            ctx.font = "bold 32px Arial";
-            ctx.fillText(ketInput.value.substring(0, 50), 30, canvas.height - 160);
+            const boxWidth = canvas.width * 0.9;
+            const boxHeight = 250;
+            const boxX = (canvas.width - boxWidth) / 2;
+            const boxY = canvas.height - boxHeight - 30;
+            
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
-            // Gambar Teks (Lokasi & Waktu)
-            ctx.font = "24px Arial";
-            const timeStr = new Date().toLocaleString('id-ID');
-            ctx.fillText(`Lokasi: Lat ${currentLat}, Long ${currentLong}`, 30, canvas.height - 110);
-            ctx.fillText(`Waktu: ${timeStr}`, 30, canvas.height - 70);
-            ctx.fillText(`Dokumentasi Aset - SMAN 1 Soppeng`, 30, canvas.height - 30);
+            ctx.fillStyle = "white";
+            ctx.shadowColor = "black"; ctx.shadowBlur = 4;
+            
+            ctx.font = "bold 28px Arial";
+            ctx.fillText(ketInput.value.substring(0, 50), boxX + 25, boxY + 50);
 
-            // Gambar Logo di sudut kanan bawah watermark
+            ctx.font = "22px Arial";
+            ctx.fillText(`Kec. Lalabata, Kab. Soppeng, Sulawesi Selatan`, boxX + 25, boxY + 85);
+            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 25, boxY + 115);
+            
+            const timeStr = formatTanggalIndo(new Date());
+            const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+            ctx.fillText(`${timeStr} ${nowTime}`, boxX + 25, boxY + 155);
+            
+            ctx.fillText(`Cuaca: ${weatherData.temp}°C, Angin: ${weatherData.windSpeed} km/jam`, boxX + 25, boxY + 195);
+            ctx.fillText(`Dokumentasi Aset - SMAN 1 Soppeng`, boxX + 25, boxY + 230);
+
+            // Logo SMAN 1 Soppeng
             if(logoImg.complete) {
-                const logoSize = 120;
-                ctx.drawImage(logoImg, canvas.width - logoSize - 30, canvas.height - boxHeight + 30, logoSize, logoSize);
+                const logoSize = 130;
+                ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 25, boxY + 25, logoSize, logoSize);
             }
+            
+            ctx.font = "bold 20px Arial";
+            ctx.fillText(`Peta: Lihat Pratinjau UI`, boxX + boxWidth - 250, boxY + boxHeight - 40);
 
-            // Kompres ke JPEG (Quality 0.6 biasanya menghasilkan gambar < 200kb untuk resolusi ini)
+            // Kompres ke JPEG (Quality 0.6 biasanya menghasilkan gambar < 200kb)
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
             // Kirim ke Google Apps Script
@@ -151,9 +213,11 @@
                     body: JSON.stringify({
                         image: base64Image,
                         keterangan: ketInput.value,
-                        lokasi: `${currentLat}, ${currentLong}`
+                        lokasi: `${currentLat.toFixed(6)}, ${currentLong.toFixed(6)}`,
+                        cuaca: weatherData.temp === "-" ? "Data belum ada" : `${weatherData.temp}°C`,
+                        angin: weatherData.windSpeed === "-" ? "Data belum ada" : `${weatherData.windSpeed} km/jam`
                     }),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain hindari preflight ribet di beberapa browser
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
 
                 const result = await response.json();
