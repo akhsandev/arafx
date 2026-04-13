@@ -196,33 +196,46 @@
             ctx.fillStyle = "#60a5fa"; 
             ctx.fillText(`ASET UPT SMA NEGERI 1 SOPPENG`, boxX + 30, boxY + 210);
 
-            // --- LOGO (TIDAK GEPENG & RAPAT KE BAWAH) ---
+            // --- PERBAIKAN LAYOUT MAP & LOGO (SEJAJAR VERTIKAL) ---
+            const mapSize = 140; // Ukuran peta sedikit dikurangi agar seimbang
+            
+            // 1. Ambil Peta dari OSM
+            const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
+            
+            let logoW = 0, logoH = 0, logoPosX = 0, logoPosY = 0;
+
             if(logoImg.complete) {
                 const logoAR = logoImg.width / logoImg.height;
-                const logoW = 140; // Lebar tetap
-                const logoH = logoW / logoAR; // Tinggi menyesuaikan agar tidak gepeng
+                // KUNCI TINGGI LOGO sama dengan Peta agar sejajar dan tidak gepeng
+                logoH = mapSize; 
+                logoW = logoH * logoAR; // Lebar menyesuaikan rasio asli logo
                 
-                // Posisi: boxX + boxWidth (area kanan) minus lebar logo, minus padding.
-                // Posisi Y: boxY + boxHeight (area bawah) minus tinggi logo, minus padding kecil.
-                const logoPosX = boxX + boxWidth - logoW - 30;
-                const logoPosY = boxY + boxHeight - logoH - 25; 
-                
+                // Posisi Logo (Paling Kanan) - Rata tengah secara vertikal
+                logoPosX = boxX + boxWidth - logoW - 30;
+                logoPosY = boxY + (boxHeight - logoH) / 2;
+            }
+
+            // 2. Posisi Peta (Di sebelah kiri logo) - Rata tengah secara vertikal
+            const mapPosX = logoImg.complete ? (logoPosX - mapSize - 25) : (boxX + boxWidth - mapSize - 30);
+            const mapPosY = boxY + (boxHeight - mapSize) / 2;
+
+            // 3. Gambar Logo
+            if(logoImg.complete) {
                 ctx.drawImage(logoImg, logoPosX, logoPosY, logoW, logoH);
             }
             
-            // --- PETA ---
-            const mapSize = 160;
-            const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
-            const mapPosX = boxX + boxWidth - mapSize - 200;
-            const mapPosY = boxY + 45;
+            // 4. Gambar Frame Peta & Petanya
             ctx.fillStyle = "white";
             ctx.fillRect(mapPosX - 4, mapPosY - 4, mapSize + 8, mapSize + 8);
             ctx.drawImage(mapCanvas, mapPosX, mapPosY, mapSize, mapSize);
+            
+            // 5. Titik Merah Center Peta
             ctx.fillStyle = "#ef4444"; 
             ctx.beginPath();
             ctx.arc(mapPosX + (mapSize / 2), mapPosY + (mapSize / 2), 8, 0, 2 * Math.PI);
             ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
+            // -----------------------------------------------------
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
             try {
