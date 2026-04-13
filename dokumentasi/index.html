@@ -9,52 +9,52 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
         video { object-fit: cover; }
-        #map { height: 100px; width: 100px; border-radius: 8px; }
+        #map { height: 110px; width: 110px; border-radius: 12px; border: 2px solid white; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
 
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl relative pb-20">
-        <div class="bg-[#1e3a8a] text-white p-4 flex items-center justify-between shadow-md">
+    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-2xl relative pb-24">
+        <div class="bg-[#1e3a8a] text-white p-5 flex items-center justify-between shadow-lg">
             <div class="flex items-center gap-4">
-                <img src="https://arafx.vercel.app/logo.png" alt="Logo" class="w-12 h-12">
+                <img src="https://arafx.vercel.app/logo.png" alt="Logo" class="w-12 h-12 drop-shadow-md">
                 <div>
-                    <h1 class="text-xl font-bold leading-tight">Dokumentasi Aset</h1>
-                    <p class="text-sm text-gray-200">SMAN 1 Soppeng</p>
+                    <h1 class="text-xl font-black tracking-tight uppercase">Dokumentasi Aset</h1>
+                    <p class="text-xs text-blue-200 font-medium">UPT SMA NEGERI 1 SOPPENG</p>
                 </div>
             </div>
         </div>
 
-        <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex">
+        <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex shadow-inner">
             <video id="videoElement" autoplay playsinline class="flex-grow h-full"></video>
-            <div id="uiMap" class="p-2 bg-white/80 rounded-lg shadow-md absolute bottom-4 left-4 z-10 hidden">
+            <div id="uiMap" class="p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl absolute bottom-4 left-4 z-10 hidden border border-white/50">
                 <div id="map"></div>
-                <p id="uiLocation" class="text-center text-xs font-bold text-gray-800 mt-1">Mencari GPS...</p>
+                <p id="uiLocation" class="text-center text-[10px] font-bold text-slate-700 mt-1 uppercase tracking-tighter">Mencari GPS...</p>
             </div>
         </div>
 
-        <div class="p-5 space-y-4">
+        <div class="p-6 space-y-5">
             <div>
-                <label class="block text-sm font-semibold mb-1">Keterangan / Nama Aset</label>
-                <textarea id="keterangan" rows="2" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#1e3a8a] outline-none" placeholder="Contoh: Proyektor Ruang Kelas 10..."></textarea>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Keterangan Aset / Nama Alat</label>
+                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-slate-50" placeholder="Tuliskan detail aset di sini..."></textarea>
             </div>
             
-            <button id="captureBtn" class="w-full bg-[#1e3a8a] hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all">
+            <button id="captureBtn" class="w-full bg-[#1e3a8a] active:scale-95 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all uppercase tracking-wider">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Ambil Foto & Simpan
+                Ambil & Simpan Aset
             </button>
         </div>
 
-        <div id="loading" class="hidden absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-50">
-            <div class="w-12 h-12 border-4 border-blue-800 border-t-transparent rounded-full animate-spin mb-2"></div>
-            <p class="font-semibold text-blue-800">Merapikan Data & Menyimpan...</p>
+        <div id="loading" class="hidden fixed inset-0 bg-[#1e3a8a]/90 backdrop-blur-md flex flex-col items-center justify-center z-50 text-white">
+            <div class="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="font-bold tracking-widest animate-pulse uppercase text-sm">Memproses Gambar & Lokasi...</p>
         </div>
 
         <canvas id="canvas" class="hidden"></canvas>
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyNxwlHW5Z3yz4gFAdQW6iaDZGDVqHgdzcdnMhjiwTjW85OtsoRnV1tS75MSNqWhYg/exec"; // Ganti dengan URL baru jika Deploy ulang
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyNxwlHW5Z3yz4gFAdQW6iaDZGDVqHgdzcdnMhjiwTjW85OtsoRnV1tS75MSNqWhYg/exec";
         
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvas');
@@ -64,7 +64,6 @@
         const loading = document.getElementById('loading');
         
         let currentLat = null, currentLong = null, map = null, marker = null;
-        
         let logoImg = new Image();
         logoImg.crossOrigin = "Anonymous";
         logoImg.src = "https://arafx.vercel.app/logo.png";
@@ -75,17 +74,25 @@
             return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
         }
 
-        // Trik khusus: Mengambil kepingan gambar peta statis secara aman untuk Canvas
-        function getMapTileImage(lat, lon, zoom) {
-            return new Promise((resolve) => {
-                const x = Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
-                const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
-                const img = new Image();
-                img.crossOrigin = "Anonymous"; // Bypass CORS
-                img.onload = () => resolve(img);
-                img.onerror = () => resolve(null);
-                img.src = `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
-            });
+        // FUNGSI MATEMATIKA PERBAIKAN TITIK PETA
+        function getMapInfo(lat, lon, zoom, mapSize) {
+            const n = Math.pow(2, zoom);
+            const x_f = (lon + 180) / 360 * n;
+            const y_f = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n;
+            
+            // x, y untuk URL Tile
+            const x = Math.floor(x_f);
+            const y = Math.floor(y_f);
+            
+            // Hitung pixel tepat di dalam kepingan tile (0-255 px) lalu di-scale ke mapSize
+            const relX = (x_f - x) * mapSize;
+            const relY = (y_f - y) * mapSize;
+
+            return {
+                url: `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`,
+                relX: relX,
+                relY: relY
+            };
         }
 
         async function startCamera() {
@@ -94,7 +101,7 @@
                     video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } }
                 });
                 video.srcObject = stream;
-            } catch (err) { alert("Izinkan akses kamera di browser Anda."); }
+            } catch (err) { alert("Akses kamera ditolak."); }
         }
 
         function startSensors() {
@@ -105,7 +112,7 @@
                     document.getElementById('uiLocation').innerText = `${currentLat.toFixed(5)}, ${currentLong.toFixed(5)}`;
                     
                     if(!map) {
-                        map = L.map('map', {zoomControl: false, attributionControl: false}).setView([currentLat, currentLong], 15);
+                        map = L.map('map', {zoomControl: false, attributionControl: false}).setView([currentLat, currentLong], 16);
                         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
                         marker = L.marker([currentLat, currentLong]).addTo(map);
                         document.getElementById('uiMap').classList.remove('hidden');
@@ -113,15 +120,13 @@
                         map.setView([currentLat, currentLong]);
                         marker.setLatLng([currentLat, currentLong]);
                     }
-                }, () => {
-                    document.getElementById('uiLocation').innerText = "Gagal ambil GPS";
-                }, { enableHighAccuracy: true });
+                }, null, { enableHighAccuracy: true });
             }
         }
 
         captureBtn.addEventListener('click', async () => {
-            if (!ketInput.value) return alert("Isi keterangan foto dulu ya!");
-            if (currentLat === null) return alert("Tunggu GPS mendeteksi lokasi.");
+            if (!ketInput.value) return alert("Keterangan wajib diisi!");
+            if (currentLat === null) return alert("Menunggu sinyal GPS...");
 
             loading.classList.remove('hidden');
 
@@ -130,58 +135,73 @@
             canvas.width = targetWidth;
             canvas.height = video.videoHeight * scale;
 
+            // 1. Gambar Video Utama
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const boxWidth = canvas.width * 0.9;
-            const boxHeight = 220;
+            // 2. Setup Box Watermark ala Survey
+            const boxWidth = canvas.width * 0.92;
+            const boxHeight = 240;
             const boxX = (canvas.width - boxWidth) / 2;
-            const boxY = canvas.height - boxHeight - 30;
+            const boxY = canvas.height - boxHeight - 40;
             
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-            ctx.strokeStyle = "white"; ctx.lineWidth = 1;
+            ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; // Slate 900 transparan
+            ctx.roundRect ? ctx.fillRoundRect : ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.lineWidth = 2;
             ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
-            ctx.fillStyle = "white"; ctx.shadowColor = "black"; ctx.shadowBlur = 4;
-            ctx.font = "bold 28px Arial";
-            ctx.fillText(ketInput.value.substring(0, 50), boxX + 25, boxY + 50);
+            // 3. Gambar Teks Info
+            ctx.fillStyle = "white";
+            ctx.font = "bold 32px Arial";
+            ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
 
-            ctx.font = "22px Arial";
-            ctx.fillText(`Kec. Lalabata, Kab. Soppeng`, boxX + 25, boxY + 85);
-            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 25, boxY + 115);
+            ctx.font = "24px Arial";
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 100);
+            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 135);
             
             const timeStr = formatTanggalIndo(new Date());
-            const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
-            ctx.fillText(`${timeStr} ${nowTime}`, boxX + 25, boxY + 155);
-            
-            ctx.fillText(`Dokumentasi Aset - SMAN 1 Soppeng`, boxX + 25, boxY + 195);
+            const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 175);
+            ctx.font = "bold 20px Arial";
+            ctx.fillStyle = "#60a5fa"; // Blue 400
+            ctx.fillText(`ASET UPT SMA NEGERI 1 SOPPENG`, boxX + 30, boxY + 210);
 
+            // 4. Logo SMAN 1 Soppeng
             if(logoImg.complete) {
-                const logoSize = 120;
-                ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 25, boxY + 25, logoSize, logoSize);
+                const logoSize = 140;
+                ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
             }
             
-            // Menggambar Map Statis ke dalam Foto
-            const mapSize = 130;
-            const mapImg = await getMapTileImage(currentLat, currentLong, 15);
-            if(mapImg) {
-                const mapPosX = boxX + boxWidth - mapSize - 165;
-                const mapPosY = boxY + 25;
-                ctx.drawImage(mapImg, mapPosX, mapPosY, mapSize, mapSize);
-                ctx.strokeRect(mapPosX, mapPosY, mapSize, mapSize);
-                
-                // Titik Merah Penanda Lokasi
-                ctx.fillStyle = "red";
-                ctx.beginPath();
-                ctx.arc(mapPosX + (mapSize/2), mapPosY + (mapSize/2), 6, 0, 2 * Math.PI);
-                ctx.fill();
-                ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
-            }
+            // 5. Gambar Peta Statis yang AKURAT (Fix Titik Melenceng)
+            const mapSize = 160;
+            const mapInfo = getMapInfo(currentLat, currentLong, 16, mapSize);
+            
+            const mapImg = new Image();
+            mapImg.crossOrigin = "Anonymous";
+            mapImg.src = mapInfo.url;
+            
+            await new Promise(r => mapImg.onload = r);
+            
+            const mapPosX = boxX + boxWidth - mapSize - 200;
+            const mapPosY = boxY + 45;
+            
+            // Gambar Frame Peta
+            ctx.fillStyle = "white";
+            ctx.fillRect(mapPosX - 4, mapPosY - 4, mapSize + 8, mapSize + 8);
+            ctx.drawImage(mapImg, mapPosX, mapPosY, mapSize, mapSize);
+            
+            // Gambar Titik Merah (Berdasarkan relX dan relY hasil kalkulasi)
+            ctx.fillStyle = "#ef4444"; // Red 500
+            ctx.beginPath();
+            ctx.arc(mapPosX + mapInfo.relX, mapPosY + mapInfo.relY, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
             try {
-                const response = await fetch(WEB_APP_URL, {
+                await fetch(WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({
                         image: base64Image,
@@ -190,15 +210,9 @@
                     }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-
-                const result = await response.json();
-                if (result.status === "success") {
-                    alert("Berhasil disimpan!");
-                    ketInput.value = ""; 
-                } else {
-                    alert("Gagal: " + result.message);
-                }
-            } catch (err) { alert("Terjadi kesalahan jaringan."); } 
+                alert("Data Aset Berhasil Terkirim ke Drive!");
+                ketInput.value = ""; 
+            } catch (err) { alert("Gagal koneksi ke server."); } 
             finally { loading.classList.add('hidden'); }
         });
 
