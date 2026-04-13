@@ -25,8 +25,8 @@
             </div>
         </div>
 
-        <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex shadow-inner">
-            <video id="videoElement" autoplay playsinline class="flex-grow h-full"></video>
+        <div class="relative w-full aspect-[3/4] bg-black overflow-hidden flex shadow-inner">
+            <video id="videoElement" autoplay playsinline class="flex-grow h-full w-full"></video>
             <div id="uiMap" class="p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl absolute bottom-4 left-4 z-10 hidden border border-white/50">
                 <div id="map"></div>
                 <p id="uiLocation" class="text-center text-[10px] font-bold text-slate-700 mt-1 uppercase tracking-tighter">Mencari GPS...</p>
@@ -35,8 +35,8 @@
 
         <div class="p-6 space-y-5">
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Keterangan Aset / Nama Alat</label>
-                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-slate-50" placeholder="Tuliskan detail aset di sini..."></textarea>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Keterangan Aset / Nama Alat</label>
+                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-300 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-slate-100 font-medium text-slate-800" placeholder="Tuliskan detail aset di sini..."></textarea>
             </div>
             
             <button id="captureBtn" class="w-full bg-[#1e3a8a] active:scale-95 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all uppercase tracking-wider">
@@ -74,7 +74,6 @@
             return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
         }
 
-        // --- INI FUNGSI BARU YANG BENAR, MENGGABUNGKAN 9 KOTAK PETA ---
         async function getStaticMapCentered(lat, lon, zoom, width, height) {
             const n = Math.pow(2, zoom);
             const x_f = (lon + 180) / 360 * n;
@@ -83,7 +82,6 @@
             const centerTileX = Math.floor(x_f);
             const centerTileY = Math.floor(y_f);
             
-            // Hitung jarak pixel dari ujung tile
             const offsetX = (x_f - centerTileX) * 256;
             const offsetY = (y_f - centerTileY) * 256;
 
@@ -92,7 +90,6 @@
             mapCanvas.height = height;
             const mCtx = mapCanvas.getContext('2d');
 
-            // Agar lokasi koordinat tepat di tengah kotak canvas
             const startX = (width / 2) - offsetX;
             const startY = (height / 2) - offsetY;
 
@@ -121,12 +118,12 @@
 
             return mapCanvas;
         }
-        // -------------------------------------------------------------
 
         async function startCamera() {
             try {
+                // Dimodifikasi meminta resolusi portrait agar tampilan di layar HP tidak kotak
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } }
+                    video: { facingMode: "environment", width: { ideal: 1080 }, height: { ideal: 1440 } }
                 });
                 video.srcObject = stream;
             } catch (err) { alert("Akses kamera ditolak."); }
@@ -170,9 +167,10 @@
             const boxX = (canvas.width - boxWidth) / 2;
             const boxY = canvas.height - boxHeight - 40;
             
-            ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+            // Background dibuat hitam pekat dengan sedikit efek transparan (0.85 opacity)
+            ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
             ctx.roundRect ? ctx.fillRoundRect : ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
             ctx.lineWidth = 2;
             ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
@@ -181,7 +179,7 @@
             ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
 
             ctx.font = "24px Arial";
-            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
             ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 100);
             ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 135);
             
@@ -197,7 +195,6 @@
                 ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
             }
             
-            // --- PEMANGGILAN FUNGSI PETA YANG BENAR ---
             const mapSize = 160;
             const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
             const mapPosX = boxX + boxWidth - mapSize - 200;
@@ -208,13 +205,11 @@
             
             ctx.drawImage(mapCanvas, mapPosX, mapPosY, mapSize, mapSize);
             
-            // TITIK MERAH DIJAMIN DI TENGAH
             ctx.fillStyle = "#ef4444"; 
             ctx.beginPath();
             ctx.arc(mapPosX + (mapSize / 2), mapPosY + (mapSize / 2), 8, 0, 2 * Math.PI);
             ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
-            // ------------------------------------------
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
 
