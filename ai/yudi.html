@@ -111,7 +111,7 @@
             title: "Misi Rahasia: Ujian Ceria!",
             description: "Selamat datang di ujian interaktif. Tarik napas, dan mari kita mulai petualangannya!",
             welcomeImageUrl: "", 
-            requireVideo: true, // Fitur Baru: Wajib Video atau Tidak
+            requireVideo: true, 
             students: [], 
             sections: [
                 {
@@ -119,9 +119,25 @@
                     blocks: [
                         { id: "b1", type: "text", content: "Halo agen muda! Tonton video instruksi ini dulu ya." },
                         { id: "b2", type: "video", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
-                        { id: "b3", type: "choice", question: "Siap melangkah lebih jauh?", options: [
+                        { id: "b3", type: "choice", question: "Siap melangkah lebih jauh?", 
+                          correctOptionIndex: 0, // <-- Contoh Kunci Jawaban
+                          options: [
                             { label: "Siaaap Komandan!", nextSection: "sec_2" },
                             { label: "Sebentar, tarik napas dulu", nextSection: "sec_3" }
+                        ]}
+                    ]
+                },
+                {
+                    id: "sec_2", title: "Bagian 2: Tantangan Inti",
+                    blocks: [
+                        { id: "b5", type: "text_input", question: "Dari animasi di atas, apa pendapatmu?" },
+                        { id: "b_likert1", type: "likert", question: "Pilih jawaban yang paling tepat", 
+                          rows: ["Ibukota Indonesia", "Ibukota Jepang"], 
+                          columns: ["Jakarta", "Tokyo", "Seoul", "Bangkok"],
+                          correctAnswers: { 0: 0, 1: 1 } // <-- Contoh Kunci Jawaban Likert (Baris -> Kolom)
+                        },
+                        { id: "b6", type: "choice", question: "Selesai?", options: [
+                            { label: "Lanjut ke Rekaman Video!", nextSection: "end_record" }
                         ]}
                     ]
                 }
@@ -176,9 +192,8 @@
         <!-- 1. STUDENT WELCOME SCREEN -->
         <div id="view-welcome" class="text-center py-12 animate-fade-up">
             
-            <!-- GAMBAR MELAYANG (BISA CUSTOM VIA ADMIN) -->
             <div id="welcome-image-container" class="w-36 h-36 mx-auto rounded-[2.5rem] animate-float mb-8 shadow-2xl shadow-pink-500/50 border-4 border-white/20 overflow-hidden flex items-center justify-center bg-gradient-to-tr from-pink-500 to-orange-400 relative z-10">
-                <!-- Akan dirender oleh JS (Roket atau Gambar Drive) -->
+                <!-- Akan dirender oleh JS -->
             </div>
 
             <h1 id="display-title" class="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-200 drop-shadow-lg">Misi Rahasia</h1>
@@ -337,14 +352,12 @@
                             <textarea id="tb-desc" class="glass-input w-full p-2 rounded-lg mt-1" onchange="appConfig.description=this.value;"></textarea>
                         </div>
                         
-                        <!-- FITUR BARU: MODE AKHIR KUIS -->
                         <div>
                             <label class="text-xs text-white/60 mb-1 block">Mode Akhir Kuis</label>
                             <select id="tb-require-video" class="glass-input w-full p-2 rounded-lg bg-[#4b1d52]" onchange="appConfig.requireVideo = (this.value === 'true');">
                                 <option value="true">Wajib Rekam Video Siswa</option>
                                 <option value="false">Langsung Kirim Jawaban (Tanpa Video)</option>
                             </select>
-                            <p class="text-[10px] text-white/40 mt-1">Pilih apakah di akhir kuis siswa harus merekam video pesan atau langsung selesai.</p>
                         </div>
 
                         <!-- UPLOAD FOTO WELCOME -->
@@ -480,7 +493,6 @@
                     if (data.status === "success" && data.data) {
                         appConfig = data.data; 
                         if(!appConfig.students) appConfig.students = []; 
-                        // Backup settingan lama jika blm ada requireVideo
                         if(typeof appConfig.requireVideo === 'undefined') appConfig.requireVideo = true;
                     }
                 } catch (e) {
@@ -554,7 +566,7 @@
 
             const btnLabel = document.getElementById('btn-upload-img');
             const originalHTML = btnLabel.innerHTML;
-            btnLabel.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Memproses & Upload...`;
+            btnLabel.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Memproses...`;
             btnLabel.style.pointerEvents = 'none';
 
             try {
@@ -577,7 +589,7 @@
                 if (data.status === "success") {
                     appConfig.welcomeImageUrl = data.imageUrl;
                     renderWelcomeImage();
-                    alert("Foto Ceria berhasil dikompresi (WebP) & diupload! Jangan lupa klik 'Simpan Permanen' ya. 🎉");
+                    alert("Foto Ceria berhasil diupload! Jangan lupa klik 'Simpan Permanen' ya. 🎉");
                 } else { throw new Error(data.message || "Gagal upload"); }
             } catch (err) { alert("Wah, gagal upload gambar. Pastikan script GAS sudah diupdate terbaru ya!"); } 
             finally {
@@ -843,6 +855,42 @@
             }
         };
 
+        // =====================================
+        // KALKULASI SKOR OTOMATIS (BARU)
+        // =====================================
+        const getStudentScore = (answersStr) => {
+            let parsed = {};
+            try { parsed = JSON.parse(answersStr || '{}'); } catch(e){}
+
+            let totalItems = 0;
+            let correctItems = 0;
+
+            appConfig.sections.forEach(sec => {
+                sec.blocks.forEach(b => {
+                    if (b.type === 'choice' && b.correctOptionIndex !== undefined && b.correctOptionIndex !== null) {
+                        totalItems++;
+                        if (b.options[b.correctOptionIndex] && parsed[b.id] === b.options[b.correctOptionIndex].label) {
+                            correctItems++;
+                        }
+                    } else if (b.type === 'likert' && b.correctAnswers && Object.keys(b.correctAnswers).length > 0) {
+                        b.rows.forEach((r, rIdx) => {
+                            if (b.correctAnswers[rIdx] !== undefined && b.correctAnswers[rIdx] !== null) {
+                                totalItems++;
+                                const correctColIndex = b.correctAnswers[rIdx];
+                                const correctLabel = b.columns[correctColIndex];
+                                if (parsed[b.id] && parsed[b.id][rIdx] === correctLabel) {
+                                    correctItems++;
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            if (totalItems === 0) return null; // Tidak ada soal yg butuh dinilai otomatis
+            return Math.round((correctItems / totalItems) * 100);
+        };
+
         // RESPONSES & PAGINATION
         const fetchResponses = async () => {
             if(!GAS_WEBHOOK_URL) { alert("Webhook belum diatur."); return; }
@@ -893,6 +941,7 @@
                 let parsedAnswers = {};
                 try { parsedAnswers = JSON.parse(resp.answers || '{}'); } catch(e){}
 
+                // Rincian Jawaban HTML
                 let answersHtml = "";
                 for(let key in parsedAnswers) {
                     let val = parsedAnswers[key];
@@ -906,6 +955,12 @@
                 }
                 if(answersHtml === "") answersHtml = "<span class='text-white/40 italic'>Tidak ada jawaban.</span>";
 
+                // Hitung Skor
+                const calcScore = getStudentScore(resp.answers);
+                const scoreBadge = calcScore !== null 
+                    ? `<span class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3"></i> Skor: ${calcScore} / 100</span>`
+                    : `<span class="bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs flex items-center gap-1"><i data-lucide="edit-3" class="w-3 h-3"></i> Menunggu Penilaian</span>`;
+
                 let videoBtn = resp.videoUrl && resp.videoUrl !== "Tidak ada video" 
                     ? `<a href="${resp.videoUrl}" target="_blank" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4"></i> Tonton Video</a>`
                     : `<span class="text-white/40 text-xs italic flex items-center gap-1"><i data-lucide="video-off" class="w-4 h-4"></i> Tanpa Video</span>`;
@@ -915,7 +970,10 @@
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 mb-4 gap-4">
                         <div>
                             <h4 class="text-xl font-bold flex items-center gap-2"><i data-lucide="user" class="text-pink-400"></i> ${resp.name || 'Anonim'}</h4>
-                            <p class="text-xs text-white/50 mt-1"><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${new Date(resp.timestamp).toLocaleString()}</p>
+                            <div class="flex gap-2 items-center mt-2">
+                                ${scoreBadge}
+                                <p class="text-[10px] text-white/40"><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${new Date(resp.timestamp).toLocaleString()}</p>
+                            </div>
                         </div>
                         ${videoBtn}
                     </div>
@@ -940,13 +998,22 @@
             const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
             let csvContent = "\uFEFF"; 
             
-            let headers = ["No", "Waktu Dikirim", "Nama Siswa", "Link Video", ...questionsArray].map(escapeCSV);
+            let headers = ["No", "Waktu Dikirim", "Nama Siswa", "Skor Auto", "Link Video", ...questionsArray].map(escapeCSV);
             csvContent += headers.join(",") + "\n";
             const chronologicalResponses = [...fetchedResponses].reverse();
 
             chronologicalResponses.forEach((r, idx) => {
                 let parsed = {}; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){}
-                let row = [idx + 1, new Date(r.timestamp).toLocaleString(), r.name || 'Anonim', r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"];
+                const score = getStudentScore(r.answers);
+                
+                let row = [
+                    idx + 1, 
+                    new Date(r.timestamp).toLocaleString(), 
+                    r.name || 'Anonim', 
+                    score !== null ? score : "Manual", 
+                    r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"
+                ];
+                
                 questionsArray.forEach(qId => {
                     let val = parsed[qId];
                     if (val === undefined) row.push("");
@@ -960,7 +1027,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `Rekap_Kuis_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `Rekap_Kuis_Skor_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         };
 
@@ -1009,16 +1076,13 @@
                     hideAllViews(); 
                     document.getElementById('view-recording').classList.remove('hidden');
                     
-                    // Cek apakah Butuh Video atau langsung Submit
                     if (appConfig.requireVideo === false) {
-                        // Sembunyikan semua UI Kamera, langsung ke proses Submit
                         document.getElementById('rec-intro').classList.add('hidden');
                         document.querySelector('#view-recording .aspect-video').classList.add('hidden');
                         document.getElementById('rec-controls').classList.add('hidden');
                         document.getElementById('submit-controls').classList.add('hidden');
                         submitData(); 
                     } else {
-                        // Tampilkan UI Kamera Normal
                         document.getElementById('rec-intro').classList.remove('hidden');
                         document.querySelector('#view-recording .aspect-video').classList.remove('hidden');
                         initCamera(); 
@@ -1116,12 +1180,9 @@
         const showSuccess = () => {
             document.getElementById('loading-spinner').classList.add('hidden'); document.getElementById('success-icon').classList.remove('hidden');
             document.getElementById('status-title').innerText = "Misi Berhasil! 🎉"; 
-            
-            // Sesuaikan pesan jika tidak ada video yang dikirim
             document.getElementById('status-desc').innerText = appConfig.requireVideo === false ? 
                 "Tugas dan jawabanmu telah aman tersimpan di brankas Guru. Kamu luar biasa!" : 
                 "Tugas dan videomu telah aman tersimpan di brankas Guru.";
-                
             document.querySelector('#view-recording .aspect-video').classList.add('hidden');
         };
 
@@ -1151,18 +1212,24 @@
         };
         const handleDragEnd = (e) => { e.target.classList.remove('opacity-50', 'scale-95'); draggedSectionIndex = null; };
 
-        // TEACHER BUILDER
+        // TEACHER BUILDER (KUNCI JAWABAN logic added)
         const addSection = (i=null) => { const n = {id: `sec_${Date.now()}`, title: "Bagian Baru", blocks: []}; if(i!==null) appConfig.sections.splice(i,0,n); else appConfig.sections.push(n); renderTeacherBuilder(); };
         const removeSection = (id) => { appConfig.sections = appConfig.sections.filter(s => s.id !== id); renderTeacherBuilder(); };
-        const addBlock = (id, t) => { const sec = appConfig.sections.find(s=>s.id===id); const b = {id:`b_${Date.now()}`, type:t, content:"", url:"", question:"", options:[]}; if(t==='choice') b.options=[{label:"Opsi 1", nextSection:"end_record"}]; if(t==='likert') {b.rows=["Pernyataan 1"]; b.columns=["Sangat Setuju","Setuju","Tidak Setuju","Sangat Tidak Setuju"];} sec.blocks.push(b); renderTeacherBuilder(); };
+        const addBlock = (id, t) => { const sec = appConfig.sections.find(s=>s.id===id); const b = {id:`b_${Date.now()}`, type:t, content:"", url:"", question:"", options:[]}; if(t==='choice'){ b.options=[{label:"Opsi 1", nextSection:"end_record"}]; b.correctOptionIndex=null; } if(t==='likert') {b.rows=["Pernyataan 1"]; b.columns=["Sangat Setuju","Setuju","Tidak Setuju"]; b.correctAnswers={};} sec.blocks.push(b); renderTeacherBuilder(); };
         const removeBlock = (sId, bId) => { const sec = appConfig.sections.find(s=>s.id===sId); sec.blocks = sec.blocks.filter(b=>b.id!==bId); renderTeacherBuilder(); };
         const updateBlockField = (sId, bId, f, v) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId)[f] = v; };
+        
+        // Choice Kunci Jawaban Set
+        const setCorrectChoice = (sId, bId, val) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); b.correctOptionIndex = val; };
         const addOption = (sId, bId) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options.push({label:"Opsi Baru", nextSection:"end_record"}); renderTeacherBuilder(); };
         const updateOption = (sId, bId, oI, f, v) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options[oI][f] = v; };
         const removeOption = (sId, bId, oI) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options.splice(oI, 1); renderTeacherBuilder(); };
+        
+        // Likert Kunci Jawaban Set
+        const updateLikertCorrect = (sId, bId, rIdx, val) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(!b.correctAnswers) b.correctAnswers = {}; if(val==="") delete b.correctAnswers[rIdx]; else b.correctAnswers[rIdx] = parseInt(val); };
         const updateLikertArr = (sId, bId, iR, i, v) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows[i]=v; else b.columns[i]=v; };
         const addLikertItem = (sId, bId, iR) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows.push(`Pernyataan ${b.rows.length+1}`); else b.columns.push(`Kolom ${b.columns.length+1}`); renderTeacherBuilder(); };
-        const removeLikertItem = (sId, bId, iR, i) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows.splice(i,1); else b.columns.splice(i,1); renderTeacherBuilder(); };
+        const removeLikertItem = (sId, bId, iR, i) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR){ b.rows.splice(i,1); if(b.correctAnswers) delete b.correctAnswers[i]; } else b.columns.splice(i,1); renderTeacherBuilder(); };
 
         const renderTeacherBuilder = () => {
             const container = document.getElementById('builder-sections'); let html = "";
@@ -1182,21 +1249,45 @@
                     if (b.type === 'text') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Teks Info</label><textarea class="glass-input w-full p-2 rounded-lg" onchange="updateBlockField('${sec.id}','${b.id}','content', this.value)">${b.content}</textarea>`;
                     else if (b.type === 'video') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
                     else if (b.type === 'gif') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="image" class="w-3 h-3"></i> Gambar / GIF URL</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
-                    else if (b.type === 'text_input') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-2" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)"><input type="text" class="glass-input w-full p-2 rounded-lg opacity-50" placeholder="Jawaban siswa..." disabled>`;
+                    else if (b.type === 'text_input') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks (Essay)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-1" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
+                        <p class="text-[10px] text-white/50 italic mb-2">* Soal ini diperiksa manual (tidak dihitung otomatis dalam skor 100).</p>
+                        <input type="text" class="glass-input w-full p-2 rounded-lg opacity-50" placeholder="Jawaban siswa..." disabled>`;
+                    }
                     else if (b.type === 'likert') {
-                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="grid" class="w-3 h-3"></i> Kisi (Skala Likert)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)"><div class="grid grid-cols-2 gap-4"><div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10"><p class="text-xs text-pink-300 font-bold mb-2">Baris</p>`;
-                        b.rows.forEach((r, rIdx) => { html += `<div class="flex gap-2 items-center"><input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${r}" onchange="updateLikertArr('${sec.id}','${b.id}',true,${rIdx},this.value)"><button onclick="removeLikertItem('${sec.id}','${b.id}',true,${rIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button></div>`; });
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="grid" class="w-3 h-3"></i> Kisi Pilihan Ganda (Skala Likert)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)"><div class="grid grid-cols-2 gap-4"><div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10"><p class="text-xs text-pink-300 font-bold mb-2">Baris (Beserta Kunci)</p>`;
+                        b.rows.forEach((r, rIdx) => { 
+                            html += `<div class="flex gap-2 items-center">
+                                <input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${r}" onchange="updateLikertArr('${sec.id}','${b.id}',true,${rIdx},this.value)">
+                                <select class="glass-input text-[10px] p-1 rounded bg-[#4b1d52] w-1/3" onchange="updateLikertCorrect('${sec.id}','${b.id}',${rIdx},this.value)">
+                                    <option value="">- Tanpa Kunci -</option>
+                                    ${b.columns.map((c, cIdx) => `<option value="${cIdx}" ${b.correctAnswers && b.correctAnswers[rIdx] == cIdx ? 'selected' : ''}>Kunci: ${c}</option>`).join('')}
+                                </select>
+                                <button onclick="removeLikertItem('${sec.id}','${b.id}',true,${rIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button>
+                            </div>`; 
+                        });
                         html += `<button onclick="addLikertItem('${sec.id}','${b.id}',true)" class="text-xs text-pink-400 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Baris</button></div><div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10"><p class="text-xs text-orange-300 font-bold mb-2">Kolom</p>`;
                         b.columns.forEach((c, cIdx) => { html += `<div class="flex gap-2 items-center"><input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${c}" onchange="updateLikertArr('${sec.id}','${b.id}',false,${cIdx},this.value)"><button onclick="removeLikertItem('${sec.id}','${b.id}',false,${cIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button></div>`; });
                         html += `<button onclick="addLikertItem('${sec.id}','${b.id}',false)" class="text-xs text-orange-400 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Kolom</button></div></div>`;
                     } else if (b.type === 'choice') {
                         html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda & Logika Loncatan</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)"><div class="space-y-2 border-l-2 border-white/20 pl-4">`;
-                        b.options.forEach((opt, oIdx) => { html += `<div class="flex gap-2 items-center"><input type="text" class="glass-input flex-1 p-2 rounded-lg text-sm" value="${opt.label}" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'label',this.value)"><i data-lucide="arrow-right" class="w-4 h-4 text-white/40"></i><select class="glass-input flex-1 p-2 rounded-lg text-sm bg-[#4b1d52]" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'nextSection',this.value)"><option value="end_record" ${opt.nextSection === 'end_record' ? 'selected' : ''}>Akhiri Kuis</option>${appConfig.sections.map(s => `<option value="${s.id}" ${opt.nextSection === s.id ? 'selected' : ''}>Ke: ${s.title}</option>`).join('')}</select><button onclick="removeOption('${sec.id}','${b.id}',${oIdx})" class="text-red-400 p-2"><i data-lucide="x" class="w-4 h-4"></i></button></div>`; });
+                        b.options.forEach((opt, oIdx) => { 
+                            html += `<div class="flex gap-2 items-center">
+                                <input type="radio" name="correct_${b.id}" class="w-4 h-4 cursor-pointer accent-green-400" title="Tandai Kunci Jawaban" onchange="setCorrectChoice('${sec.id}','${b.id}',${oIdx})" ${b.correctOptionIndex === oIdx ? 'checked' : ''}>
+                                <input type="text" class="glass-input flex-1 p-2 rounded-lg text-sm" value="${opt.label}" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'label',this.value)">
+                                <i data-lucide="arrow-right" class="w-4 h-4 text-white/40"></i>
+                                <select class="glass-input flex-1 p-2 rounded-lg text-sm bg-[#4b1d52]" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'nextSection',this.value)">
+                                    <option value="end_record" ${opt.nextSection === 'end_record' ? 'selected' : ''}>Akhiri Kuis</option>
+                                    ${appConfig.sections.map(s => `<option value="${s.id}" ${opt.nextSection === s.id ? 'selected' : ''}>Ke: ${s.title}</option>`).join('')}
+                                </select>
+                                <button onclick="removeOption('${sec.id}','${b.id}',${oIdx})" class="text-red-400 p-2"><i data-lucide="x" class="w-4 h-4"></i></button>
+                            </div>`; 
+                        });
                         html += `<button onclick="addOption('${sec.id}','${b.id}')" class="text-xs text-pink-400 hover:text-pink-300 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Opsi</button></div>`;
                     }
                     html += `</div>`;
                 });
-                html += `</div><div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10"><span class="text-xs text-white/40 flex items-center mr-2">Tambah Blok:</span><button onclick="addBlock('${sec.id}','text')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Teks</button><button onclick="addBlock('${sec.id}','video')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="video" class="w-3 h-3"></i> Video</button><button onclick="addBlock('${sec.id}','gif')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> GIF/Gbr</button><button onclick="addBlock('${sec.id}','text_input')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Soal Teks</button><button onclick="addBlock('${sec.id}','choice')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Biasa</button><button onclick="addBlock('${sec.id}','likert')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-pink-500/50 text-pink-200"><i data-lucide="grid" class="w-3 h-3"></i> Kisi (Skala)</button></div></div>`;
+                html += `</div><div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10"><span class="text-xs text-white/40 flex items-center mr-2">Tambah Blok:</span><button onclick="addBlock('${sec.id}','text')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Teks</button><button onclick="addBlock('${sec.id}','video')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="video" class="w-3 h-3"></i> Video</button><button onclick="addBlock('${sec.id}','gif')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> GIF/Gbr</button><button onclick="addBlock('${sec.id}','text_input')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Soal Essay</button><button onclick="addBlock('${sec.id}','choice')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Biasa</button><button onclick="addBlock('${sec.id}','likert')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-pink-500/50 text-pink-200"><i data-lucide="grid" class="w-3 h-3"></i> Kisi (Skala)</button></div></div>`;
             });
             container.innerHTML = html; lucide.createIcons(); 
         };
