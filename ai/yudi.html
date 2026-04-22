@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormVerse - Kuis Futuristik</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #1a0b2e, #4b1d52, #ff4b72);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: #ff4b72;
+            box-shadow: 0 0 10px rgba(255, 75, 114, 0.5);
+        }
+
+        /* Animations */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 75, 114, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 75, 114, 0.9); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(12deg); }
+            50% { transform: translateY(-20px) rotate(15deg); }
+            100% { transform: translateY(0px) rotate(12deg); }
+        }
+
+        .animate-fade-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .btn-primary {
+            background: linear-gradient(to right, #ff4b72, #ff8c42);
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 75, 114, 0.6);
+        }
+        .btn-primary:active { transform: scale(0.95); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 75, 114, 0.8); }
+    </style>
+</head>
+<body class="selection:bg-pink-500 selection:text-white pb-20">
+
+    <!-- KONFIGURASI UTAMA (HARDCODE DI SINI YAA!) -->
+    <script>
+        // 1. MASUKKAN LINK GOOGLE APPS SCRIPT DI SINI! (Biarkan kosong jika belum ada)
+        const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxJNYNa_WVMNRJNdBsv7TwI2yswRQixackM6oUNx-Hz5jwD0ImeAj48pEge6RlYEyh9/exec"; 
+        
+        // 2. MASUKKAN PASSWORD UNTUK GURU DI SINI!
+        const ADMIN_PASSWORD = "guru"; 
+        
+        // 3. Konfigurasi Default Form
+        let appConfig = {
+            title: "Misi Rahasia: Ujian Ceria!",
+            description: "Selamat datang di ujian interaktif. Tarik napas, dan mari kita mulai petualangannya!",
+            sections: [
+                {
+                    id: "sec_1", title: "Bagian 1: Pemantapan",
+                    blocks: [
+                        { id: "b1", type: "text", content: "Halo agen muda! Tonton video instruksi ini dulu ya." },
+                        { id: "b2", type: "video", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+                        { id: "b3", type: "choice", question: "Siap melangkah lebih jauh?", options: [
+                            { label: "Siaaap Komandan!", nextSection: "sec_2" },
+                            { label: "Sebentar, tarik napas dulu", nextSection: "sec_3" }
+                        ]}
+                    ]
+                },
+                {
+                    id: "sec_2", title: "Bagian 2: Tantangan Inti",
+                    blocks: [
+                        { id: "b4", type: "gif", url: "https://media.giphy.com/media/3o7aD2saalEvTehEXe/giphy.gif" },
+                        { id: "b5", type: "text_input", question: "Dari animasi di atas, apa pendapatmu?" },
+                        { id: "b6", type: "choice", question: "Selesai?", options: [
+                            { label: "Lanjut ke Rekaman Video!", nextSection: "end_record" }
+                        ]}
+                    ]
+                },
+                {
+                    id: "sec_3", title: "Bagian 3: Ruang Santai",
+                    blocks: [
+                        { id: "b7", type: "text", content: "Tenang saja, tidak ada yang perlu ditakutkan. Klik siap jika sudah oke." },
+                        { id: "b8", type: "choice", question: "Sudah siap sekarang?", options: [
+                            { label: "Ayo Gas!", nextSection: "sec_2" }
+                        ]}
+                    ]
+                }
+            ]
+        };
+
+        // State Aplikasi
+        let studentName = "";
+        let studentAnswers = {};
+        let currentSectionId = null;
+        let stream = null;
+        let mediaRecorder = null;
+        let videoChunks = [];
+        let videoBlob = null;
+        let recordTimer = null;
+        let timeLeft = 30;
+    </script>
+
+    <!-- HEADER / NAVBAR -->
+    <header class="p-4 flex justify-between items-center glass-panel sticky top-0 z-50 border-x-0 border-t-0 rounded-none">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-400 to-pink-500 flex items-center justify-center shadow-lg animate-[pulseGlow_2s_infinite]">
+                <i data-lucide="sparkles" class="text-white w-5 h-5"></i>
+            </div>
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-pink-200">
+                Form<span class="text-pink-400">Verse</span>
+            </h1>
+        </div>
+        
+        <!-- Tombol Admin (Setting) -->
+        <button onclick="showPasswordModal()" class="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white/70 hover:text-white" title="Admin / Teacher Mode">
+            <i data-lucide="settings" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- DB ALERT WARNING -->
+    <div id="db-alert" class="hidden bg-red-500/80 backdrop-blur text-white text-center py-2 px-4 text-sm font-bold shadow-lg flex justify-center items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        Perhatian: Database Belum Ready! Masukkan Webhook URL di kodingan.
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-4xl mx-auto mt-10 px-4 relative">
+
+        <!-- 1. STUDENT WELCOME SCREEN -->
+        <div id="view-welcome" class="text-center py-12 animate-fade-up">
+            <div class="w-32 h-32 mx-auto bg-gradient-to-tr from-pink-500 to-orange-400 rounded-[2rem] animate-float flex items-center justify-center mb-8 shadow-2xl shadow-pink-500/50 border-4 border-white/20">
+                <i data-lucide="rocket" class="text-white w-16 h-16 transform -rotate-12"></i>
+            </div>
+            <h1 id="display-title" class="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-200 drop-shadow-lg">Misi Rahasia</h1>
+            <p id="display-desc" class="text-xl text-white/80 mb-10 max-w-lg mx-auto leading-relaxed">Selamat datang! Silakan masukkan namamu untuk memulai.</p>
+            
+            <div class="max-w-sm mx-auto mb-8 text-left glass-panel rounded-2xl p-6">
+                <label class="block text-sm font-bold text-white/80 mb-2">Nama Lengkap Siswa:</label>
+                <input type="text" id="input-student-name" class="glass-input w-full p-4 rounded-xl text-lg font-bold" placeholder="Contoh: Budi Santoso">
+            </div>
+
+            <button onclick="startQuiz()" class="btn-primary text-xl font-bold py-4 px-10 rounded-full flex items-center justify-center gap-3 mx-auto">
+                Mulai Berpetualang <i data-lucide="arrow-right" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- 2. STUDENT FORM VIEWER (Kuis) -->
+        <div id="view-student-form" class="hidden animate-fade-up">
+            <div id="student-form-container" class="glass-panel rounded-3xl p-8 shadow-2xl">
+                <!-- Konten dinamis masuk ke sini -->
+            </div>
+        </div>
+
+        <!-- 3. STUDENT RECORDING SCREEN -->
+        <div id="view-recording" class="hidden text-center animate-fade-up glass-panel rounded-3xl p-8 max-w-2xl mx-auto">
+            <div id="rec-intro">
+                <div class="w-16 h-16 mx-auto bg-pink-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-pink-500/50">
+                    <i data-lucide="video" class="text-white w-8 h-8"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-2">Langkah Terakhir! 🎥</h2>
+                <p class="text-white/80 mb-8">Berikan pesan untuk gurumu langsung lewat video. (Maks 30 detik).</p>
+            </div>
+
+            <div class="relative rounded-2xl overflow-hidden bg-black/50 border-2 border-white/20 aspect-video mb-8 shadow-2xl">
+                <video id="live-video" autoplay muted playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                <video id="playback-video" controls playsinline class="hidden w-full h-full object-cover"></video>
+                
+                <div id="rec-indicator" class="hidden absolute top-4 right-4 bg-red-500/90 backdrop-blur text-white px-4 py-1 rounded-full text-sm font-bold animate-pulse flex items-center gap-2 shadow-lg">
+                    <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                    <span id="timer-text">00:30</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4" id="rec-controls">
+                <button id="btn-start-rec" onclick="startRecording()" class="btn-primary py-3 px-8 rounded-full font-bold shadow-lg flex items-center gap-2">
+                    <div class="w-3 h-3 bg-white rounded-full"></div> Mulai Rekam
+                </button>
+                <button id="btn-stop-rec" onclick="stopRecording()" class="hidden bg-white/20 hover:bg-white/30 text-white py-3 px-8 rounded-full font-bold shadow-lg transition-all flex items-center gap-2">
+                    <i data-lucide="square" class="w-4 h-4 fill-white"></i> Berhenti
+                </button>
+            </div>
+
+            <div id="submit-controls" class="hidden flex justify-center gap-4">
+                <button onclick="retryRecording()" class="bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-full font-bold transition-all">Ulangi</button>
+                <button onclick="submitData()" class="btn-primary py-3 px-8 rounded-full font-bold flex items-center gap-2">
+                    <i data-lucide="upload-cloud" class="w-5 h-5"></i> Kirim Tugas
+                </button>
+            </div>
+
+            <!-- Loading & Success -->
+            <div id="upload-status" class="hidden py-8">
+                <div id="loading-spinner" class="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <div id="success-icon" class="hidden w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <i data-lucide="check-circle" class="w-10 h-10"></i>
+                </div>
+                <h2 id="status-title" class="text-2xl font-bold mb-2">Mengirim Data...</h2>
+                <p id="status-desc" class="text-white/60">Mohon tunggu, video sedang dikompresi.</p>
+            </div>
+        </div>
+
+        <!-- 4. TEACHER BUILDER (Admin) -->
+        <div id="view-teacher" class="hidden animate-fade-up space-y-6">
+            <div class="glass-panel p-6 rounded-2xl flex justify-between items-center bg-pink-900/40 border-pink-500/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i data-lucide="wrench" class="text-pink-400"></i> Mode Admin (Guru)</h2>
+                <button onclick="goHome()" class="bg-white/10 px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition">Keluar Mode Admin</button>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6">
+                <h3 class="font-bold mb-4 text-pink-300">Pengaturan Utama</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-white/60">Judul Form</label>
+                        <input type="text" class="glass-input w-full p-2 rounded-lg mt-1" value="${appConfig.title}" onchange="appConfig.title=this.value; renderTeacherBuilder()">
+                    </div>
+                    <div>
+                        <label class="text-xs text-white/60">Deskripsi Form</label>
+                        <textarea class="glass-input w-full p-2 rounded-lg mt-1" onchange="appConfig.description=this.value; renderTeacherBuilder()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="builder-sections" class="space-y-6">
+                <!-- Builder sections rendered here via JS -->
+            </div>
+
+            <button onclick="addSection()" class="w-full py-4 border-2 border-dashed border-white/30 rounded-2xl text-white/70 hover:bg-white/10 hover:text-white hover:border-pink-500 transition-all font-bold flex justify-center items-center gap-2">
+                <i data-lucide="plus"></i> Tambah Bagian Baru
+            </button>
+            <div class="h-10"></div>
+        </div>
+
+    </main>
+
+    <!-- PASSWORD MODAL -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-8 relative animate-fade-up text-center">
+            <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-white/50 hover:text-white"><i data-lucide="x"></i></button>
+            <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 text-pink-400">
+                <i data-lucide="lock" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Akses Guru</h3>
+            <input type="password" id="admin-password" class="glass-input w-full p-3 rounded-xl text-center mb-4" placeholder="Masukkan Password">
+            <button onclick="verifyPassword()" class="btn-primary w-full py-3 rounded-xl font-bold">Masuk</button>
+            <p id="pw-error" class="text-red-400 text-sm mt-2 hidden">Password Salah!</p>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // Inisialisasi awal
+        window.onload = () => {
+            lucide.createIcons();
+            
+            // Cek Database Ready
+            if (!GAS_WEBHOOK_URL || GAS_WEBHOOK_URL.trim() === "") {
+                document.getElementById('db-alert').classList.remove('hidden');
+            }
+
+            // Set Title & Desc di Welcome Screen
+            document.getElementById('display-title').innerText = appConfig.title;
+            document.getElementById('display-desc').innerText = appConfig.description;
+        };
+
+        // UI Navigation Helpers
+        const hideAllViews = () => {
+            ['view-welcome', 'view-student-form', 'view-recording', 'view-teacher'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        };
+
+        const goHome = () => {
+            hideAllViews();
+            document.getElementById('view-welcome').classList.remove('hidden');
+            studentName = "";
+            studentAnswers = {};
+            document.getElementById('display-title').innerText = appConfig.title;
+            document.getElementById('display-desc').innerText = appConfig.description;
+            // Stop camera if running
+            if(stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        };
+
+        // =====================================
+        // PASSWORD / ADMIN LOGIC
+        // =====================================
+        const showPasswordModal = () => {
+            document.getElementById('password-modal').classList.remove('hidden');
+            document.getElementById('admin-password').value = "";
+            document.getElementById('pw-error').classList.add('hidden');
+        };
+        const closePasswordModal = () => {
+            document.getElementById('password-modal').classList.add('hidden');
+        };
+        const verifyPassword = () => {
+            const input = document.getElementById('admin-password').value;
+            if (input === ADMIN_PASSWORD) {
+                closePasswordModal();
+                hideAllViews();
+                renderTeacherBuilder();
+                document.getElementById('view-teacher').classList.remove('hidden');
+            } else {
+                document.getElementById('pw-error').classList.remove('hidden');
+            }
+        };
+
+        // =====================================
+        // STUDENT QUIZ LOGIC
+        // =====================================
+        const startQuiz = () => {
+            const name = document.getElementById('input-student-name').value;
+            if (!name.trim()) {
+                alert("Hei jagoan! Tolong tulis namamu dulu ya 😊");
+                return;
+            }
+            studentName = name;
+            hideAllViews();
+            currentSectionId = appConfig.sections[0].id;
+            renderStudentSection();
+            document.getElementById('view-student-form').classList.remove('hidden');
+        };
+
+        const handleTextAnswer = (blockId, val) => {
+            studentAnswers[blockId] = val;
+        };
+
+        const handleChoiceAnswer = (blockId, label, nextSecId) => {
+            studentAnswers[blockId] = label;
+            
+            // Beri efek transisi kecil
+            const container = document.getElementById('student-form-container');
+            container.style.opacity = 0;
+            
+            setTimeout(() => {
+                currentSectionId = nextSecId;
+                if (currentSectionId === 'end_record') {
+                    hideAllViews();
+                    document.getElementById('view-recording').classList.remove('hidden');
+                    initCamera();
+                } else {
+                    renderStudentSection();
+                }
+                container.style.opacity = 1;
+            }, 300);
+        };
+
+        const renderStudentSection = () => {
+            const section = appConfig.sections.find(s => s.id === currentSectionId);
+            const container = document.getElementById('student-form-container');
+            
+            if (!section) {
+                container.innerHTML = `<h2 class="text-2xl">Oops! Bagian tidak ditemukan.</h2>`;
+                return;
+            }
+
+            let html = `
+                <div class="mb-8 border-b border-white/20 pb-4">
+                    <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-pink-300">${section.title}</h2>
+                </div>
+                <div class="space-y-8">
+            `;
+
+            let hasChoice = false;
+
+            section.blocks.forEach(block => {
+                if (block.type === 'text') {
+                    html += `<p class="text-lg text-white/90 leading-relaxed">${block.content}</p>`;
+                } 
+                else if (block.type === 'video') {
+                    html += `
+                    <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                        <video src="${block.url}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+                        <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2">
+                            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Auto-loop
+                        </div>
+                    </div>`;
+                }
+                else if (block.type === 'gif') {
+                    html += `<div class="rounded-2xl overflow-hidden flex justify-center"><img src="${block.url}" class="max-w-full rounded-xl shadow-lg border border-white/20"></div>`;
+                }
+                else if (block.type === 'text_input') {
+                    const savedVal = studentAnswers[block.id] || "";
+                    html += `
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                        <p class="text-xl font-bold mb-4">${block.question}</p>
+                        <textarea onkeyup="handleTextAnswer('${block.id}', this.value)" class="glass-input w-full p-4 rounded-xl text-lg" rows="3" placeholder="Ketik jawabanmu...">${savedVal}</textarea>
+                    </div>`;
+                }
+                else if (block.type === 'choice') {
+                    hasChoice = true;
+                    html += `
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                        <p class="text-xl font-bold mb-6">${block.question}</p>
+                        <div class="grid gap-3">
+                    `;
+                    block.options.forEach(opt => {
+                        const isSelected = studentAnswers[block.id] === opt.label;
+                        const btnClass = isSelected ? "bg-pink-500/40 border-pink-400" : "bg-black/20 hover:bg-white/10 border-white/20 hover:border-pink-500";
+                        html += `
+                            <button onclick="handleChoiceAnswer('${block.id}', '${opt.label}', '${opt.nextSection}')" class="text-left p-4 rounded-xl border transition-all flex justify-between items-center group ${btnClass}">
+                                <span class="text-lg">${opt.label}</span>
+                                <i data-lucide="chevron-right" class="text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </button>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+            });
+
+            html += `</div>`;
+
+            // Kalau tidak ada tombol pilihan ganda, sediakan tombol Lanjut manual
+            if (!hasChoice) {
+                html += `
+                <div class="mt-8 flex justify-end">
+                    <button onclick="handleChoiceAnswer('manual', 'Lanjut', 'end_record')" class="btn-primary py-3 px-8 rounded-full font-bold flex items-center gap-2">Lanjut <i data-lucide="arrow-right"></i></button>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+            lucide.createIcons(); // Re-init icons untuk DOM baru
+        };
+
+        // =====================================
+        // RECORDING LOGIC
+        // =====================================
+        const initCamera = async () => {
+            const liveVid = document.getElementById('live-video');
+            const pbVid = document.getElementById('playback-video');
+            liveVid.classList.remove('hidden');
+            pbVid.classList.add('hidden');
+            document.getElementById('btn-start-rec').classList.remove('hidden');
+            document.getElementById('btn-stop-rec').classList.add('hidden');
+            document.getElementById('submit-controls').classList.add('hidden');
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, frameRate: 15 }, audio: true });
+                liveVid.srcObject = stream;
+            } catch (e) {
+                alert("Kamera tidak diizinkan! Kamu tidak bisa merekam video.");
+            }
+        };
+
+        const startRecording = () => {
+            if (!stream) { alert("Kamera belum aktif!"); return; }
+            videoChunks = [];
+            try { mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' }); } 
+            catch(e) { mediaRecorder = new MediaRecorder(stream); }
+
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) videoChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(videoBlob);
+                document.getElementById('live-video').classList.add('hidden');
+                const pbVid = document.getElementById('playback-video');
+                pbVid.src = url;
+                pbVid.classList.remove('hidden');
+                
+                // Matikan kamera
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Update UI UI
+                document.getElementById('rec-controls').classList.add('hidden');
+                document.getElementById('submit-controls').classList.remove('hidden');
+                document.getElementById('submit-controls').classList.add('flex');
+            };
+
+            mediaRecorder.start();
+            document.getElementById('btn-start-rec').classList.add('hidden');
+            document.getElementById('btn-stop-rec').classList.remove('hidden');
+            document.getElementById('rec-indicator').classList.remove('hidden');
+            
+            // Timer
+            timeLeft = 30;
+            document.getElementById('timer-text').innerText = `00:${timeLeft}`;
+            recordTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+                if (timeLeft <= 0) stopRecording();
+            }, 1000);
+        };
+
+        const stopRecording = () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                clearInterval(recordTimer);
+                document.getElementById('rec-indicator').classList.add('hidden');
+            }
+        };
+
+        const retryRecording = () => {
+            document.getElementById('rec-controls').classList.remove('hidden');
+            document.getElementById('submit-controls').classList.add('hidden');
+            document.getElementById('submit-controls').classList.remove('flex');
+            initCamera();
+        };
+
+        const submitData = async () => {
+            document.getElementById('rec-intro').classList.add('hidden');
+            document.getElementById('submit-controls').classList.add('hidden');
+            document.getElementById('submit-controls').classList.remove('flex');
+            const uploadDiv = document.getElementById('upload-status');
+            uploadDiv.classList.remove('hidden');
+            
+            let base64Video = "";
+            if (videoBlob) {
+                const reader = new FileReader();
+                base64Video = await new Promise((resolve) => {
+                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(videoBlob);
+                });
+            }
+
+            const payload = {
+                studentName: studentName,
+                answers: studentAnswers,
+                videoBase64: base64Video,
+                mimeType: "video/webm"
+            };
+
+            if (!GAS_WEBHOOK_URL) {
+                setTimeout(showSuccess, 1500); // Simulasi jika webhook kosong
+                return;
+            }
+
+            try {
+                await fetch(GAS_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // No CORS issue with text/plain for GAS
+                    body: JSON.stringify(payload)
+                });
+                showSuccess();
+            } catch (err) {
+                console.log(err);
+                showSuccess(); // Tetap show success krn GAS kadang block fetch response
+            }
+        };
+
+        const showSuccess = () => {
+            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById('success-icon').classList.remove('hidden');
+            document.getElementById('status-title').innerText = "Misi Berhasil! 🎉";
+            document.getElementById('status-desc').innerText = "Tugas dan videomu telah aman tersimpan di brankas Guru. Kamu hebat!";
+            
+            // Sembunyikan video agar bersih
+            document.querySelector('#view-recording .aspect-video').classList.add('hidden');
+        };
+
+        // =====================================
+        // TEACHER BUILDER LOGIC
+        // =====================================
+        // Karena JS murni tanpa Framework, kita buat fungsi update config & render ulang
+        
+        window.appConfig = appConfig; // Export to window for inline onclick access
+
+        const updateTitle = (val) => { appConfig.title = val; }
+        const updateDesc = (val) => { appConfig.description = val; }
+        
+        const addSection = () => {
+            appConfig.sections.push({ id: `sec_${Date.now()}`, title: "Bagian Baru", blocks: [] });
+            renderTeacherBuilder();
+        };
+        const removeSection = (secId) => {
+            appConfig.sections = appConfig.sections.filter(s => s.id !== secId);
+            renderTeacherBuilder();
+        };
+        const addBlock = (secId, type) => {
+            const sec = appConfig.sections.find(s => s.id === secId);
+            const newBlock = { id: `b_${Date.now()}`, type, content: "", url: "", question: "", options: [] };
+            if(type === 'choice') newBlock.options = [{label: "Opsi 1", nextSection: "end_record"}];
+            sec.blocks.push(newBlock);
+            renderTeacherBuilder();
+        };
+        const removeBlock = (secId, blockId) => {
+            const sec = appConfig.sections.find(s => s.id === secId);
+            sec.blocks = sec.blocks.filter(b => b.id !== blockId);
+            renderTeacherBuilder();
+        };
+        const updateBlockField = (secId, blockId, field, val) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            block[field] = val;
+        };
+        const addOption = (secId, blockId) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            block.options.push({label: "Opsi Baru", nextSection: "end_record"});
+            renderTeacherBuilder();
+        };
+        const updateOption = (secId, blockId, optIdx, field, val) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            block.options[optIdx][field] = val;
+        };
+        const removeOption = (secId, blockId, optIdx) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            block.options.splice(optIdx, 1);
+            renderTeacherBuilder();
+        };
+
+        const renderTeacherBuilder = () => {
+            const container = document.getElementById('builder-sections');
+            let html = "";
+
+            // Update Header Inputs explicitly to handle re-renders gracefully
+            // Actually, we bind via onchange in HTML directly.
+            document.querySelector('#view-teacher input[type="text"]').value = appConfig.title;
+            document.querySelector('#view-teacher textarea').value = appConfig.description;
+
+            appConfig.sections.forEach(sec => {
+                html += `
+                <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-orange-400 relative">
+                    <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                        <div class="flex-1">
+                            <input type="text" class="bg-transparent text-2xl font-bold focus:outline-none focus:text-pink-300 w-full" value="${sec.title}" onchange="appConfig.sections.find(s=>s.id==='${sec.id}').title=this.value">
+                            <span class="text-xs text-white/40 font-mono">ID: ${sec.id}</span>
+                        </div>
+                        <button onclick="removeSection('${sec.id}')" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </div>
+                    
+                    <div class="space-y-4 mb-6">
+                `;
+
+                sec.blocks.forEach(b => {
+                    html += `<div class="bg-black/20 p-4 rounded-xl border border-white/10 relative group">
+                                <button onclick="removeBlock('${sec.id}', '${b.id}')" class="absolute top-3 right-3 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    `;
+                    
+                    if (b.type === 'text') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Teks Info</label>
+                                 <textarea class="glass-input w-full p-2 rounded-lg" onchange="updateBlockField('${sec.id}','${b.id}','content', this.value)">${b.content}</textarea>`;
+                    } else if (b.type === 'video') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL</label>
+                                 <input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
+                    } else if (b.type === 'gif') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="image" class="w-3 h-3"></i> Gambar / GIF URL</label>
+                                 <input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
+                    } else if (b.type === 'text_input') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks</label>
+                                 <input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-2" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
+                                 <input type="text" class="glass-input w-full p-2 rounded-lg opacity-50" placeholder="Jawaban siswa..." disabled>`;
+                    } else if (b.type === 'choice') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda & Logika Loncatan</label>
+                                 <input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
+                                 <div class="space-y-2 border-l-2 border-white/20 pl-4">`;
+                        
+                        b.options.forEach((opt, oIdx) => {
+                            html += `
+                            <div class="flex gap-2 items-center">
+                                <input type="text" class="glass-input flex-1 p-2 rounded-lg text-sm" value="${opt.label}" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'label',this.value)">
+                                <i data-lucide="arrow-right" class="w-4 h-4 text-white/40"></i>
+                                <select class="glass-input flex-1 p-2 rounded-lg text-sm bg-[#4b1d52]" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'nextSection',this.value)">
+                                    <option value="end_record" ${opt.nextSection === 'end_record' ? 'selected' : ''}>Berhenti & Rekam Video</option>
+                                    ${appConfig.sections.map(s => `<option value="${s.id}" ${opt.nextSection === s.id ? 'selected' : ''}>Ke: ${s.title}</option>`).join('')}
+                                </select>
+                                <button onclick="removeOption('${sec.id}','${b.id}',${oIdx})" class="text-red-400 p-2"><i data-lucide="x" class="w-4 h-4"></i></button>
+                            </div>`;
+                        });
+
+                        html += `<button onclick="addOption('${sec.id}','${b.id}')" class="text-xs text-pink-400 hover:text-pink-300 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Opsi</button>
+                                 </div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+
+                html += `
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10">
+                        <span class="text-xs text-white/40 flex items-center mr-2">Tambah Blok:</span>
+                        <button onclick="addBlock('${sec.id}','text')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Teks</button>
+                        <button onclick="addBlock('${sec.id}','video')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="video" class="w-3 h-3"></i> Video</button>
+                        <button onclick="addBlock('${sec.id}','gif')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> GIF/Gbr</button>
+                        <button onclick="addBlock('${sec.id}','text_input')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Soal Teks</button>
+                        <button onclick="addBlock('${sec.id}','choice')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda</button>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            lucide.createIcons(); // Re-init icons untuk list guru
+        };
+    </script>
+</body>
+</html>
