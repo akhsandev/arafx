@@ -78,13 +78,28 @@
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255, 75, 114, 0.8); }
+
+        /* Custom Radio for Likert */
+        .likert-radio {
+            accent-color: #ff4b72;
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="selection:bg-pink-500 selection:text-white pb-20">
 
+    <!-- NEW LOADING SCREEN -->
+    <div id="view-loading" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#1a0b2e] text-white animate-fade-up">
+        <div class="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <h2 class="text-2xl font-bold mb-2">Memuat Data...</h2>
+        <p class="text-white/60">Menghubungkan ke Database Guru</p>
+    </div>
+
     <!-- KONFIGURASI UTAMA (HARDCODE DI SINI YAA!) -->
     <script>
-        // 1. MASUKKAN LINK GOOGLE APPS SCRIPT DI SINI! (Biarkan kosong jika belum ada)
+        // 1. MASUKKAN LINK GOOGLE APPS SCRIPT DI SINI!
         const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxJNYNa_WVMNRJNdBsv7TwI2yswRQixackM6oUNx-Hz5jwD0ImeAj48pEge6RlYEyh9/exec"; 
         
         // 2. MASUKKAN PASSWORD UNTUK GURU DI SINI!
@@ -111,6 +126,10 @@
                     blocks: [
                         { id: "b4", type: "gif", url: "https://media.giphy.com/media/3o7aD2saalEvTehEXe/giphy.gif" },
                         { id: "b5", type: "text_input", question: "Dari animasi di atas, apa pendapatmu?" },
+                        { id: "b_likert1", type: "likert", question: "Seberapa setuju kamu dengan pernyataan berikut?", 
+                          rows: ["Animasi ini lucu", "Warnanya cerah", "Membuat saya semangat"], 
+                          columns: ["Sangat Tidak Setuju", "Tidak Setuju", "Netral", "Setuju", "Sangat Setuju"] 
+                        },
                         { id: "b6", type: "choice", question: "Selesai?", options: [
                             { label: "Lanjut ke Rekaman Video!", nextSection: "end_record" }
                         ]}
@@ -138,6 +157,11 @@
         let videoBlob = null;
         let recordTimer = null;
         let timeLeft = 30;
+        
+        // Admin State
+        let adminTab = 'builder'; // 'builder' atau 'responses'
+        let fetchedResponses = [];
+        let isLoadingResponses = false;
     </script>
 
     <!-- HEADER / NAVBAR -->
@@ -238,34 +262,80 @@
             </div>
         </div>
 
-        <!-- 4. TEACHER BUILDER (Admin) -->
+        <!-- 4. TEACHER ADMIN (Builder & Responses) -->
         <div id="view-teacher" class="hidden animate-fade-up space-y-6">
-            <div class="glass-panel p-6 rounded-2xl flex justify-between items-center bg-pink-900/40 border-pink-500/50">
-                <h2 class="text-2xl font-bold flex items-center gap-2"><i data-lucide="wrench" class="text-pink-400"></i> Mode Admin (Guru)</h2>
-                <button onclick="goHome()" class="bg-white/10 px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition">Keluar Mode Admin</button>
+            
+            <div class="glass-panel p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 bg-pink-900/40 border-pink-500/50">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="shield-check" class="text-pink-400 w-8 h-8"></i>
+                    <h2 class="text-2xl font-bold">Ruang Admin Guru</h2>
+                </div>
+                
+                <!-- Tab Controls -->
+                <div class="flex bg-black/30 rounded-xl p-1 shadow-inner">
+                    <button onclick="switchAdminTab('builder')" id="tab-builder" class="px-6 py-2 rounded-lg text-sm font-bold transition-all bg-pink-500 text-white shadow-md">
+                        🛠️ Edit Soal
+                    </button>
+                    <button onclick="switchAdminTab('responses')" id="tab-responses" class="px-6 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white">
+                        📊 Hasil & Video
+                    </button>
+                </div>
+
+                <button onclick="goHome()" class="bg-white/10 px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition">Keluar</button>
+            </div>
+
+            <!-- TAB 1: BUILDER -->
+        <div id="admin-builder-container" class="space-y-6">
+            <!-- NEW SAVE BUTTON -->
+            <div class="glass-panel rounded-2xl p-6 bg-gradient-to-r from-pink-500/20 to-orange-500/20 border border-pink-500/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h3 class="font-bold text-pink-200">Simpan Permanen</h3>
+                    <p class="text-sm text-white/60">Simpan soal ke Google Spreadsheet agar tidak hilang.</p>
+                </div>
+                <button id="btn-save-db" onclick="saveConfigToDB()" class="btn-primary py-3 px-6 rounded-xl font-bold flex items-center gap-2 shadow-lg w-full md:w-auto justify-center">
+                    <i data-lucide="save" class="w-5 h-5"></i> Simpan ke Database
+                </button>
             </div>
 
             <div class="glass-panel rounded-2xl p-6">
-                <h3 class="font-bold mb-4 text-pink-300">Pengaturan Utama</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-white/60">Judul Form</label>
-                        <input type="text" class="glass-input w-full p-2 rounded-lg mt-1" value="${appConfig.title}" onchange="appConfig.title=this.value; renderTeacherBuilder()">
+                <h3 class="font-bold mb-4 text-pink-300">Pengaturan Utama Form</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-white/60">Judul Form</label>
+                            <input type="text" id="tb-title" class="glass-input w-full p-2 rounded-lg mt-1" value="${appConfig.title}" onchange="appConfig.title=this.value;">
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/60">Deskripsi Form</label>
+                            <textarea id="tb-desc" class="glass-input w-full p-2 rounded-lg mt-1" onchange="appConfig.description=this.value;"></textarea>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-xs text-white/60">Deskripsi Form</label>
-                        <textarea class="glass-input w-full p-2 rounded-lg mt-1" onchange="appConfig.description=this.value; renderTeacherBuilder()"></textarea>
-                    </div>
+                </div>
+
+                <div id="builder-sections" class="space-y-6">
+                    <!-- Builder sections rendered here via JS -->
+                </div>
+
+                <button onclick="addSection()" class="w-full py-4 border-2 border-dashed border-white/30 rounded-2xl text-white/70 hover:bg-white/10 hover:text-white hover:border-pink-500 transition-all font-bold flex justify-center items-center gap-2">
+                    <i data-lucide="plus"></i> Tambah Bagian Baru
+                </button>
+            </div>
+
+            <!-- TAB 2: RESPONSES REVIEW -->
+            <div id="admin-responses-container" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 text-center">
+                    <h3 class="text-xl font-bold mb-2">Review Jawaban Siswa</h3>
+                    <p class="text-sm text-white/60 mb-6">Menarik data secara langsung dari Google Spreadsheet.</p>
+                    <button onclick="fetchResponses()" class="btn-primary py-2 px-6 rounded-full mx-auto flex items-center justify-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Muat Ulang Data
+                    </button>
+                </div>
+
+                <div id="responses-list" class="space-y-4">
+                    <!-- Responses rendered here -->
+                    <div class="text-center py-10 text-white/50">Silakan klik "Muat Ulang Data" untuk melihat jawaban.</div>
                 </div>
             </div>
 
-            <div id="builder-sections" class="space-y-6">
-                <!-- Builder sections rendered here via JS -->
-            </div>
-
-            <button onclick="addSection()" class="w-full py-4 border-2 border-dashed border-white/30 rounded-2xl text-white/70 hover:bg-white/10 hover:text-white hover:border-pink-500 transition-all font-bold flex justify-center items-center gap-2">
-                <i data-lucide="plus"></i> Tambah Bagian Baru
-            </button>
             <div class="h-10"></div>
         </div>
 
@@ -278,7 +348,7 @@
             <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 text-pink-400">
                 <i data-lucide="lock" class="w-8 h-8"></i>
             </div>
-            <h3 class="text-xl font-bold mb-4">Akses Guru</h3>
+            <h3 class="text-xl font-bold mb-4">Akses Guru Rahasia</h3>
             <input type="password" id="admin-password" class="glass-input w-full p-3 rounded-xl text-center mb-4" placeholder="Masukkan Password">
             <button onclick="verifyPassword()" class="btn-primary w-full py-3 rounded-xl font-bold">Masuk</button>
             <p id="pw-error" class="text-red-400 text-sm mt-2 hidden">Password Salah!</p>
@@ -288,23 +358,39 @@
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
         // Inisialisasi awal
-        window.onload = () => {
+        window.onload = async () => {
             lucide.createIcons();
             
             // Cek Database Ready
             if (!GAS_WEBHOOK_URL || GAS_WEBHOOK_URL.trim() === "") {
                 document.getElementById('db-alert').classList.remove('hidden');
+                document.getElementById('view-loading').classList.add('hidden');
+                
+                document.getElementById('display-title').innerText = appConfig.title;
+                document.getElementById('display-desc').innerText = appConfig.description;
+            } else {
+                // Tarik Config/Soal Permanen dari Database
+                try {
+                    const res = await fetch(GAS_WEBHOOK_URL + "?action=getConfig");
+                    const data = await res.json();
+                    if (data.status === "success" && data.data) {
+                        appConfig = data.data; 
+                    }
+                } catch (e) {
+                    console.log("Gagal memuat config, menggunakan bawaan.", e);
+                }
+                
+                document.getElementById('view-loading').classList.add('hidden');
+                document.getElementById('display-title').innerText = appConfig.title;
+                document.getElementById('display-desc').innerText = appConfig.description;
             }
-
-            // Set Title & Desc di Welcome Screen
-            document.getElementById('display-title').innerText = appConfig.title;
-            document.getElementById('display-desc').innerText = appConfig.description;
         };
 
         // UI Navigation Helpers
         const hideAllViews = () => {
-            ['view-welcome', 'view-student-form', 'view-recording', 'view-teacher'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
+            ['view-loading', 'view-welcome', 'view-student-form', 'view-recording', 'view-teacher'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
             });
         };
 
@@ -338,12 +424,135 @@
             if (input === ADMIN_PASSWORD) {
                 closePasswordModal();
                 hideAllViews();
+                
+                document.querySelector('#tb-title').value = appConfig.title;
+                document.querySelector('#tb-desc').value = appConfig.description;
+                
                 renderTeacherBuilder();
+                switchAdminTab('builder');
                 document.getElementById('view-teacher').classList.remove('hidden');
             } else {
                 document.getElementById('pw-error').classList.remove('hidden');
             }
         };
+
+        const switchAdminTab = (tab) => {
+            adminTab = tab;
+            const btnB = document.getElementById('tab-builder');
+            const btnR = document.getElementById('tab-responses');
+            const conB = document.getElementById('admin-builder-container');
+            const conR = document.getElementById('admin-responses-container');
+
+            if(tab === 'builder') {
+                btnB.className = "px-6 py-2 rounded-lg text-sm font-bold transition-all bg-pink-500 text-white shadow-md";
+                btnR.className = "px-6 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white";
+                conB.classList.remove('hidden');
+                conR.classList.add('hidden');
+            } else {
+                btnR.className = "px-6 py-2 rounded-lg text-sm font-bold transition-all bg-pink-500 text-white shadow-md";
+                btnB.className = "px-6 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white";
+                conR.classList.remove('hidden');
+                conB.classList.add('hidden');
+                if(fetchedResponses.length === 0) fetchResponses(); // Auto fetch pertama kali buka tab
+            }
+        };
+
+        // =====================================
+        // FETCH RESPONSES (ADMIN)
+        // =====================================
+        const fetchResponses = async () => {
+            if(!GAS_WEBHOOK_URL) {
+                alert("URL Webhook belum diatur. Masukkan di kodingan.");
+                return;
+            }
+            const container = document.getElementById('responses-list');
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10">
+                    <div class="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p class="text-white/60">Sedang menarik data ceria dari Spreadsheet...</p>
+                </div>`;
+            
+            try {
+                // Memanggil method GET ke GAS Webhook (DENGAN ACTION getResponses)
+                const res = await fetch(GAS_WEBHOOK_URL + "?action=getResponses");
+                const data = await res.json();
+                
+                if(data.status === "success" && data.data) {
+                    fetchedResponses = data.data;
+                    renderResponses();
+                } else {
+                    throw new Error("Format data tidak sesuai atau gagal.");
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `
+                    <div class="bg-red-500/20 border border-red-500/50 p-6 rounded-2xl text-center text-red-200">
+                        <i data-lucide="alert-circle" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+                        <p class="font-bold">Gagal mengambil data!</p>
+                        <p class="text-sm mt-2">Pastikan script GAS-mu sudah ditambahkan fungsi <b>doGet()</b> (lihat panduan AI) dan URL Webhook sudah benar serta mendukung CORS.</p>
+                    </div>`;
+                lucide.createIcons();
+            }
+        };
+
+        const renderResponses = () => {
+            const container = document.getElementById('responses-list');
+            if(fetchedResponses.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-white/50">Belum ada jawaban siswa nih.</div>`;
+                return;
+            }
+
+            // Reverse agar terbaru di atas
+            const reversed = [...fetchedResponses].reverse();
+            let html = "";
+
+            reversed.forEach((resp, idx) => {
+                let parsedAnswers = {};
+                try { parsedAnswers = JSON.parse(resp.answers || '{}'); } catch(e){}
+
+                // Buat daftar jawaban cantik
+                let answersHtml = "";
+                for(let key in parsedAnswers) {
+                    let val = parsedAnswers[key];
+                    if (typeof val === 'object') {
+                        // Handle Likert Scale Answers (Object)
+                        answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">Soal ID: ${key} (Kisi/Likert)</span>`;
+                        for(let subKey in val) {
+                            answersHtml += `<div class="pl-3 border-l border-white/20 ml-2 mt-1"><span class="text-white/60 text-xs">Baris ${parseInt(subKey)+1}:</span> ${val[subKey]}</div>`;
+                        }
+                        answersHtml += `</div>`;
+                    } else {
+                        answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">Soal ID: ${key}</span><span class="font-bold">${val}</span></div>`;
+                    }
+                }
+                if(answersHtml === "") answersHtml = "<span class='text-white/40 italic'>Tidak ada jawaban tertulis.</span>";
+
+                let videoBtn = resp.videoUrl && resp.videoUrl !== "Tidak ada video" 
+                    ? `<a href="${resp.videoUrl}" target="_blank" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all"><i data-lucide="play-circle" class="w-4 h-4"></i> Tonton Video Siswa</a>`
+                    : `<span class="text-white/40 text-xs italic flex items-center gap-1"><i data-lucide="video-off" class="w-4 h-4"></i> Tanpa Video</span>`;
+
+                html += `
+                <div class="glass-panel p-6 rounded-2xl animate-fade-up" style="animation-delay: ${idx * 0.1}s">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 mb-4 gap-4">
+                        <div>
+                            <h4 class="text-xl font-bold flex items-center gap-2"><i data-lucide="user" class="text-pink-400"></i> ${resp.name || 'Anonim'}</h4>
+                            <p class="text-xs text-white/50 mt-1"><i data-lucide="calendar" class="w-3 h-3 inline"></i> Dikirim: ${new Date(resp.timestamp).toLocaleString()}</p>
+                        </div>
+                        ${videoBtn}
+                    </div>
+                    <div class="bg-black/20 p-4 rounded-xl border border-white/5">
+                        <h5 class="text-sm font-bold text-white/70 mb-3 border-b border-white/10 pb-2">Rincian Jawaban:</h5>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            ${answersHtml}
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        };
+
 
         // =====================================
         // STUDENT QUIZ LOGIC
@@ -365,10 +574,14 @@
             studentAnswers[blockId] = val;
         };
 
+        const handleLikertAnswer = (blockId, rowIndex, colValue) => {
+            if (!studentAnswers[blockId]) studentAnswers[blockId] = {};
+            studentAnswers[blockId][rowIndex] = colValue;
+        };
+
         const handleChoiceAnswer = (blockId, label, nextSecId) => {
-            studentAnswers[blockId] = label;
+            if(blockId !== 'manual') studentAnswers[blockId] = label;
             
-            // Beri efek transisi kecil
             const container = document.getElementById('student-form-container');
             container.style.opacity = 0;
             
@@ -427,6 +640,38 @@
                         <textarea onkeyup="handleTextAnswer('${block.id}', this.value)" class="glass-input w-full p-4 rounded-xl text-lg" rows="3" placeholder="Ketik jawabanmu...">${savedVal}</textarea>
                     </div>`;
                 }
+                else if (block.type === 'likert') {
+                    html += `
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner overflow-x-auto">
+                        <p class="text-xl font-bold mb-6">${block.question}</p>
+                        <table class="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                                <tr>
+                                    <th class="p-3 border-b border-white/20 w-1/3"></th>`;
+                    block.columns.forEach(col => {
+                        html += `<th class="p-3 border-b border-white/20 text-center text-sm text-pink-200 font-bold leading-tight">${col}</th>`;
+                    });
+                    html += `   </tr>
+                            </thead>
+                            <tbody>`;
+                    
+                    block.rows.forEach((row, rIdx) => {
+                        const bgClass = rIdx % 2 === 0 ? 'bg-black/10' : 'bg-transparent';
+                        html += `<tr class="${bgClass} hover:bg-white/5 transition-colors">
+                                    <td class="p-4 border-b border-white/5 text-sm md:text-base">${row}</td>`;
+                        
+                        block.columns.forEach((col, cIdx) => {
+                            const isChecked = studentAnswers[block.id] && studentAnswers[block.id][rIdx] === col ? 'checked' : '';
+                            html += `<td class="p-4 border-b border-white/5 text-center">
+                                        <input type="radio" name="likert_${block.id}_${rIdx}" value="${col}" ${isChecked}
+                                            onclick="handleLikertAnswer('${block.id}', ${rIdx}, '${col}')"
+                                            class="likert-radio transform scale-125">
+                                     </td>`;
+                        });
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
                 else if (block.type === 'choice') {
                     hasChoice = true;
                     html += `
@@ -463,7 +708,7 @@
         };
 
         // =====================================
-        // RECORDING LOGIC
+        // RECORDING & SUBMIT LOGIC
         // =====================================
         const initCamera = async () => {
             const liveVid = document.getElementById('live-video');
@@ -497,10 +742,8 @@
                 pbVid.src = url;
                 pbVid.classList.remove('hidden');
                 
-                // Matikan kamera
                 stream.getTracks().forEach(track => track.stop());
                 
-                // Update UI UI
                 document.getElementById('rec-controls').classList.add('hidden');
                 document.getElementById('submit-controls').classList.remove('hidden');
                 document.getElementById('submit-controls').classList.add('flex');
@@ -511,7 +754,6 @@
             document.getElementById('btn-stop-rec').classList.remove('hidden');
             document.getElementById('rec-indicator').classList.remove('hidden');
             
-            // Timer
             timeLeft = 30;
             document.getElementById('timer-text').innerText = `00:${timeLeft}`;
             recordTimer = setInterval(() => {
@@ -552,7 +794,9 @@
                 });
             }
 
+            // Tambahkan action submitResponse
             const payload = {
+                action: "submitResponse",
                 studentName: studentName,
                 answers: studentAnswers,
                 videoBase64: base64Video,
@@ -560,20 +804,20 @@
             };
 
             if (!GAS_WEBHOOK_URL) {
-                setTimeout(showSuccess, 1500); // Simulasi jika webhook kosong
+                setTimeout(showSuccess, 1500);
                 return;
             }
 
             try {
                 await fetch(GAS_WEBHOOK_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // No CORS issue with text/plain for GAS
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
                 showSuccess();
             } catch (err) {
                 console.log(err);
-                showSuccess(); // Tetap show success krn GAS kadang block fetch response
+                showSuccess(); 
             }
         };
 
@@ -582,21 +826,55 @@
             document.getElementById('success-icon').classList.remove('hidden');
             document.getElementById('status-title').innerText = "Misi Berhasil! 🎉";
             document.getElementById('status-desc').innerText = "Tugas dan videomu telah aman tersimpan di brankas Guru. Kamu hebat!";
-            
-            // Sembunyikan video agar bersih
             document.querySelector('#view-recording .aspect-video').classList.add('hidden');
+        };
+
+        // =====================================
+        // LOGIC SIMPAN PERMANEN KE DB
+        // =====================================
+        const saveConfigToDB = async () => {
+            if (!GAS_WEBHOOK_URL) {
+                alert("Masukkan Webhook URL dulu di kodingan!");
+                return;
+            }
+            
+            const btn = document.getElementById('btn-save-db');
+            btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Menyimpan...`;
+            btn.disabled = true;
+
+            try {
+                const payload = {
+                    action: "saveConfig",
+                    config: appConfig
+                };
+
+                const res = await fetch(GAS_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if(data.status === "success") {
+                    alert("Yey! Soal berhasil disimpan permanen ke Database! 🎉");
+                } else {
+                    throw new Error("Gagal menyimpan");
+                }
+            } catch (err) {
+                alert("Wah, gagal menyimpan. Pastikan script GAS sudah diupdate dan dideploy ulang ya!");
+                console.log(err);
+            } finally {
+                btn.innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> Simpan ke Database`;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
         };
 
         // =====================================
         // TEACHER BUILDER LOGIC
         // =====================================
-        // Karena JS murni tanpa Framework, kita buat fungsi update config & render ulang
-        
-        window.appConfig = appConfig; // Export to window for inline onclick access
+        window.appConfig = appConfig;
 
-        const updateTitle = (val) => { appConfig.title = val; }
-        const updateDesc = (val) => { appConfig.description = val; }
-        
         const addSection = () => {
             appConfig.sections.push({ id: `sec_${Date.now()}`, title: "Bagian Baru", blocks: [] });
             renderTeacherBuilder();
@@ -609,6 +887,10 @@
             const sec = appConfig.sections.find(s => s.id === secId);
             const newBlock = { id: `b_${Date.now()}`, type, content: "", url: "", question: "", options: [] };
             if(type === 'choice') newBlock.options = [{label: "Opsi 1", nextSection: "end_record"}];
+            if(type === 'likert') {
+                newBlock.rows = ["Pernyataan 1"];
+                newBlock.columns = ["Sangat Setuju", "Setuju", "Tidak Setuju", "Sangat Tidak Setuju"];
+            }
             sec.blocks.push(newBlock);
             renderTeacherBuilder();
         };
@@ -621,6 +903,8 @@
             const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
             block[field] = val;
         };
+
+        // Choice Option Handlers
         const addOption = (secId, blockId) => {
             const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
             block.options.push({label: "Opsi Baru", nextSection: "end_record"});
@@ -636,14 +920,26 @@
             renderTeacherBuilder();
         };
 
+        // Likert Option Handlers
+        const updateLikertArr = (secId, blockId, isRow, idx, val) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            if(isRow) block.rows[idx] = val; else block.columns[idx] = val;
+        };
+        const addLikertItem = (secId, blockId, isRow) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            if(isRow) block.rows.push(`Pernyataan ${block.rows.length + 1}`); 
+            else block.columns.push(`Kolom ${block.columns.length + 1}`);
+            renderTeacherBuilder();
+        };
+        const removeLikertItem = (secId, blockId, isRow, idx) => {
+            const block = appConfig.sections.find(s=>s.id===secId).blocks.find(b=>b.id===blockId);
+            if(isRow) block.rows.splice(idx, 1); else block.columns.splice(idx, 1);
+            renderTeacherBuilder();
+        };
+
         const renderTeacherBuilder = () => {
             const container = document.getElementById('builder-sections');
             let html = "";
-
-            // Update Header Inputs explicitly to handle re-renders gracefully
-            // Actually, we bind via onchange in HTML directly.
-            document.querySelector('#view-teacher input[type="text"]').value = appConfig.title;
-            document.querySelector('#view-teacher textarea').value = appConfig.description;
 
             appConfig.sections.forEach(sec => {
                 html += `
@@ -677,6 +973,31 @@
                         html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks</label>
                                  <input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-2" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
                                  <input type="text" class="glass-input w-full p-2 rounded-lg opacity-50" placeholder="Jawaban siswa..." disabled>`;
+                    } else if (b.type === 'likert') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="grid" class="w-3 h-3"></i> Kisi Pilihan Ganda (Skala Likert)</label>
+                                 <input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan Induk..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
+                                 
+                                 <div class="grid grid-cols-2 gap-4">
+                                     <!-- Edit Rows -->
+                                     <div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10">
+                                         <p class="text-xs text-pink-300 font-bold mb-2">Baris (Pernyataan)</p>`;
+                                         b.rows.forEach((r, rIdx) => {
+                                             html += `<div class="flex gap-2 items-center"><input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${r}" onchange="updateLikertArr('${sec.id}','${b.id}',true,${rIdx},this.value)">
+                                             <button onclick="removeLikertItem('${sec.id}','${b.id}',true,${rIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button></div>`;
+                                         });
+                        html += `        <button onclick="addLikertItem('${sec.id}','${b.id}',true)" class="text-xs text-pink-400 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Baris</button>
+                                     </div>
+                                     
+                                     <!-- Edit Cols -->
+                                     <div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10">
+                                         <p class="text-xs text-orange-300 font-bold mb-2">Kolom (Skala)</p>`;
+                                         b.columns.forEach((c, cIdx) => {
+                                             html += `<div class="flex gap-2 items-center"><input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${c}" onchange="updateLikertArr('${sec.id}','${b.id}',false,${cIdx},this.value)">
+                                             <button onclick="removeLikertItem('${sec.id}','${b.id}',false,${cIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button></div>`;
+                                         });
+                        html += `        <button onclick="addLikertItem('${sec.id}','${b.id}',false)" class="text-xs text-orange-400 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Kolom</button>
+                                     </div>
+                                 </div>`;
                     } else if (b.type === 'choice') {
                         html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda & Logika Loncatan</label>
                                  <input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
@@ -710,13 +1031,14 @@
                         <button onclick="addBlock('${sec.id}','video')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="video" class="w-3 h-3"></i> Video</button>
                         <button onclick="addBlock('${sec.id}','gif')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> GIF/Gbr</button>
                         <button onclick="addBlock('${sec.id}','text_input')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Soal Teks</button>
-                        <button onclick="addBlock('${sec.id}','choice')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda</button>
+                        <button onclick="addBlock('${sec.id}','choice')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda Biasa</button>
+                        <button onclick="addBlock('${sec.id}','likert')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-pink-500/50 text-pink-200"><i data-lucide="grid" class="w-3 h-3"></i> Kisi (Skala)</button>
                     </div>
                 </div>`;
             });
 
             container.innerHTML = html;
-            lucide.createIcons(); // Re-init icons untuk list guru
+            lucide.createIcons(); // Re-init icons
         };
     </script>
 </body>
