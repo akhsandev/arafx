@@ -118,7 +118,7 @@
                     id: "sec_1", title: "Bagian 1: Pemantapan",
                     blocks: [
                         { id: "b1", type: "text", content: "Halo agen muda! Tonton video instruksi ini dulu ya." },
-                        { id: "b2", type: "video", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+                        { id: "b2", type: "video", url: "https://www.youtube.com/watch?v=pXygouhiq10&t=5s" },
                         { id: "b3", type: "choice", question: "Siap melangkah lebih jauh?", 
                           correctOptionIndex: 0, // <-- Contoh Kunci Jawaban
                           options: [
@@ -697,6 +697,21 @@
             });
         };
 
+        // FUNGSI PEMBANTU DETEKSI YOUTUBE (Otomatis baca ID & Waktu)
+        const getYoutubeInfo = (url) => {
+            if(!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            if (match && match[2].length === 11) {
+                let start = 0;
+                // Cek apakah ada parameter waktu seperti &t=5s
+                const timeMatch = url.match(/[?&]t=(\d+)s?/);
+                if(timeMatch) start = parseInt(timeMatch[1]);
+                return { id: match[2], start: start };
+            }
+            return null;
+        };
+
         const goHome = () => {
             hideAllViews();
             document.getElementById('view-welcome').classList.remove('hidden');
@@ -1105,7 +1120,32 @@
 
             section.blocks.forEach(block => {
                 if (block.type === 'text') html += `<p class="text-lg text-white/90 leading-relaxed">${block.content}</p>`;
-                else if (block.type === 'video') html += `<div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg"><video src="${block.url}" autoplay loop muted playsinline class="w-full h-full object-cover"></video></div>`;
+                else if (block.type === 'video') {
+                    const ytInfo = getYoutubeInfo(block.url);
+                    if (ytInfo) {
+                        // Perbaikan Bug YouTube Error 153
+                        // Disederhanakan parameternya dan ditambahkan atribut allow yang lengkap
+                        let ytSrc = `https://www.youtube.com/embed/${ytInfo.id}?autoplay=1&mute=1&controls=1&rel=0`;
+                        if (ytInfo.start > 0) ytSrc += `&start=${ytInfo.start}`;
+                        
+                        html += `
+                        <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                            <iframe src="${ytSrc}" class="w-full h-full object-cover" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none">
+                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> YouTube
+                            </div>
+                        </div>`;
+                    } else {
+                        // Merender video biasa jika link adalah mp4/webm lokal
+                        html += `
+                        <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                            <video src="${block.url}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none">
+                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Auto-loop
+                            </div>
+                        </div>`;
+                    }
+                }
                 else if (block.type === 'gif') html += `<div class="rounded-2xl overflow-hidden flex justify-center"><img src="${block.url}" class="max-w-full rounded-xl shadow-lg border border-white/20"></div>`;
                 else if (block.type === 'text_input') {
                     const savedVal = studentAnswers[block.id] || "";
@@ -1247,7 +1287,7 @@
                 sec.blocks.forEach(b => {
                     html += `<div class="bg-black/20 p-4 rounded-xl border border-white/10 relative group"><button onclick="removeBlock('${sec.id}', '${b.id}')" class="absolute top-3 right-3 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                     if (b.type === 'text') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Teks Info</label><textarea class="glass-input w-full p-2 rounded-lg" onchange="updateBlockField('${sec.id}','${b.id}','content', this.value)">${b.content}</textarea>`;
-                    else if (b.type === 'video') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
+                    else if (b.type === 'video') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL (Mendukung Link YouTube & MP4)</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
                     else if (b.type === 'gif') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="image" class="w-3 h-3"></i> Gambar / GIF URL</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
                     else if (b.type === 'text_input') {
                         html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks (Essay)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-1" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
