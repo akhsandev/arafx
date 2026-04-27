@@ -3,378 +3,1218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Siswa Interaktif</title>
+    <title>FormVerse - Kuis Futuristik</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111827; }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-        textarea::placeholder, input::placeholder { color: #6b7280; }
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #1a0b2e, #4b1d52, #ff4b72);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: #ff4b72;
+            box-shadow: 0 0 10px rgba(255, 75, 114, 0.5);
+        }
+
+        /* Animations */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 75, 114, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 75, 114, 0.9); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(12deg); }
+            50% { transform: translateY(-20px) rotate(15deg); }
+            100% { transform: translateY(0px) rotate(12deg); }
+        }
+
+        .animate-fade-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .btn-primary {
+            background: linear-gradient(to right, #ff4b72, #ff8c42);
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 75, 114, 0.6);
+        }
+        .btn-primary:active { transform: scale(0.95); }
+        .btn-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 75, 114, 0.8); }
+
+        /* Custom Radio for Likert */
+        .likert-radio {
+            accent-color: #ff4b72;
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
     </style>
 </head>
-<body class="text-white">
+<body class="selection:bg-pink-500 selection:text-white pb-20">
 
-    <!-- Halaman Login -->
-    <div id="login-page" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-            <h2 class="text-3xl font-bold text-center text-cyan-400">Login Buku Saku</h2>
-            <p class="text-center text-gray-400">Masukkan email & password Anda. Jika akun belum ada, akan dibuat otomatis.</p>
-            <form id="login-form" class="space-y-6">
-                <div>
-                    <label for="email" class="text-sm font-bold text-gray-300">Email</label>
-                    <input type="email" id="email" required class="w-full p-3 mt-1 text-white bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500">
+    <!-- NEW LOADING SCREEN -->
+    <div id="view-loading" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#1a0b2e] text-white animate-fade-up">
+        <div class="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <h2 class="text-2xl font-bold mb-2">Memuat Data...</h2>
+        <p class="text-white/60">Menghubungkan ke Database Guru</p>
+    </div>
+
+    <!-- KONFIGURASI UTAMA -->
+    <script>
+        // 1. MASUKKAN LINK GOOGLE APPS SCRIPT DI SINI!
+        const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxJNYNa_WVMNRJNdBsv7TwI2yswRQixackM6oUNx-Hz5jwD0ImeAj48pEge6RlYEyh9/exec"; 
+        
+        // 2. MASUKKAN PASSWORD UNTUK GURU DI SINI!
+        const ADMIN_PASSWORD = "guru"; 
+        
+        // 3. Konfigurasi Default Form
+        let appConfig = {
+            title: "Misi Rahasia: Ujian Ceria!",
+            description: "Selamat datang di ujian interaktif. Tarik napas, dan mari kita mulai petualangannya!",
+            welcomeImageUrl: "", 
+            requireVideo: true, 
+            students: [], 
+            sections: [
+                {
+                    id: "sec_1", title: "Bagian 1: Pemantapan",
+                    blocks: [
+                        { id: "b1", type: "text", content: "Halo agen muda! Tonton video instruksi ini dulu ya." },
+                        { id: "b2", type: "video", url: "https://www.youtube.com/watch?v=pXygouhiq10&t=5s" },
+                        { id: "b3", type: "choice", question: "Siap melangkah lebih jauh?", 
+                          correctOptionIndex: 0,
+                          options: [
+                            { label: "Siaaap Komandan!", nextSection: "sec_2" },
+                            { label: "Sebentar, tarik napas dulu", nextSection: "sec_3" }
+                        ]}
+                    ]
+                },
+                {
+                    id: "sec_2", title: "Bagian 2: Tantangan Inti",
+                    blocks: [
+                        { id: "b5", type: "text_input", question: "Dari animasi/video di atas, apa pendapatmu?" },
+                        { id: "b4", type: "gif", url: "https://i.ibb.co.com/rf5QscjC/47692.gif" },
+                        { id: "b_likert1", type: "likert", question: "Pilih jawaban yang paling tepat", 
+                          rows: ["Ibukota Indonesia", "Ibukota Jepang"], 
+                          columns: ["Jakarta", "Tokyo", "Seoul", "Bangkok"],
+                          correctAnswers: { 0: 0, 1: 1 }
+                        },
+                        { id: "b6", type: "choice", question: "Selesai?", options: [
+                            { label: "Lanjut ke Tahap Berikutnya!", nextSection: "end_record" }
+                        ]}
+                    ]
+                }
+            ]
+        };
+
+        // State Aplikasi (Siswa)
+        let selectedClass = "";
+        let studentName = "";
+        let studentAnswers = {};
+        let currentSectionId = null;
+        let stream = null;
+        let mediaRecorder = null;
+        let videoChunks = [];
+        let videoBlob = null;
+        let recordTimer = null;
+        let timeLeft = 30;
+        
+        // Admin State
+        let adminTab = 'builder'; 
+        let fetchedResponses = [];
+        let isLoadingResponses = false;
+        let draggedSectionIndex = null;
+        let responseCurrentPage = 1;
+        const responseItemsPerPage = 15;
+        let responseSearchQuery = "";
+    </script>
+
+    <!-- HEADER / NAVBAR -->
+    <header class="p-4 flex justify-between items-center glass-panel sticky top-0 z-50 border-x-0 border-t-0 rounded-none">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+            <!-- LOGO SMAN 1 SOPPENG -->
+            <img src="https://arafx.vercel.app/logo.png" alt="SMAN 1 Soppeng" class="h-10 w-auto drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-pink-200">
+                Form<span class="text-pink-400">Verse</span>
+            </h1>
+        </div>
+        
+        <button onclick="showPasswordModal()" class="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white/70 hover:text-white" title="Admin / Teacher Mode">
+            <i data-lucide="settings" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <div id="db-alert" class="hidden bg-red-500/80 backdrop-blur text-white text-center py-2 px-4 text-sm font-bold shadow-lg flex justify-center items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        Perhatian: Database Belum Ready atau tidak bisa diakses. Menggunakan data bawaan.
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-4xl mx-auto mt-10 px-4 relative">
+
+        <!-- 1. STUDENT WELCOME SCREEN -->
+        <div id="view-welcome" class="text-center py-12 animate-fade-up">
+            
+            <div id="welcome-image-container" class="w-36 h-36 mx-auto rounded-[2.5rem] animate-float mb-8 shadow-2xl shadow-pink-500/50 border-4 border-white/20 overflow-hidden flex items-center justify-center bg-gradient-to-tr from-pink-500 to-orange-400 relative z-10">
+                <!-- Akan dirender oleh JS dengan efek pre-loading -->
+            </div>
+
+            <h1 id="display-title" class="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-200 drop-shadow-lg">Misi Rahasia</h1>
+            <p id="display-desc" class="text-xl text-white/80 mb-10 max-w-lg mx-auto leading-relaxed">Selamat datang! Silakan masukkan namamu untuk memulai.</p>
+            
+            <div class="max-w-sm mx-auto mb-8 text-left glass-panel rounded-2xl p-6 relative z-50">
+                <div id="professional-dropdown-container">
+                    <label class="block text-sm font-bold text-white/80 mb-2">Pilih Kelasmu:</label>
+                    <div class="relative mb-6">
+                        <button id="btn-select-class" onclick="toggleDropdown('dropdown-class')" class="glass-input w-full p-4 rounded-xl text-lg font-bold flex justify-between items-center bg-black/20 hover:bg-black/40 transition-all border border-white/20">
+                            <span id="text-select-class" class="text-white/60">-- Silakan Pilih Kelas --</span>
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-pink-400"></i>
+                        </button>
+                        <div id="dropdown-class" class="hidden absolute top-full mt-2 w-full bg-[#2d123d]/95 backdrop-blur-xl border border-pink-500/50 rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] z-50 max-h-56 overflow-y-auto"></div>
+                    </div>
+
+                    <label class="block text-sm font-bold text-white/80 mb-2">Nama Lengkap Siswa:</label>
+                    <div class="relative">
+                        <button id="btn-select-name" onclick="toggleDropdown('dropdown-name')" class="glass-input w-full p-4 rounded-xl text-lg font-bold flex justify-between items-center bg-black/20 transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed group">
+                            <span id="text-select-name" class="text-white/60">-- Pilih Kelas Terlebih Dahulu --</span>
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-orange-400 group-disabled:text-white/30"></i>
+                        </button>
+                        <div id="dropdown-name" class="hidden absolute top-full mt-2 w-full bg-[#2d123d]/95 backdrop-blur-xl border border-orange-500/50 rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] z-50 max-h-56 overflow-y-auto"></div>
+                    </div>
                 </div>
-                <div>
-                    <label for="password" class="text-sm font-bold text-gray-300">Password</label>
-                    <input type="password" id="password" required class="w-full p-3 mt-1 text-white bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500">
+
+                <div id="manual-input-container" class="hidden">
+                    <label class="block text-sm font-bold text-white/80 mb-2">Nama Lengkap Siswa:</label>
+                    <input type="text" id="input-student-name-manual" class="glass-input w-full p-4 rounded-xl text-lg font-bold bg-black/20" placeholder="Ketik namamu di sini...">
+                    <p class="text-xs text-yellow-300/80 mt-2 italic"><i data-lucide="alert-circle" class="w-3 h-3 inline"></i> Admin belum mengimpor daftar kelas.</p>
                 </div>
-                <button type="submit" id="login-button" class="w-full py-3 font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700 transition-colors disabled:bg-gray-500">Login atau Daftar</button>
-            </form>
-            <div id="login-error" class="text-red-400 text-center min-h-[1.25rem]"></div>
+            </div>
+
+            <button onclick="startQuiz()" class="btn-primary text-xl font-bold py-4 px-10 rounded-full flex items-center justify-center gap-3 mx-auto relative z-40">
+                Mulai Berpetualang <i data-lucide="arrow-right" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- 2. STUDENT FORM VIEWER (Kuis) -->
+        <div id="view-student-form" class="hidden animate-fade-up space-y-6">
+            <div class="glass-panel p-4 rounded-2xl flex items-center gap-4 shadow-lg sticky top-[88px] z-40 bg-[#4b1d52]/80 backdrop-blur-xl border-pink-500/30">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-orange-400 flex items-center justify-center shadow-[0_0_15px_rgba(255,75,114,0.6)]">
+                    <i data-lucide="target" class="text-white w-5 h-5"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-end mb-1.5">
+                        <span class="text-xs font-bold text-pink-200 uppercase tracking-widest">Progress Misi</span>
+                        <span id="student-progress-text" class="text-sm font-black text-white drop-shadow-md">0%</span>
+                    </div>
+                    <div class="h-3 w-full bg-black/40 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                        <div id="student-progress-bar" class="h-full bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 w-0 transition-all duration-1000 ease-out rounded-full relative">
+                            <div class="absolute top-0 right-0 bottom-0 w-8 bg-white/40 blur-sm rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="student-form-container" class="glass-panel rounded-3xl p-8 shadow-2xl"></div>
+        </div>
+
+        <!-- 3. STUDENT RECORDING/SUBMISSION SCREEN -->
+        <div id="view-recording" class="hidden text-center animate-fade-up glass-panel rounded-3xl p-8 max-w-2xl mx-auto">
+            <div id="rec-intro">
+                <div class="w-16 h-16 mx-auto bg-pink-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-pink-500/50">
+                    <i data-lucide="video" class="text-white w-8 h-8"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-2">Langkah Terakhir! 🎥</h2>
+                <p class="text-white/80 mb-8">Berikan pesan untuk gurumu langsung lewat video. (Maks 30 detik).</p>
+            </div>
+
+            <div class="relative rounded-2xl overflow-hidden bg-black/50 border-2 border-white/20 aspect-video mb-8 shadow-2xl">
+                <video id="live-video" autoplay muted playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                <video id="playback-video" controls playsinline class="hidden w-full h-full object-cover"></video>
+                
+                <div id="rec-indicator" class="hidden absolute top-4 right-4 bg-red-500/90 backdrop-blur text-white px-4 py-1 rounded-full text-sm font-bold animate-pulse flex items-center gap-2 shadow-lg">
+                    <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                    <span id="timer-text">00:30</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4" id="rec-controls">
+                <button id="btn-start-rec" onclick="startRecording()" class="btn-primary py-3 px-8 rounded-full font-bold shadow-lg flex items-center gap-2">
+                    <div class="w-3 h-3 bg-white rounded-full"></div> Mulai Rekam
+                </button>
+                <button id="btn-stop-rec" onclick="stopRecording()" class="hidden bg-white/20 hover:bg-white/30 text-white py-3 px-8 rounded-full font-bold shadow-lg transition-all flex items-center gap-2">
+                    <i data-lucide="square" class="w-4 h-4 fill-white"></i> Berhenti
+                </button>
+            </div>
+
+            <div id="submit-controls" class="hidden flex justify-center gap-4">
+                <button onclick="retryRecording()" class="bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-full font-bold transition-all">Ulangi</button>
+                <button onclick="submitData()" class="btn-primary py-3 px-8 rounded-full font-bold flex items-center gap-2">
+                    <i data-lucide="upload-cloud" class="w-5 h-5"></i> Kirim Tugas
+                </button>
+            </div>
+
+            <!-- Loading & Success -->
+            <div id="upload-status" class="hidden py-8">
+                <div id="loading-spinner" class="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <div id="success-icon" class="hidden w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <i data-lucide="check-circle" class="w-10 h-10"></i>
+                </div>
+                <h2 id="status-title" class="text-2xl font-bold mb-2">Mengirim Data...</h2>
+                <p id="status-desc" class="text-white/60">Mohon tunggu, proses pengiriman sedang berjalan.</p>
+            </div>
+        </div>
+
+        <!-- 4. TEACHER ADMIN -->
+        <div id="view-teacher" class="hidden animate-fade-up space-y-6">
+            <div class="glass-panel p-6 rounded-2xl flex flex-col lg:flex-row justify-between items-center gap-4 bg-pink-900/40 border-pink-500/50">
+                <div class="flex items-center gap-3 w-full lg:w-auto">
+                    <i data-lucide="shield-check" class="text-pink-400 w-8 h-8"></i>
+                    <h2 class="text-xl font-bold">Ruang Admin Guru</h2>
+                </div>
+                
+                <div class="flex overflow-x-auto bg-black/30 rounded-xl p-1 shadow-inner w-full lg:w-auto flex-nowrap hide-scrollbar">
+                    <button onclick="switchAdminTab('builder')" id="tab-builder" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-pink-500 text-white shadow-md flex-shrink-0 flex items-center gap-2">
+                        <i data-lucide="wrench" class="w-4 h-4"></i> Edit Soal
+                    </button>
+                    <button onclick="switchAdminTab('students')" id="tab-students" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white flex-shrink-0 flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4"></i> Data Siswa
+                    </button>
+                    <button onclick="switchAdminTab('responses')" id="tab-responses" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white flex-shrink-0 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Hasil & Video
+                    </button>
+                </div>
+                <button onclick="goHome()" class="bg-white/10 px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition w-full lg:w-auto flex justify-center">Keluar</button>
+            </div>
+
+            <!-- TAB 1: BUILDER -->
+            <div id="admin-builder-container" class="space-y-6">
+                <div class="glass-panel rounded-2xl p-6 bg-gradient-to-r from-pink-500/20 to-orange-500/20 border border-pink-500/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-pink-200">Simpan Permanen</h3>
+                        <p class="text-sm text-white/60">Simpan seluruh Soal dan Data Siswa ke Spreadsheet.</p>
+                    </div>
+                    <button id="btn-save-db" onclick="saveConfigToDB()" class="btn-primary py-3 px-6 rounded-xl font-bold flex items-center gap-2 shadow-lg w-full md:w-auto justify-center">
+                        <i data-lucide="save" class="w-5 h-5"></i> Simpan ke Database
+                    </button>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="font-bold mb-4 text-pink-300">Pengaturan Utama Form</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-white/60">Judul Form</label>
+                            <input type="text" id="tb-title" class="glass-input w-full p-2 rounded-lg mt-1" value="${appConfig.title}" onchange="appConfig.title=this.value;">
+                        </div>
+                        <div>
+                            <label class="text-xs text-white/60">Deskripsi Form</label>
+                            <textarea id="tb-desc" class="glass-input w-full p-2 rounded-lg mt-1" onchange="appConfig.description=this.value;"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs text-white/60 mb-1 block">Mode Akhir Kuis</label>
+                            <select id="tb-require-video" class="glass-input w-full p-2 rounded-lg bg-[#4b1d52]" onchange="appConfig.requireVideo = (this.value === 'true');">
+                                <option value="true">Wajib Rekam Video Siswa</option>
+                                <option value="false">Langsung Kirim Jawaban (Tanpa Video)</option>
+                            </select>
+                        </div>
+
+                        <!-- UPLOAD FOTO WELCOME (IMGBB) -->
+                        <div class="border-t border-white/10 pt-4 mt-4">
+                            <label class="text-xs text-white/60 mb-1 block">Gambar Utama Melayang (Format .jpg/.png/.gif)</label>
+                            <p class="text-[10px] text-white/40 mb-2">Upload foto kegiatan atau maskot untuk menggantikan logo roket di halaman depan.</p>
+                            <div class="flex gap-2 items-center flex-col sm:flex-row">
+                                <input type="text" id="tb-welcome-img" class="glass-input flex-1 p-2 rounded-lg w-full" placeholder="URL otomatis muncul setelah upload..." disabled value="">
+                                <label class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2 text-sm font-bold transition-all w-full sm:w-auto" id="btn-upload-img">
+                                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload ke ImgBB
+                                    <input type="file" class="hidden" accept="image/*" onchange="uploadWelcomeImage(this)">
+                                </label>
+                                <button onclick="resetWelcomeImage()" class="text-xs text-red-400 hover:text-red-300 px-2 py-2">Reset ke Roket</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="builder-sections" class="space-y-2"></div>
+
+                <button onclick="addSection()" class="w-full mt-4 py-4 border-2 border-dashed border-white/30 rounded-2xl text-white/70 hover:bg-white/10 hover:text-white hover:border-pink-500 transition-all font-bold flex justify-center items-center gap-2">
+                    <i data-lucide="plus"></i> Tambah Bagian Paling Bawah
+                </button>
+            </div>
+
+            <!-- TAB 2: DATA SISWA -->
+            <div id="admin-students-container" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-blue-400">
+                    <h3 class="font-bold mb-2 flex items-center gap-2 text-blue-300">
+                        <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Import Data dari Excel
+                    </h3>
+                    <p class="text-sm text-white/70 mb-4">
+                        Salin (Copy) daftar nama dan kelas dari file Excel atau Spreadsheet, lalu tempel (Paste) ke dalam kotak di bawah ini.<br>
+                        <b>Format Excel:</b> Kolom A = Nama Siswa, Kolom B = Kelas.
+                    </p>
+                    <textarea id="paste-students-area" class="glass-input w-full h-40 p-4 rounded-xl text-sm mb-4 font-mono leading-relaxed" placeholder="Contoh Paste:\nAliando Syarief\t10 IPA 1\nBudi Raharjo\t10 IPA 2"></textarea>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-white/40">*Otomatis tersimpan permanen setelah diimport.</span>
+                        <button id="btn-import-students" onclick="processImportStudents()" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all">
+                            <i data-lucide="download" class="w-4 h-4"></i> Proses Import
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-pink-300 flex items-center gap-2"><i data-lucide="list-checks" class="w-5 h-5"></i> Daftar Siswa Terdaftar</h3>
+                        <span class="text-sm bg-pink-500/20 text-pink-200 py-1 px-3 rounded-full font-bold" id="student-count-badge">0 Siswa</span>
+                    </div>
+                    <div class="bg-black/20 rounded-xl max-h-96 overflow-y-auto border border-white/5" id="imported-students-list"></div>
+                    <button onclick="clearAllStudents()" class="mt-4 text-xs text-red-400 hover:text-red-300 flex items-center gap-1"><i data-lucide="trash" class="w-3 h-3"></i> Hapus Semua Data Siswa</button>
+                </div>
+            </div>
+
+            <!-- TAB 3: RESPONSES REVIEW -->
+            <div id="admin-responses-container" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 text-center">
+                    <h3 class="text-xl font-bold mb-2">Review Jawaban Siswa</h3>
+                    <p class="text-sm text-white/60 mb-6">Menarik data secara langsung dari Google Spreadsheet.</p>
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        <button onclick="fetchResponses()" class="btn-primary py-2 px-6 rounded-full flex items-center justify-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Muat Ulang Data
+                        </button>
+                        <button onclick="downloadExcel()" class="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded-full flex items-center justify-center gap-2 font-bold shadow-lg transition-all" id="btn-download-excel">
+                            <i data-lucide="download-cloud" class="w-4 h-4"></i> Download Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="relative w-full md:w-64">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50"></i>
+                        <input type="text" id="search-responses" placeholder="Cari nama siswa..." class="glass-input w-full pl-9 p-2 rounded-lg text-sm" onkeyup="handleSearchResponses(this.value)">
+                    </div>
+                    
+                    <div class="flex items-center gap-4 bg-black/20 px-4 py-2 rounded-lg">
+                        <button onclick="changeResponsePage(-1)" id="btn-prev-page" class="text-white/70 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <span id="response-page-info" class="text-sm font-bold text-pink-200">Halaman 1 / 1</span>
+                        <button onclick="changeResponsePage(1)" id="btn-next-page" class="text-white/70 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="responses-list" class="space-y-4">
+                    <div class="text-center py-10 text-white/50">Silakan klik "Muat Ulang Data" untuk melihat jawaban.</div>
+                </div>
+            </div>
+            <div class="h-10"></div>
+        </div>
+    </main>
+
+    <!-- PASSWORD MODAL -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-8 relative animate-fade-up text-center">
+            <button onclick="closePasswordModal()" class="absolute top-4 right-4 text-white/50 hover:text-white"><i data-lucide="x"></i></button>
+            <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 text-pink-400">
+                <i data-lucide="lock" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Akses Guru Rahasia</h3>
+            <input type="password" id="admin-password" class="glass-input w-full p-3 rounded-xl text-center mb-4" placeholder="Masukkan Password">
+            <button onclick="verifyPassword()" class="btn-primary w-full py-3 rounded-xl font-bold">Masuk</button>
+            <p id="pw-error" class="text-red-400 text-sm mt-2 hidden">Password Salah!</p>
         </div>
     </div>
 
-    <!-- Konten Aplikasi Utama (Awalnya Tersembunyi) -->
-    <div id="app-content" class="hidden max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        <header class="text-center mb-8">
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl md:text-4xl font-bold text-cyan-400">Database Siswa</h1>
-                <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Logout</button>
-            </div>
-            <p class="text-gray-400 mt-2">Impor, tambah, lihat, dan ubah data siswa secara real-time.</p>
-        </header>
-
-        <div id="notification" class="hidden p-3 rounded-lg mb-6 text-center transition-opacity duration-300"></div>
-        
-        <!-- Form Tambah Manual -->
-        <section class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-teal-300">Tambah Data Secara Manual</h2>
-            <form id="manual-add-form">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="manual-nama" class="block text-sm font-medium text-gray-300 mb-1">Nama Lengkap Siswa</label>
-                        <input type="text" id="manual-nama" name="nama" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white" required>
-                    </div>
-                    <div>
-                        <label for="manual-namaOrangTua" class="block text-sm font-medium text-gray-300 mb-1">Nama Orang Tua</label>
-                        <input type="text" id="manual-namaOrangTua" name="namaOrangTua" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white">
-                    </div>
-                    <div>
-                        <label for="manual-kelas" class="block text-sm font-medium text-gray-300 mb-1">Kelas</label>
-                        <input type="text" id="manual-kelas" name="kelas" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white">
-                    </div>
-                     <div>
-                        <label for="manual-tanggalLahir" class="block text-sm font-medium text-gray-300 mb-1">Tanggal Lahir</label>
-                        <input type="date" id="manual-tanggalLahir" name="tanggalLahir" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="manual-alamat" class="block text-sm font-medium text-gray-300 mb-1">Alamat</label>
-                        <textarea id="manual-alamat" name="alamat" rows="2" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white"></textarea>
-                    </div>
-                    <div>
-                        <label for="manual-hobi" class="block text-sm font-medium text-gray-300 mb-1">Hobi</label>
-                        <input type="text" id="manual-hobi" name="hobi" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white">
-                    </div>
-                     <div>
-                        <label for="manual-citaCita" class="block text-sm font-medium text-gray-300 mb-1">Cita-cita</label>
-                        <input type="text" id="manual-citaCita" name="citaCita" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="manual-catatanPerilaku" class="block text-sm font-medium text-gray-300 mb-1">Catatan Perilaku</label>
-                        <textarea id="manual-catatanPerilaku" name="catatanPerilaku" rows="3" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 text-white"></textarea>
-                    </div>
-                </div>
-                <div class="mt-6 text-right">
-                    <button type="submit" id="manual-add-button" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-300 disabled:bg-gray-500">
-                        Tambah Siswa
-                    </button>
-                </div>
-            </form>
-        </section>
-
-        <!-- Form Impor Massal -->
-        <section class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-teal-300">Impor Data Massal (Paste to Import)</h2>
-            <textarea id="import-text" class="w-full h-32 p-3 bg-gray-700 border border-gray-600 rounded-md" placeholder='[{"nama": "Siswa", ...}]'></textarea>
-            <button id="import-button" class="mt-4 w-auto bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-6 rounded-lg">Impor Data Massal</button>
-        </section>
-
-        <!-- Tampilan Data -->
-        <main class="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <div id="loader" class="text-center text-gray-400">Memuat data siswa...</div>
-            <div id="main-content" class="hidden">
-                <div class="mb-6">
-                    <label for="student-select" class="block text-lg font-medium mb-2 text-teal-300">Pilih Siswa Untuk Dilihat/Diedit:</label>
-                    <select id="student-select" class="w-full p-3 bg-gray-700 border border-gray-600 rounded-md text-white"></select>
-                </div>
-                <div id="student-details-container"></div>
-            </div>
-        </main>
-
-        <footer class="text-center mt-8 text-gray-500 text-sm">
-            <p>User ID Anda (Permanen): <span id="user-id-display" class="font-mono text-xs"></span></p>
-        </footer>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, writeBatch, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- KONFIGURASI FIREBASE ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyCtChvN9bz0_jYst2Cq0CzXhPkoNIWBuxI",
-          authDomain: "buku-saku-wali.firebaseapp.com",
-          projectId: "buku-saku-wali",
-          storageBucket: "buku-saku-wali.appspot.com",
-          messagingSenderId: "931006438880",
-          appId: "1:931006438880:web:3a3dcfdef8351c9231df85",
-          measurementId: "G-4CPM08HNRY"
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // MENDAPATKAN URL GAMBAR AMAN & STABIL
+        const getSafeImageUrl = (url) => {
+            if (!url) return "";
+            // Ubah link drive menjadi format lh3 jika kebetulan ada
+            const match = url.match(/lh3\.googleusercontent\.com\/d\/([^/]+)/) || 
+                          url.match(/drive\.google\.com\/file\/d\/([^/]+)/) ||
+                          url.match(/drive\.google\.com\/uc\?.*id=([^&]+)/);
+            if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            return url;
         };
-        const appId = "buku-saku-wali";
 
-        // --- INISIALISASI FIREBASE ---
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // TOGGLE DROPDOWN
+        const toggleDropdown = (id) => {
+            const el = document.getElementById(id);
+            if (id === 'dropdown-class') document.getElementById('dropdown-name').classList.add('hidden');
+            if (id === 'dropdown-name') document.getElementById('dropdown-class').classList.add('hidden');
+            el.classList.toggle('hidden');
+        };
 
-        // --- ELEMEN DOM ---
-        const loginPage = document.getElementById('login-page');
-        const appContent = document.getElementById('app-content');
-        const loginForm = document.getElementById('login-form');
-        const loginButton = document.getElementById('login-button');
-        const loginError = document.getElementById('login-error');
-        const logoutButton = document.getElementById('logout-button');
-        const userIdDisplay = document.getElementById('user-id-display');
-        const studentSelect = document.getElementById('student-select');
-        const manualAddForm = document.getElementById('manual-add-form');
-        const importButton = document.getElementById('import-button');
+        // INIT WELCOME SCREEN (Siswa)
+        const initWelcomeScreen = () => {
+            document.getElementById('display-title').innerText = appConfig.title;
+            document.getElementById('display-desc').innerText = appConfig.description;
+            selectedClass = ""; studentName = "";
 
-        // --- STATE APLIKASI ---
-        let userId;
-        let studentsData = [];
-        let selectedStudentId = null;
-        let unsubscribe = null; // Untuk listener onSnapshot
+            if (appConfig.students && appConfig.students.length > 0) {
+                document.getElementById('professional-dropdown-container').classList.remove('hidden');
+                document.getElementById('manual-input-container').classList.add('hidden');
+                document.getElementById('text-select-class').innerText = "-- Silakan Pilih Kelas --";
+                document.getElementById('text-select-class').classList.add('text-white/60'); document.getElementById('text-select-class').classList.remove('text-white');
+                document.getElementById('btn-select-name').disabled = true;
+                document.getElementById('text-select-name').innerText = "-- Pilih Kelas Terlebih Dahulu --";
+                document.getElementById('text-select-name').classList.add('text-white/60'); document.getElementById('text-select-name').classList.remove('text-white');
 
-        // --- LOGIKA OTENTIKASI ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                userId = user.uid;
-                userIdDisplay.textContent = userId;
-                loginPage.classList.add('hidden');
-                appContent.classList.remove('hidden');
-                if (unsubscribe) unsubscribe(); // Hentikan listener lama jika ada
-                listenToStudents();
-            } else {
-                if (unsubscribe) unsubscribe(); // Hentikan listener saat logout
-                loginPage.classList.remove('hidden');
-                appContent.classList.add('hidden');
-                userId = null;
-            }
-        });
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            loginButton.disabled = true;
-            loginButton.textContent = "Memproses...";
-            loginError.textContent = "";
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    } catch (createError) {
-                        loginError.textContent = "Gagal membuat akun. Password minimal 6 karakter.";
-                    }
-                } else {
-                    loginError.textContent = "Gagal login. Periksa email dan password.";
-                }
-            } finally {
-                loginButton.disabled = false;
-                loginButton.textContent = "Login atau Daftar";
-            }
-        });
-
-        logoutButton.addEventListener('click', () => {
-            signOut(auth);
-        });
-
-        // --- FUNGSI UTAMA APLIKASI ---
-        
-        function showNotification(message, isError = false) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `p-3 rounded-lg mb-6 text-center ${isError ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`;
-            notification.classList.remove('hidden');
-            setTimeout(() => notification.classList.add('hidden'), 5000);
-        }
-
-        function listenToStudents() {
-            const studentCollectionPath = `artifacts/${appId}/users/${userId}/students`;
-            const mainContent = document.getElementById('main-content');
-            const loader = document.getElementById('loader');
-
-            unsubscribe = onSnapshot(collection(db, studentCollectionPath), (snapshot) => {
-                loader.classList.add('hidden');
-                mainContent.classList.remove('hidden');
-                
-                studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderStudentDropdown();
-                if (selectedStudentId) {
-                    renderStudentDetails(selectedStudentId);
-                }
-                if(snapshot.empty){
-                    document.getElementById('student-details-container').innerHTML = '<p class="text-center text-gray-400 mt-4">Belum ada data siswa. Silakan tambahkan melalui form di atas.</p>';
-                }
-            }, (err) => {
-                showNotification("Gagal mengambil data. Periksa aturan keamanan.", true);
-                console.error(err);
-            });
-        }
-        
-        function renderStudentDropdown() {
-            const currentSelection = studentSelect.value;
-            studentSelect.innerHTML = '<option value="">-- Silakan Pilih Nama Siswa --</option>';
-            const sortedStudents = [...studentsData].sort((a, b) => a.nama.localeCompare(b.nama));
-            sortedStudents.forEach(student => {
-                const option = document.createElement('option');
-                option.value = student.id;
-                option.textContent = student.nama;
-                studentSelect.appendChild(option);
-            });
-            studentSelect.value = currentSelection;
-        }
-        
-        function renderStudentDetails(studentId) {
-            const detailsContainer = document.getElementById('student-details-container');
-            const student = studentsData.find(s => s.id === studentId);
-            detailsContainer.innerHTML = '';
-            if (!student) return;
-
-            const formContent = document.createElement('div');
-            formContent.className = 'mt-6 border-t border-gray-700 pt-6 animate-fade-in';
-            let formHtml = `<h3 class="text-2xl font-bold mb-4 text-cyan-400">Detail: ${student.nama}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="details-grid">`;
-            
-            for (const [key, value] of Object.entries(student)) {
-                if (key === 'id') continue;
-                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                const isTextArea = ['catatanPerilaku', 'alamat', 'hobi'].includes(key);
-                const inputType = key === 'tanggalLahir' ? 'date' : 'text';
-
-                formHtml += `<div class="${isTextArea ? 'md:col-span-2' : ''}"><label class="block text-sm font-medium text-gray-400 mb-1">${label}</label>`;
-                if (isTextArea) {
-                    formHtml += `<textarea name="${key}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md h-24 text-white">${value || ''}</textarea>`;
-                } else {
-                    formHtml += `<input type="${inputType}" name="${key}" value="${value || ''}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white">`;
-                }
-                formHtml += `</div>`;
-            }
-
-            formHtml += `</div><div class="mt-8 text-right"><button id="save-button" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-6 rounded-lg">Simpan Perubahan</button></div>`;
-            formContent.innerHTML = formHtml;
-            detailsContainer.appendChild(formContent);
-            
-            formContent.querySelector('#save-button').addEventListener('click', handleSaveChanges);
-        }
-
-        async function handleSaveChanges() {
-            if (!selectedStudentId) return;
-            const saveButton = document.getElementById('save-button');
-            saveButton.disabled = true;
-            saveButton.textContent = 'Menyimpan...';
-
-            const dataToSave = {};
-            document.querySelectorAll('#student-details-container input, #student-details-container textarea').forEach(input => {
-                dataToSave[input.name] = input.value;
-            });
-
-            const studentDocRef = doc(db, `artifacts/${appId}/users/${userId}/students/${selectedStudentId}`);
-            try {
-                await updateDoc(studentDocRef, dataToSave);
-                showNotification(`Data ${dataToSave.nama} berhasil diperbarui.`);
-            } catch (e) {
-                showNotification("Gagal menyimpan perubahan.", true);
-                console.error("Save error:", e);
-            } finally {
-                saveButton.disabled = false;
-                saveButton.textContent = 'Simpan Perubahan';
-            }
-        }
-
-        studentSelect.addEventListener('change', (e) => {
-            selectedStudentId = e.target.value;
-            renderStudentDetails(selectedStudentId);
-        });
-        
-        manualAddForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const manualAddButton = document.getElementById('manual-add-button');
-            const formData = new FormData(manualAddForm);
-            const newStudentData = {};
-            formData.forEach((value, key) => {
-                if (value.trim()) newStudentData[key] = value;
-            });
-
-            if (!newStudentData.nama) {
-                showNotification("Nama siswa wajib diisi.", true);
-                return;
-            }
-
-            manualAddButton.disabled = true;
-            manualAddButton.textContent = 'Menambahkan...';
-
-            try {
-                const studentCollectionPath = `artifacts/${appId}/users/${userId}/students`;
-                await addDoc(collection(db, studentCollectionPath), newStudentData);
-                showNotification(`Siswa "${newStudentData.nama}" berhasil ditambahkan.`);
-                manualAddForm.reset();
-            } catch (error) {
-                showNotification("Gagal menambahkan siswa.", true);
-                console.error("Manual add error:", error);
-            } finally {
-                manualAddButton.disabled = false;
-                manualAddButton.textContent = 'Tambah Siswa';
-            }
-        });
-
-        importButton.addEventListener('click', async () => {
-            const importText = document.getElementById('import-text');
-             if (!importText.value.trim()) {
-                showNotification("Area impor kosong. Silakan tempel data JSON.", true);
-                return;
-            }
-            try {
-                const dataToImport = JSON.parse(importText.value);
-                if (!Array.isArray(dataToImport)) throw new Error("Format harus JSON Array.");
-                
-                importButton.disabled = true;
-                importButton.textContent = 'Memproses...';
-
-                const studentCollectionPath = `artifacts/${appId}/users/${userId}/students`;
-                const batch = writeBatch(db);
-                dataToImport.forEach(student => {
-                    const newDocRef = doc(collection(db, studentCollectionPath));
-                    batch.set(newDocRef, student);
+                const classContainer = document.getElementById('dropdown-class'); classContainer.innerHTML = "";
+                const uniqueClasses = [...new Set(appConfig.students.map(s => s.class))].sort();
+                uniqueClasses.forEach(cls => {
+                    const div = document.createElement('div'); div.className = "p-4 hover:bg-pink-500/30 cursor-pointer border-b border-white/5 transition font-bold text-white";
+                    div.innerText = cls; div.onclick = () => selectClassFromDropdown(cls); classContainer.appendChild(div);
                 });
-                await batch.commit();
-                importText.value = '';
-                showNotification(`${dataToImport.length} data siswa berhasil diimpor!`);
-            } catch (e) {
-                showNotification("Gagal mengimpor. Pastikan format JSON Array valid.", true);
-                console.error("Import error:", e);
-            } finally {
-                importButton.disabled = false;
-                importButton.textContent = 'Impor Data Massal';
+            } else {
+                document.getElementById('professional-dropdown-container').classList.add('hidden');
+                document.getElementById('manual-input-container').classList.remove('hidden');
+                document.getElementById('input-student-name-manual').value = "";
             }
-        });
+        };
 
+        // RENDER GAMBAR WELCOME DINAMIS (Anti Blank/Crash)
+        const renderWelcomeImage = () => {
+            const container = document.getElementById('welcome-image-container');
+            if (appConfig.welcomeImageUrl && appConfig.welcomeImageUrl.trim() !== '') {
+                const safeUrl = getSafeImageUrl(appConfig.welcomeImageUrl);
+                // Menggunakan elemen Image terpisah untuk pre-loading
+                container.innerHTML = `
+                    <div id="welcome-img-loader" class="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                        <div class="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <img id="welcome-img-el" src="${safeUrl}" class="w-full h-full object-cover relative z-10 opacity-0 transition-opacity duration-500" alt="Welcome Image">
+                `;
+                
+                const imgEl = document.getElementById('welcome-img-el');
+                const loaderEl = document.getElementById('welcome-img-loader');
+                
+                imgEl.onload = () => {
+                    loaderEl.style.display = 'none';
+                    imgEl.classList.remove('opacity-0');
+                };
+                imgEl.onerror = () => {
+                    loaderEl.style.display = 'none';
+                    imgEl.src = 'https://placehold.co/400x400/4b1d52/ffffff?text=Image+Error';
+                    imgEl.classList.remove('opacity-0');
+                };
+            } else {
+                container.innerHTML = `<i data-lucide="rocket" class="text-white w-16 h-16 transform -rotate-12"></i>`;
+                lucide.createIcons();
+            }
+            
+            const tbImg = document.getElementById('tb-welcome-img');
+            if(tbImg) tbImg.value = appConfig.welcomeImageUrl || "";
+        };
+
+        // EVENT WINDOW ONLOAD (Menarik Database & Inisialisasi)
+        window.onload = async () => {
+            lucide.createIcons();
+            
+            // Klik diluar menutup dropdown
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#btn-select-class') && !e.target.closest('#dropdown-class')) {
+                    document.getElementById('dropdown-class')?.classList.add('hidden');
+                }
+                if (!e.target.closest('#btn-select-name') && !e.target.closest('#dropdown-name')) {
+                    document.getElementById('dropdown-name')?.classList.add('hidden');
+                }
+            });
+            
+            if (!GAS_WEBHOOK_URL || GAS_WEBHOOK_URL.trim() === "") {
+                document.getElementById('db-alert').classList.remove('hidden');
+                document.getElementById('view-loading').classList.add('hidden');
+                renderWelcomeImage();
+                initWelcomeScreen();
+            } else {
+                try {
+                    const res = await fetch(GAS_WEBHOOK_URL + "?action=getConfig");
+                    
+                    // CEK APAKAH RESPON BERUPA JSON
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const data = await res.json();
+                        if (data.status === "success" && data.data) {
+                            appConfig = data.data; 
+                            if(!appConfig.students) appConfig.students = []; 
+                            if(typeof appConfig.requireVideo === 'undefined') appConfig.requireVideo = true;
+                        }
+                    } else {
+                        console.warn("URL Webhook tidak merespons JSON. Pastikan akses deployment di Apps Script disetel ke 'Anyone'.");
+                        document.getElementById('db-alert').classList.remove('hidden');
+                        document.getElementById('db-alert').innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4"></i> Database Terkunci! Atur akses Web app ke "Anyone".`;
+                        lucide.createIcons();
+                    }
+                } catch (e) {
+                    console.log("Gagal memuat config, menggunakan bawaan.", e);
+                }
+                
+                document.getElementById('view-loading').classList.add('hidden');
+                renderWelcomeImage();
+                initWelcomeScreen();
+            }
+        };
+
+        // FUNGSI PEMBANTU URL VIDEO DARI DRIVE
+        const getDriveVideoUrl = (url) => {
+            if(!url) return null;
+            const match = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+            if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
+            if (url.includes("drive.google.com") && url.includes("/preview")) return url;
+            return null;
+        };
+
+        // UPLOAD GAMBAR KE IMGBB (Bypass Kompresi agar GIF tidak rusak)
+        const uploadWelcomeImage = async (input) => {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const btnLabel = document.getElementById('btn-upload-img');
+            const originalHTML = btnLabel.innerHTML;
+            btnLabel.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Memproses...`;
+            btnLabel.style.pointerEvents = 'none';
+            
+            try {
+                const formData = new FormData();
+                formData.append('key', 'bc84840c84c332323a490c053d3c2df2'); // API Key ImgBB
+                formData.append('image', file);
+                
+                const res = await fetch('https://api.imgbb.com/1/upload', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Mengubah domain i.ibb.co menjadi i.ibb.co.com agar tidak diblokir provider internet
+                    const safeImgbbUrl = data.data.url.replace('i.ibb.co', 'i.ibb.co.com');
+                    appConfig.welcomeImageUrl = safeImgbbUrl; 
+                    renderWelcomeImage();
+                    alert("Foto/GIF Ceria berhasil diupload ke ImgBB! Jangan lupa klik 'Simpan Permanen' ya. 🎉");
+                } else { 
+                    throw new Error(data.error?.message || "Gagal upload"); 
+                }
+            } catch (err) { 
+                alert("Wah, gagal upload gambar. Pastikan koneksi internet stabil ya!"); 
+                console.error(err);
+            } finally { 
+                btnLabel.innerHTML = originalHTML; 
+                btnLabel.style.pointerEvents = 'auto'; 
+                input.value = ''; 
+                lucide.createIcons(); 
+            }
+        };
+
+        const resetWelcomeImage = () => { appConfig.welcomeImageUrl = ""; renderWelcomeImage(); alert("Logo berhasil dikembalikan ke Roket! Ingat klik Simpan Permanen."); };
+
+        // GAMBAR SOAL UPLOAD KE IMGBB
+        const uploadBlockImage = async (input, secId, blockId) => {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const btnLabel = document.getElementById(`btn-upload-img-${blockId}`);
+            const originalHTML = btnLabel.innerHTML;
+            btnLabel.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+            btnLabel.style.pointerEvents = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('key', 'bc84840c84c332323a490c053d3c2df2'); // API Key ImgBB
+                formData.append('image', file);
+                
+                const res = await fetch('https://api.imgbb.com/1/upload', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Mengubah domain i.ibb.co menjadi i.ibb.co.com agar tidak diblokir provider internet
+                    const safeImgbbUrl = data.data.url.replace('i.ibb.co', 'i.ibb.co.com');
+                    updateBlockField(secId, blockId, 'url', safeImgbbUrl);
+                    renderTeacherBuilder();
+                    alert("Gambar/GIF soal berhasil mendarat di ImgBB! Otomatis tayang! 🎉");
+                } else { 
+                    throw new Error(data.error?.message || "Gagal upload"); 
+                }
+            } catch (err) { 
+                alert("Wah, gagal upload gambar soal. Pastikan koneksi aman ya!"); 
+            } finally { 
+                btnLabel.innerHTML = originalHTML; 
+                btnLabel.style.pointerEvents = 'auto'; 
+                input.value = ''; 
+                lucide.createIcons(); 
+            }
+        };
+
+        // VIDEO UPLOAD 
+        const uploadBlockVideo = async (input, secId, blockId) => {
+            alert("Fitur upload video dihentikan. Silakan gunakan link YouTube atau link Google Drive ya!");
+        };
+
+        const selectClassFromDropdown = (cls) => {
+            selectedClass = cls; studentName = ""; 
+            document.getElementById('text-select-class').innerText = cls; document.getElementById('text-select-class').classList.remove('text-white/60'); document.getElementById('text-select-class').classList.add('text-white');
+            document.getElementById('dropdown-class').classList.add('hidden');
+            document.getElementById('btn-select-name').disabled = false; document.getElementById('btn-select-name').classList.add('hover:bg-black/40');
+            document.getElementById('text-select-name').innerText = "-- Silakan Pilih Nama --"; document.getElementById('text-select-name').classList.add('text-white/60'); document.getElementById('text-select-name').classList.remove('text-white');
+
+            const nameContainer = document.getElementById('dropdown-name'); nameContainer.innerHTML = "";
+            appConfig.students.filter(s => s.class === cls).sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+                const div = document.createElement('div'); div.className = "p-4 hover:bg-orange-500/30 cursor-pointer border-b border-white/5 transition font-bold text-white flex justify-between items-center group";
+                div.innerHTML = `<span>${s.name}</span> <i data-lucide="check" class="w-4 h-4 text-orange-400 opacity-0 group-hover:opacity-100 transition"></i>`;
+                div.onclick = () => selectNameFromDropdown(s.name, s.class); nameContainer.appendChild(div);
+            });
+            lucide.createIcons();
+        };
+
+        const selectNameFromDropdown = (name, cls) => {
+            studentName = `${name} (${cls})`; 
+            document.getElementById('text-select-name').innerText = name; document.getElementById('text-select-name').classList.remove('text-white/60'); document.getElementById('text-select-name').classList.add('text-white');
+            document.getElementById('dropdown-name').classList.add('hidden');
+        };
+
+        const hideAllViews = () => {
+            ['view-loading', 'view-welcome', 'view-student-form', 'view-recording', 'view-teacher'].forEach(id => {
+                const el = document.getElementById(id); if(el) el.classList.add('hidden');
+            });
+        };
+
+        const getYoutubeInfo = (url) => {
+            if(!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            if (match && match[2].length === 11) {
+                let start = 0; const timeMatch = url.match(/[?&]t=(\d+)s?/);
+                if(timeMatch) start = parseInt(timeMatch[1]);
+                return { id: match[2], start: start };
+            }
+            return null;
+        };
+
+        const goHome = () => {
+            hideAllViews(); document.getElementById('view-welcome').classList.remove('hidden');
+            studentName = ""; studentAnswers = {}; videoBlob = null; initWelcomeScreen();
+            if(stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+        };
+
+        // ADMIN LOGIC
+        const showPasswordModal = () => { document.getElementById('password-modal').classList.remove('hidden'); document.getElementById('admin-password').value = ""; document.getElementById('pw-error').classList.add('hidden'); };
+        const closePasswordModal = () => { document.getElementById('password-modal').classList.add('hidden'); };
+        
+        const verifyPassword = () => {
+            if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
+                closePasswordModal(); hideAllViews();
+                document.querySelector('#tb-title').value = appConfig.title; document.querySelector('#tb-desc').value = appConfig.description;
+                document.querySelector('#tb-welcome-img').value = appConfig.welcomeImageUrl || ""; document.querySelector('#tb-require-video').value = appConfig.requireVideo !== false ? 'true' : 'false';
+                renderTeacherBuilder(); renderImportedStudentsList(); switchAdminTab('builder'); document.getElementById('view-teacher').classList.remove('hidden');
+            } else document.getElementById('pw-error').classList.remove('hidden');
+        };
+
+        const switchAdminTab = (tab) => {
+            adminTab = tab;
+            const actC = "px-4 py-2 rounded-lg text-sm font-bold transition-all bg-pink-500 text-white shadow-md flex-shrink-0 flex items-center gap-2";
+            const inactC = "px-4 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white flex-shrink-0 flex items-center gap-2";
+            document.getElementById('tab-builder').className = tab === 'builder' ? actC : inactC;
+            document.getElementById('tab-students').className = tab === 'students' ? actC : inactC;
+            document.getElementById('tab-responses').className = tab === 'responses' ? actC : inactC;
+            document.getElementById('admin-builder-container').classList.toggle('hidden', tab !== 'builder');
+            document.getElementById('admin-students-container').classList.toggle('hidden', tab !== 'students');
+            document.getElementById('admin-responses-container').classList.toggle('hidden', tab !== 'responses');
+            if(tab === 'responses' && fetchedResponses.length === 0) fetchResponses();
+        };
+
+        const processImportStudents = async () => {
+            const textArea = document.getElementById('paste-students-area'); const rawData = textArea.value.trim();
+            if(!rawData) { alert("Teks masih kosong! Paste dulu ya."); return; }
+            if(!appConfig.students) appConfig.students = [];
+            let addedCount = 0;
+            rawData.split('\n').forEach(row => {
+                const cols = row.split('\t');
+                if(cols.length > 0 && cols[0].trim() !== '') { appConfig.students.push({ name: cols[0].trim(), class: cols[1] ? cols[1].trim() : "-" }); addedCount++; }
+            });
+            textArea.value = ""; renderImportedStudentsList();
+            if (GAS_WEBHOOK_URL) {
+                const btn = document.getElementById('btn-import-students'); btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Menyimpan...`; btn.disabled = true;
+                try {
+                    await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) });
+                    alert(`Horee! Berhasil mengimpor ${addedCount} data siswa dan tersimpan permanen! 🎉`);
+                } catch(e) { alert(`Berhasil mengimpor, tapi gagal autosave. Klik "Simpan Permanen" manual.`); } 
+                finally { btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Proses Import`; btn.disabled = false; lucide.createIcons(); }
+            }
+        };
+
+        const autoSaveSilently = async () => { if (GAS_WEBHOOK_URL) { try { await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) }); } catch(e){} } };
+
+        const renderImportedStudentsList = () => {
+            const container = document.getElementById('imported-students-list'); const badge = document.getElementById('student-count-badge');
+            if(!appConfig.students) appConfig.students = []; badge.innerText = `${appConfig.students.length} Siswa`;
+            if(appConfig.students.length === 0) return container.innerHTML = `<div class="p-6 text-center text-white/40 italic">Belum ada data siswa diimpor.</div>`;
+            let html = `<table class="w-full text-left text-sm"><thead class="bg-white/5 border-b border-white/10 text-pink-200"><tr><th class="p-3 w-12 text-center">#</th><th class="p-3">Nama Lengkap</th><th class="p-3 w-32">Kelas</th><th class="p-3 w-16 text-center">Aksi</th></tr></thead><tbody>`;
+            appConfig.students.forEach((s, i) => {
+                html += `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors"><td class="p-3 text-center text-white/50">${i+1}</td><td class="p-3 font-bold">${s.name}</td><td class="p-3"><span class="bg-blue-500/20 text-blue-300 py-1 px-2 rounded text-xs">${s.class}</span></td><td class="p-3 text-center"><button onclick="removeStudent(${i})" class="text-red-400 hover:text-red-300"><i data-lucide="x-circle" class="w-4 h-4 mx-auto"></i></button></td></tr>`;
+            });
+            html += `</tbody></table>`; container.innerHTML = html; lucide.createIcons();
+        };
+
+        const removeStudent = async (index) => { if(confirm("Yakin mau menghapus siswa ini?")) { appConfig.students.splice(index, 1); renderImportedStudentsList(); await autoSaveSilently(); } };
+        const clearAllStudents = async () => { if(confirm("PERINGATAN! Yakin menghapus seluruh data siswa?")) { appConfig.students = []; renderImportedStudentsList(); await autoSaveSilently(); } };
+
+        // KALKULASI SKOR OTOMATIS
+        const getStudentScore = (answersStr) => {
+            let parsed = {}; try { parsed = JSON.parse(answersStr || '{}'); } catch(e){}
+            let totalItems = 0; let correctItems = 0;
+            appConfig.sections.forEach(sec => {
+                sec.blocks.forEach(b => {
+                    if (b.type === 'choice' && b.correctOptionIndex !== undefined && b.correctOptionIndex !== null) {
+                        totalItems++; if (b.options[b.correctOptionIndex] && parsed[b.id] === b.options[b.correctOptionIndex].label) correctItems++;
+                    } else if (b.type === 'likert' && b.correctAnswers && Object.keys(b.correctAnswers).length > 0) {
+                        b.rows.forEach((r, rIdx) => {
+                            if (b.correctAnswers[rIdx] !== undefined && b.correctAnswers[rIdx] !== null) {
+                                totalItems++; const correctLabel = b.columns[b.correctAnswers[rIdx]];
+                                if (parsed[b.id] && parsed[b.id][rIdx] === correctLabel) correctItems++;
+                            }
+                        });
+                    }
+                });
+            });
+            if (totalItems === 0) return null; 
+            return Math.round((correctItems / totalItems) * 100);
+        };
+
+        // RESPONSES & PAGINATION
+        const fetchResponses = async () => {
+            if(!GAS_WEBHOOK_URL) return alert("Webhook belum diatur."); 
+            const container = document.getElementById('responses-list');
+            container.innerHTML = `<div class="flex flex-col items-center justify-center py-10"><div class="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mb-4"></div><p class="text-white/60">Menarik data...</p></div>`;
+            try {
+                const res = await fetch(GAS_WEBHOOK_URL + "?action=getResponses"); const data = await res.json();
+                if(data.status === "success") { fetchedResponses = data.data.reverse(); responseCurrentPage = 1; renderResponses(); } else throw new Error();
+            } catch (err) { container.innerHTML = `<div class="bg-red-500/20 border border-red-500/50 p-6 text-center text-red-200">Gagal mengambil data!</div>`; }
+        };
+
+        const handleSearchResponses = (query) => { responseSearchQuery = query.toLowerCase().trim(); responseCurrentPage = 1; renderResponses(); };
+        const changeResponsePage = (dir) => { responseCurrentPage += dir; renderResponses(); };
+
+        const renderResponses = () => {
+            const container = document.getElementById('responses-list');
+            let filteredList = fetchedResponses;
+            if (responseSearchQuery !== "") filteredList = fetchedResponses.filter(r => (r.name || '').toLowerCase().includes(responseSearchQuery));
+
+            if(filteredList.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-white/50">Belum ada jawaban / tidak ditemukan.</div>`;
+                document.getElementById('response-page-info').innerText = `Halaman 1 / 1`; document.getElementById('btn-prev-page').disabled = true; document.getElementById('btn-next-page').disabled = true; return;
+            }
+
+            const totalPages = Math.ceil(filteredList.length / responseItemsPerPage) || 1;
+            if(responseCurrentPage > totalPages) responseCurrentPage = totalPages; if(responseCurrentPage < 1) responseCurrentPage = 1;
+            const startIndex = (responseCurrentPage - 1) * responseItemsPerPage;
+            const paginatedList = filteredList.slice(startIndex, startIndex + responseItemsPerPage);
+
+            document.getElementById('response-page-info').innerText = `Halaman ${responseCurrentPage} / ${totalPages}`;
+            document.getElementById('btn-prev-page').disabled = responseCurrentPage <= 1; document.getElementById('btn-next-page').disabled = responseCurrentPage >= totalPages;
+
+            let html = "";
+            paginatedList.forEach((resp, idx) => {
+                let parsedAnswers = {}; try { parsedAnswers = JSON.parse(resp.answers || '{}'); } catch(e){}
+                let answersHtml = "";
+                for(let key in parsedAnswers) {
+                    let val = parsedAnswers[key];
+                    if (typeof val === 'object') {
+                        answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">ID Soal: ${key}</span>`;
+                        for(let subKey in val) answersHtml += `<div class="pl-3 border-l border-white/20 mt-1"><span class="text-white/60 text-xs">Baris ${parseInt(subKey)+1}:</span> ${val[subKey]}</div>`;
+                        answersHtml += `</div>`;
+                    } else { answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">ID Soal: ${key}</span><span class="font-bold">${val}</span></div>`; }
+                }
+                if(answersHtml === "") answersHtml = "<span class='text-white/40 italic'>Tidak ada jawaban.</span>";
+
+                const calcScore = getStudentScore(resp.answers);
+                const scoreBadge = calcScore !== null ? `<span class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3"></i> Skor: ${calcScore} / 100</span>` : `<span class="bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs flex items-center gap-1"><i data-lucide="edit-3" class="w-3 h-3"></i> Menunggu Penilaian</span>`;
+                let videoBtn = resp.videoUrl && resp.videoUrl !== "Tidak ada video" ? `<a href="${resp.videoUrl}" target="_blank" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4"></i> Tonton Video</a>` : `<span class="text-white/40 text-xs italic flex items-center gap-1"><i data-lucide="video-off" class="w-4 h-4"></i> Tanpa Video</span>`;
+
+                html += `
+                <div class="glass-panel p-6 rounded-2xl animate-fade-up" style="animation-delay: ${(idx%15) * 0.05}s">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 mb-4 gap-4">
+                        <div>
+                            <h4 class="text-xl font-bold flex items-center gap-2"><i data-lucide="user" class="text-pink-400"></i> ${resp.name || 'Anonim'}</h4>
+                            <div class="flex gap-2 items-center mt-2">
+                                ${scoreBadge}
+                                <p class="text-[10px] text-white/40"><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${new Date(resp.timestamp).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        ${videoBtn}
+                    </div>
+                    <div class="bg-black/20 p-4 rounded-xl border border-white/5">
+                        <h5 class="text-sm font-bold text-white/70 mb-3 border-b border-white/10 pb-2">Rincian Jawaban:</h5>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm max-h-48 overflow-y-auto">${answersHtml}</div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html; lucide.createIcons();
+        };
+
+        const downloadExcel = () => {
+            if (fetchedResponses.length === 0) return alert("Belum ada data di-download!");
+            let questionIds = new Set();
+            fetchedResponses.forEach(r => { let parsed; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){ parsed = {}; } Object.keys(parsed).forEach(k => questionIds.add(k)); });
+            const questionsArray = Array.from(questionIds);
+            const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
+            let csvContent = "\uFEFF"; 
+            let headers = ["No", "Waktu Dikirim", "Nama Siswa", "Skor Auto", "Link Video", ...questionsArray].map(escapeCSV);
+            csvContent += headers.join(",") + "\n";
+
+            [...fetchedResponses].reverse().forEach((r, idx) => {
+                let parsed = {}; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){}
+                const score = getStudentScore(r.answers);
+                let row = [idx + 1, new Date(r.timestamp).toLocaleString(), r.name || 'Anonim', score !== null ? score : "Manual", r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"];
+                questionsArray.forEach(qId => {
+                    let val = parsed[qId];
+                    if (val === undefined) row.push("");
+                    else if (typeof val === 'object') row.push(Object.entries(val).map(([k, v]) => `Baris ${parseInt(k)+1}: ${v}`).join(" | "));
+                    else row.push(val);
+                });
+                csvContent += row.map(escapeCSV).join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = `Rekap_Kuis_Skor_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        };
+
+        // QUIZ LOGIC
+        const calculateProgress = () => {
+            let total = 0, answered = 0;
+            appConfig.sections.forEach(sec => {
+                sec.blocks.forEach(b => {
+                    if (b.type === 'text_input' || b.type === 'choice') { total++; if (studentAnswers[b.id]) answered++; }
+                    else if (b.type === 'likert') { total += b.rows.length; if (studentAnswers[b.id]) answered += Object.keys(studentAnswers[b.id]).length; }
+                });
+            });
+            return total === 0 ? 0 : Math.min(Math.round((answered / total) * 100), 100);
+        };
+
+        const updateProgressBar = () => {
+            const pct = calculateProgress();
+            const bar = document.getElementById('student-progress-bar'), text = document.getElementById('student-progress-text');
+            if (bar && text) { bar.style.width = pct + '%'; text.innerText = pct + '%'; }
+        };
+
+        const startQuiz = () => {
+            const isManual = document.getElementById('manual-input-container') && !document.getElementById('manual-input-container').classList.contains('hidden');
+            if (isManual) {
+                const manualName = document.getElementById('input-student-name-manual').value;
+                if (!manualName.trim()) return alert("Tolong ketik namamu dulu ya 😊");
+                studentName = manualName;
+            } else { if (!selectedClass || !studentName) return alert("Tolong pilih Kelas dan Namamu dulu 😊"); }
+            
+            hideAllViews(); currentSectionId = appConfig.sections[0].id; renderStudentSection();
+            document.getElementById('view-student-form').classList.remove('hidden'); updateProgressBar();
+        };
+
+        const handleTextAnswer = (blockId, val) => { if(val.trim() === '') delete studentAnswers[blockId]; else studentAnswers[blockId] = val; updateProgressBar(); };
+        const handleLikertAnswer = (blockId, rowIndex, colValue) => { if (!studentAnswers[blockId]) studentAnswers[blockId] = {}; studentAnswers[blockId][rowIndex] = colValue; updateProgressBar(); };
+        const handleChoiceAnswer = (blockId, label, nextSecId) => {
+            if(blockId !== 'manual') { studentAnswers[blockId] = label; updateProgressBar(); }
+            const container = document.getElementById('student-form-container'); container.style.opacity = 0;
+            setTimeout(() => {
+                currentSectionId = nextSecId;
+                if (currentSectionId === 'end_record') { 
+                    hideAllViews(); document.getElementById('view-recording').classList.remove('hidden');
+                    if (appConfig.requireVideo === false) {
+                        document.getElementById('rec-intro').classList.add('hidden'); document.querySelector('#view-recording .aspect-video').classList.add('hidden');
+                        document.getElementById('rec-controls').classList.add('hidden'); document.getElementById('submit-controls').classList.add('hidden');
+                        submitData(); 
+                    } else {
+                        document.getElementById('rec-intro').classList.remove('hidden'); document.querySelector('#view-recording .aspect-video').classList.remove('hidden');
+                        initCamera(); 
+                    }
+                } else renderStudentSection();
+                container.style.opacity = 1;
+            }, 300);
+        };
+
+        const renderStudentSection = () => {
+            const section = appConfig.sections.find(s => s.id === currentSectionId);
+            const container = document.getElementById('student-form-container');
+            if (!section) return container.innerHTML = `<h2 class="text-2xl">Oops! Bagian tidak ditemukan.</h2>`;
+
+            let html = `<div class="mb-8 border-b border-white/20 pb-4"><h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-pink-300">${section.title}</h2></div><div class="space-y-8">`;
+            let hasChoice = false;
+
+            section.blocks.forEach(block => {
+                if (block.type === 'text') html += `<p class="text-lg text-white/90 leading-relaxed">${block.content}</p>`;
+                else if (block.type === 'video') {
+                    const ytInfo = getYoutubeInfo(block.url);
+                    const driveVidUrl = getDriveVideoUrl(block.url);
+                    
+                    if (ytInfo) {
+                        let ytSrc = `https://www.youtube.com/embed/${ytInfo.id}?autoplay=1&mute=1&controls=1&rel=0`;
+                        if (ytInfo.start > 0) ytSrc += `&start=${ytInfo.start}`;
+                        html += `
+                        <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                            <iframe src="${ytSrc}" class="w-full h-full object-cover" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none"><div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> YouTube</div>
+                        </div>`;
+                    } else if (driveVidUrl) {
+                        html += `
+                        <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                            <iframe src="${driveVidUrl}" class="w-full h-full object-cover" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                            <div class="absolute top-4 right-4 bg-blue-900/80 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none border border-blue-400/50"><div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div> G-Drive Video</div>
+                        </div>`;
+                    } else {
+                        html += `
+                        <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                            <video src="${block.url}" autoplay loop muted playsinline controls class="w-full h-full object-cover"></video>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none"><div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Auto-loop</div>
+                        </div>`;
+                    }
+                }
+                else if (block.type === 'gif') {
+                    const safeUrl = getSafeImageUrl(block.url);
+                    html += `
+                    <div class="rounded-2xl overflow-hidden flex justify-center relative min-h-[200px] bg-black/20 border border-white/20">
+                        <div id="loader-${block.id}" class="absolute inset-0 flex items-center justify-center z-10">
+                            <div class="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <img src="${safeUrl}" class="max-w-full rounded-xl shadow-lg relative z-20 opacity-0 transition-opacity duration-500" onload="document.getElementById('loader-${block.id}').style.display='none'; this.classList.remove('opacity-0');" onerror="this.onerror=null; document.getElementById('loader-${block.id}').style.display='none'; this.src='https://placehold.co/600x400/4b1d52/ffffff?text=Gagal+Memuat+Gambar'; this.classList.remove('opacity-0');">
+                    </div>`;
+                }
+                else if (block.type === 'text_input') {
+                    const savedVal = studentAnswers[block.id] || "";
+                    html += `<div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner"><p class="text-xl font-bold mb-4">${block.question}</p><textarea onkeyup="handleTextAnswer('${block.id}', this.value)" class="glass-input w-full p-4 rounded-xl text-lg" rows="3" placeholder="Ketik jawabanmu...">${savedVal}</textarea></div>`;
+                }
+                else if (block.type === 'likert') {
+                    html += `<div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner overflow-x-auto"><p class="text-xl font-bold mb-6">${block.question}</p><table class="w-full text-left border-collapse min-w-[500px]"><thead><tr><th class="p-3 border-b border-white/20 w-1/3"></th>`;
+                    block.columns.forEach(col => html += `<th class="p-3 border-b border-white/20 text-center text-sm text-pink-200 font-bold leading-tight">${col}</th>`);
+                    html += `</tr></thead><tbody>`;
+                    block.rows.forEach((row, rIdx) => {
+                        const bgClass = rIdx % 2 === 0 ? 'bg-black/10' : 'bg-transparent';
+                        html += `<tr class="${bgClass} hover:bg-white/5 transition-colors"><td class="p-4 border-b border-white/5 text-sm md:text-base">${row}</td>`;
+                        block.columns.forEach(col => {
+                            const isChecked = studentAnswers[block.id] && studentAnswers[block.id][rIdx] === col ? 'checked' : '';
+                            html += `<td class="p-4 border-b border-white/5 text-center"><input type="radio" name="likert_${block.id}_${rIdx}" value="${col}" ${isChecked} onclick="handleLikertAnswer('${block.id}', ${rIdx}, '${col}')" class="likert-radio transform scale-125"></td>`;
+                        });
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+                else if (block.type === 'choice') {
+                    hasChoice = true;
+                    html += `<div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner"><p class="text-xl font-bold mb-6">${block.question}</p><div class="grid gap-3">`;
+                    block.options.forEach(opt => {
+                        const btnClass = studentAnswers[block.id] === opt.label ? "bg-pink-500/40 border-pink-400" : "bg-black/20 hover:bg-white/10 border-white/20 hover:border-pink-500";
+                        html += `<button onclick="handleChoiceAnswer('${block.id}', '${opt.label}', '${opt.nextSection}')" class="text-left p-4 rounded-xl border transition-all flex justify-between items-center group ${btnClass}"><span class="text-lg">${opt.label}</span><i data-lucide="chevron-right" class="text-pink-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></button>`;
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            html += `</div>`;
+            if (!hasChoice) html += `<div class="mt-8 flex justify-end"><button onclick="handleChoiceAnswer('manual', 'Lanjut', 'end_record')" class="btn-primary py-3 px-8 rounded-full font-bold flex items-center gap-2">Selesai / Lanjut <i data-lucide="arrow-right"></i></button></div>`;
+            container.innerHTML = html; lucide.createIcons();
+        };
+
+        // RECORDING LOGIC
+        const initCamera = async () => {
+            document.getElementById('live-video').classList.remove('hidden'); document.getElementById('playback-video').classList.add('hidden');
+            document.getElementById('btn-start-rec').classList.remove('hidden'); document.getElementById('btn-stop-rec').classList.add('hidden'); document.getElementById('submit-controls').classList.add('hidden');
+            try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, frameRate: 15 }, audio: true }); document.getElementById('live-video').srcObject = stream; } 
+            catch (e) { alert("Kamera tidak diizinkan!"); }
+        };
+        const startRecording = () => {
+            if (!stream) return alert("Kamera belum aktif!");
+            videoChunks = []; try { mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' }); } catch(e) { mediaRecorder = new MediaRecorder(stream); }
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) videoChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                document.getElementById('live-video').classList.add('hidden');
+                document.getElementById('playback-video').src = URL.createObjectURL(videoBlob);
+                document.getElementById('playback-video').classList.remove('hidden');
+                stream.getTracks().forEach(track => track.stop());
+                document.getElementById('rec-controls').classList.add('hidden'); document.getElementById('submit-controls').classList.remove('hidden'); document.getElementById('submit-controls').classList.add('flex');
+            };
+            mediaRecorder.start();
+            document.getElementById('btn-start-rec').classList.add('hidden'); document.getElementById('btn-stop-rec').classList.remove('hidden'); document.getElementById('rec-indicator').classList.remove('hidden');
+            timeLeft = 30; document.getElementById('timer-text').innerText = `00:30`;
+            recordTimer = setInterval(() => { timeLeft--; document.getElementById('timer-text').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`; if (timeLeft <= 0) stopRecording(); }, 1000);
+        };
+        const stopRecording = () => { if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); clearInterval(recordTimer); document.getElementById('rec-indicator').classList.add('hidden'); } };
+        const retryRecording = () => { document.getElementById('rec-controls').classList.remove('hidden'); document.getElementById('submit-controls').classList.add('hidden'); document.getElementById('submit-controls').classList.remove('flex'); initCamera(); };
+        const submitData = async () => {
+            document.getElementById('rec-intro').classList.add('hidden'); document.getElementById('submit-controls').classList.add('hidden'); document.getElementById('submit-controls').classList.remove('flex');
+            document.getElementById('upload-status').classList.remove('hidden');
+            let base64Video = "";
+            if (videoBlob) base64Video = await new Promise((res) => { const reader = new FileReader(); reader.onloadend = () => res(reader.result.split(',')[1]); reader.readAsDataURL(videoBlob); });
+            const payload = { action: "submitResponse", studentName: studentName, answers: studentAnswers, videoBase64: base64Video, mimeType: "video/webm" };
+            if (!GAS_WEBHOOK_URL) return setTimeout(showSuccess, 1500);
+            try { await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }); showSuccess(); } 
+            catch (err) { showSuccess(); }
+        };
+        const showSuccess = () => {
+            document.getElementById('loading-spinner').classList.add('hidden'); document.getElementById('success-icon').classList.remove('hidden');
+            document.getElementById('status-title').innerText = "Misi Berhasil! 🎉"; 
+            document.getElementById('status-desc').innerText = appConfig.requireVideo === false ? "Tugas dan jawabanmu telah aman tersimpan di brankas Guru. Kamu luar biasa!" : "Tugas dan videomu telah aman tersimpan di brankas Guru.";
+            document.querySelector('#view-recording .aspect-video').classList.add('hidden');
+        };
+
+        // ADMIN CONFIG SAVE
+        const saveConfigToDB = async () => {
+            if (!GAS_WEBHOOK_URL) return alert("Webhook URL kosong!");
+            const btn = document.getElementById('btn-save-db');
+            btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Menyimpan...`; btn.disabled = true;
+            try {
+                const res = await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) });
+                if((await res.json()).status === "success") alert("Yey! Seluruh Soal & Data Siswa berhasil disimpan permanen ke Database! 🎉");
+                else throw new Error();
+            } catch (err) { alert("Gagal menyimpan. Pastikan script GAS sudah diupdate dan dideploy ulang!"); } 
+            finally { btn.innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> Simpan ke Database`; btn.disabled = false; lucide.createIcons(); }
+        };
+
+        // DRAG AND DROP SECTIONS
+        const handleDragStart = (e, index) => { draggedSectionIndex = index; e.dataTransfer.effectAllowed = "move"; setTimeout(() => e.target.classList.add('opacity-50', 'scale-95'), 0); };
+        const handleDragOver = (e) => { e.preventDefault(); e.currentTarget.style.border = '2px dashed #ff4b72'; e.currentTarget.style.transform = 'scale(1.02)'; };
+        const handleDragLeave = (e) => { e.currentTarget.style.border = ''; e.currentTarget.style.transform = 'scale(1)'; };
+        const handleDrop = (e, targetIndex) => {
+            e.preventDefault(); e.currentTarget.style.border = ''; e.currentTarget.style.transform = 'scale(1)';
+            if (draggedSectionIndex === null || draggedSectionIndex === targetIndex) return;
+            const draggedItem = appConfig.sections.splice(draggedSectionIndex, 1)[0];
+            appConfig.sections.splice(targetIndex, 0, draggedItem);
+            draggedSectionIndex = null; renderTeacherBuilder(); 
+        };
+        const handleDragEnd = (e) => { e.target.classList.remove('opacity-50', 'scale-95'); draggedSectionIndex = null; };
+
+        // TEACHER BUILDER (KUNCI JAWABAN)
+        const addSection = (i=null) => { const n = {id: `sec_${Date.now()}`, title: "Bagian Baru", blocks: []}; if(i!==null) appConfig.sections.splice(i,0,n); else appConfig.sections.push(n); renderTeacherBuilder(); };
+        const removeSection = (id) => { appConfig.sections = appConfig.sections.filter(s => s.id !== id); renderTeacherBuilder(); };
+        const addBlock = (id, t) => { const sec = appConfig.sections.find(s=>s.id===id); const b = {id:`b_${Date.now()}`, type:t, content:"", url:"", question:"", options:[]}; if(t==='choice'){ b.options=[{label:"Opsi 1", nextSection:"end_record"}]; b.correctOptionIndex=null; } if(t==='likert') {b.rows=["Pernyataan 1"]; b.columns=["Sangat Setuju","Setuju","Tidak Setuju"]; b.correctAnswers={};} sec.blocks.push(b); renderTeacherBuilder(); };
+        const removeBlock = (sId, bId) => { const sec = appConfig.sections.find(s=>s.id===sId); sec.blocks = sec.blocks.filter(b=>b.id!==bId); renderTeacherBuilder(); };
+        const updateBlockField = (sId, bId, f, v) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId)[f] = v; };
+        
+        const setCorrectChoice = (sId, bId, val) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); b.correctOptionIndex = val; };
+        const addOption = (sId, bId) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options.push({label:"Opsi Baru", nextSection:"end_record"}); renderTeacherBuilder(); };
+        const updateOption = (sId, bId, oI, f, v) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options[oI][f] = v; };
+        const removeOption = (sId, bId, oI) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options.splice(oI, 1); renderTeacherBuilder(); };
+        
+        const updateLikertCorrect = (sId, bId, rIdx, val) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(!b.correctAnswers) b.correctAnswers = {}; if(val==="") delete b.correctAnswers[rIdx]; else b.correctAnswers[rIdx] = parseInt(val); };
+        const updateLikertArr = (sId, bId, iR, i, v) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows[i]=v; else b.columns[i]=v; };
+        const addLikertItem = (sId, bId, iR) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows.push(`Pernyataan ${b.rows.length+1}`); else b.columns.push(`Kolom ${b.columns.length+1}`); renderTeacherBuilder(); };
+        const removeLikertItem = (sId, bId, iR, i) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR){ b.rows.splice(i,1); if(b.correctAnswers) delete b.correctAnswers[i]; } else b.columns.splice(i,1); renderTeacherBuilder(); };
+
+        const renderTeacherBuilder = () => {
+            const container = document.getElementById('builder-sections'); let html = "";
+            appConfig.sections.forEach((sec, sIdx) => {
+                html += `<div class="flex justify-center opacity-0 hover:opacity-100 transition-opacity pb-2"><button onclick="addSection(${sIdx})" class="text-xs bg-pink-500/20 hover:bg-pink-500 hover:text-white text-pink-300 py-1.5 px-4 rounded-full flex items-center gap-1 transition-all"><i data-lucide="plus" class="w-3 h-3"></i> Sisipkan Bagian di Sini</button></div>
+                <div draggable="true" ondragstart="handleDragStart(event, ${sIdx})" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, ${sIdx})" ondragend="handleDragEnd(event)" class="glass-panel p-6 rounded-2xl border-t-4 border-t-orange-400 relative transition-all cursor-move mb-2">
+                    <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                        <div class="flex items-center gap-3 flex-1">
+                            <i data-lucide="grip-vertical" class="text-white/30 hover:text-white cursor-grab active:cursor-grabbing w-6 h-6" title="Tahan dan geser"></i>
+                            <div class="flex-1"><input type="text" class="bg-transparent text-2xl font-bold focus:outline-none focus:text-pink-300 w-full cursor-text" value="${sec.title}" onchange="appConfig.sections.find(s=>s.id==='${sec.id}').title=this.value"><span class="text-xs text-white/40 font-mono">ID: ${sec.id}</span></div>
+                        </div>
+                        <button onclick="removeSection('${sec.id}')" class="text-red-400 hover:text-red-300 bg-red-400/10 p-2 rounded-lg ml-2"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </div>
+                    <div ondragstart="event.preventDefault(); event.stopPropagation();" class="cursor-default space-y-4 mb-6">`;
+                sec.blocks.forEach(b => {
+                    html += `<div class="bg-black/20 p-4 rounded-xl border border-white/10 relative group"><button onclick="removeBlock('${sec.id}', '${b.id}')" class="absolute top-3 right-3 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                    if (b.type === 'text') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Teks Info</label><textarea class="glass-input w-full p-2 rounded-lg" onchange="updateBlockField('${sec.id}','${b.id}','content', this.value)">${b.content}</textarea>`;
+                    else if (b.type === 'video') {
+                        html += `
+                        <label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL (Mendukung Link YouTube & Google Drive)</label>
+                        <div class="flex gap-2 items-center flex-col sm:flex-row">
+                            <input type="text" class="glass-input flex-1 p-2 rounded-lg w-full" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)" placeholder="Tempel URL Video / YouTube / G-Drive">
+                        </div>`;
+                    }
+                    else if (b.type === 'gif') {
+                        const safeUrl = getSafeImageUrl(b.url);
+                        html += `
+                        <label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="image" class="w-3 h-3"></i> Gambar / GIF (Mendukung Link URL & Upload ImgBB)</label>
+                        <div class="flex gap-2 items-center flex-col sm:flex-row">
+                            <input type="text" class="glass-input flex-1 p-2 rounded-lg w-full" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)" placeholder="Tempel URL Gambar / GIF atau Upload">
+                            <label class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2 text-sm font-bold transition-all w-full sm:w-auto" id="btn-upload-img-${b.id}">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload ke ImgBB
+                                <input type="file" class="hidden" accept="image/*" onchange="uploadBlockImage(this, '${sec.id}', '${b.id}')">
+                            </label>
+                            ${safeUrl ? `<div class="w-10 h-10 rounded overflow-hidden bg-black/50 border border-white/20 flex-shrink-0"><img src="${safeUrl}" class="w-full h-full object-cover"></div>` : ''}
+                        </div>`;
+                    }
+                    else if (b.type === 'text_input') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks (Essay)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-1" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
+                        <p class="text-[10px] text-white/50 italic mb-2">* Soal ini diperiksa manual (tidak dihitung otomatis dalam skor 100).</p>
+                        <input type="text" class="glass-input w-full p-2 rounded-lg opacity-50" placeholder="Jawaban siswa..." disabled>`;
+                    }
+                    else if (b.type === 'likert') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="grid" class="w-3 h-3"></i> Kisi Pilihan Ganda (Skala Likert)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)"><div class="grid grid-cols-2 gap-4"><div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10"><p class="text-xs text-pink-300 font-bold mb-2">Baris (Beserta Kunci)</p>`;
+                        b.rows.forEach((r, rIdx) => { 
+                            html += `<div class="flex gap-2 items-center">
+                                <input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${r}" onchange="updateLikertArr('${sec.id}','${b.id}',true,${rIdx},this.value)">
+                                <select class="glass-input text-[10px] p-1 rounded bg-[#4b1d52] w-1/3" onchange="updateLikertCorrect('${sec.id}','${b.id}',${rIdx},this.value)">
+                                    <option value="">- Tanpa Kunci -</option>
+                                    ${b.columns.map((c, cIdx) => `<option value="${cIdx}" ${b.correctAnswers && b.correctAnswers[rIdx] == cIdx ? 'selected' : ''}>Kunci: ${c}</option>`).join('')}
+                                </select>
+                                <button onclick="removeLikertItem('${sec.id}','${b.id}',true,${rIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button>
+                            </div>`; 
+                        });
+                        html += `<button onclick="addLikertItem('${sec.id}','${b.id}',true)" class="text-xs text-pink-400 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Baris</button></div><div class="space-y-2 border border-white/10 p-3 rounded-lg bg-black/10"><p class="text-xs text-orange-300 font-bold mb-2">Kolom</p>`;
+                        b.columns.forEach((c, cIdx) => { html += `<div class="flex gap-2 items-center"><input type="text" class="glass-input flex-1 p-1 text-sm rounded" value="${c}" onchange="updateLikertArr('${sec.id}','${b.id}',false,${cIdx},this.value)"><button onclick="removeLikertItem('${sec.id}','${b.id}',false,${cIdx})" class="text-red-400 p-1"><i data-lucide="x" class="w-3 h-3"></i></button></div>`; });
+                        html += `<button onclick="addLikertItem('${sec.id}','${b.id}',false)" class="text-xs text-orange-400 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Kolom</button></div></div>`;
+                    } else if (b.type === 'choice') {
+                        html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Ganda & Logika Loncatan</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-4" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)"><div class="space-y-2 border-l-2 border-white/20 pl-4">`;
+                        b.options.forEach((opt, oIdx) => { 
+                            html += `<div class="flex gap-2 items-center">
+                                <input type="radio" name="correct_${b.id}" class="w-4 h-4 cursor-pointer accent-green-400" title="Tandai Kunci Jawaban" onchange="setCorrectChoice('${sec.id}','${b.id}',${oIdx})" ${b.correctOptionIndex === oIdx ? 'checked' : ''}>
+                                <input type="text" class="glass-input flex-1 p-2 rounded-lg text-sm" value="${opt.label}" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'label',this.value)">
+                                <i data-lucide="arrow-right" class="w-4 h-4 text-white/40"></i>
+                                <select class="glass-input flex-1 p-2 rounded-lg text-sm bg-[#4b1d52]" onchange="updateOption('${sec.id}','${b.id}',${oIdx},'nextSection',this.value)">
+                                    <option value="end_record" ${opt.nextSection === 'end_record' ? 'selected' : ''}>Akhiri Kuis</option>
+                                    ${appConfig.sections.map(s => `<option value="${s.id}" ${opt.nextSection === s.id ? 'selected' : ''}>Ke: ${s.title}</option>`).join('')}
+                                </select>
+                                <button onclick="removeOption('${sec.id}','${b.id}',${oIdx})" class="text-red-400 p-2"><i data-lucide="x" class="w-4 h-4"></i></button>
+                            </div>`; 
+                        });
+                        html += `<button onclick="addOption('${sec.id}','${b.id}')" class="text-xs text-pink-400 hover:text-pink-300 mt-2 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Tambah Opsi</button></div>`;
+                    }
+                    html += `</div>`;
+                });
+                html += `</div><div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10"><span class="text-xs text-white/40 flex items-center mr-2">Tambah Blok:</span><button onclick="addBlock('${sec.id}','text')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Teks</button><button onclick="addBlock('${sec.id}','video')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="video" class="w-3 h-3"></i> Video</button><button onclick="addBlock('${sec.id}','gif')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> GIF/Gbr</button><button onclick="addBlock('${sec.id}','text_input')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="type" class="w-3 h-3"></i> Soal Essay</button><button onclick="addBlock('${sec.id}','choice')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="list" class="w-3 h-3"></i> Pilihan Biasa</button><button onclick="addBlock('${sec.id}','likert')" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-pink-500/50 text-pink-200"><i data-lucide="grid" class="w-3 h-3"></i> Kisi (Skala)</button></div></div>`;
+            });
+            container.innerHTML = html; lucide.createIcons(); 
+        };
     </script>
 </body>
 </html>
