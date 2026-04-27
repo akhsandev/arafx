@@ -98,7 +98,7 @@
         <p class="text-white/60">Menghubungkan ke Database Guru</p>
     </div>
 
-    <!-- KONFIGURASI UTAMA (HARDCODE DI SINI YAA!) -->
+    <!-- KONFIGURASI UTAMA -->
     <script>
         // 1. MASUKKAN LINK GOOGLE APPS SCRIPT DI SINI!
         const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxJNYNa_WVMNRJNdBsv7TwI2yswRQixackM6oUNx-Hz5jwD0ImeAj48pEge6RlYEyh9/exec"; 
@@ -120,7 +120,7 @@
                         { id: "b1", type: "text", content: "Halo agen muda! Tonton video instruksi ini dulu ya." },
                         { id: "b2", type: "video", url: "https://www.youtube.com/watch?v=pXygouhiq10&t=5s" },
                         { id: "b3", type: "choice", question: "Siap melangkah lebih jauh?", 
-                          correctOptionIndex: 0, // <-- Contoh Kunci Jawaban
+                          correctOptionIndex: 0,
                           options: [
                             { label: "Siaaap Komandan!", nextSection: "sec_2" },
                             { label: "Sebentar, tarik napas dulu", nextSection: "sec_3" }
@@ -130,14 +130,15 @@
                 {
                     id: "sec_2", title: "Bagian 2: Tantangan Inti",
                     blocks: [
-                        { id: "b5", type: "text_input", question: "Dari animasi di atas, apa pendapatmu?" },
+                        { id: "b5", type: "text_input", question: "Dari animasi/video di atas, apa pendapatmu?" },
+                        { id: "b4", type: "gif", url: "https://i.ibb.co.com/rf5QscjC/47692.gif" },
                         { id: "b_likert1", type: "likert", question: "Pilih jawaban yang paling tepat", 
                           rows: ["Ibukota Indonesia", "Ibukota Jepang"], 
                           columns: ["Jakarta", "Tokyo", "Seoul", "Bangkok"],
-                          correctAnswers: { 0: 0, 1: 1 } // <-- Contoh Kunci Jawaban Likert (Baris -> Kolom)
+                          correctAnswers: { 0: 0, 1: 1 }
                         },
                         { id: "b6", type: "choice", question: "Selesai?", options: [
-                            { label: "Lanjut ke Rekaman Video!", nextSection: "end_record" }
+                            { label: "Lanjut ke Tahap Berikutnya!", nextSection: "end_record" }
                         ]}
                     ]
                 }
@@ -166,7 +167,7 @@
         let responseSearchQuery = "";
     </script>
 
-    <!-- HEADER / NAVBAR (LOGO UPDATED) -->
+    <!-- HEADER / NAVBAR -->
     <header class="p-4 flex justify-between items-center glass-panel sticky top-0 z-50 border-x-0 border-t-0 rounded-none">
         <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
             <!-- LOGO SMAN 1 SOPPENG -->
@@ -183,7 +184,7 @@
 
     <div id="db-alert" class="hidden bg-red-500/80 backdrop-blur text-white text-center py-2 px-4 text-sm font-bold shadow-lg flex justify-center items-center gap-2">
         <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-        Perhatian: Database Belum Ready! Masukkan Webhook URL di kodingan.
+        Perhatian: Database Belum Ready atau tidak bisa diakses. Menggunakan data bawaan.
     </div>
 
     <!-- MAIN CONTAINER -->
@@ -193,7 +194,7 @@
         <div id="view-welcome" class="text-center py-12 animate-fade-up">
             
             <div id="welcome-image-container" class="w-36 h-36 mx-auto rounded-[2.5rem] animate-float mb-8 shadow-2xl shadow-pink-500/50 border-4 border-white/20 overflow-hidden flex items-center justify-center bg-gradient-to-tr from-pink-500 to-orange-400 relative z-10">
-                <!-- Akan dirender oleh JS -->
+                <!-- Akan dirender oleh JS dengan efek pre-loading -->
             </div>
 
             <h1 id="display-title" class="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-200 drop-shadow-lg">Misi Rahasia</h1>
@@ -207,8 +208,7 @@
                             <span id="text-select-class" class="text-white/60">-- Silakan Pilih Kelas --</span>
                             <i data-lucide="chevron-down" class="w-5 h-5 text-pink-400"></i>
                         </button>
-                        <div id="dropdown-class" class="hidden absolute top-full mt-2 w-full bg-[#2d123d]/95 backdrop-blur-xl border border-pink-500/50 rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] z-50 max-h-56 overflow-y-auto">
-                        </div>
+                        <div id="dropdown-class" class="hidden absolute top-full mt-2 w-full bg-[#2d123d]/95 backdrop-blur-xl border border-pink-500/50 rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] z-50 max-h-56 overflow-y-auto"></div>
                     </div>
 
                     <label class="block text-sm font-bold text-white/80 mb-2">Nama Lengkap Siswa:</label>
@@ -217,8 +217,7 @@
                             <span id="text-select-name" class="text-white/60">-- Pilih Kelas Terlebih Dahulu --</span>
                             <i data-lucide="chevron-down" class="w-5 h-5 text-orange-400 group-disabled:text-white/30"></i>
                         </button>
-                        <div id="dropdown-name" class="hidden absolute top-full mt-2 w-full bg-[#2d123d]/95 backdrop-blur-xl border border-orange-500/50 rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] z-50 max-h-56 overflow-y-auto">
-                        </div>
+                        <div id="dropdown-name" class="hidden absolute top-full mt-2 w-full bg-[#2d123d]/95 backdrop-blur-xl border border-orange-500/50 rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.5)] z-50 max-h-56 overflow-y-auto"></div>
                     </div>
                 </div>
 
@@ -252,10 +251,7 @@
                     </div>
                 </div>
             </div>
-
-            <div id="student-form-container" class="glass-panel rounded-3xl p-8 shadow-2xl">
-                <!-- Konten dinamis masuk ke sini -->
-            </div>
+            <div id="student-form-container" class="glass-panel rounded-3xl p-8 shadow-2xl"></div>
         </div>
 
         <!-- 3. STUDENT RECORDING/SUBMISSION SCREEN -->
@@ -324,7 +320,6 @@
                         <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Hasil & Video
                     </button>
                 </div>
-
                 <button onclick="goHome()" class="bg-white/10 px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition w-full lg:w-auto flex justify-center">Keluar</button>
             </div>
 
@@ -360,20 +355,19 @@
                             </select>
                         </div>
 
-                        <!-- UPLOAD FOTO WELCOME -->
+                        <!-- UPLOAD FOTO WELCOME (IMGBB) -->
                         <div class="border-t border-white/10 pt-4 mt-4">
                             <label class="text-xs text-white/60 mb-1 block">Gambar Utama Melayang (Format .jpg/.png/.gif)</label>
                             <p class="text-[10px] text-white/40 mb-2">Upload foto kegiatan atau maskot untuk menggantikan logo roket di halaman depan.</p>
                             <div class="flex gap-2 items-center flex-col sm:flex-row">
                                 <input type="text" id="tb-welcome-img" class="glass-input flex-1 p-2 rounded-lg w-full" placeholder="URL otomatis muncul setelah upload..." disabled value="">
                                 <label class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2 text-sm font-bold transition-all w-full sm:w-auto" id="btn-upload-img">
-                                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload Foto ke Drive
+                                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload ke ImgBB
                                     <input type="file" class="hidden" accept="image/*" onchange="uploadWelcomeImage(this)">
                                 </label>
                                 <button onclick="resetWelcomeImage()" class="text-xs text-red-400 hover:text-red-300 px-2 py-2">Reset ke Roket</button>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -469,9 +463,92 @@
 
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
+        // MENDAPATKAN URL GAMBAR AMAN & STABIL
+        const getSafeImageUrl = (url) => {
+            if (!url) return "";
+            // Ubah link drive menjadi format lh3 jika kebetulan ada
+            const match = url.match(/lh3\.googleusercontent\.com\/d\/([^/]+)/) || 
+                          url.match(/drive\.google\.com\/file\/d\/([^/]+)/) ||
+                          url.match(/drive\.google\.com\/uc\?.*id=([^&]+)/);
+            if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            return url;
+        };
+
+        // TOGGLE DROPDOWN
+        const toggleDropdown = (id) => {
+            const el = document.getElementById(id);
+            if (id === 'dropdown-class') document.getElementById('dropdown-name').classList.add('hidden');
+            if (id === 'dropdown-name') document.getElementById('dropdown-class').classList.add('hidden');
+            el.classList.toggle('hidden');
+        };
+
+        // INIT WELCOME SCREEN (Siswa)
+        const initWelcomeScreen = () => {
+            document.getElementById('display-title').innerText = appConfig.title;
+            document.getElementById('display-desc').innerText = appConfig.description;
+            selectedClass = ""; studentName = "";
+
+            if (appConfig.students && appConfig.students.length > 0) {
+                document.getElementById('professional-dropdown-container').classList.remove('hidden');
+                document.getElementById('manual-input-container').classList.add('hidden');
+                document.getElementById('text-select-class').innerText = "-- Silakan Pilih Kelas --";
+                document.getElementById('text-select-class').classList.add('text-white/60'); document.getElementById('text-select-class').classList.remove('text-white');
+                document.getElementById('btn-select-name').disabled = true;
+                document.getElementById('text-select-name').innerText = "-- Pilih Kelas Terlebih Dahulu --";
+                document.getElementById('text-select-name').classList.add('text-white/60'); document.getElementById('text-select-name').classList.remove('text-white');
+
+                const classContainer = document.getElementById('dropdown-class'); classContainer.innerHTML = "";
+                const uniqueClasses = [...new Set(appConfig.students.map(s => s.class))].sort();
+                uniqueClasses.forEach(cls => {
+                    const div = document.createElement('div'); div.className = "p-4 hover:bg-pink-500/30 cursor-pointer border-b border-white/5 transition font-bold text-white";
+                    div.innerText = cls; div.onclick = () => selectClassFromDropdown(cls); classContainer.appendChild(div);
+                });
+            } else {
+                document.getElementById('professional-dropdown-container').classList.add('hidden');
+                document.getElementById('manual-input-container').classList.remove('hidden');
+                document.getElementById('input-student-name-manual').value = "";
+            }
+        };
+
+        // RENDER GAMBAR WELCOME DINAMIS (Anti Blank/Crash)
+        const renderWelcomeImage = () => {
+            const container = document.getElementById('welcome-image-container');
+            if (appConfig.welcomeImageUrl && appConfig.welcomeImageUrl.trim() !== '') {
+                const safeUrl = getSafeImageUrl(appConfig.welcomeImageUrl);
+                // Menggunakan elemen Image terpisah untuk pre-loading
+                container.innerHTML = `
+                    <div id="welcome-img-loader" class="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                        <div class="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <img id="welcome-img-el" src="${safeUrl}" class="w-full h-full object-cover relative z-10 opacity-0 transition-opacity duration-500" alt="Welcome Image">
+                `;
+                
+                const imgEl = document.getElementById('welcome-img-el');
+                const loaderEl = document.getElementById('welcome-img-loader');
+                
+                imgEl.onload = () => {
+                    loaderEl.style.display = 'none';
+                    imgEl.classList.remove('opacity-0');
+                };
+                imgEl.onerror = () => {
+                    loaderEl.style.display = 'none';
+                    imgEl.src = 'https://placehold.co/400x400/4b1d52/ffffff?text=Image+Error';
+                    imgEl.classList.remove('opacity-0');
+                };
+            } else {
+                container.innerHTML = `<i data-lucide="rocket" class="text-white w-16 h-16 transform -rotate-12"></i>`;
+                lucide.createIcons();
+            }
+            
+            const tbImg = document.getElementById('tb-welcome-img');
+            if(tbImg) tbImg.value = appConfig.welcomeImageUrl || "";
+        };
+
+        // EVENT WINDOW ONLOAD (Menarik Database & Inisialisasi)
         window.onload = async () => {
             lucide.createIcons();
             
+            // Klik diluar menutup dropdown
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#btn-select-class') && !e.target.closest('#dropdown-class')) {
                     document.getElementById('dropdown-class')?.classList.add('hidden');
@@ -489,223 +566,163 @@
             } else {
                 try {
                     const res = await fetch(GAS_WEBHOOK_URL + "?action=getConfig");
-                    const data = await res.json();
-                    if (data.status === "success" && data.data) {
-                        appConfig = data.data; 
-                        if(!appConfig.students) appConfig.students = []; 
-                        if(typeof appConfig.requireVideo === 'undefined') appConfig.requireVideo = true;
+                    
+                    // CEK APAKAH RESPON BERUPA JSON
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const data = await res.json();
+                        if (data.status === "success" && data.data) {
+                            appConfig = data.data; 
+                            if(!appConfig.students) appConfig.students = []; 
+                            if(typeof appConfig.requireVideo === 'undefined') appConfig.requireVideo = true;
+                        }
+                    } else {
+                        console.warn("URL Webhook tidak merespons JSON. Pastikan akses deployment di Apps Script disetel ke 'Anyone'.");
+                        document.getElementById('db-alert').classList.remove('hidden');
+                        document.getElementById('db-alert').innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4"></i> Database Terkunci! Atur akses Web app ke "Anyone".`;
+                        lucide.createIcons();
                     }
                 } catch (e) {
                     console.log("Gagal memuat config, menggunakan bawaan.", e);
                 }
+                
                 document.getElementById('view-loading').classList.add('hidden');
                 renderWelcomeImage();
                 initWelcomeScreen();
             }
         };
 
-        // RENDER GAMBAR WELCOME DINAMIS
-        const renderWelcomeImage = () => {
-            const container = document.getElementById('welcome-image-container');
-            if (appConfig.welcomeImageUrl && appConfig.welcomeImageUrl.trim() !== '') {
-                container.innerHTML = `<img src="${appConfig.welcomeImageUrl}" class="w-full h-full object-cover" alt="Welcome Image">`;
-            } else {
-                container.innerHTML = `<i data-lucide="rocket" class="text-white w-16 h-16 transform -rotate-12"></i>`;
-                lucide.createIcons();
-            }
-            
-            const tbImg = document.getElementById('tb-welcome-img');
-            if(tbImg) tbImg.value = appConfig.welcomeImageUrl || "";
+        // FUNGSI PEMBANTU URL VIDEO DARI DRIVE
+        const getDriveVideoUrl = (url) => {
+            if(!url) return null;
+            const match = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+            if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
+            if (url.includes("drive.google.com") && url.includes("/preview")) return url;
+            return null;
         };
 
-        // KOMPRESI GAMBAR KE WEBP DI BAWAH 100KB
-        const compressImageToWebp = (file) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        const MAX_DIM = 800; 
-                        if (width > height && width > MAX_DIM) {
-                            height *= MAX_DIM / width; width = MAX_DIM;
-                        } else if (height > MAX_DIM) {
-                            width *= MAX_DIM / height; height = MAX_DIM;
-                        }
-                        
-                        canvas.width = width; 
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        let quality = 0.9;
-                        let dataUrl = canvas.toDataURL('image/webp', quality);
-                        
-                        const calcSizeKB = (b64) => Math.round((b64.length * 3 / 4) / 1024);
-                        
-                        while(calcSizeKB(dataUrl) > 95 && quality > 0.1) {
-                            quality -= 0.1;
-                            dataUrl = canvas.toDataURL('image/webp', quality);
-                        }
-                        resolve(dataUrl);
-                    };
-                };
-            });
-        };
-
-        // UPLOAD GAMBAR KE DRIVE
+        // UPLOAD GAMBAR KE IMGBB (Bypass Kompresi agar GIF tidak rusak)
         const uploadWelcomeImage = async (input) => {
             const file = input.files[0];
             if (!file) return;
-            if (!GAS_WEBHOOK_URL) return alert("Masukkan Webhook URL dulu di kodingan!");
-
+            
             const btnLabel = document.getElementById('btn-upload-img');
             const originalHTML = btnLabel.innerHTML;
             btnLabel.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Memproses...`;
             btnLabel.style.pointerEvents = 'none';
-
+            
             try {
-                const webpDataUrl = await compressImageToWebp(file);
-                const base64Data = webpDataUrl.split(',')[1];
-                const payload = {
-                    action: "uploadImage",
-                    imageName: `Welcome_${new Date().getTime()}.webp`, 
-                    mimeType: 'image/webp',
-                    imageBase64: base64Data
-                };
-
-                const res = await fetch(GAS_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
+                const formData = new FormData();
+                formData.append('key', 'bc84840c84c332323a490c053d3c2df2'); // API Key ImgBB
+                formData.append('image', file);
+                
+                const res = await fetch('https://api.imgbb.com/1/upload', { 
+                    method: 'POST', 
+                    body: formData 
                 });
                 const data = await res.json();
-
-                if (data.status === "success") {
-                    appConfig.welcomeImageUrl = data.imageUrl;
-                    renderWelcomeImage();
-                    alert("Foto Ceria berhasil diupload! Jangan lupa klik 'Simpan Permanen' ya. 🎉");
-                } else { throw new Error(data.message || "Gagal upload"); }
-            } catch (err) { alert("Wah, gagal upload gambar. Pastikan script GAS sudah diupdate terbaru ya!"); } 
-            finally {
-                btnLabel.innerHTML = originalHTML;
-                btnLabel.style.pointerEvents = 'auto';
-                input.value = ''; 
-                lucide.createIcons();
-            }
-        };
-
-        const resetWelcomeImage = () => {
-            appConfig.welcomeImageUrl = "";
-            renderWelcomeImage();
-            alert("Logo berhasil dikembalikan ke Roket! Ingat klik Simpan Permanen.");
-        };
-
-        // WELCOME SCREEN & CUSTOM DROPDOWN
-        const toggleDropdown = (id) => {
-            const el = document.getElementById(id);
-            if (id === 'dropdown-class') document.getElementById('dropdown-name').classList.add('hidden');
-            if (id === 'dropdown-name') document.getElementById('dropdown-class').classList.add('hidden');
-            el.classList.toggle('hidden');
-        };
-
-        const initWelcomeScreen = () => {
-            document.getElementById('display-title').innerText = appConfig.title;
-            document.getElementById('display-desc').innerText = appConfig.description;
-            selectedClass = "";
-            studentName = "";
-
-            const hasStudents = appConfig.students && appConfig.students.length > 0;
-            if (hasStudents) {
-                document.getElementById('professional-dropdown-container').classList.remove('hidden');
-                document.getElementById('manual-input-container').classList.add('hidden');
-
-                document.getElementById('text-select-class').innerText = "-- Silakan Pilih Kelas --";
-                document.getElementById('text-select-class').classList.add('text-white/60');
-                document.getElementById('text-select-class').classList.remove('text-white');
                 
-                document.getElementById('btn-select-name').disabled = true;
-                document.getElementById('text-select-name').innerText = "-- Pilih Kelas Terlebih Dahulu --";
-                document.getElementById('text-select-name').classList.add('text-white/60');
-                document.getElementById('text-select-name').classList.remove('text-white');
-
-                const classContainer = document.getElementById('dropdown-class');
-                classContainer.innerHTML = "";
-                const uniqueClasses = [...new Set(appConfig.students.map(s => s.class))].sort();
-                uniqueClasses.forEach(cls => {
-                    const div = document.createElement('div');
-                    div.className = "p-4 hover:bg-pink-500/30 cursor-pointer border-b border-white/5 transition font-bold text-white";
-                    div.innerText = cls;
-                    div.onclick = () => selectClassFromDropdown(cls);
-                    classContainer.appendChild(div);
-                });
-            } else {
-                document.getElementById('professional-dropdown-container').classList.add('hidden');
-                document.getElementById('manual-input-container').classList.remove('hidden');
-                document.getElementById('input-student-name-manual').value = "";
+                if (data.success) {
+                    // Mengubah domain i.ibb.co menjadi i.ibb.co.com agar tidak diblokir provider internet
+                    const safeImgbbUrl = data.data.url.replace('i.ibb.co', 'i.ibb.co.com');
+                    appConfig.welcomeImageUrl = safeImgbbUrl; 
+                    renderWelcomeImage();
+                    alert("Foto/GIF Ceria berhasil diupload ke ImgBB! Jangan lupa klik 'Simpan Permanen' ya. 🎉");
+                } else { 
+                    throw new Error(data.error?.message || "Gagal upload"); 
+                }
+            } catch (err) { 
+                alert("Wah, gagal upload gambar. Pastikan koneksi internet stabil ya!"); 
+                console.error(err);
+            } finally { 
+                btnLabel.innerHTML = originalHTML; 
+                btnLabel.style.pointerEvents = 'auto'; 
+                input.value = ''; 
+                lucide.createIcons(); 
             }
+        };
+
+        const resetWelcomeImage = () => { appConfig.welcomeImageUrl = ""; renderWelcomeImage(); alert("Logo berhasil dikembalikan ke Roket! Ingat klik Simpan Permanen."); };
+
+        // GAMBAR SOAL UPLOAD KE IMGBB
+        const uploadBlockImage = async (input, secId, blockId) => {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const btnLabel = document.getElementById(`btn-upload-img-${blockId}`);
+            const originalHTML = btnLabel.innerHTML;
+            btnLabel.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+            btnLabel.style.pointerEvents = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('key', 'bc84840c84c332323a490c053d3c2df2'); // API Key ImgBB
+                formData.append('image', file);
+                
+                const res = await fetch('https://api.imgbb.com/1/upload', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Mengubah domain i.ibb.co menjadi i.ibb.co.com agar tidak diblokir provider internet
+                    const safeImgbbUrl = data.data.url.replace('i.ibb.co', 'i.ibb.co.com');
+                    updateBlockField(secId, blockId, 'url', safeImgbbUrl);
+                    renderTeacherBuilder();
+                    alert("Gambar/GIF soal berhasil mendarat di ImgBB! Otomatis tayang! 🎉");
+                } else { 
+                    throw new Error(data.error?.message || "Gagal upload"); 
+                }
+            } catch (err) { 
+                alert("Wah, gagal upload gambar soal. Pastikan koneksi aman ya!"); 
+            } finally { 
+                btnLabel.innerHTML = originalHTML; 
+                btnLabel.style.pointerEvents = 'auto'; 
+                input.value = ''; 
+                lucide.createIcons(); 
+            }
+        };
+
+        // VIDEO UPLOAD 
+        const uploadBlockVideo = async (input, secId, blockId) => {
+            alert("Fitur upload video dihentikan. Silakan gunakan link YouTube atau link Google Drive ya!");
         };
 
         const selectClassFromDropdown = (cls) => {
-            selectedClass = cls;
-            studentName = ""; 
-            
-            document.getElementById('text-select-class').innerText = cls;
-            document.getElementById('text-select-class').classList.remove('text-white/60');
-            document.getElementById('text-select-class').classList.add('text-white');
+            selectedClass = cls; studentName = ""; 
+            document.getElementById('text-select-class').innerText = cls; document.getElementById('text-select-class').classList.remove('text-white/60'); document.getElementById('text-select-class').classList.add('text-white');
             document.getElementById('dropdown-class').classList.add('hidden');
+            document.getElementById('btn-select-name').disabled = false; document.getElementById('btn-select-name').classList.add('hover:bg-black/40');
+            document.getElementById('text-select-name').innerText = "-- Silakan Pilih Nama --"; document.getElementById('text-select-name').classList.add('text-white/60'); document.getElementById('text-select-name').classList.remove('text-white');
 
-            document.getElementById('btn-select-name').disabled = false;
-            document.getElementById('btn-select-name').classList.add('hover:bg-black/40');
-            document.getElementById('text-select-name').innerText = "-- Silakan Pilih Nama --";
-            document.getElementById('text-select-name').classList.add('text-white/60');
-            document.getElementById('text-select-name').classList.remove('text-white');
-
-            const nameContainer = document.getElementById('dropdown-name');
-            nameContainer.innerHTML = "";
-            const studentsInClass = appConfig.students
-                .filter(s => s.class === cls)
-                .sort((a,b) => a.name.localeCompare(b.name));
-            
-            studentsInClass.forEach(s => {
-                const div = document.createElement('div');
-                div.className = "p-4 hover:bg-orange-500/30 cursor-pointer border-b border-white/5 transition font-bold text-white flex justify-between items-center group";
+            const nameContainer = document.getElementById('dropdown-name'); nameContainer.innerHTML = "";
+            appConfig.students.filter(s => s.class === cls).sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+                const div = document.createElement('div'); div.className = "p-4 hover:bg-orange-500/30 cursor-pointer border-b border-white/5 transition font-bold text-white flex justify-between items-center group";
                 div.innerHTML = `<span>${s.name}</span> <i data-lucide="check" class="w-4 h-4 text-orange-400 opacity-0 group-hover:opacity-100 transition"></i>`;
-                div.onclick = () => selectNameFromDropdown(s.name, s.class);
-                nameContainer.appendChild(div);
+                div.onclick = () => selectNameFromDropdown(s.name, s.class); nameContainer.appendChild(div);
             });
             lucide.createIcons();
         };
 
         const selectNameFromDropdown = (name, cls) => {
             studentName = `${name} (${cls})`; 
-            document.getElementById('text-select-name').innerText = name;
-            document.getElementById('text-select-name').classList.remove('text-white/60');
-            document.getElementById('text-select-name').classList.add('text-white');
+            document.getElementById('text-select-name').innerText = name; document.getElementById('text-select-name').classList.remove('text-white/60'); document.getElementById('text-select-name').classList.add('text-white');
             document.getElementById('dropdown-name').classList.add('hidden');
         };
 
         const hideAllViews = () => {
             ['view-loading', 'view-welcome', 'view-student-form', 'view-recording', 'view-teacher'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.classList.add('hidden');
+                const el = document.getElementById(id); if(el) el.classList.add('hidden');
             });
         };
 
-        // FUNGSI PEMBANTU DETEKSI YOUTUBE (Otomatis baca ID & Waktu)
         const getYoutubeInfo = (url) => {
             if(!url) return null;
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
             if (match && match[2].length === 11) {
-                let start = 0;
-                // Cek apakah ada parameter waktu seperti &t=5s
-                const timeMatch = url.match(/[?&]t=(\d+)s?/);
+                let start = 0; const timeMatch = url.match(/[?&]t=(\d+)s?/);
                 if(timeMatch) start = parseInt(timeMatch[1]);
                 return { id: match[2], start: start };
             }
@@ -713,215 +730,104 @@
         };
 
         const goHome = () => {
-            hideAllViews();
-            document.getElementById('view-welcome').classList.remove('hidden');
-            studentName = "";
-            studentAnswers = {};
-            videoBlob = null;
-            initWelcomeScreen();
+            hideAllViews(); document.getElementById('view-welcome').classList.remove('hidden');
+            studentName = ""; studentAnswers = {}; videoBlob = null; initWelcomeScreen();
             if(stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
         };
 
         // ADMIN LOGIC
-        const showPasswordModal = () => {
-            document.getElementById('password-modal').classList.remove('hidden');
-            document.getElementById('admin-password').value = "";
-            document.getElementById('pw-error').classList.add('hidden');
-        };
+        const showPasswordModal = () => { document.getElementById('password-modal').classList.remove('hidden'); document.getElementById('admin-password').value = ""; document.getElementById('pw-error').classList.add('hidden'); };
         const closePasswordModal = () => { document.getElementById('password-modal').classList.add('hidden'); };
         
         const verifyPassword = () => {
             if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
-                closePasswordModal();
-                hideAllViews();
-                document.querySelector('#tb-title').value = appConfig.title;
-                document.querySelector('#tb-desc').value = appConfig.description;
-                document.querySelector('#tb-welcome-img').value = appConfig.welcomeImageUrl || "";
-                document.querySelector('#tb-require-video').value = appConfig.requireVideo !== false ? 'true' : 'false';
-                
-                renderTeacherBuilder();
-                renderImportedStudentsList();
-                switchAdminTab('builder');
-                document.getElementById('view-teacher').classList.remove('hidden');
-            } else {
-                document.getElementById('pw-error').classList.remove('hidden');
-            }
+                closePasswordModal(); hideAllViews();
+                document.querySelector('#tb-title').value = appConfig.title; document.querySelector('#tb-desc').value = appConfig.description;
+                document.querySelector('#tb-welcome-img').value = appConfig.welcomeImageUrl || ""; document.querySelector('#tb-require-video').value = appConfig.requireVideo !== false ? 'true' : 'false';
+                renderTeacherBuilder(); renderImportedStudentsList(); switchAdminTab('builder'); document.getElementById('view-teacher').classList.remove('hidden');
+            } else document.getElementById('pw-error').classList.remove('hidden');
         };
 
         const switchAdminTab = (tab) => {
             adminTab = tab;
-            const btnB = document.getElementById('tab-builder');
-            const btnS = document.getElementById('tab-students');
-            const btnR = document.getElementById('tab-responses');
-            const conB = document.getElementById('admin-builder-container');
-            const conS = document.getElementById('admin-students-container');
-            const conR = document.getElementById('admin-responses-container');
-
             const actC = "px-4 py-2 rounded-lg text-sm font-bold transition-all bg-pink-500 text-white shadow-md flex-shrink-0 flex items-center gap-2";
             const inactC = "px-4 py-2 rounded-lg text-sm font-bold transition-all text-white/60 hover:text-white flex-shrink-0 flex items-center gap-2";
-            
-            btnB.className = tab === 'builder' ? actC : inactC;
-            btnS.className = tab === 'students' ? actC : inactC;
-            btnR.className = tab === 'responses' ? actC : inactC;
-
-            conB.classList.toggle('hidden', tab !== 'builder');
-            conS.classList.toggle('hidden', tab !== 'students');
-            conR.classList.toggle('hidden', tab !== 'responses');
-
+            document.getElementById('tab-builder').className = tab === 'builder' ? actC : inactC;
+            document.getElementById('tab-students').className = tab === 'students' ? actC : inactC;
+            document.getElementById('tab-responses').className = tab === 'responses' ? actC : inactC;
+            document.getElementById('admin-builder-container').classList.toggle('hidden', tab !== 'builder');
+            document.getElementById('admin-students-container').classList.toggle('hidden', tab !== 'students');
+            document.getElementById('admin-responses-container').classList.toggle('hidden', tab !== 'responses');
             if(tab === 'responses' && fetchedResponses.length === 0) fetchResponses();
         };
 
         const processImportStudents = async () => {
-            const textArea = document.getElementById('paste-students-area');
-            const rawData = textArea.value.trim();
+            const textArea = document.getElementById('paste-students-area'); const rawData = textArea.value.trim();
             if(!rawData) { alert("Teks masih kosong! Paste dulu ya."); return; }
-
-            const rows = rawData.split('\n');
             if(!appConfig.students) appConfig.students = [];
-            
             let addedCount = 0;
-            rows.forEach(row => {
+            rawData.split('\n').forEach(row => {
                 const cols = row.split('\t');
-                if(cols.length > 0 && cols[0].trim() !== '') {
-                    appConfig.students.push({ name: cols[0].trim(), class: cols[1] ? cols[1].trim() : "-" });
-                    addedCount++;
-                }
+                if(cols.length > 0 && cols[0].trim() !== '') { appConfig.students.push({ name: cols[0].trim(), class: cols[1] ? cols[1].trim() : "-" }); addedCount++; }
             });
-
-            textArea.value = "";
-            renderImportedStudentsList();
-            
+            textArea.value = ""; renderImportedStudentsList();
             if (GAS_WEBHOOK_URL) {
-                const btn = document.getElementById('btn-import-students');
-                btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Menyimpan...`;
-                btn.disabled = true;
+                const btn = document.getElementById('btn-import-students'); btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Menyimpan...`; btn.disabled = true;
                 try {
-                    await fetch(GAS_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ action: "saveConfig", config: appConfig })
-                    });
+                    await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) });
                     alert(`Horee! Berhasil mengimpor ${addedCount} data siswa dan tersimpan permanen! 🎉`);
-                } catch(e) {
-                    alert(`Berhasil mengimpor, tapi gagal autosave. Klik "Simpan Permanen" manual.`);
-                } finally {
-                    btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Proses Import`;
-                    btn.disabled = false;
-                    lucide.createIcons();
-                }
+                } catch(e) { alert(`Berhasil mengimpor, tapi gagal autosave. Klik "Simpan Permanen" manual.`); } 
+                finally { btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Proses Import`; btn.disabled = false; lucide.createIcons(); }
             }
         };
 
-        const autoSaveSilently = async () => {
-             if (GAS_WEBHOOK_URL) {
-                 try {
-                     await fetch(GAS_WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ action: "saveConfig", config: appConfig })
-                    });
-                 } catch(e){}
-             }
-        };
+        const autoSaveSilently = async () => { if (GAS_WEBHOOK_URL) { try { await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) }); } catch(e){} } };
 
         const renderImportedStudentsList = () => {
-            const container = document.getElementById('imported-students-list');
-            const badge = document.getElementById('student-count-badge');
-            
-            if(!appConfig.students) appConfig.students = [];
-            badge.innerText = `${appConfig.students.length} Siswa`;
-
-            if(appConfig.students.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-white/40 italic">Belum ada data siswa diimpor.</div>`;
-                return;
-            }
-
-            let html = `<table class="w-full text-left text-sm"><thead class="bg-white/5 border-b border-white/10 text-pink-200">
-                <tr><th class="p-3 w-12 text-center">#</th><th class="p-3">Nama Lengkap</th><th class="p-3 w-32">Kelas</th><th class="p-3 w-16 text-center">Aksi</th></tr>
-                </thead><tbody>`;
+            const container = document.getElementById('imported-students-list'); const badge = document.getElementById('student-count-badge');
+            if(!appConfig.students) appConfig.students = []; badge.innerText = `${appConfig.students.length} Siswa`;
+            if(appConfig.students.length === 0) return container.innerHTML = `<div class="p-6 text-center text-white/40 italic">Belum ada data siswa diimpor.</div>`;
+            let html = `<table class="w-full text-left text-sm"><thead class="bg-white/5 border-b border-white/10 text-pink-200"><tr><th class="p-3 w-12 text-center">#</th><th class="p-3">Nama Lengkap</th><th class="p-3 w-32">Kelas</th><th class="p-3 w-16 text-center">Aksi</th></tr></thead><tbody>`;
             appConfig.students.forEach((s, i) => {
-                html += `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td class="p-3 text-center text-white/50">${i+1}</td>
-                    <td class="p-3 font-bold">${s.name}</td>
-                    <td class="p-3"><span class="bg-blue-500/20 text-blue-300 py-1 px-2 rounded text-xs">${s.class}</span></td>
-                    <td class="p-3 text-center">
-                        <button onclick="removeStudent(${i})" class="text-red-400 hover:text-red-300" title="Hapus"><i data-lucide="x-circle" class="w-4 h-4 mx-auto"></i></button>
-                    </td>
-                </tr>`;
+                html += `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors"><td class="p-3 text-center text-white/50">${i+1}</td><td class="p-3 font-bold">${s.name}</td><td class="p-3"><span class="bg-blue-500/20 text-blue-300 py-1 px-2 rounded text-xs">${s.class}</span></td><td class="p-3 text-center"><button onclick="removeStudent(${i})" class="text-red-400 hover:text-red-300"><i data-lucide="x-circle" class="w-4 h-4 mx-auto"></i></button></td></tr>`;
             });
-            html += `</tbody></table>`;
-            container.innerHTML = html;
-            lucide.createIcons();
+            html += `</tbody></table>`; container.innerHTML = html; lucide.createIcons();
         };
 
-        const removeStudent = async (index) => {
-            if(confirm("Yakin mau menghapus siswa ini?")) {
-                appConfig.students.splice(index, 1);
-                renderImportedStudentsList();
-                await autoSaveSilently();
-            }
-        };
+        const removeStudent = async (index) => { if(confirm("Yakin mau menghapus siswa ini?")) { appConfig.students.splice(index, 1); renderImportedStudentsList(); await autoSaveSilently(); } };
+        const clearAllStudents = async () => { if(confirm("PERINGATAN! Yakin menghapus seluruh data siswa?")) { appConfig.students = []; renderImportedStudentsList(); await autoSaveSilently(); } };
 
-        const clearAllStudents = async () => {
-            if(confirm("PERINGATAN! Yakin menghapus seluruh data siswa?")) {
-                appConfig.students = [];
-                renderImportedStudentsList();
-                await autoSaveSilently();
-            }
-        };
-
-        // =====================================
-        // KALKULASI SKOR OTOMATIS (BARU)
-        // =====================================
+        // KALKULASI SKOR OTOMATIS
         const getStudentScore = (answersStr) => {
-            let parsed = {};
-            try { parsed = JSON.parse(answersStr || '{}'); } catch(e){}
-
-            let totalItems = 0;
-            let correctItems = 0;
-
+            let parsed = {}; try { parsed = JSON.parse(answersStr || '{}'); } catch(e){}
+            let totalItems = 0; let correctItems = 0;
             appConfig.sections.forEach(sec => {
                 sec.blocks.forEach(b => {
                     if (b.type === 'choice' && b.correctOptionIndex !== undefined && b.correctOptionIndex !== null) {
-                        totalItems++;
-                        if (b.options[b.correctOptionIndex] && parsed[b.id] === b.options[b.correctOptionIndex].label) {
-                            correctItems++;
-                        }
+                        totalItems++; if (b.options[b.correctOptionIndex] && parsed[b.id] === b.options[b.correctOptionIndex].label) correctItems++;
                     } else if (b.type === 'likert' && b.correctAnswers && Object.keys(b.correctAnswers).length > 0) {
                         b.rows.forEach((r, rIdx) => {
                             if (b.correctAnswers[rIdx] !== undefined && b.correctAnswers[rIdx] !== null) {
-                                totalItems++;
-                                const correctColIndex = b.correctAnswers[rIdx];
-                                const correctLabel = b.columns[correctColIndex];
-                                if (parsed[b.id] && parsed[b.id][rIdx] === correctLabel) {
-                                    correctItems++;
-                                }
+                                totalItems++; const correctLabel = b.columns[b.correctAnswers[rIdx]];
+                                if (parsed[b.id] && parsed[b.id][rIdx] === correctLabel) correctItems++;
                             }
                         });
                     }
                 });
             });
-
-            if (totalItems === 0) return null; // Tidak ada soal yg butuh dinilai otomatis
+            if (totalItems === 0) return null; 
             return Math.round((correctItems / totalItems) * 100);
         };
 
         // RESPONSES & PAGINATION
         const fetchResponses = async () => {
-            if(!GAS_WEBHOOK_URL) { alert("Webhook belum diatur."); return; }
+            if(!GAS_WEBHOOK_URL) return alert("Webhook belum diatur."); 
             const container = document.getElementById('responses-list');
             container.innerHTML = `<div class="flex flex-col items-center justify-center py-10"><div class="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mb-4"></div><p class="text-white/60">Menarik data...</p></div>`;
             try {
-                const res = await fetch(GAS_WEBHOOK_URL + "?action=getResponses");
-                const data = await res.json();
-                if(data.status === "success") {
-                    fetchedResponses = data.data.reverse(); 
-                    responseCurrentPage = 1;
-                    renderResponses();
-                } else throw new Error("Gagal.");
-            } catch (err) {
-                container.innerHTML = `<div class="bg-red-500/20 border border-red-500/50 p-6 text-center text-red-200">Gagal mengambil data!</div>`;
-            }
+                const res = await fetch(GAS_WEBHOOK_URL + "?action=getResponses"); const data = await res.json();
+                if(data.status === "success") { fetchedResponses = data.data.reverse(); responseCurrentPage = 1; renderResponses(); } else throw new Error();
+            } catch (err) { container.innerHTML = `<div class="bg-red-500/20 border border-red-500/50 p-6 text-center text-red-200">Gagal mengambil data!</div>`; }
         };
 
         const handleSearchResponses = (query) => { responseSearchQuery = query.toLowerCase().trim(); responseCurrentPage = 1; renderResponses(); };
@@ -934,29 +840,20 @@
 
             if(filteredList.length === 0) {
                 container.innerHTML = `<div class="text-center py-10 text-white/50">Belum ada jawaban / tidak ditemukan.</div>`;
-                document.getElementById('response-page-info').innerText = `Halaman 1 / 1`;
-                document.getElementById('btn-prev-page').disabled = true;
-                document.getElementById('btn-next-page').disabled = true;
-                return;
+                document.getElementById('response-page-info').innerText = `Halaman 1 / 1`; document.getElementById('btn-prev-page').disabled = true; document.getElementById('btn-next-page').disabled = true; return;
             }
 
             const totalPages = Math.ceil(filteredList.length / responseItemsPerPage) || 1;
-            if(responseCurrentPage > totalPages) responseCurrentPage = totalPages;
-            if(responseCurrentPage < 1) responseCurrentPage = 1;
-
+            if(responseCurrentPage > totalPages) responseCurrentPage = totalPages; if(responseCurrentPage < 1) responseCurrentPage = 1;
             const startIndex = (responseCurrentPage - 1) * responseItemsPerPage;
             const paginatedList = filteredList.slice(startIndex, startIndex + responseItemsPerPage);
 
             document.getElementById('response-page-info').innerText = `Halaman ${responseCurrentPage} / ${totalPages}`;
-            document.getElementById('btn-prev-page').disabled = responseCurrentPage <= 1;
-            document.getElementById('btn-next-page').disabled = responseCurrentPage >= totalPages;
+            document.getElementById('btn-prev-page').disabled = responseCurrentPage <= 1; document.getElementById('btn-next-page').disabled = responseCurrentPage >= totalPages;
 
             let html = "";
             paginatedList.forEach((resp, idx) => {
-                let parsedAnswers = {};
-                try { parsedAnswers = JSON.parse(resp.answers || '{}'); } catch(e){}
-
-                // Rincian Jawaban HTML
+                let parsedAnswers = {}; try { parsedAnswers = JSON.parse(resp.answers || '{}'); } catch(e){}
                 let answersHtml = "";
                 for(let key in parsedAnswers) {
                     let val = parsedAnswers[key];
@@ -964,21 +861,13 @@
                         answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">ID Soal: ${key}</span>`;
                         for(let subKey in val) answersHtml += `<div class="pl-3 border-l border-white/20 mt-1"><span class="text-white/60 text-xs">Baris ${parseInt(subKey)+1}:</span> ${val[subKey]}</div>`;
                         answersHtml += `</div>`;
-                    } else {
-                        answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">ID Soal: ${key}</span><span class="font-bold">${val}</span></div>`;
-                    }
+                    } else { answersHtml += `<div class="mb-2"><span class="text-pink-300 text-xs block">ID Soal: ${key}</span><span class="font-bold">${val}</span></div>`; }
                 }
                 if(answersHtml === "") answersHtml = "<span class='text-white/40 italic'>Tidak ada jawaban.</span>";
 
-                // Hitung Skor
                 const calcScore = getStudentScore(resp.answers);
-                const scoreBadge = calcScore !== null 
-                    ? `<span class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3"></i> Skor: ${calcScore} / 100</span>`
-                    : `<span class="bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs flex items-center gap-1"><i data-lucide="edit-3" class="w-3 h-3"></i> Menunggu Penilaian</span>`;
-
-                let videoBtn = resp.videoUrl && resp.videoUrl !== "Tidak ada video" 
-                    ? `<a href="${resp.videoUrl}" target="_blank" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4"></i> Tonton Video</a>`
-                    : `<span class="text-white/40 text-xs italic flex items-center gap-1"><i data-lucide="video-off" class="w-4 h-4"></i> Tanpa Video</span>`;
+                const scoreBadge = calcScore !== null ? `<span class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3"></i> Skor: ${calcScore} / 100</span>` : `<span class="bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs flex items-center gap-1"><i data-lucide="edit-3" class="w-3 h-3"></i> Menunggu Penilaian</span>`;
+                let videoBtn = resp.videoUrl && resp.videoUrl !== "Tidak ada video" ? `<a href="${resp.videoUrl}" target="_blank" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4"></i> Tonton Video</a>` : `<span class="text-white/40 text-xs italic flex items-center gap-1"><i data-lucide="video-off" class="w-4 h-4"></i> Tanpa Video</span>`;
 
                 html += `
                 <div class="glass-panel p-6 rounded-2xl animate-fade-up" style="animation-delay: ${(idx%15) * 0.05}s">
@@ -998,37 +887,23 @@
                     </div>
                 </div>`;
             });
-            container.innerHTML = html;
-            lucide.createIcons();
+            container.innerHTML = html; lucide.createIcons();
         };
 
         const downloadExcel = () => {
             if (fetchedResponses.length === 0) return alert("Belum ada data di-download!");
             let questionIds = new Set();
-            fetchedResponses.forEach(r => {
-                let parsed; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){ parsed = {}; }
-                Object.keys(parsed).forEach(k => questionIds.add(k));
-            });
+            fetchedResponses.forEach(r => { let parsed; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){ parsed = {}; } Object.keys(parsed).forEach(k => questionIds.add(k)); });
             const questionsArray = Array.from(questionIds);
             const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
             let csvContent = "\uFEFF"; 
-            
             let headers = ["No", "Waktu Dikirim", "Nama Siswa", "Skor Auto", "Link Video", ...questionsArray].map(escapeCSV);
             csvContent += headers.join(",") + "\n";
-            const chronologicalResponses = [...fetchedResponses].reverse();
 
-            chronologicalResponses.forEach((r, idx) => {
+            [...fetchedResponses].reverse().forEach((r, idx) => {
                 let parsed = {}; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){}
                 const score = getStudentScore(r.answers);
-                
-                let row = [
-                    idx + 1, 
-                    new Date(r.timestamp).toLocaleString(), 
-                    r.name || 'Anonim', 
-                    score !== null ? score : "Manual", 
-                    r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"
-                ];
-                
+                let row = [idx + 1, new Date(r.timestamp).toLocaleString(), r.name || 'Anonim', score !== null ? score : "Manual", r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"];
                 questionsArray.forEach(qId => {
                     let val = parsed[qId];
                     if (val === undefined) row.push("");
@@ -1040,9 +915,7 @@
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `Rekap_Kuis_Skor_${new Date().toISOString().slice(0,10)}.csv`;
+            const a = document.createElement("a"); a.href = url; a.download = `Rekap_Kuis_Skor_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         };
 
@@ -1070,42 +943,30 @@
                 const manualName = document.getElementById('input-student-name-manual').value;
                 if (!manualName.trim()) return alert("Tolong ketik namamu dulu ya 😊");
                 studentName = manualName;
-            } else {
-                if (!selectedClass || !studentName) return alert("Tolong pilih Kelas dan Namamu dulu 😊");
-            }
+            } else { if (!selectedClass || !studentName) return alert("Tolong pilih Kelas dan Namamu dulu 😊"); }
             
             hideAllViews(); currentSectionId = appConfig.sections[0].id; renderStudentSection();
-            document.getElementById('view-student-form').classList.remove('hidden');
-            updateProgressBar();
+            document.getElementById('view-student-form').classList.remove('hidden'); updateProgressBar();
         };
 
         const handleTextAnswer = (blockId, val) => { if(val.trim() === '') delete studentAnswers[blockId]; else studentAnswers[blockId] = val; updateProgressBar(); };
         const handleLikertAnswer = (blockId, rowIndex, colValue) => { if (!studentAnswers[blockId]) studentAnswers[blockId] = {}; studentAnswers[blockId][rowIndex] = colValue; updateProgressBar(); };
         const handleChoiceAnswer = (blockId, label, nextSecId) => {
             if(blockId !== 'manual') { studentAnswers[blockId] = label; updateProgressBar(); }
-            const container = document.getElementById('student-form-container');
-            container.style.opacity = 0;
+            const container = document.getElementById('student-form-container'); container.style.opacity = 0;
             setTimeout(() => {
                 currentSectionId = nextSecId;
                 if (currentSectionId === 'end_record') { 
-                    hideAllViews(); 
-                    document.getElementById('view-recording').classList.remove('hidden');
-                    
+                    hideAllViews(); document.getElementById('view-recording').classList.remove('hidden');
                     if (appConfig.requireVideo === false) {
-                        document.getElementById('rec-intro').classList.add('hidden');
-                        document.querySelector('#view-recording .aspect-video').classList.add('hidden');
-                        document.getElementById('rec-controls').classList.add('hidden');
-                        document.getElementById('submit-controls').classList.add('hidden');
+                        document.getElementById('rec-intro').classList.add('hidden'); document.querySelector('#view-recording .aspect-video').classList.add('hidden');
+                        document.getElementById('rec-controls').classList.add('hidden'); document.getElementById('submit-controls').classList.add('hidden');
                         submitData(); 
                     } else {
-                        document.getElementById('rec-intro').classList.remove('hidden');
-                        document.querySelector('#view-recording .aspect-video').classList.remove('hidden');
+                        document.getElementById('rec-intro').classList.remove('hidden'); document.querySelector('#view-recording .aspect-video').classList.remove('hidden');
                         initCamera(); 
                     }
-                }
-                else {
-                    renderStudentSection();
-                }
+                } else renderStudentSection();
                 container.style.opacity = 1;
             }, 300);
         };
@@ -1122,31 +983,40 @@
                 if (block.type === 'text') html += `<p class="text-lg text-white/90 leading-relaxed">${block.content}</p>`;
                 else if (block.type === 'video') {
                     const ytInfo = getYoutubeInfo(block.url);
+                    const driveVidUrl = getDriveVideoUrl(block.url);
+                    
                     if (ytInfo) {
-                        // Perbaikan Bug YouTube Error 153
-                        // Disederhanakan parameternya dan ditambahkan atribut allow yang lengkap
                         let ytSrc = `https://www.youtube.com/embed/${ytInfo.id}?autoplay=1&mute=1&controls=1&rel=0`;
                         if (ytInfo.start > 0) ytSrc += `&start=${ytInfo.start}`;
-                        
                         html += `
                         <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
                             <iframe src="${ytSrc}" class="w-full h-full object-cover" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none">
-                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> YouTube
-                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none"><div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> YouTube</div>
                         </div>`;
-                    } else {
-                        // Merender video biasa jika link adalah mp4/webm lokal
+                    } else if (driveVidUrl) {
                         html += `
                         <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
-                            <video src="${block.url}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
-                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none">
-                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Auto-loop
-                            </div>
+                            <iframe src="${driveVidUrl}" class="w-full h-full object-cover" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                            <div class="absolute top-4 right-4 bg-blue-900/80 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none border border-blue-400/50"><div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div> G-Drive Video</div>
+                        </div>`;
+                    } else {
+                        html += `
+                        <div class="rounded-2xl overflow-hidden border border-white/20 bg-black/50 aspect-video relative shadow-lg">
+                            <video src="${block.url}" autoplay loop muted playsinline controls class="w-full h-full object-cover"></video>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs flex items-center gap-2 pointer-events-none"><div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Auto-loop</div>
                         </div>`;
                     }
                 }
-                else if (block.type === 'gif') html += `<div class="rounded-2xl overflow-hidden flex justify-center"><img src="${block.url}" class="max-w-full rounded-xl shadow-lg border border-white/20"></div>`;
+                else if (block.type === 'gif') {
+                    const safeUrl = getSafeImageUrl(block.url);
+                    html += `
+                    <div class="rounded-2xl overflow-hidden flex justify-center relative min-h-[200px] bg-black/20 border border-white/20">
+                        <div id="loader-${block.id}" class="absolute inset-0 flex items-center justify-center z-10">
+                            <div class="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <img src="${safeUrl}" class="max-w-full rounded-xl shadow-lg relative z-20 opacity-0 transition-opacity duration-500" onload="document.getElementById('loader-${block.id}').style.display='none'; this.classList.remove('opacity-0');" onerror="this.onerror=null; document.getElementById('loader-${block.id}').style.display='none'; this.src='https://placehold.co/600x400/4b1d52/ffffff?text=Gagal+Memuat+Gambar'; this.classList.remove('opacity-0');">
+                    </div>`;
+                }
                 else if (block.type === 'text_input') {
                     const savedVal = studentAnswers[block.id] || "";
                     html += `<div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner"><p class="text-xl font-bold mb-4">${block.question}</p><textarea onkeyup="handleTextAnswer('${block.id}', this.value)" class="glass-input w-full p-4 rounded-xl text-lg" rows="3" placeholder="Ketik jawabanmu...">${savedVal}</textarea></div>`;
@@ -1220,9 +1090,7 @@
         const showSuccess = () => {
             document.getElementById('loading-spinner').classList.add('hidden'); document.getElementById('success-icon').classList.remove('hidden');
             document.getElementById('status-title').innerText = "Misi Berhasil! 🎉"; 
-            document.getElementById('status-desc').innerText = appConfig.requireVideo === false ? 
-                "Tugas dan jawabanmu telah aman tersimpan di brankas Guru. Kamu luar biasa!" : 
-                "Tugas dan videomu telah aman tersimpan di brankas Guru.";
+            document.getElementById('status-desc').innerText = appConfig.requireVideo === false ? "Tugas dan jawabanmu telah aman tersimpan di brankas Guru. Kamu luar biasa!" : "Tugas dan videomu telah aman tersimpan di brankas Guru.";
             document.querySelector('#view-recording .aspect-video').classList.add('hidden');
         };
 
@@ -1252,20 +1120,18 @@
         };
         const handleDragEnd = (e) => { e.target.classList.remove('opacity-50', 'scale-95'); draggedSectionIndex = null; };
 
-        // TEACHER BUILDER (KUNCI JAWABAN logic added)
+        // TEACHER BUILDER (KUNCI JAWABAN)
         const addSection = (i=null) => { const n = {id: `sec_${Date.now()}`, title: "Bagian Baru", blocks: []}; if(i!==null) appConfig.sections.splice(i,0,n); else appConfig.sections.push(n); renderTeacherBuilder(); };
         const removeSection = (id) => { appConfig.sections = appConfig.sections.filter(s => s.id !== id); renderTeacherBuilder(); };
         const addBlock = (id, t) => { const sec = appConfig.sections.find(s=>s.id===id); const b = {id:`b_${Date.now()}`, type:t, content:"", url:"", question:"", options:[]}; if(t==='choice'){ b.options=[{label:"Opsi 1", nextSection:"end_record"}]; b.correctOptionIndex=null; } if(t==='likert') {b.rows=["Pernyataan 1"]; b.columns=["Sangat Setuju","Setuju","Tidak Setuju"]; b.correctAnswers={};} sec.blocks.push(b); renderTeacherBuilder(); };
         const removeBlock = (sId, bId) => { const sec = appConfig.sections.find(s=>s.id===sId); sec.blocks = sec.blocks.filter(b=>b.id!==bId); renderTeacherBuilder(); };
         const updateBlockField = (sId, bId, f, v) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId)[f] = v; };
         
-        // Choice Kunci Jawaban Set
         const setCorrectChoice = (sId, bId, val) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); b.correctOptionIndex = val; };
         const addOption = (sId, bId) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options.push({label:"Opsi Baru", nextSection:"end_record"}); renderTeacherBuilder(); };
         const updateOption = (sId, bId, oI, f, v) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options[oI][f] = v; };
         const removeOption = (sId, bId, oI) => { appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId).options.splice(oI, 1); renderTeacherBuilder(); };
         
-        // Likert Kunci Jawaban Set
         const updateLikertCorrect = (sId, bId, rIdx, val) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(!b.correctAnswers) b.correctAnswers = {}; if(val==="") delete b.correctAnswers[rIdx]; else b.correctAnswers[rIdx] = parseInt(val); };
         const updateLikertArr = (sId, bId, iR, i, v) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows[i]=v; else b.columns[i]=v; };
         const addLikertItem = (sId, bId, iR) => { const b = appConfig.sections.find(s=>s.id===sId).blocks.find(b=>b.id===bId); if(iR) b.rows.push(`Pernyataan ${b.rows.length+1}`); else b.columns.push(`Kolom ${b.columns.length+1}`); renderTeacherBuilder(); };
@@ -1287,8 +1153,26 @@
                 sec.blocks.forEach(b => {
                     html += `<div class="bg-black/20 p-4 rounded-xl border border-white/10 relative group"><button onclick="removeBlock('${sec.id}', '${b.id}')" class="absolute top-3 right-3 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                     if (b.type === 'text') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Teks Info</label><textarea class="glass-input w-full p-2 rounded-lg" onchange="updateBlockField('${sec.id}','${b.id}','content', this.value)">${b.content}</textarea>`;
-                    else if (b.type === 'video') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL (Mendukung Link YouTube & MP4)</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
-                    else if (b.type === 'gif') html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="image" class="w-3 h-3"></i> Gambar / GIF URL</label><input type="text" class="glass-input w-full p-2 rounded-lg" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)">`;
+                    else if (b.type === 'video') {
+                        html += `
+                        <label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="video" class="w-3 h-3"></i> Video URL (Mendukung Link YouTube & Google Drive)</label>
+                        <div class="flex gap-2 items-center flex-col sm:flex-row">
+                            <input type="text" class="glass-input flex-1 p-2 rounded-lg w-full" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)" placeholder="Tempel URL Video / YouTube / G-Drive">
+                        </div>`;
+                    }
+                    else if (b.type === 'gif') {
+                        const safeUrl = getSafeImageUrl(b.url);
+                        html += `
+                        <label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="image" class="w-3 h-3"></i> Gambar / GIF (Mendukung Link URL & Upload ImgBB)</label>
+                        <div class="flex gap-2 items-center flex-col sm:flex-row">
+                            <input type="text" class="glass-input flex-1 p-2 rounded-lg w-full" value="${b.url}" onchange="updateBlockField('${sec.id}','${b.id}','url', this.value)" placeholder="Tempel URL Gambar / GIF atau Upload">
+                            <label class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2 text-sm font-bold transition-all w-full sm:w-auto" id="btn-upload-img-${b.id}">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload ke ImgBB
+                                <input type="file" class="hidden" accept="image/*" onchange="uploadBlockImage(this, '${sec.id}', '${b.id}')">
+                            </label>
+                            ${safeUrl ? `<div class="w-10 h-10 rounded overflow-hidden bg-black/50 border border-white/20 flex-shrink-0"><img src="${safeUrl}" class="w-full h-full object-cover"></div>` : ''}
+                        </div>`;
+                    }
                     else if (b.type === 'text_input') {
                         html += `<label class="text-xs text-white/50 flex items-center gap-1 mb-2"><i data-lucide="type" class="w-3 h-3"></i> Pertanyaan Teks (Essay)</label><input type="text" class="glass-input font-bold w-full p-2 rounded-lg mb-1" value="${b.question}" placeholder="Pertanyaan..." onchange="updateBlockField('${sec.id}','${b.id}','question', this.value)">
                         <p class="text-[10px] text-white/50 italic mb-2">* Soal ini diperiksa manual (tidak dihitung otomatis dalam skor 100).</p>
