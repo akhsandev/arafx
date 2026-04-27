@@ -14,7 +14,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen font-sans text-slate-900">
 
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-2xl relative pb-24">
+    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-2xl relative pb-24 border-x border-slate-100">
         <div class="bg-[#1e3a8a] text-white p-5 flex items-center justify-between shadow-lg">
             <div class="flex items-center gap-4">
                 <img src="https://arafx.vercel.app/logo.png" alt="Logo" class="w-12 h-12 drop-shadow-md">
@@ -25,8 +25,8 @@
             </div>
         </div>
 
-        <div class="relative w-full aspect-[4/3] bg-black overflow-hidden flex shadow-inner">
-            <video id="videoElement" autoplay playsinline class="flex-grow h-full"></video>
+        <div class="relative w-full aspect-[3/4] bg-black overflow-hidden flex shadow-inner">
+            <video id="videoElement" autoplay playsinline class="flex-grow h-full w-full"></video>
             <div id="uiMap" class="p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl absolute bottom-4 left-4 z-10 hidden border border-white/50">
                 <div id="map"></div>
                 <p id="uiLocation" class="text-center text-[10px] font-bold text-slate-700 mt-1 uppercase tracking-tighter">Mencari GPS...</p>
@@ -35,8 +35,8 @@
 
         <div class="p-6 space-y-5">
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Keterangan Aset / Nama Alat</label>
-                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-100 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-slate-50" placeholder="Tuliskan detail aset di sini..."></textarea>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Keterangan Aset / Nama Alat</label>
+                <textarea id="keterangan" rows="3" class="w-full border-2 border-slate-300 rounded-xl p-3 focus:border-[#1e3a8a] focus:ring-0 outline-none transition-all text-sm bg-white font-medium text-slate-800 shadow-inner" placeholder="Tuliskan detail aset di sini..."></textarea>
             </div>
             
             <button id="captureBtn" class="w-full bg-[#1e3a8a] active:scale-95 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all uppercase tracking-wider">
@@ -54,7 +54,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyNxwlHW5Z3yz4gFAdQW6iaDZGDVqHgdzcdnMhjiwTjW85OtsoRnV1tS75MSNqWhYg/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyYZo43wNhGnxf1LpF07_aoYttFzodg8J-q39pAXHOAZSb96fLzexVZ_kQBHRBVpN47/exec";
         
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvas');
@@ -64,9 +64,6 @@
         const loading = document.getElementById('loading');
         
         let currentLat = null, currentLong = null, map = null, marker = null;
-        let logoImg = new Image();
-        logoImg.crossOrigin = "Anonymous";
-        logoImg.src = "https://arafx.vercel.app/logo.png";
 
         function formatTanggalIndo(date) {
             const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -74,30 +71,22 @@
             return `${hari[date.getDay()]}, ${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
         }
 
-        // FUNGSI BARU: Menggabungkan 3x3 Tile dan memotongnya tepat di tengah koordinat GPS
         async function getStaticMapCentered(lat, lon, zoom, width, height) {
             const n = Math.pow(2, zoom);
             const x_f = (lon + 180) / 360 * n;
             const y_f = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n;
-            
             const centerTileX = Math.floor(x_f);
             const centerTileY = Math.floor(y_f);
-            
-            // Hitung pixel offset dari sudut kiri atas kepingan tile utama
             const offsetX = (x_f - centerTileX) * 256;
             const offsetY = (y_f - centerTileY) * 256;
 
-            // Buat canvas virtual untuk merender peta gabungan
             const mapCanvas = document.createElement('canvas');
             mapCanvas.width = width;
             mapCanvas.height = height;
             const mCtx = mapCanvas.getContext('2d');
-
-            // Geser posisi draw gambar agar koordinat (offsetX, offsetY) jatuh TEPAT di tengah (width/2, height/2)
             const startX = (width / 2) - offsetX;
             const startY = (height / 2) - offsetY;
 
-            // Ambil 9 kepingan peta di sekitar posisi untuk mencegah ada area putih jika titik ada di pinggir tile
             const promises = [];
             for (let i = -1; i <= 1; i++) {
                 for (let j = -1; j <= 1; j++) {
@@ -113,21 +102,15 @@
                     promises.push(p);
                 }
             }
-
             const tiles = await Promise.all(promises);
-            tiles.forEach(t => {
-                if(t.img) {
-                    mCtx.drawImage(t.img, startX + (t.i * 256), startY + (t.j * 256), 256, 256);
-                }
-            });
-
+            tiles.forEach(t => { if(t.img) mCtx.drawImage(t.img, startX + (t.i * 256), startY + (t.j * 256), 256, 256); });
             return mapCanvas;
         }
 
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } }
+                    video: { facingMode: "environment", width: { ideal: 1080 }, height: { ideal: 1440 } }
                 });
                 video.srcObject = stream;
             } catch (err) { alert("Akses kamera ditolak."); }
@@ -139,7 +122,6 @@
                     currentLat = position.coords.latitude;
                     currentLong = position.coords.longitude;
                     document.getElementById('uiLocation').innerText = `${currentLat.toFixed(5)}, ${currentLong.toFixed(5)}`;
-                    
                     if(!map) {
                         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([currentLat, currentLong], 16);
                         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -154,79 +136,81 @@
         }
 
         captureBtn.addEventListener('click', async () => {
-            if (!ketInput.value) return alert("Keterangan wajib diisi!");
-            if (currentLat === null) return alert("Menunggu sinyal GPS...");
+            if (!ketInput.value) return alert("Isi keterangan foto dulu ya Pak!");
+            if (currentLat === null) return alert("Menunggu GPS...");
 
             loading.classList.remove('hidden');
 
             const targetWidth = 1080;
-            const scale = targetWidth / video.videoWidth;
+            const targetHeight = 1440;
             canvas.width = targetWidth;
-            canvas.height = video.videoHeight * scale;
+            canvas.height = targetHeight;
 
-            // 1. Gambar Video Utama
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const sWidth = video.videoWidth;
+            const sHeight = video.videoHeight;
+            const sAR = sWidth / sHeight;
+            const tAR = targetWidth / targetHeight;
 
-            // 2. Setup Box Watermark ala Survey
+            let sX, sY, sw, sh;
+            if (sAR > tAR) {
+                sh = sHeight; sw = sh * tAR;
+                sX = (sWidth - sw) / 2; sY = 0;
+            } else {
+                sw = sWidth; sh = sw / tAR;
+                sX = 0; sY = (sHeight - sh) / 2;
+            }
+
+            ctx.drawImage(video, sX, sY, sw, sh, 0, 0, targetWidth, targetHeight);
+
             const boxWidth = canvas.width * 0.92;
-            const boxHeight = 240;
+            const boxHeight = 220; // Disesuaikan sedikit tingginya karena tulisan berkurang
             const boxX = (canvas.width - boxWidth) / 2;
             const boxY = canvas.height - boxHeight - 40;
             
-            ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-            ctx.roundRect ? ctx.fillRoundRect : ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            // --- BOX WATERMARK HITAM SEMI-TRANSPARAN ---
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 16);
+            else ctx.rect(boxX, boxY, boxWidth, boxHeight);
+            ctx.fill();
+            
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
             ctx.lineWidth = 2;
-            ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+            ctx.stroke();
 
-            // 3. Gambar Teks Info
+            // --- TEKS INFO (Tanpa Tulisan SMAN 1 Soppeng) ---
             ctx.fillStyle = "white";
             ctx.font = "bold 32px Arial";
             ctx.fillText(ketInput.value.substring(0, 45), boxX + 30, boxY + 60);
-
+            
             ctx.font = "24px Arial";
-            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-            ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 100);
-            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 135);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            ctx.fillText(`Kec. Lalabata, Kabupaten Soppeng`, boxX + 30, boxY + 110);
+            ctx.fillText(`Lat: ${currentLat.toFixed(6)} Long: ${currentLong.toFixed(6)}`, boxX + 30, boxY + 145);
             
             const timeStr = formatTanggalIndo(new Date());
             const nowTime = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-            ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 175);
-            ctx.font = "bold 20px Arial";
-            ctx.fillStyle = "#60a5fa"; // Blue 400
-            ctx.fillText(`ASET UPT SMA NEGERI 1 SOPPENG`, boxX + 30, boxY + 210);
+            ctx.fillText(`${timeStr} | ${nowTime} WITA`, boxX + 30, boxY + 185);
 
-            // 4. Logo SMAN 1 Soppeng
-            if(logoImg.complete) {
-                const logoSize = 140;
-                ctx.drawImage(logoImg, boxX + boxWidth - logoSize - 30, boxY + 30, logoSize, logoSize);
-            }
-            
-            // 5. Gambar Peta Statis Terpusat
-            const mapSize = 160;
-            
-            // Tunggu render peta gabungan selesai
+            // --- PETA (Tampil Sendiri Tanpa Logo, Digeser ke Kanan) ---
+            const mapSize = 140; 
             const mapCanvas = await getStaticMapCentered(currentLat, currentLong, 16, mapSize, mapSize);
             
-            const mapPosX = boxX + boxWidth - mapSize - 200;
-            const mapPosY = boxY + 45;
+            // Posisi Map diletakkan paling kanan dari dalam area box
+            const mapPosX = boxX + boxWidth - mapSize - 30;
+            const mapPosY = boxY + (boxHeight - mapSize) / 2;
             
-            // Frame Peta
             ctx.fillStyle = "white";
             ctx.fillRect(mapPosX - 4, mapPosY - 4, mapSize + 8, mapSize + 8);
-            
-            // Tempel hasil render peta ke canvas utama
             ctx.drawImage(mapCanvas, mapPosX, mapPosY, mapSize, mapSize);
             
-            // Gambar Titik Merah PASTI di Tengah (karena petanya sudah digeser sesuai koordinat)
-            ctx.fillStyle = "#ef4444"; // Red 500
+            ctx.fillStyle = "#ef4444"; 
             ctx.beginPath();
             ctx.arc(mapPosX + (mapSize / 2), mapPosY + (mapSize / 2), 8, 0, 2 * Math.PI);
             ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
 
             const base64Image = canvas.toDataURL('image/jpeg', 0.6);
-
             try {
                 await fetch(WEB_APP_URL, {
                     method: 'POST',
@@ -237,9 +221,9 @@
                     }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
-                alert("Data Aset Berhasil Terkirim ke Drive!");
+                alert("Data Aset Berhasil Terkirim!");
                 ketInput.value = ""; 
-            } catch (err) { alert("Gagal koneksi ke server."); } 
+            } catch (err) { alert("Gagal koneksi."); } 
             finally { loading.classList.add('hidden'); }
         });
 
