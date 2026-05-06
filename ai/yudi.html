@@ -233,6 +233,35 @@
             </button>
         </div>
 
+        <!-- 1B. FEEDBACK / SCORE SCREEN (JIKA SISWA SUDAH MENGERJAKAN) -->
+        <div id="view-feedback" class="hidden text-center py-12 animate-fade-up max-w-lg mx-auto">
+            <div class="w-24 h-24 mx-auto bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-green-500/20">
+                <i data-lucide="award" class="w-12 h-12"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-2">Halo, <span id="feedback-student-name" class="text-pink-400">Siswa</span>!</h2>
+            <p class="text-white/80 mb-8">Kamu sudah menyelesaikan misi ini. Berikut adalah hasil rapormu:</p>
+            
+            <div class="glass-panel rounded-3xl p-8 text-left relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                
+                <h3 class="text-xs font-bold text-pink-300 uppercase tracking-widest mb-1">Skor Otomatis</h3>
+                <div class="text-5xl font-black text-white mb-6 drop-shadow-md" id="feedback-score">100</div>
+                
+                <div class="border-t border-white/10 pt-6">
+                    <h3 class="text-xs font-bold text-orange-300 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i> Catatan dari Guru:
+                    </h3>
+                    <div class="bg-black/20 p-5 rounded-2xl border border-white/5 relative">
+                        <p id="feedback-text" class="text-white/90 leading-relaxed italic">"Kerja bagus! Pertahankan semangat belajarmu."</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="goHome()" class="mt-8 bg-white/10 hover:bg-white/20 text-white py-3 px-8 rounded-full font-bold transition-all flex items-center gap-2 mx-auto">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Awal
+            </button>
+        </div>
+
         <!-- 2. STUDENT FORM VIEWER (Kuis) -->
         <div id="view-student-form" class="hidden animate-fade-up space-y-6">
             <div class="glass-panel p-4 rounded-2xl flex items-center gap-4 shadow-lg sticky top-[88px] z-40 bg-[#4b1d52]/80 backdrop-blur-xl border-pink-500/30">
@@ -333,6 +362,25 @@
                     <button id="btn-save-db" onclick="saveConfigToDB()" class="btn-primary py-3 px-6 rounded-xl font-bold flex items-center gap-2 shadow-lg w-full md:w-auto justify-center">
                         <i data-lucide="save" class="w-5 h-5"></i> Simpan ke Database
                     </button>
+                </div>
+
+                <!-- ALAT BACKUP & RESTORE JSON -->
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-green-400">
+                    <h3 class="font-bold mb-2 flex items-center gap-2 text-green-300">
+                        <i data-lucide="database" class="w-5 h-5"></i> Alat Backup & Restore (File JSON)
+                    </h3>
+                    <p class="text-sm text-white/70 mb-4">
+                        Download seluruh data soal dan siswa sebagai file cadangan di laptop/HP, atau muat file backup jika Database sedang error.
+                    </p>
+                    <div class="flex gap-4 flex-wrap">
+                        <button onclick="exportJSON()" class="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg text-sm">
+                            <i data-lucide="download-cloud" class="w-4 h-4"></i> Download File .json
+                        </button>
+                        <label class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-xl font-bold flex items-center gap-2 cursor-pointer transition-all shadow-lg text-sm">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i> Muat File .json
+                            <input type="file" class="hidden" accept=".json" onchange="importJSON(this)">
+                        </label>
+                    </div>
                 </div>
 
                 <div class="glass-panel rounded-2xl p-6">
@@ -509,7 +557,7 @@
             }
         }
 
-        // RENDER GAMBAR WELCOME DINAMIS (Anti Blank/Crash)
+        // RENDER GAMBAR WELCOME DINAMIS
         function renderWelcomeImage() {
             const container = document.getElementById('welcome-image-container');
             if (appConfig.welcomeImageUrl && appConfig.welcomeImageUrl.trim() !== '') {
@@ -542,7 +590,7 @@
             if(tbImg) tbImg.value = appConfig.welcomeImageUrl || "";
         }
 
-        // EVENT WINDOW ONLOAD (Menarik Database & Inisialisasi)
+        // EVENT WINDOW ONLOAD
         window.onload = async () => {
             lucide.createIcons();
             
@@ -563,11 +611,8 @@
                 try {
                     const res = await fetch(GAS_WEBHOOK_URL + "?action=getConfig");
                     
-                    if (!res.ok) {
-                        throw new Error(`HTTP Error ${res.status}`);
-                    }
+                    if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
                     
-                    // CEK APAKAH RESPON BERUPA JSON
                     const contentType = res.headers.get("content-type");
                     if (contentType && contentType.indexOf("application/json") !== -1) {
                         const data = await res.json();
@@ -577,7 +622,7 @@
                             if(typeof appConfig.requireVideo === 'undefined') appConfig.requireVideo = true;
                         }
                     } else {
-                        console.warn("URL Webhook tidak merespons JSON. Pastikan akses deployment di Apps Script disetel ke 'Anyone'.");
+                        console.warn("URL Webhook tidak merespons JSON.");
                         document.getElementById('db-alert').classList.remove('hidden');
                         document.getElementById('db-alert-text').innerText = "Database Terkunci! Atur akses Web App ke 'Anyone' di Google Script.";
                     }
@@ -602,7 +647,7 @@
             return null;
         }
 
-        // UPLOAD GAMBAR KE IMGBB (Bypass Kompresi agar GIF tidak rusak)
+        // UPLOAD GAMBAR KE IMGBB
         async function uploadWelcomeImage(input) {
             const file = input.files[0];
             if (!file) return;
@@ -614,7 +659,7 @@
             
             try {
                 const formData = new FormData();
-                formData.append('key', 'bc84840c84c332323a490c053d3c2df2'); // API Key ImgBB
+                formData.append('key', 'bc84840c84c332323a490c053d3c2df2');
                 formData.append('image', file);
                 
                 const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
@@ -626,18 +671,9 @@
                     appConfig.welcomeImageUrl = safeImgbbUrl; 
                     renderWelcomeImage();
                     alert("Foto/GIF Ceria berhasil diupload ke ImgBB! Jangan lupa klik 'Simpan Permanen' ya. 🎉");
-                } else { 
-                    throw new Error(data.error?.message || "Gagal upload"); 
-                }
-            } catch (err) { 
-                alert("Wah, gagal upload gambar. Pastikan koneksi internet stabil ya!"); 
-                console.error(err);
-            } finally { 
-                btnLabel.innerHTML = originalHTML; 
-                btnLabel.style.pointerEvents = 'auto'; 
-                input.value = ''; 
-                lucide.createIcons(); 
-            }
+                } else { throw new Error(data.error?.message || "Gagal upload"); }
+            } catch (err) { alert("Wah, gagal upload gambar. Pastikan koneksi internet stabil ya!"); console.error(err);
+            } finally { btnLabel.innerHTML = originalHTML; btnLabel.style.pointerEvents = 'auto'; input.value = ''; lucide.createIcons(); }
         }
 
         function resetWelcomeImage() { appConfig.welcomeImageUrl = ""; renderWelcomeImage(); alert("Logo berhasil dikembalikan ke Roket! Ingat klik Simpan Permanen."); }
@@ -654,7 +690,7 @@
 
             try {
                 const formData = new FormData();
-                formData.append('key', 'bc84840c84c332323a490c053d3c2df2'); // API Key ImgBB
+                formData.append('key', 'bc84840c84c332323a490c053d3c2df2');
                 formData.append('image', file);
                 
                 const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
@@ -666,22 +702,9 @@
                     updateBlockField(secId, blockId, 'url', safeImgbbUrl);
                     renderTeacherBuilder();
                     alert("Gambar/GIF soal berhasil mendarat di ImgBB! Otomatis tayang! 🎉");
-                } else { 
-                    throw new Error(data.error?.message || "Gagal upload"); 
-                }
-            } catch (err) { 
-                alert("Wah, gagal upload gambar soal. Pastikan koneksi aman ya!"); 
-            } finally { 
-                btnLabel.innerHTML = originalHTML; 
-                btnLabel.style.pointerEvents = 'auto'; 
-                input.value = ''; 
-                lucide.createIcons(); 
-            }
-        }
-
-        // VIDEO UPLOAD MENGGUNAKAN YOUTUBE / DRIVE AJA
-        function uploadBlockVideo(input, secId, blockId) {
-            alert("Fitur upload video dihentikan. Silakan gunakan link YouTube atau link Google Drive ya!");
+                } else { throw new Error(data.error?.message || "Gagal upload"); }
+            } catch (err) { alert("Wah, gagal upload gambar soal. Pastikan koneksi aman ya!"); 
+            } finally { btnLabel.innerHTML = originalHTML; btnLabel.style.pointerEvents = 'auto'; input.value = ''; lucide.createIcons(); }
         }
 
         function selectClassFromDropdown(cls) {
@@ -707,7 +730,7 @@
         }
 
         function hideAllViews() {
-            ['view-loading', 'view-welcome', 'view-student-form', 'view-recording', 'view-teacher'].forEach(id => {
+            ['view-loading', 'view-welcome', 'view-student-form', 'view-recording', 'view-teacher', 'view-feedback'].forEach(id => {
                 const el = document.getElementById(id); if(el) el.classList.add('hidden');
             });
         }
@@ -787,21 +810,14 @@
                     alert(`Horee! Berhasil mengimpor ${addedCount} data siswa dan tersimpan permanen ke Database! 🎉`);
                 } catch(e) { 
                     alert(`Data ${addedCount} siswa berhasil ditambahkan sementara ke layar, TAPI GAGAL DISIMPAN KE DATABASE (Error: ${e.message}). Pastikan Webhook URL Google Apps Script milikmu sudah benar dan ter-deploy (New Version).`); 
-                } finally { 
-                    btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Proses Import`; 
-                    btn.disabled = false; 
-                    lucide.createIcons(); 
-                }
-            } else {
-                alert(`Data ${addedCount} siswa berhasil ditambahkan ke layar (Database belum terhubung).`);
-            }
+                } finally { btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Proses Import`; btn.disabled = false; lucide.createIcons(); }
+            } else { alert(`Data ${addedCount} siswa berhasil ditambahkan ke layar (Database belum terhubung).`); }
         }
 
         async function autoSaveSilently() { 
             if (GAS_WEBHOOK_URL) { 
-                try { 
-                    await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) }); 
-                } catch(e){ console.warn("Auto save silently gagal:", e.message); } 
+                try { await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) }); } 
+                catch(e){ console.warn("Auto save silently gagal:", e.message); } 
             } 
         }
 
@@ -841,6 +857,37 @@
             return Math.round((correctItems / totalItems) * 100);
         }
 
+        // ===============================================
+        // FITUR BARU: SIMPAN FEEDBACK GURU KE DATABASE
+        // ===============================================
+        async function saveFeedbackGuru(rowIndex, studentName, idx) {
+            if(!GAS_WEBHOOK_URL) return alert("Webhook belum diatur!");
+            
+            const feedbackText = document.getElementById(`feedback-input-${idx}`).value;
+            const btn = document.getElementById(`btn-feedback-${idx}`);
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<div class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Mengirim...`;
+            btn.disabled = true;
+
+            try {
+                const payload = { action: "saveFeedback", rowIndex: rowIndex, feedback: feedbackText };
+                const res = await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                
+                if (data.status === "success") {
+                    fetchedResponses[idx].feedback = feedbackText; // Update state lokal
+                    alert(`Yeay! Feedback untuk ${studentName} berhasil dikirim! 🎉`);
+                } else {
+                    throw new Error();
+                }
+            } catch (err) {
+                alert("Gagal mengirim feedback. Pastikan koneksi internet bagus dan Script GAS sudah diupdate.");
+            } finally {
+                btn.innerHTML = originalHTML; btn.disabled = false; lucide.createIcons();
+            }
+        }
+
         // RESPONSES & PAGINATION
         async function fetchResponses() {
             if(!GAS_WEBHOOK_URL) return alert("Webhook belum diatur."); 
@@ -850,7 +897,11 @@
                 const res = await fetch(GAS_WEBHOOK_URL + "?action=getResponses"); 
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                if(data.status === "success") { fetchedResponses = data.data.reverse(); responseCurrentPage = 1; renderResponses(); } else throw new Error();
+                if(data.status === "success") { 
+                    fetchedResponses = data.data.reverse(); // Membalik urutan agar yang terbaru di atas
+                    responseCurrentPage = 1; 
+                    renderResponses(); 
+                } else throw new Error();
             } catch (err) { container.innerHTML = `<div class="bg-red-500/20 border border-red-500/50 p-6 text-center text-red-200">Gagal mengambil data dari Spreadsheet! Pastikan Webhook valid.</div>`; }
         }
 
@@ -893,6 +944,9 @@
                 const scoreBadge = calcScore !== null ? `<span class="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3"></i> Skor: ${calcScore} / 100</span>` : `<span class="bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs flex items-center gap-1"><i data-lucide="edit-3" class="w-3 h-3"></i> Menunggu Penilaian</span>`;
                 let videoBtn = resp.videoUrl && resp.videoUrl !== "Tidak ada video" ? `<a href="${resp.videoUrl}" target="_blank" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-4 py-2 rounded-lg font-bold flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4"></i> Tonton Video</a>` : `<span class="text-white/40 text-xs italic flex items-center gap-1"><i data-lucide="video-off" class="w-4 h-4"></i> Tanpa Video</span>`;
 
+                // Calculate absolute index in fetchedResponses array for saving feedback
+                const absoluteIdx = startIndex + idx;
+
                 html += `
                 <div class="glass-panel p-6 rounded-2xl animate-fade-up" style="animation-delay: ${(idx%15) * 0.05}s">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 mb-4 gap-4">
@@ -905,9 +959,20 @@
                         </div>
                         ${videoBtn}
                     </div>
-                    <div class="bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div class="bg-black/20 p-4 rounded-xl border border-white/5 mb-4">
                         <h5 class="text-sm font-bold text-white/70 mb-3 border-b border-white/10 pb-2">Rincian Jawaban:</h5>
                         <div class="grid md:grid-cols-2 gap-4 text-sm max-h-48 overflow-y-auto">${answersHtml}</div>
+                    </div>
+                    
+                    <!-- UI FEEDBACK GURU BARU -->
+                    <div class="border-t border-white/10 pt-4">
+                        <h5 class="text-sm font-bold text-orange-300 mb-2 flex items-center gap-1"><i data-lucide="message-square" class="w-4 h-4"></i> Berikan Feedback ke Siswa:</h5>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <textarea id="feedback-input-${absoluteIdx}" class="glass-input flex-1 p-3 rounded-xl text-sm min-h-[44px]" placeholder="Ketik pujian atau saran di sini...">${resp.feedback || ''}</textarea>
+                            <button onclick="saveFeedbackGuru(${resp.rowIndex}, '${resp.name}', ${absoluteIdx})" id="btn-feedback-${absoluteIdx}" class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                                <i data-lucide="send" class="w-4 h-4"></i> Simpan Pesan
+                            </button>
+                        </div>
                     </div>
                 </div>`;
             });
@@ -921,13 +986,21 @@
             const questionsArray = Array.from(questionIds);
             const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
             let csvContent = "\uFEFF"; 
-            let headers = ["No", "Waktu Dikirim", "Nama Siswa", "Skor Auto", "Link Video", ...questionsArray].map(escapeCSV);
+            let headers = ["No", "Waktu Dikirim", "Nama Siswa", "Skor Auto", "Feedback Guru", "Link Video", ...questionsArray].map(escapeCSV);
             csvContent += headers.join(",") + "\n";
 
+            // Karena fetchedResponses sudah di-reverse untuk UI, kita reverse lagi ke chronological (waktu aslinya)
             [...fetchedResponses].reverse().forEach((r, idx) => {
                 let parsed = {}; try { parsed = JSON.parse(r.answers || '{}'); } catch(e){}
                 const score = getStudentScore(r.answers);
-                let row = [idx + 1, new Date(r.timestamp).toLocaleString(), r.name || 'Anonim', score !== null ? score : "Manual", r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"];
+                let row = [
+                    idx + 1, 
+                    new Date(r.timestamp).toLocaleString(), 
+                    r.name || 'Anonim', 
+                    score !== null ? score : "Manual", 
+                    r.feedback || "Belum ada feedback",
+                    r.videoUrl && r.videoUrl !== "Tidak ada video" ? r.videoUrl : "Tanpa Video"
+                ];
                 questionsArray.forEach(qId => {
                     let val = parsed[qId];
                     if (val === undefined) row.push("");
@@ -939,7 +1012,7 @@
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a"); a.href = url; a.download = `Rekap_Kuis_Skor_${new Date().toISOString().slice(0,10)}.csv`;
+            const a = document.createElement("a"); a.href = url; a.download = `Rekap_Kuis_Lengkap_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         }
 
@@ -961,7 +1034,8 @@
             if (bar && text) { bar.style.width = pct + '%'; text.innerText = pct + '%'; }
         }
 
-        function startQuiz() {
+        // CEK STATUS SISWA (FITUR BARU) SEBELUM MULAI
+        async function startQuiz() {
             const isManual = document.getElementById('manual-input-container') && !document.getElementById('manual-input-container').classList.contains('hidden');
             if (isManual) {
                 const manualName = document.getElementById('input-student-name-manual').value;
@@ -969,8 +1043,48 @@
                 studentName = manualName;
             } else { if (!selectedClass || !studentName) return alert("Tolong pilih Kelas dan Namamu dulu 😊"); }
             
+            // Cek ke database apakah siswa sudah pernah submit
+            if (GAS_WEBHOOK_URL) {
+                document.getElementById('view-loading').classList.remove('hidden');
+                try {
+                    const res = await fetch(GAS_WEBHOOK_URL + `?action=checkStatus&studentName=${encodeURIComponent(studentName)}`);
+                    const data = await res.json();
+                    
+                    if (data.status === "found") {
+                        // Siswa sudah mengerjakan, langsung buka halaman Feedback Rapor!
+                        document.getElementById('view-loading').classList.add('hidden');
+                        showFeedbackView(data);
+                        return;
+                    }
+                } catch(e) { 
+                    console.log("Cek status gagal/timeout, lanjut kuis...", e); 
+                }
+                document.getElementById('view-loading').classList.add('hidden');
+            }
+
             hideAllViews(); currentSectionId = appConfig.sections[0].id; renderStudentSection();
             document.getElementById('view-student-form').classList.remove('hidden'); updateProgressBar();
+        }
+
+        // TAMPILAN RAPOR / FEEDBACK SISWA
+        function showFeedbackView(data) {
+            hideAllViews();
+            document.getElementById('feedback-student-name').innerText = studentName;
+            
+            const score = getStudentScore(data.answers);
+            document.getElementById('feedback-score').innerText = score !== null ? score : "Manual";
+            
+            const textFeedback = document.getElementById('feedback-text');
+            if (data.feedback && data.feedback.trim() !== "") {
+                textFeedback.innerText = `"${data.feedback}"`;
+                textFeedback.classList.remove('text-white/50');
+            } else {
+                textFeedback.innerText = "Guru belum memberikan pesan evaluasi untukmu. Silakan cek lagi nanti ya!";
+                textFeedback.classList.add('text-white/50');
+            }
+            
+            document.getElementById('view-feedback').classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function handleTextAnswer(blockId, val) { if(val.trim() === '') delete studentAnswers[blockId]; else studentAnswers[blockId] = val; updateProgressBar(); }
@@ -1105,6 +1219,16 @@
         async function submitData() {
             document.getElementById('rec-intro').classList.add('hidden'); document.getElementById('submit-controls').classList.add('hidden'); document.getElementById('submit-controls').classList.remove('flex');
             document.getElementById('upload-status').classList.remove('hidden');
+            
+            document.getElementById('loading-spinner').classList.remove('hidden');
+            const successIcon = document.getElementById('success-icon');
+            successIcon.classList.add('hidden');
+            successIcon.className = "hidden w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce";
+            successIcon.innerHTML = `<i data-lucide="check-circle" class="w-10 h-10"></i>`;
+            document.getElementById('status-title').innerText = "Mengirim Data..."; 
+            document.getElementById('status-title').classList.remove('text-red-400');
+            document.getElementById('status-desc').innerText = "Mohon tunggu, proses pengiriman sedang berjalan.";
+
             let base64Video = "";
             if (videoBlob) base64Video = await new Promise((res) => { const reader = new FileReader(); reader.onloadend = () => res(reader.result.split(',')[1]); reader.readAsDataURL(videoBlob); });
             const payload = { action: "submitResponse", studentName: studentName, answers: studentAnswers, videoBase64: base64Video, mimeType: "video/webm" };
@@ -1112,33 +1236,70 @@
             try { 
                 const res = await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }); 
                 if(!res.ok) throw new Error("HTTP " + res.status);
-                showSuccess(); 
+                const data = await res.json();
+                if(data.status === "success") { showSuccess(); } else { throw new Error(data.message || "Gagal menyimpan di server"); }
             } 
-            catch (err) { showSuccess(); console.error("Video tidak tersimpan", err); }
+            catch (err) { showError(err); console.error("Data tidak tersimpan", err); }
         }
         
         function showSuccess() {
             document.getElementById('loading-spinner').classList.add('hidden'); document.getElementById('success-icon').classList.remove('hidden');
             document.getElementById('status-title').innerText = "Misi Berhasil! 🎉"; 
             document.getElementById('status-desc').innerText = appConfig.requireVideo === false ? "Tugas dan jawabanmu telah aman tersimpan di brankas Guru. Kamu luar biasa!" : "Tugas dan videomu telah aman tersimpan di brankas Guru.";
-            document.querySelector('#view-recording .aspect-video').classList.add('hidden');
+            const aspectVid = document.querySelector('#view-recording .aspect-video');
+            if(aspectVid) aspectVid.classList.add('hidden');
+            lucide.createIcons();
         }
 
-        // ADMIN CONFIG SAVE
-        async function saveConfigToDB() {
-            if (!GAS_WEBHOOK_URL) return alert("Webhook URL kosong!");
-            const btn = document.getElementById('btn-save-db');
-            btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Menyimpan...`; btn.disabled = true;
-            try {
-                const res = await fetch(GAS_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "saveConfig", config: appConfig }) });
-                if(!res.ok) throw new Error(`HTTP Error ${res.status}`);
-                const data = await res.json();
-                if(data.status === "success") alert("Yey! Seluruh Soal & Data Siswa berhasil disimpan permanen ke Database! 🎉");
-                else throw new Error("Gagal dari server");
-            } catch (err) { 
-                alert(`Gagal menyimpan (Error: ${err.message}). Pastikan Webhook URL Google Apps Script benar dan sudah di-Deploy sebagai "New version"!`); 
-            } 
-            finally { btn.innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> Simpan ke Database`; btn.disabled = false; lucide.createIcons(); }
+        function showError(err) {
+            document.getElementById('loading-spinner').classList.add('hidden'); 
+            const iconContainer = document.getElementById('success-icon');
+            iconContainer.classList.remove('hidden', 'bg-green-500/20', 'text-green-400', 'animate-bounce');
+            iconContainer.classList.add('bg-red-500/20', 'text-red-400', 'animate-pulse');
+            iconContainer.innerHTML = `<i data-lucide="x-circle" class="w-10 h-10"></i>`;
+            
+            document.getElementById('status-title').innerText = "Oops! Gagal Menyimpan 😢"; 
+            document.getElementById('status-title').classList.add('text-red-400');
+            document.getElementById('status-desc').innerText = "Koneksi ke Database terputus atau Link salah (Error 404). Silakan periksa koneksi lalu coba Kirim ulang.";
+            
+            document.getElementById('submit-controls').classList.remove('hidden');
+            document.getElementById('submit-controls').classList.add('flex');
+            lucide.createIcons();
+        }
+
+        // ALAT BACKUP & RESTORE JSON
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appConfig, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `Backup_FormVerse_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
+        }
+
+        function importJSON(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedConfig = JSON.parse(e.target.result);
+                    if (importedConfig && importedConfig.sections) {
+                        appConfig = importedConfig;
+                        if (!appConfig.students) appConfig.students = [];
+                        if (typeof appConfig.requireVideo === 'undefined') appConfig.requireVideo = true;
+                        
+                        document.getElementById('tb-title').value = appConfig.title || "";
+                        document.getElementById('tb-desc').value = appConfig.description || "";
+                        document.getElementById('tb-welcome-img').value = appConfig.welcomeImageUrl || "";
+                        document.getElementById('tb-require-video').value = appConfig.requireVideo ? 'true' : 'false';
+                        
+                        renderTeacherBuilder(); renderImportedStudentsList(); renderWelcomeImage();
+                        alert("Horee! Data Backup berhasil dimuat ke layar. Jangan lupa klik 'Simpan ke Database' untuk mematenkannya! 🎉");
+                    } else { alert("Format file JSON tidak sesuai."); }
+                } catch (err) { alert("Gagal membaca file JSON."); }
+                input.value = ''; 
+            };
+            reader.readAsText(file);
         }
 
         // DRAG AND DROP SECTIONS
