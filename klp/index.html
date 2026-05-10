@@ -741,27 +741,54 @@
     return a;
   }
 
-  // === DISTRIBUTE MERATA ===
-  // Strategi: hitung target ukuran per kelompok, lalu isi
-  // laki-laki & perempuan proporsional ke setiap kelompok
+  // === DISTRIBUTE MERATA BIKINAN BARU ===
   function distributeBalanced(males, females, numGroups) {
     const mShuffled = shuffle(males.map(n => ({ name: n, gender: 'm' })));
     const fShuffled = shuffle(females.map(n => ({ name: n, gender: 'f' })));
-    const all = shuffle([...mShuffled, ...fShuffled]);
-    const total = all.length;
 
-    // Hitung ukuran setiap kelompok: sebagian dapat floor, sisanya floor+1
-    const base = Math.floor(total / numGroups);
-    const extra = total % numGroups; // kelompok 0..(extra-1) dapat 1 anggota tambahan
+    // Siapkan array penampung per kelompok
+    let groups = Array.from({ length: numGroups }, () => ({ members: [], mCount: 0, fCount: 0 }));
 
-    const groups = [];
-    let idx = 0;
-    for (let g = 0; g < numGroups; g++) {
-      const size = base + (g < extra ? 1 : 0);
-      groups.push(all.slice(idx, idx + size));
-      idx += size;
+    // Fungsi canggih untuk nambahin anggota ke kelompok yang paling sepi gender-nya!
+    function addMember(member) {
+      let bestGroup = null;
+      let minSameGender = Infinity;
+      let minTotal = Infinity;
+
+      for (let i = 0; i < numGroups; i++) {
+        const g = groups[i];
+        const sameGenderCount = member.gender === 'm' ? g.mCount : g.fCount;
+        const totalCount = g.members.length;
+
+        // Prioritas 1: Bagi rata berdasarkan gendernya biar seimbang
+        if (sameGenderCount < minSameGender) {
+          minSameGender = sameGenderCount;
+          minTotal = totalCount;
+          bestGroup = g;
+        } 
+        // Prioritas 2: Kalau jumlah gendernya sama, cek kelompok mana yang anggotanya paling dikit
+        else if (sameGenderCount === minSameGender) {
+          if (totalCount < minTotal) {
+            minTotal = totalCount;
+            bestGroup = g;
+          }
+        }
+      }
+
+      bestGroup.members.push(member);
+      if (member.gender === 'm') bestGroup.mCount++;
+      else bestGroup.fCount++;
     }
-    return groups;
+
+    // Masukin cowok dulu, baru cewek
+    mShuffled.forEach(addMember);
+    fShuffled.forEach(addMember);
+
+    // Diacak urutan kelompoknya biar kalau ada sisa (angka ganjil), ngga melulu Kelompok 1 yang dapet
+    groups = shuffle(groups);
+
+    // Dan yang terakhir, acak anggota di dalem kelompoknya biar di layar kecampur cowok-ceweknya!
+    return groups.map(g => shuffle(g.members));
   }
 
   // === GENERATE ===
