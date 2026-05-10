@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GROUPIFY — Pembagi Kelompok</title>
+<title>ARA GROUPIFY — Pembagi Kelompok</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -611,7 +611,7 @@
 
   <div class="hero-content">
     <div class="hero-badge">◈ SYSTEM ONLINE ◈</div>
-    <h1 class="hero-title">GROUPIFY</h1>
+    <h1 class="hero-title">ARA GROUPIFY</h1>
     <p class="hero-sub">PEMBAGI KELOMPOK OTOMATIS</p>
   </div>
 
@@ -741,11 +741,26 @@
     return a;
   }
 
-  // === DISTRIBUTE ===
-  function distribute(names, numGroups) {
-    const shuffled = shuffle(names);
-    const groups = Array.from({ length: numGroups }, () => []);
-    shuffled.forEach((name, i) => groups[i % numGroups].push(name));
+  // === DISTRIBUTE MERATA ===
+  // Strategi: hitung target ukuran per kelompok, lalu isi
+  // laki-laki & perempuan proporsional ke setiap kelompok
+  function distributeBalanced(males, females, numGroups) {
+    const mShuffled = shuffle(males.map(n => ({ name: n, gender: 'm' })));
+    const fShuffled = shuffle(females.map(n => ({ name: n, gender: 'f' })));
+    const all = shuffle([...mShuffled, ...fShuffled]);
+    const total = all.length;
+
+    // Hitung ukuran setiap kelompok: sebagian dapat floor, sisanya floor+1
+    const base = Math.floor(total / numGroups);
+    const extra = total % numGroups; // kelompok 0..(extra-1) dapat 1 anggota tambahan
+
+    const groups = [];
+    let idx = 0;
+    for (let g = 0; g < numGroups; g++) {
+      const size = base + (g < extra ? 1 : 0);
+      groups.push(all.slice(idx, idx + size));
+      idx += size;
+    }
     return groups;
   }
 
@@ -772,17 +787,15 @@
 
     errEl.style.display = 'none';
 
-    // Distribute males & females separately, then merge per group
-    const maleGroups = distribute(males, numGroups);
-    const femaleGroups = distribute(females, numGroups);
+    const groupsData = distributeBalanced(males, females, numGroups);
 
     const grid = document.getElementById('groupsGrid');
     grid.innerHTML = '';
 
     for (let g = 0; g < numGroups; g++) {
-      const mList = maleGroups[g].map(n => ({ name: n, gender: 'm' }));
-      const fList = femaleGroups[g].map(n => ({ name: n, gender: 'f' }));
-      const members = [...mList, ...fList];
+      const members = groupsData[g];
+      const mList = members.filter(m => m.gender === 'm');
+      const fList = members.filter(m => m.gender === 'f');
 
       const card = document.createElement('div');
       card.className = 'group-card';
