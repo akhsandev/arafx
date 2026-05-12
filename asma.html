@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ChemSpin Master - Lab Tata Nama Senyawa</title>
-    <!-- Tailwind CSS untuk Layout Cepat dan Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* --- CUSTOM CSS ANIMATIONS --- */
@@ -20,18 +19,18 @@
         .bg-pulse-1 { animation: pulse-slow 8s infinite alternate; }
         .bg-pulse-2 { animation: pulse-slow 10s infinite alternate-reverse; }
 
-        /* Confetti - DIPERBAIKI UNTUK HP */
+        /* Confetti */
         @keyframes fall {
             0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
             100% { transform: translateY(120vh) rotate(720deg) scale(0.5); opacity: 0; }
         }
         .confetti { 
             position: fixed; 
-            top: -50px; /* PERBAIKAN: Selalu mulai dari luar atas layar */
+            top: -50px; 
             width: 12px; 
             height: 24px; 
             border-radius: 2px; 
-            z-index: 9999; /* Pastikan selalu paling depan */
+            z-index: 9999; 
             pointer-events: none; 
         }
 
@@ -72,7 +71,6 @@
     <div class="relative z-10 p-4 sm:p-6 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
         <div class="flex items-center gap-3">
             <div class="bg-gradient-to-br from-pink-500 to-purple-500 p-2 sm:p-3 rounded-2xl text-white shadow-lg">
-                <!-- SVG Atom -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-[spin_10s_linear_infinite]"><circle cx="12" cy="12" r="3"></circle><path d="M19 12c0-1.5-3.13-2.81-7-2.81S5 10.5 5 12s3.13 2.81 7 2.81 7-1.31 7-2.81Z"></path><path d="M15.53 18.12c-1.3 1.3-3.66 1.48-5.26.4s-1.85-3.03-.55-4.33 3.66-1.48 5.26-.4 1.85 3.03.55 4.33Z"></path><path d="M8.47 18.12c1.3 1.3 3.66 1.48 5.26.4s1.85-3.03.55-4.33-3.66-1.48-5.26-.4-1.85 3.03-.55 4.33Z"></path></svg>
             </div>
             <div>
@@ -83,9 +81,7 @@
         
         <div class="flex gap-2 sm:gap-4 items-center">
             <button id="btn-sound" onclick="toggleSound()" class="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition backdrop-blur-sm cursor-pointer border-0">
-                <!-- SVG Volume 2 (ON) -->
                 <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-                <!-- SVG Volume X (OFF) -->
                 <svg id="icon-sound-off" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
             </button>
             <div class="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-full font-black text-base sm:text-xl shadow-[0_0_15px_rgba(251,191,36,0.4)]">
@@ -95,7 +91,7 @@
         </div>
     </div>
 
-    <!-- MAIN AREA (WHEEL & CHALLENGE) -->
+    <!-- MAIN AREA -->
     <main class="flex-1 relative z-10 flex flex-col items-center justify-center p-4 sm:p-8 min-h-[500px]">
         
         <!-- HEADER TEXT RODA -->
@@ -107,22 +103,16 @@
         <!-- GIANT WHEEL SECTION -->
         <div id="wheel-section" class="relative transition-all duration-1000 transform scale-100 translate-y-0 opacity-100 flex flex-col items-center">
             
-            <!-- Jarum -->
             <div class="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[20px] sm:border-l-[30px] border-l-transparent border-r-[20px] sm:border-r-[30px] border-r-transparent border-t-[40px] sm:border-t-[50px] border-t-yellow-400 z-30 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"></div>
             
-            <!-- Roda -->
             <div class="relative w-[280px] h-[280px] sm:w-[450px] sm:h-[450px] rounded-full border-[10px] sm:border-[15px] border-white/90 wheel-shadow flex items-center justify-center wheel-lights z-20 overflow-hidden sm:overflow-visible">
-                <!-- Elemen Roda (Gradient & Teks) -->
-                <div id="wheel" class="w-full h-full rounded-full relative overflow-hidden" style="transition: transform 4.2s cubic-bezier(0.15, 0.85, 0.15, 1);">
-                    <!-- Diisi lewat JavaScript -->
-                </div>
-                <!-- Poros Tengah -->
+                <div id="wheel" class="w-full h-full rounded-full relative overflow-hidden" style="transition: transform 4.2s cubic-bezier(0.15, 0.85, 0.15, 1);"></div>
+                
                 <div class="absolute w-14 h-14 sm:w-24 sm:h-24 bg-white rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] z-30 flex items-center justify-center border-[6px] sm:border-8 border-slate-800">
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-800 sm:w-10 sm:h-10"><circle cx="12" cy="12" r="3"></circle><path d="M19 12c0-1.5-3.13-2.81-7-2.81S5 10.5 5 12s3.13 2.81 7 2.81 7-1.31 7-2.81Z"></path><path d="M15.53 18.12c-1.3 1.3-3.66 1.48-5.26.4s-1.85-3.03-.55-4.33 3.66-1.48 5.26-.4 1.85 3.03.55 4.33Z"></path><path d="M8.47 18.12c1.3 1.3 3.66 1.48 5.26.4s1.85-3.03.55-4.33-3.66-1.48-5.26-.4-1.85 3.03-.55 4.33Z"></path></svg>
                 </div>
             </div>
 
-            <!-- Tombol Putar -->
             <button id="spin-btn" onclick="handleSpin()" class="mt-8 sm:mt-12 relative overflow-hidden group btn-hover-shine text-lg sm:text-3xl font-black text-white px-8 sm:px-16 py-4 sm:py-6 rounded-full transition-all flex items-center justify-center gap-2 sm:gap-4 bg-gradient-to-r from-pink-500 to-rose-600 hover:scale-105 active:scale-95 shadow-[0_8px_0_#9f1239,0_15px_30px_rgba(225,29,72,0.6)] cursor-pointer border-0 w-full max-w-[280px] sm:max-w-none">
                 <div class="btn-shine-effect"></div>
                 <span id="spin-icon">
@@ -132,24 +122,25 @@
             </button>
         </div>
 
-        <!-- CHALLENGE SECTION (Disembunyikan awalnya) -->
+        <!-- CHALLENGE SECTION -->
         <div id="challenge-section" class="hidden w-full max-w-4xl z-30 animate-popup">
-            <!-- Tampilan Ion -->
+            
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mb-8 mt-4 sm:mt-10">
-                <div class="bg-gradient-to-br from-pink-500 to-rose-600 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-pink-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
-                    <span class="text-pink-100 font-bold uppercase tracking-widest text-xs sm:text-sm">KATION (+)</span>
-                    <div id="c-kation-sym" class="text-4xl sm:text-6xl font-black text-white mt-2 drop-shadow-md formula-text">Na⁺</div>
-                    <div id="c-kation-name" class="text-white text-lg sm:text-xl font-medium mt-1">Natrium</div>
+                <!-- KATION CARD (Hanya Simbol, Nama disembunyikan agar menantang) -->
+                <div class="bg-gradient-to-br from-pink-500 to-rose-600 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-pink-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
+                    <span class="text-pink-100 font-bold uppercase tracking-widest text-xs sm:text-sm block mb-2">KATION (+)</span>
+                    <div id="c-kation-sym" class="text-5xl sm:text-7xl font-black text-white drop-shadow-md formula-text">Na⁺</div>
                 </div>
+                
                 <div class="text-white text-4xl sm:text-5xl font-black drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">+</div>
-                <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-cyan-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
-                    <span class="text-cyan-100 font-bold uppercase tracking-widest text-xs sm:text-sm">ANION (-)</span>
-                    <div id="c-anion-sym" class="text-4xl sm:text-6xl font-black text-white mt-2 drop-shadow-md formula-text">Cl⁻</div>
-                    <div id="c-anion-name" class="text-white text-lg sm:text-xl font-medium mt-1">Klorida</div>
+                
+                <!-- ANION CARD (Hanya Simbol) -->
+                <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-cyan-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
+                    <span class="text-cyan-100 font-bold uppercase tracking-widest text-xs sm:text-sm block mb-2">ANION (-)</span>
+                    <div id="c-anion-sym" class="text-5xl sm:text-7xl font-black text-white drop-shadow-md formula-text">Cl⁻</div>
                 </div>
             </div>
 
-            <!-- Form Input -->
             <div class="bg-white/10 backdrop-blur-xl p-5 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-white/20 shadow-2xl">
                 <h3 class="text-xl sm:text-3xl font-black text-white mb-6 text-center">Bentuk Senyawanya! 🧪</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -185,18 +176,18 @@
         </div>
     </main>
 
-    <!-- MODAL POPUP (Translasi Tahap) -->
+    <!-- MODAL POPUP -->
     <div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
         <div class="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 max-w-lg w-full text-center shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-popup border-[6px] sm:border-8 border-white/20 bg-clip-padding">
             <div class="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-tr from-amber-300 to-orange-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-orange-500/30">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sm:w-12 sm:h-12"><path d="M10 2v7.31"></path><path d="M14 9.3V1.99"></path><path d="M8.5 2h7"></path><path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path><path d="M5.52 16h12.96"></path></svg>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2 uppercase tracking-wide m-0">Ditemukan!</h2>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2 uppercase tracking-wide m-0">Berhasil Dikunci!</h2>
             
-            <div class="my-4 sm:my-6 p-4 sm:p-6 bg-slate-50 rounded-2xl sm:rounded-3xl border-2 border-slate-100">
-                <span id="modal-type" class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest block mb-2">Ion Positif (+)</span>
-                <div id="modal-symbol" class="text-5xl sm:text-6xl font-black mb-1 sm:mb-2 text-pink-500 formula-text"></div>
-                <div id="modal-name" class="text-xl sm:text-2xl font-bold text-slate-700"></div>
+            <div class="my-4 sm:my-6 p-4 sm:p-8 bg-slate-50 rounded-2xl sm:rounded-3xl border-2 border-slate-100">
+                <span id="modal-type" class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest block mb-4">Ion Positif (+)</span>
+                <!-- HANYA MENAMPILKAN SIMBOL DI MODAL -->
+                <div id="modal-symbol" class="text-7xl sm:text-8xl font-black mb-1 sm:mb-2 text-pink-500 formula-text drop-shadow-md"></div>
             </div>
 
             <p id="modal-desc" class="text-base sm:text-lg text-slate-500 font-medium mb-6 sm:mb-8 m-0"></p>
@@ -208,7 +199,7 @@
         </div>
     </div>
 
-    <!-- Container Confetti (Sekarang ditumpuk paling atas secara layar penuh) -->
+    <!-- Container Confetti -->
     <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden"></div>
 
     <script>
@@ -307,7 +298,15 @@
         let selectedAnion = null;
 
         // --- FUNGSI UTILITAS ---
-        const formatFormulaHTML = (text) => text.replace(/(\d+)/g, '<sub>$1</sub>');
+        const subscriptMap = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+        const reverseSubscriptMap = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
+        
+        const toSubscript = (text) => text.replace(/[0-9]/g, m => subscriptMap[m]);
+        const toNormalDigits = (text) => text.replace(/[₀-₉]/g, m => reverseSubscriptMap[m]);
+        
+        // Konversi angka ke unicode subscript
+        const formatFormulaHTML = (text) => toSubscript(text);
+        
         const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
         
         const getCorrectFormula = (kation, anion) => {
@@ -330,6 +329,14 @@
         function initApp() {
             soundEngine = new SoundEngine();
             renderWheel();
+
+            // Auto-format input rumus menjadi subscript saat diketik
+            document.getElementById('input-rumus').addEventListener('input', function(e) {
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = toSubscript(this.value);
+                this.setSelectionRange(start, end);
+            });
         }
 
         function toggleSound() {
@@ -383,7 +390,6 @@
             }
         }
 
-        // FUNGSI CONFETTI YG DIPERBAIKI
         function createConfetti() {
             const container = document.getElementById('confetti-container');
             container.innerHTML = '';
@@ -440,11 +446,13 @@
                 if (isFirstSpin) {
                     selectedKation = currentItems[randomIndex];
                     gameState = 'kation_done';
-                    showModal('Kation (+)', selectedKation, 'text-pink-500', 'Satu ion berhasil dikunci! Putar roda sekali lagi.', 'LANJUT ANION');
+                    // Tampilkan modal TANPA nama
+                    showModal('Kation (+)', selectedKation, 'text-pink-500', 'Satu ion berhasil didapatkan! Putar roda sekali lagi.', 'LANJUT ANION');
                 } else {
                     selectedAnion = currentItems[randomIndex];
                     gameState = 'anion_done';
-                    showModal('Anion (-)', selectedAnion, 'text-cyan-500', 'Kedua ion telah terkumpul! Saatnya ke meja lab.', 'MULAI TANTANGAN');
+                    // Tampilkan modal TANPA nama
+                    showModal('Anion (-)', selectedAnion, 'text-cyan-500', 'Kedua ion telah terkumpul! Saatnya ke meja lab untuk membentuk senyawanya.', 'MULAI TANTANGAN');
                 }
             }, 4200);
         }
@@ -454,10 +462,11 @@
             document.getElementById('modal-type').innerText = type;
             
             const symEl = document.getElementById('modal-symbol');
-            symEl.className = `text-5xl sm:text-6xl font-black mb-1 sm:mb-2 formula-text ${colorClass}`;
+            symEl.className = `text-7xl sm:text-8xl font-black mb-1 sm:mb-2 formula-text drop-shadow-md ${colorClass}`;
             symEl.innerHTML = formatFormulaHTML(item.symbol);
             
-            document.getElementById('modal-name').innerText = item.name;
+            // NAMA DIHAPUS DARI MODAL SESUAI PERMINTAAN
+            
             document.getElementById('modal-desc').innerText = desc;
             document.getElementById('modal-btn-text').innerText = btnText;
         }
@@ -484,10 +493,9 @@
             
             document.getElementById('challenge-section').classList.remove('hidden');
             
+            // HANYA MENAMPILKAN SIMBOL KETIKA MENGISI TANTANGAN
             document.getElementById('c-kation-sym').innerHTML = formatFormulaHTML(selectedKation.symbol);
-            document.getElementById('c-kation-name').innerText = selectedKation.name;
             document.getElementById('c-anion-sym').innerHTML = formatFormulaHTML(selectedAnion.symbol);
-            document.getElementById('c-anion-name').innerText = selectedAnion.name;
         }
 
         function checkAnswer() {
@@ -502,8 +510,15 @@
             const correctName = getCorrectName(selectedKation, selectedAnion);
             const correctFormula = getCorrectFormula(selectedKation, selectedAnion);
 
-            const isNameCorrect = inputNama.trim().toLowerCase().replace(/\s+/g, ' ') === correctName;
-            const isFormulaCorrect = inputRumus.replace(/\s/g, '') === correctFormula;
+            // TOLERANSI SPASI & KARAKTER TANDA BACA
+            const cleanInputName = inputNama.toLowerCase().replace(/[^a-z0-9()]/g, '');
+            const cleanCorrectName = correctName.toLowerCase().replace(/[^a-z0-9()]/g, '');
+            const isNameCorrect = cleanInputName === cleanCorrectName;
+
+            // NORMALIZE RUMUS (Subscript jadi angka normal, hapus spasi)
+            const cleanInputFormula = toNormalDigits(inputRumus).replace(/\s+/g, '');
+            const cleanCorrectFormula = correctFormula.replace(/\s+/g, '');
+            const isFormulaCorrect = cleanInputFormula === cleanCorrectFormula;
 
             const feedbackArea = document.getElementById('feedback-area');
             const feedbackIcon = document.getElementById('feedback-icon');
