@@ -305,11 +305,6 @@
                 <input type="text" id="prodiLainnya" class="hidden" style="margin-top:10px;" placeholder="Ketik program studi lainnya secara manual...">
             </div>
 
-            <div class="form-group">
-                <label>6. Pilihan Program studi lainnya atau rencana masa depan (Contoh: Sekolah Kedinasan)</label>
-                <input type="text" id="rencanaLain" placeholder="Tuliskan di sini jika ada rencana lain...">
-            </div>
-
             <div class="form-group camera-box">
                 <label>Validasi Kehadiran Orang Tua <span style="color:red">*</span></label>
                 <p style="font-size:13px; color:#64748b; margin-bottom:15px;">Silakan ambil foto selfie bersama orang tua/wali sebagai bukti persetujuan form ini.</p>
@@ -677,7 +672,7 @@
                 pil2: document.getElementById('pil2').value,
                 pil3: document.getElementById('pil3').value,
                 prodi: selectedProdi,
-                rencanaLain: document.getElementById('rencanaLain').value,
+                rencanaLain: "-", // Rencana lain dihapus, set default ke "-" agar backend tidak error
                 persetujuan: "Ya",
                 fotoBase64: fotoBase64.value
             }
