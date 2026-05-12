@@ -150,48 +150,110 @@
         </section>
 
         <!-- ========================================================= -->
-        <!-- LABORATORIUM PENEMUAN RUMUS                               -->
+        <!-- LABORATORIUM PENEMUAN RUMUS (PEDAGOGIS DETAIL)            -->
         <!-- ========================================================= -->
         <div class="text-center mb-8 mt-20">
             <div class="inline-block bg-pink-100 text-pink-700 font-bold px-4 py-1 rounded-full mb-4 animate-float border border-pink-200 shadow-sm">Tahap 2: Abstraksi 🔬</div>
-            <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-4">Laboratorium Rahasia</h2>
-            <p class="text-lg text-slate-600 font-medium max-w-2xl mx-auto bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white">
-                Mari jadi ilmuwan matematika! Berdasarkan petualanganmu tadi, kita akan merumuskan sendiri Formula Kombinasi.
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-4">Laboratorium Penemuan Rumus</h2>
+            <p class="text-lg text-slate-600 font-medium max-w-3xl mx-auto bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white">
+                Bagaimana para matematikawan menciptakan rumus Kombinasi? Mari kita telusuri jejak berpikir mereka langkah demi langkah!
             </p>
         </div>
 
         <section class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-16 border border-slate-100">
             
-            <!-- Langkah 1: Observasi -->
-            <div class="p-6 sm:p-10 border-b-2 border-slate-100 bg-slate-50">
-                <h3 class="text-2xl font-bold text-indigo-600 mb-4">1. Menghilangkan Urutan yang Ganda</h3>
+            <!-- Langkah 1: Ingat Permutasi -->
+            <div class="p-6 sm:p-10 border-b-2 border-slate-100 bg-orange-50">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="text-4xl">👑</span>
+                    <h3 class="text-2xl font-bold text-orange-700">1. Konsep Permutasi (Urutan Sangat Penting!)</h3>
+                </div>
                 <p class="text-slate-700 mb-6 font-medium leading-relaxed text-lg">
-                    Coba kita perhatikan saat memilih <strong>2 makanan</strong>. <br>
-                    Jika urutannya diperhatikan (Permutasi), akan ada <strong>P(n,r)</strong> susunan. Tapi saat masuk ke mangkok (Kombinasi), urutan tidak penting! (Jalangkote+Risoles = Risoles+Jalangkote).
+                    Misalkan di kelasmu ada 3 kandidat: <strong>Andi, Budi, dan Fina</strong>. Guru ingin memilih 2 orang untuk menjadi <strong>Ketua</strong> dan <strong>Wakil Ketua</strong>.<br>
+                    Apakah terpilihnya <em>(Ketua: Andi, Wakil: Fina)</em> sama dengan <em>(Ketua: Fina, Wakil: Andi)</em>? <strong>Tentu saja berbeda!</strong> Jabatannya berbeda.
+                </p>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-orange-200 flex flex-wrap gap-4 justify-center text-center">
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg font-semibold text-orange-800 border border-orange-300">(Andi, Budi)</div>
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg font-semibold text-orange-800 border border-orange-300">(Budi, Andi)</div>
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg font-semibold text-orange-800 border border-orange-300">(Andi, Fina)</div>
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg font-semibold text-orange-800 border border-orange-300">(Fina, Andi)</div>
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg font-semibold text-orange-800 border border-orange-300">(Budi, Fina)</div>
+                    <div class="bg-orange-100 px-4 py-2 rounded-lg font-semibold text-orange-800 border border-orange-300">(Fina, Budi)</div>
+                </div>
+                <p class="mt-4 text-orange-800 font-bold text-center">Total ada 6 cara susunan. Ini disebut Permutasi: P(3,2) = 6.</p>
+            </div>
+
+            <!-- Langkah 2: Bandingkan dengan Kombinasi -->
+            <div class="p-6 sm:p-10 border-b-2 border-slate-100 bg-sky-50">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="text-4xl">🤝</span>
+                    <h3 class="text-2xl font-bold text-sky-700">2. Konsep Kombinasi (Urutan Tidak Penting)</h3>
+                </div>
+                <p class="text-slate-700 mb-6 font-medium leading-relaxed text-lg">
+                    Sekarang kasusnya diubah. Guru ingin memilih 2 orang untuk membentuk <strong>Satu Tim Belajar</strong> (tanpa ada jabatan).<br>
+                    Jika guru memanggil <em>"Andi dan Fina, maju ke depan!"</em>, apakah berbeda dengan <em>"Fina dan Andi, maju ke depan!"</em>? <strong>Sama saja!</strong> Keduanya berada di tim yang sama.
                 </p>
                 
-                <div class="bg-slate-200/50 p-6 rounded-3xl mb-6">
-                    <div id="permVisualizer" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        <!-- Kotak digenerate via JS -->
+                <!-- Visualisasi Merger Kombinasi -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-200 text-center relative overflow-hidden group">
+                        <div class="text-sm text-slate-400 font-bold mb-2">Permutasi</div>
+                        <div class="flex justify-around mb-2">
+                            <span class="bg-sky-100 px-3 py-1 rounded text-sky-800 line-through decoration-red-500 decoration-2">Andi - Budi</span>
+                            <span class="bg-sky-100 px-3 py-1 rounded text-sky-800 line-through decoration-red-500 decoration-2">Budi - Andi</span>
+                        </div>
+                        <div class="text-2xl my-2 text-sky-400 font-black">⬇️ Melebur Jadi 1 ⬇️</div>
+                        <div class="bg-sky-500 text-white font-bold py-2 rounded-lg text-lg transform group-hover:scale-105 transition-transform">Tim: { Andi, Budi }</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-200 text-center relative overflow-hidden group">
+                        <div class="text-sm text-slate-400 font-bold mb-2">Permutasi</div>
+                        <div class="flex justify-around mb-2">
+                            <span class="bg-sky-100 px-3 py-1 rounded text-sky-800 line-through decoration-red-500 decoration-2">Andi - Fina</span>
+                            <span class="bg-sky-100 px-3 py-1 rounded text-sky-800 line-through decoration-red-500 decoration-2">Fina - Andi</span>
+                        </div>
+                        <div class="text-2xl my-2 text-sky-400 font-black">⬇️ Melebur Jadi 1 ⬇️</div>
+                        <div class="bg-sky-500 text-white font-bold py-2 rounded-lg text-lg transform group-hover:scale-105 transition-transform">Tim: { Andi, Fina }</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-200 text-center relative overflow-hidden group">
+                        <div class="text-sm text-slate-400 font-bold mb-2">Permutasi</div>
+                        <div class="flex justify-around mb-2">
+                            <span class="bg-sky-100 px-3 py-1 rounded text-sky-800 line-through decoration-red-500 decoration-2">Budi - Fina</span>
+                            <span class="bg-sky-100 px-3 py-1 rounded text-sky-800 line-through decoration-red-500 decoration-2">Fina - Budi</span>
+                        </div>
+                        <div class="text-2xl my-2 text-sky-400 font-black">⬇️ Melebur Jadi 1 ⬇️</div>
+                        <div class="bg-sky-500 text-white font-bold py-2 rounded-lg text-lg transform group-hover:scale-105 transition-transform">Tim: { Budi, Fina }</div>
                     </div>
                 </div>
+                <p class="mt-4 text-sky-800 font-bold text-center text-lg">Permutasi yang tadinya berjumlah 6, menyusut menjadi hanya 3 Kombinasi!</p>
+            </div>
 
-                <div class="text-center">
-                    <button id="btnMerge" onclick="animateMerge()" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold px-8 py-4 rounded-full shadow-[0_10px_20px_rgba(236,72,153,0.3)] hover:-translate-y-1 hover:shadow-[0_15px_30px_rgba(236,72,153,0.4)] transition-all">
-                        ✨ Satukan Permutasi yang Sama ke Dalam Mangkok ✨
-                    </button>
-                    <p id="mergeDesc" class="mt-6 font-bold text-indigo-600 hidden animate-[fadeIn_1s] text-xl bg-indigo-50 py-3 px-6 rounded-2xl inline-block border border-indigo-100 shadow-sm">
-                        Lihat! Tiap 1 Kombinasi berasal dari susunan berulang yang melebur.<br>
-                        <span class="text-slate-600 text-base font-medium mt-1 block">Karena kita memilih <strong>r</strong> makanan, susunan ganda yang melebur adalah sebanyak <strong>r!</strong></span>
-                    </p>
+            <!-- Langkah 3: Menarik Kesimpulan (Logika Pembagian) -->
+            <div class="p-6 sm:p-10 border-b-2 border-slate-100 bg-white">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="text-4xl">💡</span>
+                    <h3 class="text-2xl font-bold text-slate-800">3. Menemukan Pola Rumusnya</h3>
+                </div>
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="flex-1 text-slate-700 font-medium leading-relaxed text-lg">
+                        <p class="mb-4">Kenapa dari <strong>6</strong> bisa berubah menjadi <strong>3</strong>? Betul, karena dibagi <strong>2</strong>.</p>
+                        <p class="mb-4">Angka 2 ini berasal dari banyaknya cara menyusun 2 orang yang ada di dalam tim itu sendiri (misal susunan A-B dan B-A). Cara menyusun 2 orang adalah <strong>2! = 2 × 1 = 2</strong>.</p>
+                        <p class="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl">
+                            <strong>Kesimpulan Emas:</strong><br>
+                            Kombinasi hanyalah Permutasi yang dibagi dengan <em>"jumlah cara menyusun benda yang sudah dipilih"</em> untuk menghilangkan susunan ganda/kembar.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Langkah 2: Lengkapi Rumus -->
+            <!-- Langkah 4: Lengkapi Rumus Interaktif -->
             <div class="p-6 sm:p-10 bg-indigo-50/50 relative border-b-2 border-slate-100">
-                <h3 class="text-2xl font-bold text-indigo-800 mb-4">2. Susun Formulasi Awal</h3>
+                <div class="flex items-center gap-4 mb-6">
+                    <span class="text-4xl">🚀</span>
+                    <h3 class="text-2xl font-bold text-indigo-800">4. Eksekusi Formula!</h3>
+                </div>
                 <p class="text-slate-700 mb-8 font-medium text-lg max-w-3xl">
-                    Kombinasi <strong>C(n,r)</strong> pada dasarnya adalah Permutasi <strong>P(n,r)</strong> yang dibagi dengan jumlah susunan gandanya. Lengkapi persamaan ini:
+                    Sekarang kembali ke kasus Kantin. Kita memilih <strong>r buah makanan</strong> dari total <strong>n makanan</strong>.<br>
+                    Untuk mencari Kombinasi <strong>C(n,r)</strong>, kita ambil Permutasi <strong>P(n,r)</strong> lalu kita bagi dengan <em>cara menyusun r makanan tersebut</em>. Pilih pembagi yang tepat di bawah ini!
                 </p>
 
                 <!-- Box Fraksi Formulasi Awal -->
@@ -215,10 +277,10 @@
                 </div>
 
                 <!-- Pesan Error -->
-                <p id="formulaFeedback" class="text-center font-bold text-red-500 hidden animate-pulse">Coba ingat lagi: berapa banyak cara menyusun <strong>r</strong> benda? Ya, jawabannya r!</p>
+                <p id="formulaFeedback" class="text-center font-bold text-red-500 hidden animate-pulse">Coba ingat lagi: berapa banyak cara menyusun <strong>r</strong> buah benda? Ingat konsep faktorial!</p>
             </div>
 
-            <!-- Langkah 3: RUMUS FINAL (Penjabaran Detail) -->
+            <!-- Langkah 5: RUMUS FINAL (Penjabaran Detail) -->
             <div id="finalFormulaCard" class="hidden overflow-hidden">
                 <div class="p-6 sm:p-12 bg-white text-center">
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 text-3xl mb-4">🥳</div>
@@ -268,6 +330,7 @@
                 </div>
             </div>
         </section>
+
 
         <!-- BANNER KUIS -->
         <section class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl text-white text-center relative overflow-hidden group mb-10">
