@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Refleksi Kimia - ChemSpin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        body { font-family: 'Nunito', sans-serif; }
+        
+        /* Background Animations */
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.5; }
+        }
+        .bg-pulse-1 { animation: pulse-slow 8s infinite alternate; }
+        .bg-pulse-2 { animation: pulse-slow 10s infinite alternate-reverse; }
+
+        /* Pop Animation */
+        @keyframes popup {
+            0% { transform: scale(0.5) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .animate-popup { animation: popup 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+
+        /* Card selection styling */
+        .emoji-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .emoji-card.selected {
+            transform: scale(1.05) translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border-color: rgba(255,255,255,0.8);
+        }
+        
+        /* Confetti */
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+        .confetti { position: fixed; width: 12px; height: 24px; border-radius: 4px; z-index: 9999; pointer-events: none; top: -50px;}
+        
+        /* Custom Scrollbar for Admin */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 overflow-x-hidden flex flex-col relative text-slate-800 selection:bg-pink-400 selection:text-white">
+
+    <!-- BACKGROUND ANIMASI -->
+    <div class="fixed inset-0 z-0 opacity-40 pointer-events-none">
+        <div class="absolute w-[80vw] h-[80vw] bg-pink-600 rounded-full blur-[150px] -top-40 -left-40 bg-pulse-1"></div>
+        <div class="absolute w-[80vw] h-[80vw] bg-purple-600 rounded-full blur-[150px] -bottom-40 -right-40 bg-pulse-2"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <div class="relative z-10 p-4 sm:p-6 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
+        <div class="flex items-center gap-3">
+            <!-- SECRET ADMIN TRIGGER: Click this icon 5 times -->
+            <div id="secret-trigger" class="bg-gradient-to-br from-pink-500 to-purple-500 p-2 sm:p-3 rounded-2xl text-white shadow-lg cursor-pointer hover:scale-105 transition-transform" onclick="handleSecretClick()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-[spin_10s_linear_infinite]"><circle cx="12" cy="12" r="3"></circle><path d="M19 12c0-1.5-3.13-2.81-7-2.81S5 10.5 5 12s3.13 2.81 7 2.81 7-1.31 7-2.81Z"></path><path d="M15.53 18.12c-1.3 1.3-3.66 1.48-5.26.4s-1.85-3.03-.55-4.33 3.66-1.48 5.26-.4 1.85 3.03.55 4.33Z"></path><path d="M8.47 18.12c1.3 1.3 3.66 1.48 5.26.4s1.85-3.03.55-4.33-3.66-1.48-5.26-.4-1.85 3.03-.55 4.33Z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 m-0">ChemSpin Refleksi</h1>
+                <p class="text-xs sm:text-sm text-slate-300 font-medium m-0">Bagaimana perasaanmu hari ini?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN VIEW (STUDENT) -->
+    <main id="view-student" class="flex-1 relative z-10 flex flex-col items-center justify-center p-4 sm:p-8">
+        <div class="w-full max-w-3xl animate-popup">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-4 animate-float">✨🧪</div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white mb-2 drop-shadow-lg leading-tight">Halo Anak Hebat! 👋</h2>
+                <p class="text-slate-200 text-lg sm:text-xl font-medium">Bagaimana perasaanmu belajar Tata Nama Senyawa hari ini?</p>
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-xl p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-white/20 shadow-2xl">
+                
+                <div id="url-warning" class="hidden mb-6 bg-amber-500/20 border border-amber-500 rounded-xl p-4 text-amber-300 text-sm font-bold text-center">
+                    ⚠️ Bapak/Ibu Guru, tolong masukkan URL Web App Google Script-nya ke dalam kode HTML ya agar bisa nyala!
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-slate-300 font-bold mb-3 uppercase text-sm tracking-wider">Nama Lengkap Kamu</label>
+                    <input id="input-nama" type="text" placeholder="Ketik namamu di sini..." class="w-full text-lg sm:text-2xl p-4 bg-white/90 border-0 rounded-2xl focus:ring-4 focus:ring-pink-500 outline-none transition font-semibold text-slate-800 placeholder:text-slate-400">
+                </div>
+
+                <label class="block text-slate-300 font-bold mb-4 uppercase text-sm tracking-wider">Pilih Perasaanmu Saat Ini</label>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mb-8">
+                    <!-- Cards -->
+                    <div onclick="selectFeeling('senang')" id="card-senang" class="emoji-card cursor-pointer bg-gradient-to-br from-yellow-400 to-orange-400 p-4 rounded-2xl text-center border-4 border-transparent opacity-80 hover:opacity-100">
+                        <div class="text-4xl sm:text-5xl mb-2 drop-shadow-md">🥳</div>
+                        <div class="font-bold text-white text-sm sm:text-base drop-shadow-md">Senang</div>
+                    </div>
+                    <div onclick="selectFeeling('tertarik')" id="card-tertarik" class="emoji-card cursor-pointer bg-gradient-to-br from-cyan-400 to-blue-500 p-4 rounded-2xl text-center border-4 border-transparent opacity-80 hover:opacity-100">
+                        <div class="text-4xl sm:text-5xl mb-2 drop-shadow-md">🤩</div>
+                        <div class="font-bold text-white text-sm sm:text-base drop-shadow-md">Tertarik</div>
+                    </div>
+                    <div onclick="selectFeeling('bersemangat')" id="card-bersemangat" class="emoji-card cursor-pointer bg-gradient-to-br from-rose-400 to-pink-500 p-4 rounded-2xl text-center border-4 border-transparent opacity-80 hover:opacity-100">
+                        <div class="text-4xl sm:text-5xl mb-2 drop-shadow-md">🔥</div>
+                        <div class="font-bold text-white text-sm sm:text-base drop-shadow-md">Semangat</div>
+                    </div>
+                    <div onclick="selectFeeling('bingung')" id="card-bingung" class="emoji-card cursor-pointer bg-gradient-to-br from-purple-400 to-indigo-500 p-4 rounded-2xl text-center border-4 border-transparent opacity-80 hover:opacity-100">
+                        <div class="text-4xl sm:text-5xl mb-2 drop-shadow-md">😵‍💫</div>
+                        <div class="font-bold text-white text-sm sm:text-base drop-shadow-md">Bingung</div>
+                    </div>
+                    <div onclick="selectFeeling('bosan')" id="card-bosan" class="emoji-card cursor-pointer bg-gradient-to-br from-slate-400 to-gray-600 p-4 rounded-2xl text-center border-4 border-transparent opacity-80 hover:opacity-100 sm:col-span-1 col-span-2">
+                        <div class="text-4xl sm:text-5xl mb-2 drop-shadow-md">🥱</div>
+                        <div class="font-bold text-white text-sm sm:text-base drop-shadow-md">Bosan</div>
+                    </div>
+                </div>
+
+                <button onclick="submitReflection()" id="btn-submit" class="w-full bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white font-black text-xl sm:text-2xl py-4 sm:py-5 rounded-2xl shadow-[0_8px_0_#047857] active:translate-y-2 active:shadow-none transition-all cursor-pointer border-0 flex justify-center items-center gap-3">
+                    KIRIM REFLEKSI 🚀
+                </button>
+                
+                <!-- Feedback Error/Loading -->
+                <div id="student-msg" class="hidden mt-4 text-center font-bold text-rose-300 bg-rose-900/30 py-2 rounded-xl border border-rose-500/50"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ADMIN VIEW (HIDDEN) -->
+    <main id="view-admin" class="hidden flex-1 relative z-10 flex flex-col items-center p-4 sm:p-8 w-full max-w-6xl mx-auto h-[80vh]">
+        <div class="w-full flex justify-between items-end mb-6 animate-popup">
+            <div>
+                <h2 class="text-3xl sm:text-4xl font-black text-white drop-shadow-lg">Dashboard Admin 📊</h2>
+                <p class="text-slate-300">Hasil Refleksi Kelas Hari Ini</p>
+                <a id="link-spreadsheet" href="#" target="_blank" class="hidden inline-block mt-2 text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-full font-bold shadow-lg transition-colors">
+                    🔗 Buka File Spreadsheet
+                </a>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="loadDataAdmin()" id="btn-refresh" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-colors flex items-center gap-2">
+                    🔄 Refresh
+                </button>
+                <button onclick="closeAdmin()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl backdrop-blur font-bold border border-white/20 transition-colors">
+                    Keluar
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistik Cepat -->
+        <div class="w-full grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mb-6 animate-popup" style="animation-delay: 0.1s;">
+            <div class="bg-gradient-to-br from-yellow-400 to-orange-400 p-4 rounded-2xl text-white shadow-lg">
+                <div class="text-sm font-bold opacity-80 uppercase">Senang 🥳</div>
+                <div id="stat-senang" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-cyan-400 to-blue-500 p-4 rounded-2xl text-white shadow-lg">
+                <div class="text-sm font-bold opacity-80 uppercase">Tertarik 🤩</div>
+                <div id="stat-tertarik" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-rose-400 to-pink-500 p-4 rounded-2xl text-white shadow-lg">
+                <div class="text-sm font-bold opacity-80 uppercase">Semangat 🔥</div>
+                <div id="stat-bersemangat" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-400 to-indigo-500 p-4 rounded-2xl text-white shadow-lg">
+                <div class="text-sm font-bold opacity-80 uppercase">Bingung 😵‍💫</div>
+                <div id="stat-bingung" class="text-3xl font-black">0</div>
+            </div>
+            <div class="bg-gradient-to-br from-slate-400 to-gray-600 p-4 rounded-2xl text-white shadow-lg">
+                <div class="text-sm font-bold opacity-80 uppercase">Bosan 🥱</div>
+                <div id="stat-bosan" class="text-3xl font-black">0</div>
+            </div>
+        </div>
+
+        <!-- Tabel Data -->
+        <div class="w-full flex-1 bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-2xl overflow-hidden flex flex-col animate-popup" style="animation-delay: 0.2s;">
+            <div class="overflow-y-auto flex-1 p-4 sm:p-6">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-slate-300 border-b border-white/20">
+                            <th class="p-3 font-bold uppercase tracking-wider">Waktu</th>
+                            <th class="p-3 font-bold uppercase tracking-wider">Nama Siswa</th>
+                            <th class="p-3 font-bold uppercase tracking-wider">Perasaan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="text-white">
+                        <tr><td colspan="3" class="text-center py-8 text-slate-400 italic">Tekan "Refresh" untuk memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL PIN ADMIN -->
+    <div id="modal-pin" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl animate-popup border-[6px] border-purple-500 bg-clip-padding">
+            <h3 class="text-2xl font-black text-slate-800 mb-2">Area Rahasia 🔒</h3>
+            <p class="text-slate-500 mb-6 font-medium text-sm">Masukkan PIN Guru untuk melihat dashboard.</p>
+            
+            <input id="input-pin" type="password" placeholder="***" class="w-full text-center text-2xl tracking-[0.5em] font-black p-4 bg-slate-100 border-2 border-slate-200 rounded-2xl focus:border-purple-500 focus:outline-none mb-4 transition">
+            
+            <div id="pin-error" class="hidden text-rose-500 font-bold mb-4 text-sm">PIN Salah! Coba lagi.</div>
+            
+            <div class="flex gap-3">
+                <button onclick="closePinModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition">Batal</button>
+                <button onclick="checkPin()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl shadow-[0_4px_0_#6b21a8] active:translate-y-1 active:shadow-none transition">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKSES (STUDENT) -->
+    <div id="modal-success" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-[2rem] p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(52,211,153,0.3)] animate-popup border-[6px] border-white/30 text-white">
+            <div class="text-6xl mb-4 animate-bounce">💖</div>
+            <h2 class="text-3xl font-black mb-2 uppercase tracking-wide">Terima Kasih!</h2>
+            <p class="text-lg font-medium mb-8 opacity-90">Perasaanmu sudah tersimpan dengan aman. Tetap semangat belajar kimia ya anak hebat!</p>
+            <button onclick="resetStudentForm()" class="w-full bg-white text-teal-700 hover:bg-slate-100 text-xl font-black py-4 rounded-xl shadow-[0_6px_0_rgba(255,255,255,0.5)] active:translate-y-2 active:shadow-none transition-all border-0">
+                KEMBALI
+            </button>
+        </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden"></div>
+
+    <script>
+        // ==========================================
+        // ⚠️ PENTING: GANTI URL DI BAWAH INI !!! ⚠️
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJc80_iV6GWgSypqBAsdcYbTKfYJ_XVS6pwlXyYC-6PKbLtN4EQcHftZtuOicGvpnR_Q/exec"; 
+        
+        const ADMIN_PIN = "KIMIAJUARA";
+        let selectedFeeling = '';
+        let secretClickCount = 0;
+        let secretTimer = null;
+
+        // Cek URL saat pertama load
+        window.onload = () => {
+            if(SCRIPT_URL === "TARUH_URL_APPS_SCRIPT_KAMU_DISINI" || SCRIPT_URL === "") {
+                document.getElementById('url-warning').classList.remove('hidden');
+            }
+        };
+
+        // --- SISTEM PEMILIHAN KARTU ---
+        window.selectFeeling = (feeling) => {
+            selectedFeeling = feeling;
+            // Reset semua kartu
+            document.querySelectorAll('.emoji-card').forEach(el => {
+                el.classList.remove('selected', 'opacity-100');
+                el.classList.add('opacity-80', 'scale-100');
+                el.style.borderWidth = "4px";
+                el.style.borderColor = "transparent";
+            });
+            // Highlight yang dipilih
+            const card = document.getElementById(`card-${feeling}`);
+            card.classList.add('selected', 'opacity-100');
+            card.classList.remove('opacity-80', 'scale-100');
+            card.style.borderColor = "rgba(255,255,255,0.8)";
+        };
+
+        // --- KIRIM DATA KE GOOGLE SPREADSHEET ---
+        window.submitReflection = async () => {
+            if(SCRIPT_URL === "TARUH_URL_APPS_SCRIPT_KAMU_DISINI" || SCRIPT_URL === "") {
+                alert("Maaf, Pak/Bu Guru belum memasang URL Databasenya.");
+                return;
+            }
+
+            const nama = document.getElementById('input-nama').value.trim();
+            const msgEl = document.getElementById('student-msg');
+            const btn = document.getElementById('btn-submit');
+
+            if(!nama) {
+                msgEl.innerText = "Hei, jangan lupa tulis namamu ya! 😊";
+                msgEl.classList.remove('hidden');
+                return;
+            }
+            if(!selectedFeeling) {
+                msgEl.innerText = "Pilih salah satu emoji perasaanmu dulu! 🤔";
+                msgEl.classList.remove('hidden');
+                return;
+            }
+
+            msgEl.classList.add('hidden');
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-3 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> MENYIMPAN...`;
+            btn.disabled = true;
+
+            // Mempersiapkan data untuk Google Apps Script
+            const formData = new URLSearchParams();
+            formData.append('nama', nama);
+            formData.append('perasaan', selectedFeeling);
+
+            try {
+                // Mengirim Request POST
+                const response = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    // Berhasil tersimpan!
+                    document.getElementById('modal-success').classList.remove('hidden');
+                    createConfetti();
+                } else {
+                    throw new Error(result.message);
+                }
+
+            } catch (error) {
+                console.error("Error saving:", error);
+                msgEl.innerText = "Gagal menyimpan, cek koneksi internetmu ya!";
+                msgEl.classList.remove('hidden');
+            } finally {
+                btn.innerHTML = "KIRIM REFLEKSI 🚀";
+                btn.disabled = false;
+            }
+        };
+
+        window.resetStudentForm = () => {
+            document.getElementById('modal-success').classList.add('hidden');
+            document.getElementById('input-nama').value = '';
+            selectedFeeling = '';
+            document.querySelectorAll('.emoji-card').forEach(el => {
+                el.classList.remove('selected', 'opacity-100');
+                el.classList.add('opacity-80', 'scale-100');
+                el.style.borderWidth = "4px";
+                el.style.borderColor = "transparent";
+            });
+        };
+
+        // --- ADMIN SECRET LOGIC ---
+        window.handleSecretClick = () => {
+            secretClickCount++;
+            clearTimeout(secretTimer);
+            if(secretClickCount >= 5) {
+                secretClickCount = 0;
+                document.getElementById('input-pin').value = '';
+                document.getElementById('pin-error').classList.add('hidden');
+                document.getElementById('modal-pin').classList.remove('hidden');
+            }
+            secretTimer = setTimeout(() => { secretClickCount = 0; }, 2000);
+        };
+
+        window.closePinModal = () => { document.getElementById('modal-pin').classList.add('hidden'); };
+
+        window.checkPin = () => {
+            const pin = document.getElementById('input-pin').value;
+            if(pin === ADMIN_PIN) {
+                closePinModal();
+                document.getElementById('view-student').classList.add('hidden');
+                document.getElementById('view-admin').classList.remove('hidden');
+                loadDataAdmin(); // Auto load data
+            } else {
+                document.getElementById('pin-error').classList.remove('hidden');
+            }
+        };
+
+        window.closeAdmin = () => {
+            document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('view-student').classList.remove('hidden');
+        };
+
+        // --- LOAD DATA DARI GOOGLE APPS SCRIPT ---
+        window.loadDataAdmin = async () => {
+            const btnRefresh = document.getElementById('btn-refresh');
+            const tbody = document.getElementById('table-body');
+            
+            btnRefresh.innerHTML = "🔄 Memuat...";
+            btnRefresh.disabled = true;
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-slate-400 italic">Membuka Spreadsheet rahasia...</td></tr>`;
+
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    // Set Link Spreadsheet
+                    if(result.sheetUrl) {
+                        const linkEl = document.getElementById('link-spreadsheet');
+                        linkEl.href = result.sheetUrl;
+                        linkEl.classList.remove('hidden');
+                    }
+
+                    const data = result.data || [];
+                    
+                    // Hitung Statistik
+                    let stats = { senang:0, tertarik:0, bersemangat:0, bingung:0, bosan:0 };
+                    data.forEach(item => {
+                        if(stats[item.perasaan] !== undefined) stats[item.perasaan]++;
+                    });
+
+                    renderAdminUI(stats, data);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch(error) {
+                console.error("Fetch Error:", error);
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-rose-400 italic">Gagal mengambil data dari Google Script. Pastikan URL sudah benar.</td></tr>`;
+            } finally {
+                btnRefresh.innerHTML = "🔄 Refresh Data";
+                btnRefresh.disabled = false;
+            }
+        };
+
+        const getEmoji = (feeling) => {
+            const map = { senang: '🥳 Senang', tertarik: '🤩 Tertarik', bersemangat: '🔥 Semangat', bingung: '😵‍💫 Bingung', bosan: '🥱 Bosan' };
+            return map[feeling] || feeling;
+        };
+        
+        const getStyle = (feeling) => {
+            const map = { 
+                senang: 'text-yellow-400 font-bold', 
+                tertarik: 'text-cyan-400 font-bold', 
+                bersemangat: 'text-rose-400 font-bold', 
+                bingung: 'text-purple-400 font-bold', 
+                bosan: 'text-slate-400 font-bold' 
+            };
+            return map[feeling] || 'text-white';
+        };
+
+        const renderAdminUI = (stats, data) => {
+            // Update Stats
+            Object.keys(stats).forEach(key => {
+                const el = document.getElementById(`stat-${key}`);
+                if(el) el.innerText = stats[key];
+            });
+
+            // Update Table
+            const tbody = document.getElementById('table-body');
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-slate-400 italic">Belum ada data refleksi di Spreadsheet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                return `
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                        <td class="p-3 text-slate-300 text-sm">${item.waktu || '-'}</td>
+                        <td class="p-3 font-bold text-white capitalize">${item.nama || '-'}</td>
+                        <td class="p-3 ${getStyle(item.perasaan)}">${getEmoji(item.perasaan)}</td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        // --- UTILS CONFETTI ---
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            const colors = ['#ff9ff3', '#feca57', '#48dbfb', '#1dd1a1', '#ff6b6b'];
+            for(let i=0; i<80; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = `${Math.random() * 100}vw`;
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animation = `fall ${Math.random() * 2 + 2}s linear forwards`;
+                conf.style.animationDelay = `${Math.random() * 0.5}s`;
+                container.appendChild(conf);
+            }
+            setTimeout(() => { container.innerHTML = ''; }, 4000);
+        }
+    </script>
+</body>
+</html>
