@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ChemSpin Master - Lab Tata Nama Senyawa</title>
+    <!-- Tailwind CSS untuk Layout Cepat dan Modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- CUSTOM CSS ANIMATIONS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        
+        body { font-family: 'Nunito', sans-serif; }
+        
+        /* Background Pulse */
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+        .bg-pulse-1 { animation: pulse-slow 8s infinite alternate; }
+        .bg-pulse-2 { animation: pulse-slow 10s infinite alternate-reverse; }
+
+        /* Confetti - DIPERBAIKI UNTUK HP */
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(120vh) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+        .confetti { 
+            position: fixed; 
+            top: -50px; /* PERBAIKAN: Selalu mulai dari luar atas layar */
+            width: 12px; 
+            height: 24px; 
+            border-radius: 2px; 
+            z-index: 9999; /* Pastikan selalu paling depan */
+            pointer-events: none; 
+        }
+
+        /* Popup Bouncing */
+        @keyframes popup {
+            0% { transform: scale(0.5) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .animate-popup { animation: popup 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Wheel Shadow & Lights */
+        .wheel-shadow { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0.2), 0 0 50px rgba(0, 0, 0, 0.5); }
+        .wheel-lights::before {
+            content: ''; position: absolute; inset: -20px; border-radius: 50%;
+            border: 4px dotted rgba(255,255,255,0.6);
+            animation: rotate-lights 10s linear infinite;
+        }
+        @keyframes rotate-lights { 100% { transform: rotate(360deg); } }
+
+        /* Button Shine Effect */
+        @keyframes shine { 100% { left: 200%; } }
+        .btn-shine-effect { position: absolute; inset: 0; width: 25%; background: rgba(255,255,255,0.3); transform: skewX(12deg); left: -100%; }
+        .btn-hover-shine:hover .btn-shine-effect { animation: shine 1s ease-in-out; }
+
+        /* Utilitas Teks Rumus (Subscript) */
+        .formula-text sub { font-size: 0.6em; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 overflow-x-hidden flex flex-col relative selection:bg-pink-400 selection:text-white text-slate-800">
+
+    <!-- BACKGROUND ANIMASI -->
+    <div class="fixed inset-0 z-0 opacity-40 pointer-events-none">
+        <div class="absolute w-[80vw] h-[80vw] bg-pink-600 rounded-full blur-[150px] -top-40 -left-40 bg-pulse-1"></div>
+        <div class="absolute w-[80vw] h-[80vw] bg-purple-600 rounded-full blur-[150px] -bottom-40 -right-40 bg-pulse-2"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <div class="relative z-10 p-4 sm:p-6 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/10">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-pink-500 to-purple-500 p-2 sm:p-3 rounded-2xl text-white shadow-lg">
+                <!-- SVG Atom -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-[spin_10s_linear_infinite]"><circle cx="12" cy="12" r="3"></circle><path d="M19 12c0-1.5-3.13-2.81-7-2.81S5 10.5 5 12s3.13 2.81 7 2.81 7-1.31 7-2.81Z"></path><path d="M15.53 18.12c-1.3 1.3-3.66 1.48-5.26.4s-1.85-3.03-.55-4.33 3.66-1.48 5.26-.4 1.85 3.03.55 4.33Z"></path><path d="M8.47 18.12c1.3 1.3 3.66 1.48 5.26.4s1.85-3.03.55-4.33-3.66-1.48-5.26-.4-1.85 3.03-.55 4.33Z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 m-0">ChemSpin Master</h1>
+                <p class="text-xs sm:text-sm text-slate-300 font-medium m-0">Lab Tata Nama Senyawa</p>
+            </div>
+        </div>
+        
+        <div class="flex gap-2 sm:gap-4 items-center">
+            <button id="btn-sound" onclick="toggleSound()" class="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition backdrop-blur-sm cursor-pointer border-0">
+                <!-- SVG Volume 2 (ON) -->
+                <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                <!-- SVG Volume X (OFF) -->
+                <svg id="icon-sound-off" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+            </button>
+            <div class="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-full font-black text-base sm:text-xl shadow-[0_0_15px_rgba(251,191,36,0.4)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+                <span id="score-display">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN AREA (WHEEL & CHALLENGE) -->
+    <main class="flex-1 relative z-10 flex flex-col items-center justify-center p-4 sm:p-8 min-h-[500px]">
+        
+        <!-- HEADER TEXT RODA -->
+        <div id="header-text" class="text-center mb-8 animate-popup transition-all duration-500 w-full max-w-md">
+            <h2 id="phase-title" class="text-3xl sm:text-5xl font-black text-white mb-2 drop-shadow-lg leading-tight">Tahap 1:<br>Pilih Kation (+)</h2>
+            <p id="phase-desc" class="text-slate-300 text-base sm:text-xl font-medium">Tekan tombol putar untuk mengacak roda lab!</p>
+        </div>
+
+        <!-- GIANT WHEEL SECTION -->
+        <div id="wheel-section" class="relative transition-all duration-1000 transform scale-100 translate-y-0 opacity-100 flex flex-col items-center">
+            
+            <!-- Jarum -->
+            <div class="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[20px] sm:border-l-[30px] border-l-transparent border-r-[20px] sm:border-r-[30px] border-r-transparent border-t-[40px] sm:border-t-[50px] border-t-yellow-400 z-30 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"></div>
+            
+            <!-- Roda -->
+            <div class="relative w-[280px] h-[280px] sm:w-[450px] sm:h-[450px] rounded-full border-[10px] sm:border-[15px] border-white/90 wheel-shadow flex items-center justify-center wheel-lights z-20 overflow-hidden sm:overflow-visible">
+                <!-- Elemen Roda (Gradient & Teks) -->
+                <div id="wheel" class="w-full h-full rounded-full relative overflow-hidden" style="transition: transform 4.2s cubic-bezier(0.15, 0.85, 0.15, 1);">
+                    <!-- Diisi lewat JavaScript -->
+                </div>
+                <!-- Poros Tengah -->
+                <div class="absolute w-14 h-14 sm:w-24 sm:h-24 bg-white rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] z-30 flex items-center justify-center border-[6px] sm:border-8 border-slate-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-800 sm:w-10 sm:h-10"><circle cx="12" cy="12" r="3"></circle><path d="M19 12c0-1.5-3.13-2.81-7-2.81S5 10.5 5 12s3.13 2.81 7 2.81 7-1.31 7-2.81Z"></path><path d="M15.53 18.12c-1.3 1.3-3.66 1.48-5.26.4s-1.85-3.03-.55-4.33 3.66-1.48 5.26-.4 1.85 3.03.55 4.33Z"></path><path d="M8.47 18.12c1.3 1.3 3.66 1.48 5.26.4s1.85-3.03.55-4.33-3.66-1.48-5.26-.4-1.85 3.03-.55 4.33Z"></path></svg>
+                </div>
+            </div>
+
+            <!-- Tombol Putar -->
+            <button id="spin-btn" onclick="handleSpin()" class="mt-8 sm:mt-12 relative overflow-hidden group btn-hover-shine text-lg sm:text-3xl font-black text-white px-8 sm:px-16 py-4 sm:py-6 rounded-full transition-all flex items-center justify-center gap-2 sm:gap-4 bg-gradient-to-r from-pink-500 to-rose-600 hover:scale-105 active:scale-95 shadow-[0_8px_0_#9f1239,0_15px_30px_rgba(225,29,72,0.6)] cursor-pointer border-0 w-full max-w-[280px] sm:max-w-none">
+                <div class="btn-shine-effect"></div>
+                <span id="spin-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="sm:w-9 sm:h-9"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </span>
+                <span id="spin-text">PUTAR KATION!</span>
+            </button>
+        </div>
+
+        <!-- CHALLENGE SECTION (Disembunyikan awalnya) -->
+        <div id="challenge-section" class="hidden w-full max-w-4xl z-30 animate-popup">
+            <!-- Tampilan Ion -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mb-8 mt-4 sm:mt-10">
+                <div class="bg-gradient-to-br from-pink-500 to-rose-600 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-pink-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
+                    <span class="text-pink-100 font-bold uppercase tracking-widest text-xs sm:text-sm">KATION (+)</span>
+                    <div id="c-kation-sym" class="text-4xl sm:text-6xl font-black text-white mt-2 drop-shadow-md formula-text">Na⁺</div>
+                    <div id="c-kation-name" class="text-white text-lg sm:text-xl font-medium mt-1">Natrium</div>
+                </div>
+                <div class="text-white text-4xl sm:text-5xl font-black drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">+</div>
+                <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-cyan-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
+                    <span class="text-cyan-100 font-bold uppercase tracking-widest text-xs sm:text-sm">ANION (-)</span>
+                    <div id="c-anion-sym" class="text-4xl sm:text-6xl font-black text-white mt-2 drop-shadow-md formula-text">Cl⁻</div>
+                    <div id="c-anion-name" class="text-white text-lg sm:text-xl font-medium mt-1">Klorida</div>
+                </div>
+            </div>
+
+            <!-- Form Input -->
+            <div class="bg-white/10 backdrop-blur-xl p-5 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-white/20 shadow-2xl">
+                <h3 class="text-xl sm:text-3xl font-black text-white mb-6 text-center">Bentuk Senyawanya! 🧪</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-2 uppercase text-xs sm:text-sm tracking-wider">Nama Senyawa</label>
+                        <input id="input-nama" type="text" placeholder="Misal: Natrium klorida" class="w-full text-lg sm:text-2xl p-3 sm:p-4 bg-white/90 border-0 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-pink-500 outline-none transition font-semibold text-slate-800 placeholder:text-slate-400">
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-2 uppercase text-xs sm:text-sm tracking-wider">Rumus Kimia</label>
+                        <input id="input-rumus" type="text" placeholder="Ketik biasa (Misal: NaCl)" class="w-full text-lg sm:text-2xl p-3 sm:p-4 bg-white/90 border-0 rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-cyan-500 outline-none transition font-mono font-bold text-slate-800 tracking-wider placeholder:text-slate-400">
+                    </div>
+                </div>
+
+                <div id="action-buttons" class="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <button id="btn-check" onclick="checkAnswer()" class="flex-1 bg-gradient-to-r from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 text-white font-black text-xl sm:text-2xl py-4 sm:py-5 rounded-xl sm:rounded-2xl shadow-[0_6px_0_#047857] sm:shadow-[0_8px_0_#047857] active:translate-y-2 active:shadow-none transition-all cursor-pointer border-0">
+                        KUNCI JAWABAN ✔️
+                    </button>
+                    <button id="btn-next" onclick="resetGame()" class="hidden flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-black text-xl sm:text-2xl py-4 sm:py-5 rounded-xl sm:rounded-2xl shadow-[0_6px_0_#86198f] sm:shadow-[0_8px_0_#86198f] active:translate-y-2 active:shadow-none transition-all flex items-center justify-center gap-3 animate-pulse cursor-pointer border-0">
+                        MAIN LAGI 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sm:w-7 sm:h-7"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="feedback-area" class="hidden mt-6 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-l-[6px] sm:border-l-8 animate-popup flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                    <div id="feedback-icon" class="shrink-0 self-center sm:self-start"></div>
+                    <div class="text-center sm:text-left w-full">
+                        <h4 id="feedback-title" class="font-black text-xl sm:text-2xl m-0"></h4>
+                        <p id="feedback-desc" class="text-base sm:text-lg font-bold mt-1 sm:mt-2 m-0 formula-text"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL POPUP (Translasi Tahap) -->
+    <div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 max-w-lg w-full text-center shadow-[0_0_50px_rgba(255,255,255,0.2)] animate-popup border-[6px] sm:border-8 border-white/20 bg-clip-padding">
+            <div class="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gradient-to-tr from-amber-300 to-orange-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-orange-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sm:w-12 sm:h-12"><path d="M10 2v7.31"></path><path d="M14 9.3V1.99"></path><path d="M8.5 2h7"></path><path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path><path d="M5.52 16h12.96"></path></svg>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2 uppercase tracking-wide m-0">Ditemukan!</h2>
+            
+            <div class="my-4 sm:my-6 p-4 sm:p-6 bg-slate-50 rounded-2xl sm:rounded-3xl border-2 border-slate-100">
+                <span id="modal-type" class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest block mb-2">Ion Positif (+)</span>
+                <div id="modal-symbol" class="text-5xl sm:text-6xl font-black mb-1 sm:mb-2 text-pink-500 formula-text"></div>
+                <div id="modal-name" class="text-xl sm:text-2xl font-bold text-slate-700"></div>
+            </div>
+
+            <p id="modal-desc" class="text-base sm:text-lg text-slate-500 font-medium mb-6 sm:mb-8 m-0"></p>
+
+            <button onclick="nextPhase()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-lg sm:text-2xl font-black py-4 sm:py-5 rounded-full shadow-[0_6px_0_#334155] sm:shadow-[0_8px_0_#334155] active:translate-y-2 active:shadow-none transition-all flex justify-center items-center gap-2 sm:gap-3 cursor-pointer border-0">
+                <span id="modal-btn-text">LANJUT PUTAR ANION</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sm:w-7 sm:h-7"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Container Confetti (Sekarang ditumpuk paling atas secara layar penuh) -->
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden"></div>
+
+    <script>
+        // --- DATA KIMIA ---
+        const kations = [
+            { name: 'Natrium', symbol: 'Na⁺', formula: 'Na', charge: 1, isPoly: false },
+            { name: 'Kalsium', symbol: 'Ca²⁺', formula: 'Ca', charge: 2, isPoly: false },
+            { name: 'Aluminium', symbol: 'Al³⁺', formula: 'Al', charge: 3, isPoly: false },
+            { name: 'Besi(II)', symbol: 'Fe²⁺', formula: 'Fe', charge: 2, isPoly: false },
+            { name: 'Besi(III)', symbol: 'Fe³⁺', formula: 'Fe', charge: 3, isPoly: false },
+            { name: 'Amonium', symbol: 'NH₄⁺', formula: 'NH4', charge: 1, isPoly: true },
+            { name: 'Magnesium', symbol: 'Mg²⁺', formula: 'Mg', charge: 2, isPoly: false },
+            { name: 'Hidrogen', symbol: 'H⁺', formula: 'H', charge: 1, isPoly: false }
+        ];
+
+        const anions = [
+            { name: 'Klorida', symbol: 'Cl⁻', formula: 'Cl', charge: 1, isPoly: false },
+            { name: 'Nitrat', symbol: 'NO₃⁻', formula: 'NO3', charge: 1, isPoly: true },
+            { name: 'Sulfat', symbol: 'SO₄²⁻', formula: 'SO4', charge: 2, isPoly: true },
+            { name: 'Karbonat', symbol: 'CO₃²⁻', formula: 'CO3', charge: 2, isPoly: true },
+            { name: 'Hidroksida', symbol: 'OH⁻', formula: 'OH', charge: 1, isPoly: true },
+            { name: 'Fosfat', symbol: 'PO₄³⁻', formula: 'PO4', charge: 3, isPoly: true },
+            { name: 'Sulfida', symbol: 'S²⁻', formula: 'S', charge: 2, isPoly: false },
+            { name: 'Oksida', symbol: 'O²⁻', formula: 'O', charge: 2, isPoly: false }
+        ];
+
+        const colorsKation = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FDCB6E', '#6C5CE7', '#FF8ED4', '#00B894', '#E17055'];
+        const colorsAnion = ['#1dd1a1', '#ff9ff3', '#feca57', '#54a0ff', '#00d2d3', '#ff6b6b', '#c8d6e5', '#ff9f43'];
+
+        // --- AUDIO ENGINE ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.enabled = true;
+            }
+            playTick() {
+                if (!this.enabled || this.ctx.state === 'suspended') return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.05);
+            }
+            playTada() {
+                if (!this.enabled) return;
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                        osc.type = 'sine'; osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.6);
+                    }, i === 3 ? 150 : i * 50); 
+                });
+            }
+            playWin() {
+                if (!this.enabled) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                        osc.type = 'square'; osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+                    }, i * 120);
+                });
+            }
+            playLose() {
+                if (!this.enabled) return;
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+            }
+        }
+
+        // --- STATE & GLOBAL VARS ---
+        let soundEngine = null;
+        let gameState = 'idle'; // idle, spin, kation_done, idle_anion, anion_done, challenge
+        let wheelPhase = 'KATION';
+        let wheelRot = 0;
+        let score = 0;
+        let selectedKation = null;
+        let selectedAnion = null;
+
+        // --- FUNGSI UTILITAS ---
+        const formatFormulaHTML = (text) => text.replace(/(\d+)/g, '<sub>$1</sub>');
+        const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+        
+        const getCorrectFormula = (kation, anion) => {
+            if (kation.formula === 'H' && anion.formula === 'OH') return 'H2O';
+            const common = gcd(kation.charge, anion.charge);
+            const kCount = anion.charge / common; const aCount = kation.charge / common;
+            let kStr = kation.formula;
+            if (kCount > 1 && kation.isPoly) kStr = `(${kStr})${kCount}`; else if (kCount > 1) kStr = `${kStr}${kCount}`;
+            let aStr = anion.formula;
+            if (aCount > 1 && anion.isPoly) aStr = `(${aStr})${aCount}`; else if (aCount > 1) aStr = `${aStr}${aCount}`;
+            return `${kStr}${aStr}`;
+        };
+
+        const getCorrectName = (kation, anion) => {
+            if (kation.formula === 'H') return `asam ${anion.name.toLowerCase()}`;
+            return `${kation.name.toLowerCase()} ${anion.name.toLowerCase()}`;
+        };
+
+        // --- MANIPULASI DOM ---
+        function initApp() {
+            soundEngine = new SoundEngine();
+            renderWheel();
+        }
+
+        function toggleSound() {
+            if (!soundEngine) return;
+            if (soundEngine.ctx.state === 'suspended') soundEngine.ctx.resume();
+            soundEngine.enabled = !soundEngine.enabled;
+            
+            document.getElementById('icon-sound-on').classList.toggle('hidden');
+            document.getElementById('icon-sound-off').classList.toggle('hidden');
+            
+            if(!soundEngine.enabled) soundEngine.playTada(); 
+        }
+
+        function renderWheel() {
+            const items = wheelPhase === 'KATION' ? kations : anions;
+            const colors = wheelPhase === 'KATION' ? colorsKation : colorsAnion;
+            const segmentAngle = 360 / items.length;
+            
+            const backgroundStr = items.map((_, i) => `${colors[i]} ${i * segmentAngle}deg ${(i + 1) * segmentAngle}deg`).join(', ');
+            
+            const wheelEl = document.getElementById('wheel');
+            wheelEl.style.background = `conic-gradient(${backgroundStr})`;
+            wheelEl.innerHTML = ''; 
+            
+            items.forEach((item, index) => {
+                const rotation = index * segmentAngle + (segmentAngle / 2);
+                const el = document.createElement('div');
+                el.className = 'absolute w-full h-full flex items-start justify-center pt-3 sm:pt-8';
+                el.style.transform = `rotate(${rotation}deg)`;
+                
+                const textContainer = document.createElement('div');
+                textContainer.className = 'text-white font-black text-xl sm:text-4xl drop-shadow-[0_3px_3px_rgba(0,0,0,0.8)] text-center flex flex-col formula-text';
+                textContainer.style.transform = 'rotate(180deg)';
+                textContainer.innerHTML = formatFormulaHTML(item.symbol);
+                
+                el.appendChild(textContainer);
+                wheelEl.appendChild(el);
+            });
+
+            const btn = document.getElementById('spin-btn');
+            const title = document.getElementById('phase-title');
+            
+            if (wheelPhase === 'KATION') {
+                btn.className = 'mt-8 sm:mt-12 relative overflow-hidden group btn-hover-shine text-lg sm:text-3xl font-black text-white px-8 sm:px-16 py-4 sm:py-6 rounded-full transition-all flex items-center justify-center gap-2 sm:gap-4 bg-gradient-to-r from-pink-500 to-rose-600 hover:scale-105 active:scale-95 shadow-[0_8px_0_#9f1239,0_15px_30px_rgba(225,29,72,0.6)] cursor-pointer border-0 w-full max-w-[280px] sm:max-w-none';
+                title.innerHTML = 'Tahap 1:<br>Pilih Kation (+)';
+                document.getElementById('spin-text').innerText = 'PUTAR KATION!';
+            } else {
+                btn.className = 'mt-8 sm:mt-12 relative overflow-hidden group btn-hover-shine text-lg sm:text-3xl font-black text-white px-8 sm:px-16 py-4 sm:py-6 rounded-full transition-all flex items-center justify-center gap-2 sm:gap-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 active:scale-95 shadow-[0_8px_0_#1e3a8a,0_15px_30px_rgba(6,182,212,0.6)] cursor-pointer border-0 w-full max-w-[280px] sm:max-w-none';
+                title.innerHTML = 'Tahap 2:<br>Pilih Anion (-)';
+                document.getElementById('spin-text').innerText = 'PUTAR ANION!';
+            }
+        }
+
+        // FUNGSI CONFETTI YG DIPERBAIKI
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            const colors = ['#ff9ff3', '#feca57', '#48dbfb', '#1dd1a1', '#ff6b6b'];
+            for(let i=0; i<80; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = `${Math.random() * 100}vw`;
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animation = `fall ${Math.random() * 2 + 2}s linear forwards`;
+                conf.style.animationDelay = `${Math.random() * 0.5}s`;
+                container.appendChild(conf);
+            }
+            setTimeout(() => { container.innerHTML = ''; }, 4000);
+        }
+
+        function handleSpin() {
+            if (gameState.includes('spin')) return;
+            if (soundEngine && soundEngine.ctx.state === 'suspended') soundEngine.ctx.resume();
+            
+            const isFirstSpin = wheelPhase === 'KATION';
+            gameState = isFirstSpin ? 'spin1' : 'spin2';
+            
+            const btn = document.getElementById('spin-btn');
+            btn.classList.add('bg-slate-600', 'scale-95', 'opacity-80', 'cursor-not-allowed', 'shadow-none');
+            btn.classList.remove('hover:scale-105', 'active:scale-95');
+            document.getElementById('spin-text').innerText = 'MENGACAK...';
+            document.getElementById('spin-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin sm:w-9 sm:h-9"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>';
+            document.getElementById('phase-desc').innerText = 'Sedang mengacak...';
+
+            const currentItems = isFirstSpin ? kations : anions;
+            const segmentAngle = 360 / currentItems.length;
+            const randomIndex = Math.floor(Math.random() * currentItems.length);
+            const targetDeg = 360 - (randomIndex * segmentAngle + segmentAngle / 2);
+            
+            const extraSpins = (Math.floor(Math.random() * 3) + 6) * 360; 
+            wheelRot += extraSpins + (targetDeg - (wheelRot % 360));
+
+            const wheelEl = document.getElementById('wheel');
+            wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.15, 1)';
+            wheelEl.style.transform = `rotate(${wheelRot}deg)`;
+
+            let ticks = 0;
+            const tickInterval = setInterval(() => {
+                if(soundEngine) soundEngine.playTick();
+                ticks++;
+                if(ticks > 35) clearInterval(tickInterval);
+            }, 100);
+
+            setTimeout(() => {
+                if(soundEngine) soundEngine.playTada();
+                createConfetti();
+                
+                if (isFirstSpin) {
+                    selectedKation = currentItems[randomIndex];
+                    gameState = 'kation_done';
+                    showModal('Kation (+)', selectedKation, 'text-pink-500', 'Satu ion berhasil dikunci! Putar roda sekali lagi.', 'LANJUT ANION');
+                } else {
+                    selectedAnion = currentItems[randomIndex];
+                    gameState = 'anion_done';
+                    showModal('Anion (-)', selectedAnion, 'text-cyan-500', 'Kedua ion telah terkumpul! Saatnya ke meja lab.', 'MULAI TANTANGAN');
+                }
+            }, 4200);
+        }
+
+        function showModal(type, item, colorClass, desc, btnText) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('modal-type').innerText = type;
+            
+            const symEl = document.getElementById('modal-symbol');
+            symEl.className = `text-5xl sm:text-6xl font-black mb-1 sm:mb-2 formula-text ${colorClass}`;
+            symEl.innerHTML = formatFormulaHTML(item.symbol);
+            
+            document.getElementById('modal-name').innerText = item.name;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-btn-text').innerText = btnText;
+        }
+
+        function nextPhase() {
+            document.getElementById('modal-overlay').classList.add('hidden');
+            
+            if (gameState === 'kation_done') {
+                wheelPhase = 'ANION';
+                gameState = 'idle_anion';
+                document.getElementById('phase-desc').innerText = 'Tekan tombol putar untuk mengacak roda lab!';
+                document.getElementById('spin-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="sm:w-9 sm:h-9"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+                renderWheel(); 
+            } else if (gameState === 'anion_done') {
+                gameState = 'challenge';
+                showChallengeMode();
+            }
+        }
+
+        function showChallengeMode() {
+            document.getElementById('header-text').classList.add('hidden');
+            const wheelSec = document.getElementById('wheel-section');
+            wheelSec.classList.add('scale-75', '-translate-y-10', 'opacity-50', 'blur-sm', 'pointer-events-none', 'absolute');
+            
+            document.getElementById('challenge-section').classList.remove('hidden');
+            
+            document.getElementById('c-kation-sym').innerHTML = formatFormulaHTML(selectedKation.symbol);
+            document.getElementById('c-kation-name').innerText = selectedKation.name;
+            document.getElementById('c-anion-sym').innerHTML = formatFormulaHTML(selectedAnion.symbol);
+            document.getElementById('c-anion-name').innerText = selectedAnion.name;
+        }
+
+        function checkAnswer() {
+            const inputNama = document.getElementById('input-nama').value;
+            const inputRumus = document.getElementById('input-rumus').value;
+            
+            if (!inputNama || !inputRumus) {
+                alert('Harap isi kedua kolom nama dan rumus kimia!');
+                return;
+            }
+
+            const correctName = getCorrectName(selectedKation, selectedAnion);
+            const correctFormula = getCorrectFormula(selectedKation, selectedAnion);
+
+            const isNameCorrect = inputNama.trim().toLowerCase().replace(/\s+/g, ' ') === correctName;
+            const isFormulaCorrect = inputRumus.replace(/\s/g, '') === correctFormula;
+
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackDesc = document.getElementById('feedback-desc');
+            const btnCheck = document.getElementById('btn-check');
+            const btnNext = document.getElementById('btn-next');
+
+            feedbackArea.classList.remove('hidden', 'bg-emerald-100', 'border-emerald-500', 'bg-rose-100', 'border-rose-500');
+            
+            if (isNameCorrect && isFormulaCorrect) {
+                score += 50;
+                document.getElementById('score-display').innerText = score;
+                
+                feedbackArea.classList.add('bg-emerald-100', 'border-emerald-500');
+                feedbackIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600 sm:w-10 sm:h-10"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path></svg>';
+                feedbackTitle.className = 'font-black text-xl sm:text-2xl m-0 text-emerald-800';
+                feedbackTitle.innerText = 'LUAR BIASA! Tepat!';
+                feedbackDesc.className = 'text-base sm:text-lg font-bold mt-1 sm:mt-2 m-0 formula-text text-emerald-700';
+                feedbackDesc.innerHTML = `${correctName} (${formatFormulaHTML(correctFormula)})`;
+                
+                createConfetti();
+                if(soundEngine) soundEngine.playWin();
+
+                document.getElementById('input-nama').disabled = true;
+                document.getElementById('input-rumus').disabled = true;
+                btnCheck.classList.add('hidden');
+                btnNext.classList.remove('hidden');
+                
+            } else {
+                feedbackArea.classList.add('bg-rose-100', 'border-rose-500');
+                feedbackIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-rose-600 sm:w-10 sm:h-10"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+                feedbackTitle.className = 'font-black text-xl sm:text-2xl m-0 text-rose-800';
+                feedbackTitle.innerText = 'Masih keliru!';
+                feedbackDesc.className = 'text-base sm:text-lg font-bold mt-1 sm:mt-2 m-0 formula-text text-rose-700';
+                feedbackDesc.innerHTML = `Kunci: <span class="text-blue-700">${correctName}</span> <br/> Rumus: <span class="text-blue-700 font-mono">${formatFormulaHTML(correctFormula)}</span>`;
+                
+                if(soundEngine) soundEngine.playLose();
+            }
+        }
+
+        function resetGame() {
+            gameState = 'idle';
+            wheelPhase = 'KATION';
+            selectedKation = null;
+            selectedAnion = null;
+            
+            document.getElementById('input-nama').value = '';
+            document.getElementById('input-nama').disabled = false;
+            document.getElementById('input-rumus').value = '';
+            document.getElementById('input-rumus').disabled = false;
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('btn-check').classList.remove('hidden');
+            document.getElementById('btn-next').classList.add('hidden');
+
+            document.getElementById('challenge-section').classList.add('hidden');
+            document.getElementById('header-text').classList.remove('hidden');
+            
+            const wheelSec = document.getElementById('wheel-section');
+            wheelSec.classList.remove('scale-75', '-translate-y-10', 'opacity-50', 'blur-sm', 'pointer-events-none', 'absolute');
+            
+            document.getElementById('phase-desc').innerText = 'Tekan tombol putar untuk mengacak roda lab!';
+            document.getElementById('spin-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="sm:w-9 sm:h-9"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+            
+            const wheelEl = document.getElementById('wheel');
+            wheelEl.style.transition = 'none'; 
+            wheelRot = 0;
+            wheelEl.style.transform = `rotate(0deg)`;
+            
+            setTimeout(() => { renderWheel(); }, 50);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
