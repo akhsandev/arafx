@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eksplorasi Kantin - Drag & Drop</title>
+    <!-- Font Kekinian: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Library Confetti untuk Animasi Pesta -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-dark: #2d3436;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Animasi Background Gradien Mengalir */
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dark);
+            background: linear-gradient(-45deg, #a8edea, #fed6e3, #e0c3fc, #8ec5fc);
+            background-size: 400% 400%;
+            animation: gradientBg 15s ease infinite;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Panel Utama */
+        .glass-container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: var(--glass-shadow);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.2em;
+            background: -webkit-linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .instruction {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 15px 20px;
+            border-radius: 16px;
+            border-left: 6px solid #764ba2;
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.6;
+            font-size: 0.95em;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.8);
+        }
+
+        /* AREA MANGKOK (DROPZONE) */
+        .bowl-wrapper {
+            margin-bottom: 30px;
+        }
+
+        .bowl-title {
+            font-weight: 800;
+            color: #6c5ce7;
+            margin-bottom: 10px;
+        }
+
+        .bowl {
+            width: 100%;
+            max-width: 400px;
+            height: 140px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.4);
+            border: 4px dashed #a18cd1;
+            border-radius: 20px 20px 70px 70px; /* Bentuk seperti mangkok */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .bowl.drag-over {
+            background: rgba(255, 240, 245, 0.8);
+            border-color: #ff758c;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 117, 140, 0.3);
+        }
+
+        .bowl.processing {
+            pointer-events: none;
+            opacity: 0.8;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .bowl-placeholder {
+            color: #888;
+            font-weight: 600;
+            font-size: 0.9em;
+            pointer-events: none;
+        }
+
+        .bowl-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: dropIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes dropIn {
+            0% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* Grid Makanan */
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (min-width: 600px) {
+            .food-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Kartu Makanan */
+        .food-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 15px;
+            cursor: grab;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        .food-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .food-card:active {
+            cursor: grabbing;
+        }
+
+        .food-card.disabled {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .food-card img {
+            width: 100%;
+            max-width: 110px;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            pointer-events: none; /* Mencegah drag bawaan browser pada gambar */
+        }
+
+        .food-name {
+            font-weight: 800;
+            font-size: 1em;
+            margin-bottom: 5px;
+            color: #2d3436;
+        }
+
+        /* Kotak Pesan Notifikasi (Glass) */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 2px solid transparent;
+            z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .message-box.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .message-box.error { border-color: #ff4757; color: #ff4757; }
+        .message-box.success { border-color: #2ed573; color: #2ed573; }
+        .message-box.info { border-color: #3742fa; color: #3742fa; }
+
+        /* Daftar Hasil Kombinasi */
+        .results {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.5);
+        }
+
+        .results h3 {
+            margin-top: 0;
+            color: #6c5ce7;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        li {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 12px 15px;
+            border-radius: 12px;
+            border-left: 5px solid #a18cd1;
+            font-size: 1.05em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: slideIn 0.5s forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+
+        .badge {
+            background: linear-gradient(45deg, #a18cd1, #fbc2eb);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            margin-right: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Notifikasi Melayang -->
+    <div id="messageBox" class="message-box">Pesan muncul di sini</div>
+
+    <div class="glass-container">
+        <h1>🍱 Kantin Interaktif</h1>
+        
+        <div class="instruction">
+            <strong>🎯 Cara Bermain:</strong><br>
+            Tarik (Drag) atau Klik makanan dari bawah ke dalam <strong>Mangkok Ajaib</strong>. <br>
+            Setiap mangkok berisi tepat <strong>2 makanan berbeda</strong> (seharga Rp 2.000). Aplikasi akan otomatis mencatat jika kamu menemukan kombinasi yang baru!
+        </div>
+
+        <!-- MANGKOK AJAIB (DROPZONE) -->
+        <div class="bowl-wrapper">
+            <div class="bowl-title">⬇️ Tarik 2 Makanan ke Sini ⬇️</div>
+            <div id="bowl" class="bowl" 
+                 ondrop="drop(event)" 
+                 ondragover="allowDrop(event)" 
+                 ondragenter="dragEnter(event)" 
+                 ondragleave="dragLeave(event)">
+                <span class="bowl-placeholder" id="bowlPlaceholder">Mangkok masih kosong...</span>
+                <!-- Item akan muncul di sini -->
+            </div>
+        </div>
+
+        <!-- DAFTAR MAKANAN -->
+        <div class="food-grid" id="foodGrid">
+            <!-- Di-render oleh JS -->
+        </div>
+
+        <!-- CATATAN HASIL -->
+        <div class="results">
+            <h3>📝 Buku Catatan Kombinasimu:</h3>
+            <ul id="combinationList">
+                <li id="emptyState" style="background: transparent; border: none; box-shadow: none; color: #888; font-weight: normal; font-style: italic; justify-content: center; opacity: 1; transform: none; animation: none;">
+                    Belum ada kombinasi yang ditemukan.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // DATA MAKANAN (Bapak/Ibu bisa edit gambar di sini)
+        const foods = [
+            { id: 'A', name: 'Nasi Goreng', img: 'https://placehold.co/200x200/ff9a9e/ffffff?text=Makanan+1' },
+            { id: 'B', name: 'Roti Bakar', img: 'https://placehold.co/200x200/a18cd1/ffffff?text=Makanan+2' },
+            { id: 'C', name: 'Mie Rebus', img: 'https://placehold.co/200x200/fecfef/555555?text=Makanan+3' },
+            { id: 'D', name: 'Es Coklat', img: 'https://placehold.co/200x200/ff758c/ffffff?text=Makanan+4' }
+        ];
+
+        let selectedFoods = []; // Isi mangkok saat ini
+        let savedCombinations = []; // Kombinasi yang sudah berhasil dicatat
+        let messageTimeout;
+        let isProcessing = false; // Mencegah drag saat sedang animasi auto-cek
+
+        // ==========================================
+        // SISTEM NOTIFIKASI
+        // ==========================================
+        function showMessage(text, type = 'info') {
+            const msgBox = document.getElementById('messageBox');
+            let icon = "ℹ️ ";
+            if(type === 'error') icon = "⚠️ ";
+            if(type === 'success') icon = "🎉 ";
+
+            msgBox.textContent = icon + text;
+            msgBox.className = `message-box show ${type}`;
+            
+            clearTimeout(messageTimeout);
+            messageTimeout = setTimeout(() => {
+                msgBox.classList.remove('show');
+            }, 3000); 
+        }
+
+        // ==========================================
+        // RENDER UI
+        // ==========================================
+        function renderFoods() {
+            const grid = document.getElementById('foodGrid');
+            grid.innerHTML = '';
+
+            foods.forEach(food => {
+                const isInBowl = selectedFoods.includes(food.id);
+                const card = document.createElement('div');
+                card.className = `food-card ${isInBowl ? 'disabled' : ''}`;
+                
+                // Set agar bisa di-drag
+                card.draggable = !isInBowl && !isProcessing; 
+                card.ondragstart = (e) => dragStart(e, food.id);
+                
+                // Fallback klik untuk pengguna HP
+                card.onclick = () => {
+                    if(!isInBowl && !isProcessing) addToBowl(food.id);
+                };
+
+                card.innerHTML = `
+                    <img src="${food.img}" alt="${food.name}">
+                    <div class="food-name">${food.name}</div>
+                    <div style="color: #666; font-size: 0.85em;">Rp 1.000</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderBowl() {
+            const bowl = document.getElementById('bowl');
+            const placeholder = document.getElementById('bowlPlaceholder');
+            
+            // Hapus gambar makanan sebelumnya dari mangkok
+            const existingItems = bowl.querySelectorAll('.bowl-item');
+            existingItems.forEach(item => item.remove());
+
+            if (selectedFoods.length === 0) {
+                placeholder.style.display = 'block';
+            } else {
+                placeholder.style.display = 'none';
+                
+                // Masukkan gambar makanan ke mangkok
+                selectedFoods.forEach(id => {
+                    const foodData = foods.find(f => f.id === id);
+                    const img = document.createElement('img');
+                    img.src = foodData.img;
+                    img.className = 'bowl-item';
+                    bowl.appendChild(img);
+                });
+            }
+            renderFoods(); // Update kartu di bawah (jadikan abu-abu jika sudah di mangkok)
+        }
+
+        // ==========================================
+        // LOGIKA DRAG & DROP
+        // ==========================================
+        function dragStart(ev, id) {
+            if(isProcessing) { ev.preventDefault(); return; }
+            ev.dataTransfer.setData("text/plain", id);
+        }
+
+        function allowDrop(ev) {
+            if(!isProcessing) ev.preventDefault();
+        }
+
+        function dragEnter(ev) {
+            if(!isProcessing) {
+                ev.preventDefault();
+                document.getElementById('bowl').classList.add('drag-over');
+            }
+        }
+
+        function dragLeave(ev) {
+            document.getElementById('bowl').classList.remove('drag-over');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            document.getElementById('bowl').classList.remove('drag-over');
+            
+            if(isProcessing) return;
+
+            const foodId = ev.dataTransfer.getData("text/plain");
+            if (foodId) {
+                addToBowl(foodId);
+            }
+        }
+
+        // ==========================================
+        // LOGIKA APLIKASI
+        // ==========================================
+        function addToBowl(foodId) {
+            if(selectedFoods.includes(foodId)) {
+                showMessage("Makanan ini sudah ada di dalam mangkok!", "error");
+                return;
+            }
+            if(selectedFoods.length >= 2) {
+                showMessage("Mangkok penuh! Sedang mengecek...", "info");
+                return;
+            }
+
+            selectedFoods.push(foodId);
+            renderBowl();
+
+            // Jika mangkok sudah isi 2, otomatis proses kombinasinya!
+            if (selectedFoods.length === 2) {
+                processCombination();
+            }
+        }
+
+        function processCombination() {
+            isProcessing = true;
+            const bowl = document.getElementById('bowl');
+            bowl.classList.add('processing');
+
+            // Beri jeda 0.8 detik agar siswa bisa melihat makanannya masuk ke mangkok dulu
+            setTimeout(() => {
+                const currentCombo = [...selectedFoods].sort();
+                const comboSignature = currentCombo.join('-'); 
+
+                if (savedCombinations.includes(comboSignature)) {
+                    // Jika duplikat
+                    showMessage("Yah, Kombinasi ini sudah pernah kamu catat. Mangkok dikosongkan ya!", "error");
+                } else {
+                    // Jika kombinasi baru berhasil ditemukan!
+                    savedCombinations.push(comboSignature);
+                    
+                    const emptyState = document.getElementById('emptyState');
+                    if (emptyState) emptyState.remove();
+
+                    const food1 = foods.find(f => f.id === currentCombo[0]).name;
+                    const food2 = foods.find(f => f.id === currentCombo[1]).name;
+
+                    const list = document.getElementById('combinationList');
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="badge">Ke-${savedCombinations.length}</span> ${food1} & ${food2}`;
+                    list.appendChild(li);
+
+                    fireConfetti();
+                    showMessage("Yey! Kombinasi baru berhasil ditemukan!", "success");
+                }
+
+                // Kosongkan mangkok otomatis setelah 2 detik
+                setTimeout(() => {
+                    selectedFoods = [];
+                    isProcessing = false;
+                    bowl.classList.remove('processing');
+                    renderBowl();
+                }, 2000);
+
+            }, 800);
+        }
+
+        // ==========================================
+        // EFEK CONFETTI
+        // ==========================================
+        function fireConfetti() {
+            const count = 200;
+            const defaults = { origin: { y: 0.6 } };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, { spread: 26, startVelocity: 55 });
+            fire(0.2, { spread: 60 });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 120, startVelocity: 45 });
+        }
+
+        // Inisialisasi awal
+        renderBowl();
+    </script>
+</body>
+</html>
