@@ -96,7 +96,7 @@
         
         <!-- HEADER TEXT RODA -->
         <div id="header-text" class="text-center mb-8 animate-popup transition-all duration-500 w-full max-w-md">
-            <h2 id="phase-title" class="text-3xl sm:text-5xl font-black text-white mb-2 drop-shadow-lg leading-tight">Tahap 1:<br>Pilih Kation (+)</h2>
+            <h2 id="phase-title" class="text-3xl sm:text-5xl font-black text-white mb-2 drop-shadow-lg leading-tight">Tahap 1:<br>Pilih Unsur/Ion 1</h2>
             <p id="phase-desc" class="text-slate-300 text-base sm:text-xl font-medium">Tekan tombol putar untuk mengacak roda lab!</p>
         </div>
 
@@ -118,7 +118,7 @@
                 <span id="spin-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="sm:w-9 sm:h-9"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 </span>
-                <span id="spin-text">PUTAR KATION!</span>
+                <span id="spin-text">PUTAR UNSUR 1!</span>
             </button>
         </div>
 
@@ -128,7 +128,7 @@
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mb-8 mt-4 sm:mt-10">
                 <!-- KATION CARD -->
                 <div class="bg-gradient-to-br from-pink-500 to-rose-600 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-pink-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
-                    <span class="text-pink-100 font-bold uppercase tracking-widest text-xs sm:text-sm block mb-2">KATION (+)</span>
+                    <span class="text-pink-100 font-bold uppercase tracking-widest text-xs sm:text-sm block mb-2">UNSUR/ION 1</span>
                     <div id="c-kation-sym" class="text-5xl sm:text-7xl font-black text-white drop-shadow-md formula-text">Na⁺</div>
                 </div>
                 
@@ -136,7 +136,7 @@
                 
                 <!-- ANION CARD -->
                 <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl text-center border-4 border-cyan-300 w-full sm:w-1/3 transform hover:scale-105 transition-transform">
-                    <span class="text-cyan-100 font-bold uppercase tracking-widest text-xs sm:text-sm block mb-2">ANION (-)</span>
+                    <span class="text-cyan-100 font-bold uppercase tracking-widest text-xs sm:text-sm block mb-2">UNSUR/ION 2</span>
                     <div id="c-anion-sym" class="text-5xl sm:text-7xl font-black text-white drop-shadow-md formula-text">Cl⁻</div>
                 </div>
             </div>
@@ -196,7 +196,7 @@
             <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2 uppercase tracking-wide m-0">Berhasil Dikunci!</h2>
             
             <div class="my-4 sm:my-6 p-4 sm:p-8 bg-slate-50 rounded-2xl sm:rounded-3xl border-2 border-slate-100">
-                <span id="modal-type" class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest block mb-4">Ion Positif (+)</span>
+                <span id="modal-type" class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest block mb-4">Unsur/Ion Pertama</span>
                 <!-- HANYA MENAMPILKAN SIMBOL DI MODAL -->
                 <div id="modal-symbol" class="text-7xl sm:text-8xl font-black mb-1 sm:mb-2 text-pink-500 formula-text drop-shadow-md"></div>
             </div>
@@ -204,7 +204,7 @@
             <p id="modal-desc" class="text-base sm:text-lg text-slate-500 font-medium mb-6 sm:mb-8 m-0"></p>
 
             <button onclick="nextPhase()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-lg sm:text-2xl font-black py-4 sm:py-5 rounded-full shadow-[0_6px_0_#334155] sm:shadow-[0_8px_0_#334155] active:translate-y-2 active:shadow-none transition-all flex justify-center items-center gap-2 sm:gap-3 cursor-pointer border-0">
-                <span id="modal-btn-text">LANJUT PUTAR ANION</span>
+                <span id="modal-btn-text">LANJUT PUTAR UNSUR 2</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sm:w-7 sm:h-7"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
             </button>
         </div>
@@ -220,7 +220,8 @@
             { name: 'Kalsium', symbol: 'Ca²⁺', formula: 'Ca', charge: 2, isPoly: false },
             { name: 'Aluminium', symbol: 'Al³⁺', formula: 'Al', charge: 3, isPoly: false },
             { name: 'Besi(II)', symbol: 'Fe²⁺', formula: 'Fe', charge: 2, isPoly: false },
-            { name: 'Besi(III)', symbol: 'Fe³⁺', formula: 'Fe', charge: 3, isPoly: false },
+            // MENGGANTI Fe3+ MENJADI FOSFOR (P) 
+            { name: 'Fosfor', symbol: 'P', formula: 'P', charge: 3, isPoly: false }, 
             { name: 'Amonium', symbol: 'NH₄⁺', formula: 'NH4', charge: 1, isPoly: true },
             { name: 'Magnesium', symbol: 'Mg²⁺', formula: 'Mg', charge: 2, isPoly: false },
             { name: 'Hidrogen', symbol: 'H⁺', formula: 'H', charge: 1, isPoly: false }
@@ -314,10 +315,7 @@
         
         const toSubscript = (text) => text.replace(/[0-9]/g, m => subscriptMap[m]);
         const toNormalDigits = (text) => text.replace(/[₀-₉]/g, m => reverseSubscriptMap[m]);
-        
-        // Konversi angka ke unicode subscript
         const formatFormulaHTML = (text) => toSubscript(text);
-        
         const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
         
         const getCorrectFormula = (kation, anion) => {
@@ -331,17 +329,58 @@
             return `${kStr}${aStr}`;
         };
 
-        const getCorrectName = (kation, anion) => {
-            if (kation.formula === 'H') return `asam ${anion.name.toLowerCase()}`;
-            return `${kation.name.toLowerCase()} ${anion.name.toLowerCase()}`;
+        // Fungsi baru untuk mendukung berbagai variasi nama yang benar
+        const getCorrectNames = (kation, anion) => {
+            let names = [];
+            
+            // Khusus Asam & Air
+            if (kation.formula === 'H' && anion.formula === 'OH') {
+                return ['air', 'hidrogen hidroksida', 'dihidrogen monoksida'];
+            }
+            if (kation.formula === 'H') {
+                names.push(`asam ${anion.name.toLowerCase()}`);
+                return names;
+            }
+
+            // Khusus Fosfor (Kovalen) - Menerima dengan dan tanpa awalan Yunani
+            if (kation.formula === 'P') {
+                const common = gcd(kation.charge, anion.charge);
+                const kCount = anion.charge / common;
+                const aCount = kation.charge / common;
+
+                const getPrefix = (num) => {
+                    if (num === 1) return 'mono';
+                    if (num === 2) return 'di';
+                    if (num === 3) return 'tri';
+                    if (num === 4) return 'tetra';
+                    if (num === 5) return 'penta';
+                    return '';
+                };
+
+                const prefixK = kCount > 1 ? getPrefix(kCount) : '';
+                const prefixA = aCount > 1 ? getPrefix(aCount) : ''; 
+                
+                let covName = `${prefixK}${kation.name.toLowerCase()} ${prefixA}${anion.name.toLowerCase()}`;
+                if (covName.startsWith('mono')) covName = covName.substring(4); // Buang mono di depan
+                
+                names.push(covName.trim()); // Contoh: Difosfor trioksida
+                names.push(`${kation.name.toLowerCase()} ${anion.name.toLowerCase()}`); // Contoh: Fosfor oksida (versi santai)
+                names.push(`${kation.name.toLowerCase()}(iii) ${anion.name.toLowerCase()}`); // Contoh: Fosfor(III) oksida
+            } else {
+                // Standar Ionik Logam
+                names.push(`${kation.name.toLowerCase()} ${anion.name.toLowerCase()}`);
+            }
+
+            return names;
         };
 
         // Logika penentuan jenis senyawa
         const getCorrectType = (kation, anion) => {
-            if (kation.formula === 'H' && anion.formula === 'OH') return 'kovalen'; // Air (H2O)
+            if (kation.formula === 'H' && anion.formula === 'OH') return 'kovalen'; // Air
+            if (kation.formula === 'P') return 'kovalen'; // Fosfor adalah Non-logam
             if (kation.formula === 'H') return 'asam'; // Diawali H+
             if (anion.formula === 'OH') return 'basa'; // Diakhiri OH-
-            return 'ion'; // Logam + Non-logam / Poliatomik
+            return 'ion'; // Logam/Amonium + Non-logam/Poliatomik
         };
 
         // --- MANIPULASI DOM ---
@@ -349,7 +388,6 @@
             soundEngine = new SoundEngine();
             renderWheel();
 
-            // Auto-format input rumus menjadi subscript saat diketik
             document.getElementById('input-rumus').addEventListener('input', function(e) {
                 const start = this.selectionStart;
                 const end = this.selectionEnd;
@@ -400,12 +438,12 @@
             
             if (wheelPhase === 'KATION') {
                 btn.className = 'mt-8 sm:mt-12 relative overflow-hidden group btn-hover-shine text-lg sm:text-3xl font-black text-white px-8 sm:px-16 py-4 sm:py-6 rounded-full transition-all flex items-center justify-center gap-2 sm:gap-4 bg-gradient-to-r from-pink-500 to-rose-600 hover:scale-105 active:scale-95 shadow-[0_8px_0_#9f1239,0_15px_30px_rgba(225,29,72,0.6)] cursor-pointer border-0 w-full max-w-[280px] sm:max-w-none';
-                title.innerHTML = 'Tahap 1:<br>Pilih Kation (+)';
-                document.getElementById('spin-text').innerText = 'PUTAR KATION!';
+                title.innerHTML = 'Tahap 1:<br>Pilih Unsur/Ion 1';
+                document.getElementById('spin-text').innerText = 'PUTAR UNSUR 1!';
             } else {
                 btn.className = 'mt-8 sm:mt-12 relative overflow-hidden group btn-hover-shine text-lg sm:text-3xl font-black text-white px-8 sm:px-16 py-4 sm:py-6 rounded-full transition-all flex items-center justify-center gap-2 sm:gap-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 active:scale-95 shadow-[0_8px_0_#1e3a8a,0_15px_30px_rgba(6,182,212,0.6)] cursor-pointer border-0 w-full max-w-[280px] sm:max-w-none';
-                title.innerHTML = 'Tahap 2:<br>Pilih Anion (-)';
-                document.getElementById('spin-text').innerText = 'PUTAR ANION!';
+                title.innerHTML = 'Tahap 2:<br>Pilih Unsur/Ion 2';
+                document.getElementById('spin-text').innerText = 'PUTAR UNSUR 2!';
             }
         }
 
@@ -465,13 +503,11 @@
                 if (isFirstSpin) {
                     selectedKation = currentItems[randomIndex];
                     gameState = 'kation_done';
-                    // Tampilkan modal TANPA nama
-                    showModal('Kation (+)', selectedKation, 'text-pink-500', 'Satu ion berhasil didapatkan! Putar roda sekali lagi.', 'LANJUT ANION');
+                    showModal('Unsur/Ion Pertama', selectedKation, 'text-pink-500', 'Satu unsur/ion berhasil didapatkan! Putar roda sekali lagi.', 'LANJUT UNSUR 2');
                 } else {
                     selectedAnion = currentItems[randomIndex];
                     gameState = 'anion_done';
-                    // Tampilkan modal TANPA nama
-                    showModal('Anion (-)', selectedAnion, 'text-cyan-500', 'Kedua ion telah terkumpul! Saatnya ke meja lab untuk membentuk senyawanya.', 'MULAI TANTANGAN');
+                    showModal('Unsur/Ion Kedua', selectedAnion, 'text-cyan-500', 'Kedua unsur/ion telah terkumpul! Saatnya ke meja lab untuk membentuk senyawanya.', 'MULAI TANTANGAN');
                 }
             }, 4200);
         }
@@ -510,7 +546,6 @@
             
             document.getElementById('challenge-section').classList.remove('hidden');
             
-            // HANYA MENAMPILKAN SIMBOL KETIKA MENGISI TANTANGAN
             document.getElementById('c-kation-sym').innerHTML = formatFormulaHTML(selectedKation.symbol);
             document.getElementById('c-anion-sym').innerHTML = formatFormulaHTML(selectedAnion.symbol);
         }
@@ -527,10 +562,8 @@
             const btnCheck = document.getElementById('btn-check');
             const btnNext = document.getElementById('btn-next');
 
-            // Hapus semua styling sebelumnya dari feedback area
             feedbackArea.classList.remove('hidden', 'bg-emerald-100', 'border-emerald-500', 'bg-rose-100', 'border-rose-500', 'bg-amber-100', 'border-amber-500');
 
-            // Validasi Input Kosong
             if (!inputNama || !inputRumus || !inputJenis) {
                 feedbackArea.classList.add('bg-amber-100', 'border-amber-500');
                 feedbackIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600 sm:w-10 sm:h-10"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
@@ -541,24 +574,25 @@
                 return;
             }
 
-            const correctName = getCorrectName(selectedKation, selectedAnion);
+            const correctNames = getCorrectNames(selectedKation, selectedAnion);
             const correctFormula = getCorrectFormula(selectedKation, selectedAnion);
             const correctType = getCorrectType(selectedKation, selectedAnion);
 
-            // TOLERANSI SPASI & KARAKTER TANDA BACA
+            // PENGECEKAN NAMA (Menerima beberapa variasi jawaban yang benar)
             const cleanInputName = inputNama.toLowerCase().replace(/[^a-z0-9()]/g, '');
-            const cleanCorrectName = correctName.toLowerCase().replace(/[^a-z0-9()]/g, '');
-            const isNameCorrect = cleanInputName === cleanCorrectName;
+            const isNameCorrect = correctNames.some(name => {
+                const cleanCorrect = name.toLowerCase().replace(/[^a-z0-9()]/g, '');
+                return cleanInputName === cleanCorrect;
+            });
 
-            // NORMALIZE RUMUS (Subscript jadi angka normal, hapus spasi)
+            // PENGECEKAN RUMUS
             const cleanInputFormula = toNormalDigits(inputRumus).replace(/\s+/g, '');
             const cleanCorrectFormula = correctFormula.replace(/\s+/g, '');
             const isFormulaCorrect = cleanInputFormula === cleanCorrectFormula;
             
-            // CEK JENIS SENYAWA
+            // PENGECEKAN JENIS SENYAWA
             const isTypeCorrect = inputJenis === correctType;
             
-            // Format teks jenis senyawa untuk ditampilkan
             const typeText = correctType.charAt(0).toUpperCase() + correctType.slice(1);
             
             if (isNameCorrect && isFormulaCorrect && isTypeCorrect) {
@@ -569,8 +603,12 @@
                 feedbackIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600 sm:w-10 sm:h-10"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path></svg>';
                 feedbackTitle.className = 'font-black text-xl sm:text-2xl m-0 text-emerald-800';
                 feedbackTitle.innerText = 'LUAR BIASA! Jawabanmu Sempurna!';
+                
+                // Ambil variasi nama terbaik (yang paling awal di array) untuk ditampilkan
+                const bestNameDisplay = correctNames[0].charAt(0).toUpperCase() + correctNames[0].slice(1);
+                
                 feedbackDesc.className = 'text-base sm:text-lg font-bold mt-1 sm:mt-2 m-0 formula-text text-emerald-700';
-                feedbackDesc.innerHTML = `${correctName} (${formatFormulaHTML(correctFormula)}) <br> <span class="text-sm opacity-80">✅ Senyawa ${typeText}</span>`;
+                feedbackDesc.innerHTML = `${bestNameDisplay} (${formatFormulaHTML(correctFormula)}) <br> <span class="text-sm opacity-80">✅ Senyawa ${typeText}</span>`;
                 
                 createConfetti();
                 if(soundEngine) soundEngine.playWin();
@@ -588,8 +626,8 @@
                 feedbackTitle.innerText = 'Waduh, Masih Keliru!';
                 feedbackDesc.className = 'text-base sm:text-lg font-bold mt-1 sm:mt-2 m-0 formula-text text-rose-700 leading-tight';
                 
-                // Beri tahu spesifik yang salah
-                let feedbackMsg = `Kunci: <span class="text-blue-700">${correctName}</span> <br/> Rumus: <span class="text-blue-700 font-mono">${formatFormulaHTML(correctFormula)}</span> <br/> Jenis: <span class="text-blue-700">Senyawa ${typeText}</span>`;
+                const bestNameDisplay = correctNames[0].charAt(0).toUpperCase() + correctNames[0].slice(1);
+                let feedbackMsg = `Kunci: <span class="text-blue-700">${bestNameDisplay}</span> <br/> Rumus: <span class="text-blue-700 font-mono">${formatFormulaHTML(correctFormula)}</span> <br/> Jenis: <span class="text-blue-700">Senyawa ${typeText}</span>`;
                 
                 feedbackDesc.innerHTML = feedbackMsg;
                 
