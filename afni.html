@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kombinatorika Interaktif</title>
+    <title>Penemuan Rumus Kombinasi</title>
     
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +24,13 @@
                     animation: {
                         'bounce-slow': 'bounce 3s infinite',
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
                     }
                 }
             }
@@ -55,7 +62,6 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
 
         .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -66,121 +72,225 @@
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
-        /* Kartu Normal */
-        .food-card-active {
-            border-color: white;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-            cursor: grab;
-        }
-        .food-card-active:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+        .food-card-active { border-color: white; box-shadow: 0 8px 30px rgba(0,0,0,0.08); cursor: grab; }
+        .food-card-active:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .food-card-disabled { opacity: 0.5; filter: grayscale(100%); transform: scale(0.95); cursor: not-allowed; border-color: #e2e8f0; }
 
-        /* Kartu saat sudah masuk mangkok */
-        .food-card-disabled {
-            opacity: 0.5;
-            filter: grayscale(100%);
-            transform: scale(0.95);
-            cursor: not-allowed;
-            border-color: #e2e8f0;
-            box-shadow: none;
-        }
+        .bowl-active { background-color: #eff6ff !important; border-color: #3b82f6 !important; transform: scale(1.02); box-shadow: inset 0 4px 6px -1px rgba(59, 130, 246, 0.2); }
 
-        .bowl-active {
-            background-color: #eff6ff !important;
-            border-color: #3b82f6 !important;
-            transform: scale(1.02);
-            box-shadow: inset 0 4px 6px -1px rgba(59, 130, 246, 0.2);
-        }
-
-        .quiz-option { transition: all 0.2s ease-in-out; }
         .quiz-option.selected { border-color: #6366f1; background-color: #eef2ff; }
         .quiz-option.correct { border-color: #22c55e; background-color: #f0fdf4; color: #166534; }
         .quiz-option.wrong { border-color: #ef4444; background-color: #fef2f2; color: #991b1b; opacity: 0.7;}
+
+        /* Animasi Merger Rumus */
+        .perm-box { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .perm-item { transition: all 0.5s ease; }
+        .merged .perm-item:nth-child(2) { opacity: 0; transform: scale(0.5) translateY(-20px) translateX(-20px); position: absolute; }
+        .merged .perm-item:nth-child(1) { transform: scale(1.1); margin: 0 auto; }
+        .merged { background-color: #f0fdf4 !important; border-color: #86efac !important; }
     </style>
 </head>
 <body class="bg-mesh min-h-screen text-slate-800 font-sans antialiased pb-20 selection:bg-indigo-200">
 
-    <!-- Notifikasi Toast -->
-    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-500 opacity-0 translate-y-[-20px] pointer-events-none">
-        <div id="toastContent" class="bg-white px-6 py-3 rounded-full shadow-xl font-bold flex items-center gap-3 border-2 border-transparent">
-            <span id="toastIcon">💡</span>
-            <span id="toastText">Pesan</span>
+    <!-- Toast Notifikasi -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-500 opacity-0 translate-y-[-20px] pointer-events-none w-11/12 max-w-md">
+        <div id="toastContent" class="bg-white px-6 py-4 rounded-full shadow-2xl font-bold flex items-center justify-center gap-3 border-2 border-transparent text-center">
+            <span id="toastIcon" class="text-2xl">💡</span>
+            <span id="toastText" class="text-sm sm:text-base leading-tight">Pesan</span>
         </div>
     </div>
 
-    <!-- KONTEN UTAMA -->
-    <main class="max-w-4xl mx-auto pt-10 px-4 sm:px-6">
+    <main class="max-w-5xl mx-auto pt-10 px-4 sm:px-6">
         
-        <div class="text-center mb-10">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-4 drop-shadow-sm">
-                Petualangan Jajanan Kantin
+        <!-- HEADER -->
+        <div class="text-center mb-12">
+            <div class="inline-block bg-indigo-100 text-indigo-700 font-bold px-4 py-1 rounded-full mb-4 animate-float border border-indigo-200 shadow-sm">Tahap 1: Eksplorasi 🕵️‍♂️</div>
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-4 drop-shadow-sm leading-tight">
+                Misteri Jajanan Kantin
             </h1>
-            <p class="text-lg text-slate-600 font-medium max-w-2xl mx-auto">
-                Uang sakumu cuma <strong class="text-indigo-600">Rp 2.000</strong>. Pilih <strong class="text-purple-600">2 jajanan berbeda</strong> (seharga Rp 1.000) dan temukan semua kombinasinya!
+            <p class="text-lg text-slate-600 font-medium max-w-2xl mx-auto bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white">
+                Uang sakumu cuma <strong class="text-indigo-600">Rp 2.000</strong>. Pilih <strong class="text-purple-600">2 jajanan berbeda</strong> (seharga Rp 1.000) dan catat kombinasinya! Terus bereksplorasi sampai kamu tidak menemukan kombinasi baru lagi!
             </p>
         </div>
 
-        <!-- SIMULASI KANTIN -->
+        <!-- SIMULASI KANTIN (Tanpa Spoiler Batas Maksimal) -->
         <section class="glass-card rounded-[2.5rem] p-6 sm:p-10 shadow-2xl mb-12 relative overflow-hidden">
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-purple-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
-            <div class="absolute -bottom-24 -left-24 w-56 h-56 bg-indigo-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
-
             <div class="relative z-10">
                 <div class="text-center mb-8">
-                    <p class="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-3 animate-pulse">Tarik / Klik 2 Makanan ke Sini 👇</p>
+                    <p class="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-3 animate-pulse">Tarik / Klik 2 Makanan ke Mangkok 👇</p>
                     <div id="bowl" 
                          class="mx-auto w-full max-w-md h-36 bg-white/60 border-4 border-dashed border-indigo-300 rounded-t-3xl rounded-b-[4rem] flex items-center justify-center gap-4 transition-all duration-300 shadow-inner"
                          ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
                         <span id="bowlPlaceholder" class="text-slate-400 font-semibold">Mangkok masih kosong...</span>
-                        <!-- Item gambar akan diinjeksi ke sini -->
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6" id="foodGrid">
-                    <!-- Kartu di-render HANYA SEKALI oleh JS -->
-                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6" id="foodGrid"></div>
             </div>
         </section>
 
         <!-- HASIL KOMBINASI -->
-        <section class="glass-card rounded-3xl p-6 shadow-xl mb-12">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">📝</div>
-                <h3 class="text-2xl font-bold text-slate-700">Catatan Kombinasimu</h3>
+        <section class="glass-card rounded-3xl p-6 shadow-xl mb-16">
+            <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">📝</div>
+                    <h3 class="text-2xl font-bold text-slate-700">Catatan Kombinasimu</h3>
+                </div>
+                <div class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl font-bold border border-indigo-200">
+                    Total Ditemukan: <span id="comboCounter" class="text-xl">0</span>
+                </div>
             </div>
             
             <div id="combinationList" class="flex flex-wrap gap-3">
-                <div id="emptyState" class="px-5 py-3 rounded-2xl bg-slate-100 text-slate-500 font-medium italic border border-slate-200 w-full text-center">
-                    Belum ada kombinasi yang ditemukan. Eksplorasi sekarang!
+                <div id="emptyState" class="px-5 py-4 rounded-2xl bg-slate-50 text-slate-500 font-medium italic border border-slate-200 w-full text-center">
+                    Belum ada kombinasi yang ditemukan. Mulai pilih makanan di atas!
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- LABORATORIUM PENEMUAN RUMUS                               -->
+        <!-- ========================================================= -->
+        <div class="text-center mb-8 mt-20">
+            <div class="inline-block bg-pink-100 text-pink-700 font-bold px-4 py-1 rounded-full mb-4 animate-float border border-pink-200 shadow-sm">Tahap 2: Abstraksi 🔬</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-4">Laboratorium Rahasia</h2>
+            <p class="text-lg text-slate-600 font-medium max-w-2xl mx-auto bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white">
+                Mari jadi ilmuwan matematika! Berdasarkan petualanganmu tadi, kita akan merumuskan sendiri Formula Kombinasi.
+            </p>
+        </div>
+
+        <section class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-16 border border-slate-100">
+            
+            <!-- Langkah 1: Observasi -->
+            <div class="p-6 sm:p-10 border-b-2 border-slate-100 bg-slate-50">
+                <h3 class="text-2xl font-bold text-indigo-600 mb-4">1. Menghilangkan Urutan yang Ganda</h3>
+                <p class="text-slate-700 mb-6 font-medium leading-relaxed text-lg">
+                    Coba kita perhatikan saat memilih <strong>2 makanan</strong>. <br>
+                    Jika urutannya diperhatikan (Permutasi), akan ada <strong>P(n,r)</strong> susunan. Tapi saat masuk ke mangkok (Kombinasi), urutan tidak penting! (Jalangkote+Risoles = Risoles+Jalangkote).
+                </p>
+                
+                <div class="bg-slate-200/50 p-6 rounded-3xl mb-6">
+                    <div id="permVisualizer" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <!-- Kotak digenerate via JS -->
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button id="btnMerge" onclick="animateMerge()" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-extrabold px-8 py-4 rounded-full shadow-[0_10px_20px_rgba(236,72,153,0.3)] hover:-translate-y-1 hover:shadow-[0_15px_30px_rgba(236,72,153,0.4)] transition-all">
+                        ✨ Satukan Permutasi yang Sama ke Dalam Mangkok ✨
+                    </button>
+                    <p id="mergeDesc" class="mt-6 font-bold text-indigo-600 hidden animate-[fadeIn_1s] text-xl bg-indigo-50 py-3 px-6 rounded-2xl inline-block border border-indigo-100 shadow-sm">
+                        Lihat! Tiap 1 Kombinasi berasal dari susunan berulang yang melebur.<br>
+                        <span class="text-slate-600 text-base font-medium mt-1 block">Karena kita memilih <strong>r</strong> makanan, susunan ganda yang melebur adalah sebanyak <strong>r!</strong></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Langkah 2: Lengkapi Rumus -->
+            <div class="p-6 sm:p-10 bg-indigo-50/50 relative border-b-2 border-slate-100">
+                <h3 class="text-2xl font-bold text-indigo-800 mb-4">2. Susun Formulasi Awal</h3>
+                <p class="text-slate-700 mb-8 font-medium text-lg max-w-3xl">
+                    Kombinasi <strong>C(n,r)</strong> pada dasarnya adalah Permutasi <strong>P(n,r)</strong> yang dibagi dengan jumlah susunan gandanya. Lengkapi persamaan ini:
+                </p>
+
+                <!-- Box Fraksi Formulasi Awal -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-xl sm:text-2xl font-extrabold text-slate-800 mb-8">
+                    <div class="bg-white px-6 py-4 rounded-2xl shadow-sm border-2 border-indigo-200 text-indigo-700 whitespace-nowrap shrink-0">
+                        C(n,r)
+                    </div>
+                    <div class="text-3xl">=</div>
+                    
+                    <div class="flex flex-col items-center bg-white px-4 sm:px-8 py-4 rounded-2xl shadow-sm border-2 border-indigo-200 shrink-0 min-w-[200px]">
+                        <div class="border-b-[3px] border-slate-800 pb-2 w-full text-center whitespace-nowrap">P(n,r)</div>
+                        <div class="pt-3 w-full flex justify-center">
+                            <select id="formulaDropdown" onchange="checkFormula()" class="bg-indigo-100 border-2 border-indigo-300 text-indigo-700 font-bold rounded-xl px-4 py-2 cursor-pointer outline-none hover:bg-indigo-200 transition-colors appearance-none text-center min-w-[120px]">
+                                <option value="" disabled selected>Pilih Pembagi</option>
+                                <option value="n!">n!</option>
+                                <option value="(n-r)!">(n-r)!</option>
+                                <option value="r!">r!</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pesan Error -->
+                <p id="formulaFeedback" class="text-center font-bold text-red-500 hidden animate-pulse">Coba ingat lagi: berapa banyak cara menyusun <strong>r</strong> benda? Ya, jawabannya r!</p>
+            </div>
+
+            <!-- Langkah 3: RUMUS FINAL (Penjabaran Detail) -->
+            <div id="finalFormulaCard" class="hidden overflow-hidden">
+                <div class="p-6 sm:p-12 bg-white text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 text-3xl mb-4">🥳</div>
+                    <h3 class="text-3xl font-extrabold mb-4 text-slate-800">Tepat Sekali!</h3>
+                    <p class="text-slate-600 font-medium mb-8 text-lg max-w-2xl mx-auto">
+                        Karena <strong>P(n,r)</strong> sudah mengandung rumus faktorialnya sendiri, mari kita jabarkan bentuk lengkapnya!
+                    </p>
+
+                    <!-- Proses Penjabaran -->
+                    <div class="flex flex-col items-center gap-4 sm:gap-6 mb-8 text-lg sm:text-xl font-bold text-slate-700 bg-slate-50 p-4 sm:p-8 rounded-[2rem] border border-slate-200 max-w-3xl mx-auto w-full">
+                        
+                        <div class="w-full text-left text-sm text-slate-500 mb-2 uppercase tracking-wide">Langkah Substitusi:</div>
+                        
+                        <!-- P(n,r) Recall -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between sm:justify-start gap-4 w-full bg-white p-4 sm:p-6 rounded-xl shadow-sm overflow-x-auto">
+                            <span class="text-slate-400 font-semibold text-sm sm:text-base whitespace-nowrap self-start sm:self-center">Kita tahu:</span>
+                            <div class="flex items-center gap-3 sm:gap-4 mx-auto whitespace-nowrap shrink-0">
+                                <span>P(n,r)</span>
+                                <span>=</span>
+                                <div class="flex flex-col items-center">
+                                    <span class="border-b-2 border-slate-400 pb-1 px-4 w-full text-center">n!</span>
+                                    <span class="pt-1 px-4">(n-r)!</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-slate-400 text-2xl my-2">⬇️</div>
+
+                        <!-- Final Formula -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between sm:justify-start gap-4 w-full bg-indigo-50 p-4 sm:p-6 rounded-2xl border-2 border-indigo-200 overflow-x-auto">
+                            <span class="text-indigo-600 font-semibold text-sm sm:text-base whitespace-nowrap self-start sm:self-center">Maka:</span>
+                            <div class="flex items-center gap-3 sm:gap-4 mx-auto whitespace-nowrap shrink-0">
+                                <span class="text-xl sm:text-2xl text-indigo-800">C(n,r)</span>
+                                <span class="text-xl sm:text-2xl text-indigo-800">=</span>
+                                <div class="flex flex-col items-center text-xl sm:text-2xl text-indigo-800 font-extrabold">
+                                    <span class="border-b-[3px] border-indigo-800 pb-1 sm:pb-2 px-4 sm:px-6 w-full text-center">n!</span>
+                                    <span class="pt-1 sm:pt-2 px-4 sm:px-6">(n-r)! &times; r!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-700 p-8 text-center text-white">
+                    <h4 class="text-2xl font-extrabold mb-2 text-yellow-300">🎉 SELAMAT! KAMU TELAH MENEMUKAN RUMUSNYA! 🎉</h4>
+                    <p class="font-medium text-indigo-100">Sekarang kamu tidak perlu menghafal lagi, karena kamu tahu dari mana asalnya!</p>
                 </div>
             </div>
         </section>
 
         <!-- BANNER KUIS -->
-        <section class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl text-white text-center relative overflow-hidden group">
+        <section class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl text-white text-center relative overflow-hidden group mb-10">
             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
             <div class="relative z-10">
-                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Sudah Paham Konsepnya?</h2>
-                <p class="text-indigo-100 text-lg mb-8 max-w-xl mx-auto">Yuk, uji insting matematikamu! Jawab 10 soal kombinasi dan buktikan kamu adalah Master Kombinatorika! 🧠✨</p>
-                <button onclick="openQuizModal()" class="bg-white text-indigo-600 hover:bg-indigo-50 font-extrabold text-xl py-4 px-10 rounded-full shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:shadow-[0_0_60px_rgba(255,255,255,0.6)] transition-all duration-300 transform hover:-translate-y-1">
-                    🚀 Mulai Uji Kemampuan
+                <div class="inline-block bg-green-500 text-white font-bold px-4 py-1 rounded-full mb-4 animate-float shadow-sm border border-green-400">Tahap 3: Evaluasi 🏆</div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Ujian Master Kombinatorika</h2>
+                <p class="text-slate-300 text-lg mb-8 max-w-xl mx-auto">Setelah menemukan rumusnya sendiri, buktikan kehebatanmu dengan menyelesaikan 10 kasus dunia nyata ini!</p>
+                <button onclick="openQuizModal()" class="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-extrabold text-xl py-4 px-10 rounded-full shadow-[0_10px_30px_rgba(16,185,129,0.3)] transition-all duration-300 transform hover:-translate-y-1 border-2 border-emerald-300">
+                    🚀 Mulai Ujian Master
                 </button>
             </div>
         </section>
 
     </main>
 
-    <!-- MODAL KUIS -->
+    <!-- MODAL KUIS (Tidak ada perubahan struktur) -->
     <div id="quizModal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeQuizModal()"></div>
-        
         <div class="absolute inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:max-w-2xl bg-white sm:rounded-[2.5rem] shadow-2xl flex flex-col h-full sm:h-[85vh] sm:max-h-[800px] overflow-hidden transform scale-95 transition-transform duration-300" id="quizCard">
             
             <div class="flex items-center justify-between p-5 sm:p-6 border-b border-slate-100 bg-white z-10">
                 <div class="flex items-center gap-4 w-full">
-                    <!-- X Button diperbaiki (langsung tutup tanpa confirm) -->
                     <button onclick="closeQuizModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
@@ -211,7 +321,6 @@
                     <div id="scoreIcon" class="text-7xl mb-6 animate-bounce-slow">🏆</div>
                     <h2 class="text-4xl font-extrabold text-slate-800 mb-2">Selesai!</h2>
                     <p class="text-lg text-slate-500 font-medium mb-8">Ini dia hasil perjuanganmu:</p>
-                    
                     <div class="inline-block bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-100 rounded-[2rem] p-10 shadow-lg mb-8">
                         <span class="text-sm font-bold text-indigo-400 uppercase tracking-widest block mb-2">Nilai Akhir</span>
                         <span id="finalScore" class="text-6xl sm:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">100</span>
@@ -228,61 +337,49 @@
         </div>
     </div>
 
-    <!-- SCRIPT JAVASCRIPT -->
+    <!-- ========================================== -->
+    <!-- SCRIPT JAVASCRIPT                          -->
+    <!-- ========================================== -->
     <script>
         const foods = [
-            { id: 'A', name: 'Jalangkote', img: 'https://i.ibb.co.com/Xrt699WL/images-1.jpg' },
-            { id: 'B', name: 'Cantik Manis', img: 'https://i.ibb.co.com/pj1rzMhd/download.jpg' },
-            { id: 'C', name: 'Donat Coklat', img: 'https://i.ibb.co.com/VpS93K1M/17872251-c853-4bb7-bde0-eecd2815bf88-jpg.jpg' },
-            { id: 'D', name: 'Risoles', img: 'https://i.ibb.co.com/bRq3HMnK/5ff2caec5696b.jpg' }
+            { id: 'A', name: 'Jalangkote', emoji: '🥟', img: 'https://i.ibb.co.com/Xrt699WL/images-1.jpg' },
+            { id: 'B', name: 'Cantik Manis', emoji: '🍮', img: 'https://i.ibb.co.com/pj1rzMhd/download.jpg' },
+            { id: 'C', name: 'Donat Coklat', emoji: '🍩', img: 'https://i.ibb.co.com/VpS93K1M/17872251-c853-4bb7-bde0-eecd2815bf88-jpg.jpg' },
+            { id: 'D', name: 'Risoles', emoji: '🌯', img: 'https://i.ibb.co.com/bRq3HMnK/5ff2caec5696b.jpg' }
         ];
 
         let selectedFoods = []; 
         let savedCombinations = []; 
         let isProcessing = false; 
 
-        // Notifikasi Toast
         function showToast(text, type = 'info') {
             const toast = document.getElementById('toast');
             const toastContent = document.getElementById('toastContent');
-            const toastIcon = document.getElementById('toastIcon');
-            const toastText = document.getElementById('toastText');
-
-            toastContent.className = 'bg-white px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 border-2';
-            if (type === 'success') { toastContent.classList.add('border-green-400', 'text-green-700'); toastIcon.textContent = '🎉'; } 
-            else if (type === 'error') { toastContent.classList.add('border-red-400', 'text-red-700'); toastIcon.textContent = '⚠️'; } 
-            else { toastContent.classList.add('border-indigo-400', 'text-indigo-700'); toastIcon.textContent = '💡'; }
-
-            toastText.textContent = text;
+            toastContent.className = 'bg-white px-6 py-4 rounded-full shadow-2xl font-bold flex items-center justify-center gap-3 border-2 text-center';
             
-            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-[-20px]');
-            }, 3000);
+            if (type === 'success') { toastContent.classList.add('border-green-400', 'text-green-700'); document.getElementById('toastIcon').textContent = '🎉'; } 
+            else if (type === 'error') { toastContent.classList.add('border-red-400', 'text-red-700'); document.getElementById('toastIcon').textContent = '⚠️'; } 
+            else { toastContent.classList.add('border-indigo-400', 'text-indigo-700'); document.getElementById('toastIcon').textContent = '💡'; }
+            
+            document.getElementById('toastText').textContent = text;
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]'); toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-[-20px]'); }, 3500);
         }
 
-        // ==========================================
-        // SISTEM RENDER BARU (TIDAK BERKEDIP)
-        // ==========================================
         function renderFoodsInit() {
             const grid = document.getElementById('foodGrid');
-            grid.innerHTML = ''; // Dipanggil cuma 1x di awal
-            
+            grid.innerHTML = ''; 
             foods.forEach((food) => {
                 const card = document.createElement('div');
                 card.id = `card-${food.id}`;
                 card.className = `bg-white rounded-[2rem] p-4 flex flex-col items-center justify-between border-2 transition-all duration-300 food-card-active`;
-                
                 card.draggable = true;
                 card.ondragstart = (e) => { if(!isProcessing && !selectedFoods.includes(food.id)) e.dataTransfer.setData("text/plain", food.id); };
                 card.onclick = () => { if(!isProcessing && !selectedFoods.includes(food.id)) addToBowl(food.id); };
 
                 card.innerHTML = `
                     <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 mb-4 overflow-hidden border-4 border-white shadow-inner flex-shrink-0 relative group">
-                        <img src="${food.img}" alt="${food.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                        <img src="${food.img}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                     </div>
                     <div class="text-center">
                         <div class="font-extrabold text-slate-800 text-sm sm:text-base leading-tight mb-1">${food.name}</div>
@@ -295,20 +392,14 @@
 
         function addToBowl(foodId) {
             if(selectedFoods.includes(foodId)) return;
-            if(selectedFoods.length >= 2) { showToast("Mangkok sudah penuh!", "info"); return; }
-
+            if(selectedFoods.length >= 2) { showToast("Mangkok sedang diisi!", "info"); return; }
             selectedFoods.push(foodId);
             
-            // Ubah tampilan kartu grid langsung (Tanpa muat ulang)
             const card = document.getElementById(`card-${foodId}`);
-            card.classList.remove('food-card-active');
-            card.classList.add('food-card-disabled');
-            card.draggable = false;
+            card.classList.remove('food-card-active'); card.classList.add('food-card-disabled'); card.draggable = false;
 
-            // Masukkan ke mangkok
             const bowl = document.getElementById('bowl');
             document.getElementById('bowlPlaceholder').style.display = 'none';
-            
             const foodData = foods.find(f => f.id === foodId);
             const img = document.createElement('img');
             img.src = foodData.img;
@@ -318,30 +409,23 @@
             if (selectedFoods.length === 2) processCombination();
         }
 
-        // Drag Drop Handlers
         function allowDrop(ev) { if(!isProcessing) ev.preventDefault(); }
         function dragEnter(ev) { if(!isProcessing) { ev.preventDefault(); document.getElementById('bowl').classList.add('bowl-active'); } }
         function dragLeave(ev) { document.getElementById('bowl').classList.remove('bowl-active'); }
         function drop(ev) {
-            ev.preventDefault();
-            document.getElementById('bowl').classList.remove('bowl-active');
+            ev.preventDefault(); document.getElementById('bowl').classList.remove('bowl-active');
             if(isProcessing) return;
             const foodId = ev.dataTransfer.getData("text/plain");
             if (foodId) addToBowl(foodId);
         }
 
         function clearBowlUI() {
-            // Bersihkan gambar di mangkok
             const bowl = document.getElementById('bowl');
             bowl.querySelectorAll('.bowl-item').forEach(item => item.remove());
             document.getElementById('bowlPlaceholder').style.display = 'block';
-
-            // Kembalikan semua kartu makanan ke posisi aktif
             foods.forEach(food => {
                 const card = document.getElementById(`card-${food.id}`);
-                card.classList.remove('food-card-disabled');
-                card.classList.add('food-card-active');
-                card.draggable = true;
+                card.classList.remove('food-card-disabled'); card.classList.add('food-card-active'); card.draggable = true;
             });
         }
 
@@ -355,7 +439,7 @@
                 const comboSignature = currentCombo.join('-'); 
 
                 if (savedCombinations.includes(comboSignature)) {
-                    showToast("Kombinasi ini sudah dicatat. Coba yang lain!", "error");
+                    showToast("Kombinasi ini sudah dicatat. Ayo temukan yang baru!", "error");
                 } else {
                     savedCombinations.push(comboSignature);
                     const emptyState = document.getElementById('emptyState');
@@ -366,265 +450,254 @@
 
                     const list = document.getElementById('combinationList');
                     const chip = document.createElement('div');
-                    chip.className = 'bg-white border border-indigo-100 shadow-sm px-4 py-2 rounded-2xl flex items-center gap-3 animate-[slideIn_0.4s_ease-out]';
+                    chip.className = 'bg-white border border-indigo-100 shadow-sm px-4 py-3 rounded-2xl flex items-center gap-3 animate-[slideIn_0.4s_ease-out]';
                     chip.innerHTML = `
-                        <span class="bg-indigo-100 text-indigo-700 font-extrabold text-xs px-2 py-1 rounded-lg">#${savedCombinations.length}</span>
-                        <span class="font-bold text-slate-700 text-sm">${food1} + ${food2}</span>
+                        <span class="bg-indigo-100 text-indigo-700 font-extrabold text-sm px-3 py-1 rounded-xl">#${savedCombinations.length}</span>
+                        <span class="font-bold text-slate-700 text-sm sm:text-base">${food1} + ${food2}</span>
                     `;
                     list.appendChild(chip);
+
+                    // Update UI Counter tanpa limit (Biarkan siswa sadar sendiri)
+                    document.getElementById('comboCounter').textContent = savedCombinations.length;
 
                     fireConfetti(0.5);
                     showToast("Mantap! Kombinasi baru berhasil dicatat!", "success");
                 }
-
-                // Bersihkan mangkok secara mulus
-                setTimeout(() => {
-                    selectedFoods = [];
-                    isProcessing = false;
-                    bowl.classList.remove('animate-pulse', 'bg-indigo-50');
-                    clearBowlUI(); // Panggil fungsi pembersihan UI
-                }, 1500);
+                
+                setTimeout(() => { selectedFoods = []; isProcessing = false; bowl.classList.remove('animate-pulse', 'bg-indigo-50'); clearBowlUI(); }, 1200);
             }, 800);
         }
 
+        // ==========================================
+        // LABORATORIUM PENEMUAN RUMUS
+        // ==========================================
+        const pairs = [ ['A','B'], ['A','C'], ['A','D'], ['B','C'], ['B','D'], ['C','D'] ];
+
+        function renderPermVisualizer() {
+            const container = document.getElementById('permVisualizer');
+            container.innerHTML = '';
+            
+            pairs.forEach((pair) => {
+                const f1 = foods.find(f => f.id === pair[0]);
+                const f2 = foods.find(f => f.id === pair[1]);
+                
+                const box = document.createElement('div');
+                box.className = 'perm-box bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm flex flex-col gap-2 relative';
+                
+                const p1 = document.createElement('div');
+                p1.className = 'perm-item bg-slate-50 p-2 rounded-xl flex justify-center items-center gap-2 border border-slate-100';
+                p1.innerHTML = `<span class="text-2xl">${f1.emoji}</span> <span class="text-slate-400 font-bold">-</span> <span class="text-2xl">${f2.emoji}</span>`;
+                
+                const p2 = document.createElement('div');
+                p2.className = 'perm-item bg-slate-50 p-2 rounded-xl flex justify-center items-center gap-2 border border-slate-100';
+                p2.innerHTML = `<span class="text-2xl">${f2.emoji}</span> <span class="text-slate-400 font-bold">-</span> <span class="text-2xl">${f1.emoji}</span>`;
+
+                box.appendChild(p1); box.appendChild(p2); container.appendChild(box);
+            });
+        }
+
+        function animateMerge() {
+            const btn = document.getElementById('btnMerge');
+            btn.disabled = true; btn.innerHTML = "Menyatukan... ⏳";
+            btn.classList.replace('from-pink-500', 'from-slate-400'); btn.classList.replace('to-purple-500', 'to-slate-500');
+
+            const boxes = document.querySelectorAll('.perm-box');
+            boxes.forEach((box, i) => { setTimeout(() => { box.classList.add('merged'); }, i * 150); });
+
+            setTimeout(() => {
+                btn.style.display = 'none';
+                document.getElementById('mergeDesc').classList.remove('hidden');
+                fireConfetti(0.5);
+            }, boxes.length * 150 + 500);
+        }
+
+        function checkFormula() {
+            const dropdown = document.getElementById('formulaDropdown');
+            const feedback = document.getElementById('formulaFeedback');
+            const finalCard = document.getElementById('finalFormulaCard');
+
+            if(dropdown.value === 'r!') {
+                // BENAR
+                dropdown.classList.replace('bg-indigo-100', 'bg-green-100');
+                dropdown.classList.replace('border-indigo-300', 'border-green-400');
+                dropdown.classList.replace('text-indigo-700', 'text-green-700');
+                feedback.classList.add('hidden');
+                
+                finalCard.classList.remove('hidden');
+                finalCard.classList.add('animate-[slideIn_0.5s_ease-out]');
+                
+                fireConfetti(1.5); setTimeout(() => fireConfetti(1.5), 600);
+                showToast("Genius! Kamu memahaminya dengan sangat baik!", "success");
+                dropdown.disabled = true;
+            } else {
+                // SALAH
+                feedback.classList.remove('hidden');
+                dropdown.classList.replace('bg-indigo-100', 'bg-red-100');
+                dropdown.classList.replace('border-indigo-300', 'border-red-400');
+                dropdown.classList.replace('text-indigo-700', 'text-red-700');
+                
+                setTimeout(() => {
+                    dropdown.classList.replace('bg-red-100', 'bg-indigo-100');
+                    dropdown.classList.replace('border-red-400', 'border-indigo-300');
+                    dropdown.classList.replace('text-red-700', 'text-indigo-700');
+                }, 2000);
+            }
+        }
 
         // ==========================================
-        // DATA & LOGIKA KUIS
+        // KUIS MASTER KOMBINATORIKA
         // ==========================================
         const quizData = [
-            { q: "Dari 5 orang siswa akan dipilih 2 orang untuk lomba. Banyak cara pemilihan yang mungkin adalah...", opts: { A: "5 cara", B: "10 cara", C: "15 cara", D: "20 cara" }, ans: "B", detail: "Kombinasi 2 dari 5: C(5,2) = (5×4) / (2×1) = 10" },
-            { q: "Dalam sebuah kotak terdapat 6 bola merah. Jika diambil 3 bola sekaligus, banyak cara pengambilannya adalah...", opts: { A: "10 cara", B: "20 cara", C: "60 cara", D: "120 cara" }, ans: "B", detail: "Kombinasi 3 dari 6: C(6,3) = (6×5×4) / (3×2×1) = 20" },
-            { q: "Dalam suatu rapat dihadiri 8 orang. Jika semua saling berjabat tangan tepat satu kali, banyak jabat tangan yang terjadi adalah...", opts: { A: "16 jabat tangan", B: "28 jabat tangan", C: "56 jabat tangan", D: "64 jabat tangan" }, ans: "B", detail: "Jabat tangan melibatkan 2 orang dari 8: C(8,2) = (8×7) / (2×1) = 28" },
-            { q: "Ibu ingin membuat jus dari 7 jenis buah. Jika Ibu mencampur 3 jenis buah, banyak kombinasi jus yang bisa dibuat adalah...", opts: { A: "21", B: "35", C: "210", D: "343" }, ans: "B", detail: "Kombinasi 3 dari 7: C(7,3) = (7×6×5) / (3×2×1) = 35" },
-            { q: "Budi ingin meminjam 4 buku dari 6 jenis buku yang berbeda. Banyak cara Budi memilih buku tersebut adalah...", opts: { A: "10 cara", B: "15 cara", C: "24 cara", D: "30 cara" }, ans: "B", detail: "Memilih 4 dari 6 sama dengan memilih sisa 2 dari 6: C(6,4) = C(6,2) = 15" },
-            { q: "Saat ulangan, wajib kerjakan soal No.1 & 2, bebas pilih 3 soal lagi dari sisa 6 soal. Banyak pilihan soal Budi adalah...", opts: { A: "15 pilihan", B: "20 pilihan", C: "28 pilihan", D: "56 pilihan" }, ans: "B", detail: "Memilih 3 dari sisa 6 soal: C(6,3) = 20" },
-            { q: "Tim basket (5 orang) dipilih dari 10 kandidat. Banyak susunan tim yang dapat dibentuk adalah...", opts: { A: "120", B: "252", C: "504", D: "1260" }, ans: "B", detail: "Kombinasi 5 dari 10: C(10,5) = (10×9×8×7×6) / (5×4×3×2×1) = 252" },
-            { q: "Ada 5 titik di bidang datar (tidak ada 3 titik segaris). Banyak segitiga yang dapat dibuat adalah...", opts: { A: "10 segitiga", B: "15 segitiga", C: "20 segitiga", D: "60 segitiga" }, ans: "A", detail: "Segitiga butuh 3 titik dari 5: C(5,3) = 10" },
-            { q: "Dari 4 guru Matematika dan 3 guru Fisika dibentuk panitia (2 Mat & 1 Fisika). Banyak cara pembentukannya adalah...", opts: { A: "9 cara", B: "12 cara", C: "18 cara", D: "36 cara" }, ans: "C", detail: "C(4,2) × C(3,1) = 6 × 3 = 18" },
-            { q: "Pak Guru mencampur 2 warna dari 7 warna dasar. Banyak warna baru maksimal yang dihasilkan adalah...", opts: { A: "14 warna", B: "21 warna", C: "42 warna", D: "49 warna" }, ans: "B", detail: "Kombinasi 2 dari 7: C(7,2) = (7×6) / (2×1) = 21" }
+            { q: "Dari 5 orang siswa akan dipilih 2 orang untuk lomba. Banyak cara pemilihan yang mungkin adalah...", opts: { A: "5 cara", B: "10 cara", C: "15 cara", D: "20 cara" }, ans: "B", detail: "Kombinasi 2 dari 5: C(5,2) = 5! / (3! × 2!) = 10" },
+            { q: "Dalam sebuah kotak terdapat 6 bola merah. Jika diambil 3 bola sekaligus, banyak cara pengambilannya adalah...", opts: { A: "10 cara", B: "20 cara", C: "60 cara", D: "120 cara" }, ans: "B", detail: "Kombinasi 3 dari 6: C(6,3) = 6! / (3! × 3!) = 20" },
+            { q: "Dalam suatu rapat dihadiri 8 orang. Jika semua saling berjabat tangan tepat satu kali, banyak jabat tangan yang terjadi adalah...", opts: { A: "16 jabat", B: "28 jabat", C: "56 jabat", D: "64 jabat" }, ans: "B", detail: "Jabat tangan = Memilih 2 dari 8: C(8,2) = 28" },
+            { q: "Ibu ingin membuat jus dari 7 jenis buah. Jika Ibu mencampur 3 jenis buah, banyak kombinasi jus yang bisa dibuat adalah...", opts: { A: "21", B: "35", C: "210", D: "343" }, ans: "B", detail: "Kombinasi 3 dari 7: C(7,3) = 7! / (4! × 3!) = 35" },
+            { q: "Budi ingin meminjam 4 buku dari 6 jenis buku yang berbeda. Banyak cara Budi memilih buku tersebut adalah...", opts: { A: "10 cara", B: "15 cara", C: "24 cara", D: "30 cara" }, ans: "B", detail: "Sama dengan memilih yang ditinggal (2 dari 6): C(6,2) = 15" },
+            { q: "Saat ulangan, wajib kerjakan soal No.1 & 2, bebas pilih 3 soal lagi dari sisa 6 soal. Banyak pilihan soal Budi adalah...", opts: { A: "15 pilihan", B: "20 pilihan", C: "28 pilihan", D: "56 pilihan" }, ans: "B", detail: "Cukup hitung sisa pilihannya: C(6,3) = 20" },
+            { q: "Tim basket (5 orang) dipilih dari 10 kandidat. Banyak susunan tim yang dapat dibentuk adalah...", opts: { A: "120", B: "252", C: "504", D: "1260" }, ans: "B", detail: "Kombinasi 5 dari 10: C(10,5) = 252" },
+            { q: "Ada 5 titik di bidang datar (tidak ada 3 titik segaris). Banyak segitiga yang dapat dibuat adalah...", opts: { A: "10 segitiga", B: "15 segitiga", C: "20 segitiga", D: "60 segitiga" }, ans: "A", detail: "Segitiga butuh 3 titik: C(5,3) = 10" },
+            { q: "Dari 4 guru Mat & 3 guru Fisika dibentuk panitia (2 Mat & 1 Fisika). Banyak cara pembentukannya adalah...", opts: { A: "9 cara", B: "12 cara", C: "18 cara", D: "36 cara" }, ans: "C", detail: "Aturan Perkalian: C(4,2) × C(3,1) = 6 × 3 = 18" },
+            { q: "Pak Guru mencampur 2 warna dari 7 warna dasar. Banyak warna baru maksimal yang dihasilkan adalah...", opts: { A: "14 warna", B: "21 warna", C: "42 warna", D: "49 warna" }, ans: "B", detail: "Kombinasi 2 dari 7: C(7,2) = 21" }
         ];
 
-        let currentQIndex = 0;
-        let userScore = 0;
-        let selectedOption = null;
-        let quizState = 'answering'; 
+        let currentQIndex = 0; let userScore = 0; let selectedOption = null; let quizState = 'answering'; 
 
         function openQuizModal() {
-            // Jangan direset jika sedang berada di tengah-tengah soal
             if(quizState === 'finished') {
-                currentQIndex = 0;
-                userScore = 0;
-                quizState = 'answering';
+                currentQIndex = 0; userScore = 0; quizState = 'answering';
                 document.getElementById('questionContainer').classList.remove('hidden');
                 document.getElementById('resultContainer').classList.add('hidden');
                 document.getElementById('btnQuizAction').classList.remove('hidden');
                 loadQuestion();
-            } else if(currentQIndex === 0 && quizState !== 'reviewed') {
-                loadQuestion();
-            }
+            } else if(currentQIndex === 0 && quizState !== 'reviewed') loadQuestion();
             
-            const modal = document.getElementById('quizModal');
-            const card = document.getElementById('quizCard');
-            
+            const modal = document.getElementById('quizModal'); const card = document.getElementById('quizCard');
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.classList.add('opacity-100');
-                card.classList.remove('scale-95');
-                card.classList.add('scale-100');
-            }, 10);
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.classList.add('opacity-100'); card.classList.remove('scale-95'); card.classList.add('scale-100'); }, 10);
         }
 
-        // Langsung tutup tanpa konfirmasi alert
         function closeQuizModal() {
-            const modal = document.getElementById('quizModal');
-            const card = document.getElementById('quizCard');
-            
-            modal.classList.remove('opacity-100');
-            modal.classList.add('opacity-0');
-            card.classList.remove('scale-100');
-            card.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            const modal = document.getElementById('quizModal'); const card = document.getElementById('quizCard');
+            modal.classList.remove('opacity-100'); modal.classList.add('opacity-0'); card.classList.remove('scale-100'); card.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
         function loadQuestion() {
-            quizState = 'answering';
-            selectedOption = null;
-            const qData = quizData[currentQIndex];
-            
+            quizState = 'answering'; selectedOption = null; const qData = quizData[currentQIndex];
             document.getElementById('quizCounter').textContent = `${currentQIndex + 1}/${quizData.length}`;
             document.getElementById('quizProgress').style.width = `${((currentQIndex) / quizData.length) * 100}%`;
             document.getElementById('explanationBox').classList.add('hidden');
-            
             document.getElementById('questionText').innerHTML = `<span class="text-indigo-600 mr-2">${currentQIndex + 1}.</span> ${qData.q}`;
             
-            const optsContainer = document.getElementById('optionsContainer');
-            optsContainer.innerHTML = '';
-            
+            const optsContainer = document.getElementById('optionsContainer'); optsContainer.innerHTML = '';
             for(let key in qData.opts) {
                 const optBtn = document.createElement('button');
                 optBtn.className = `quiz-option w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-slate-200 bg-white font-semibold text-slate-700 flex items-center gap-4 hover:border-indigo-300 hover:bg-indigo-50/50 outline-none`;
                 optBtn.onclick = () => selectOption(key, optBtn);
-                optBtn.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 flex-shrink-0 option-letter">${key}</div>
-                    <span class="text-base sm:text-lg">${qData.opts[key]}</span>
-                `;
+                optBtn.innerHTML = `<div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 flex-shrink-0 option-letter">${key}</div><span class="text-base sm:text-lg">${qData.opts[key]}</span>`;
                 optsContainer.appendChild(optBtn);
             }
-
             const btn = document.getElementById('btnQuizAction');
-            btn.textContent = "Pilih Jawaban";
-            btn.className = "w-full bg-slate-200 text-slate-400 font-bold text-lg py-4 sm:py-5 rounded-2xl cursor-not-allowed transition-all duration-300";
-            btn.disabled = true;
+            btn.textContent = "Pilih Jawaban"; btn.className = "w-full bg-slate-200 text-slate-400 font-bold text-lg py-4 sm:py-5 rounded-2xl cursor-not-allowed transition-all duration-300"; btn.disabled = true;
         }
 
         function selectOption(key, element) {
-            if (quizState !== 'answering') return; 
-            selectedOption = key;
-            
-            const options = document.querySelectorAll('.quiz-option');
-            options.forEach(opt => {
+            if (quizState !== 'answering') return;  selectedOption = key;
+            document.querySelectorAll('.quiz-option').forEach(opt => {
                 opt.classList.remove('selected', 'border-indigo-500', 'bg-indigo-50');
-                opt.querySelector('.option-letter').classList.remove('bg-indigo-500', 'text-white');
-                opt.querySelector('.option-letter').classList.add('bg-slate-100', 'text-slate-500');
+                opt.querySelector('.option-letter').classList.replace('bg-indigo-500', 'bg-slate-100');
+                opt.querySelector('.option-letter').classList.replace('text-white', 'text-slate-500');
             });
-            
             element.classList.add('selected', 'border-indigo-500', 'bg-indigo-50');
-            element.querySelector('.option-letter').classList.remove('bg-slate-100', 'text-slate-500');
-            element.querySelector('.option-letter').classList.add('bg-indigo-500', 'text-white');
+            element.querySelector('.option-letter').classList.replace('bg-slate-100', 'bg-indigo-500');
+            element.querySelector('.option-letter').classList.replace('text-slate-500', 'text-white');
 
             const btn = document.getElementById('btnQuizAction');
-            btn.textContent = "Cek Jawaban";
-            btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-lg py-4 sm:py-5 rounded-2xl shadow-[0_10px_20px_rgba(79,70,229,0.3)] hover:-translate-y-1 transition-all duration-300 transform active:translate-y-0";
-            btn.disabled = false;
+            btn.textContent = "Cek Jawaban"; btn.disabled = false;
+            btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-lg py-4 sm:py-5 rounded-2xl shadow-[0_10px_20px_rgba(79,70,229,0.3)] hover:-translate-y-1 transition-all duration-300";
         }
 
         function handleQuizAction() {
             if (quizState === 'answering') checkAnswer();
-            else if (quizState === 'reviewed') {
-                currentQIndex++;
-                if (currentQIndex < quizData.length) loadQuestion();
-                else showFinalResult();
-            } 
+            else if (quizState === 'reviewed') { currentQIndex++; if (currentQIndex < quizData.length) loadQuestion(); else showFinalResult(); } 
             else if (quizState === 'finished') closeQuizModal();
         }
 
         function checkAnswer() {
-            quizState = 'reviewed';
-            const qData = quizData[currentQIndex];
-            const isCorrect = (selectedOption === qData.ans);
+            quizState = 'reviewed'; const qData = quizData[currentQIndex]; const isCorrect = (selectedOption === qData.ans);
             if (isCorrect) userScore += 10;
-
+            
             const options = document.querySelectorAll('.quiz-option');
             let idx = 0;
             for(let key in qData.opts) {
-                const optElement = options[idx];
-                if (key === qData.ans) optElement.classList.add('correct'); 
-                else if (key === selectedOption && !isCorrect) optElement.classList.add('wrong'); 
-                else optElement.classList.add('opacity-50'); 
+                if (key === qData.ans) options[idx].classList.add('correct'); 
+                else if (key === selectedOption && !isCorrect) options[idx].classList.add('wrong'); 
+                else options[idx].classList.add('opacity-50'); 
                 idx++;
             }
 
-            const expBox = document.getElementById('explanationBox');
-            const expCard = document.getElementById('explanationCard');
-            const expIcon = document.getElementById('explanationIcon');
-            const expTitle = document.getElementById('explanationTitle');
-            const expText = document.getElementById('explanationText');
-
-            expBox.classList.remove('hidden');
-            expBox.classList.add('animate-[fadeIn_0.5s_ease-out]');
+            const expBox = document.getElementById('explanationBox'); const expCard = document.getElementById('explanationCard');
+            const expIcon = document.getElementById('explanationIcon'); const expTitle = document.getElementById('explanationTitle');
+            expBox.classList.remove('hidden'); expBox.classList.add('animate-[fadeIn_0.5s_ease-out]');
             
             if (isCorrect) {
                 expCard.className = "p-5 rounded-2xl border-2 flex flex-col sm:flex-row items-start gap-4 border-green-200 bg-green-50";
-                expIcon.textContent = "🥳";
-                expTitle.textContent = "Benar Sekali!";
-                expTitle.className = "font-extrabold text-lg mb-1 text-green-700";
+                expIcon.textContent = "🥳"; expTitle.textContent = "Benar Sekali!"; expTitle.className = "font-extrabold text-lg mb-1 text-green-700";
                 fireConfetti(0.5);
             } else {
                 expCard.className = "p-5 rounded-2xl border-2 flex flex-col sm:flex-row items-start gap-4 border-red-200 bg-red-50";
-                expIcon.textContent = "🥲";
-                expTitle.textContent = `Kurang Tepat. Jawaban: ${qData.ans}`;
-                expTitle.className = "font-extrabold text-lg mb-1 text-red-700";
+                expIcon.textContent = "🥲"; expTitle.textContent = `Jawaban Benar: ${qData.ans}`; expTitle.className = "font-extrabold text-lg mb-1 text-red-700";
             }
-            expText.textContent = qData.detail;
-
+            document.getElementById('explanationText').textContent = qData.detail;
             document.getElementById('quizBody').scrollTo({ top: 1000, behavior: 'smooth' });
 
             const btn = document.getElementById('btnQuizAction');
-            const isLast = currentQIndex === quizData.length - 1;
-            btn.textContent = isLast ? "Lihat Hasil Akhir" : "Lanjut ke Soal Berikutnya";
-            btn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-lg py-4 sm:py-5 rounded-2xl shadow-xl hover:-translate-y-1 transition-all duration-300 transform active:translate-y-0";
+            btn.textContent = currentQIndex === quizData.length - 1 ? "Lihat Hasil Akhir" : "Lanjut ke Soal Berikutnya";
+            btn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-lg py-4 sm:py-5 rounded-2xl shadow-xl hover:-translate-y-1 transition-all duration-300";
         }
 
         function showFinalResult() {
             quizState = 'finished';
             document.getElementById('quizProgress').style.width = '100%';
-            document.getElementById('questionContainer').classList.add('hidden');
-            document.getElementById('explanationBox').classList.add('hidden');
+            document.getElementById('questionContainer').classList.add('hidden'); document.getElementById('explanationBox').classList.add('hidden');
             
             const resultBox = document.getElementById('resultContainer');
-            resultBox.classList.remove('hidden');
-            resultBox.classList.add('animate-[slideIn_0.5s_ease-out]');
+            resultBox.classList.remove('hidden'); resultBox.classList.add('animate-[slideIn_0.5s_ease-out]');
             
-            const scoreEl = document.getElementById('finalScore');
-            const iconEl = document.getElementById('scoreIcon');
-            const msgEl = document.getElementById('scoreMessage');
-            
-            let displayScore = 0;
-            const targetScore = userScore;
+            const scoreEl = document.getElementById('finalScore'); const iconEl = document.getElementById('scoreIcon'); const msgEl = document.getElementById('scoreMessage');
+            let displayScore = 0; const targetScore = userScore;
             
             const interval = setInterval(() => {
-                displayScore += 2;
-                scoreEl.textContent = displayScore;
+                displayScore += 2; scoreEl.textContent = displayScore;
                 if(displayScore >= targetScore) {
-                    clearInterval(interval);
-                    scoreEl.textContent = targetScore;
-                    
-                    if(targetScore === 100) {
-                        iconEl.textContent = "🏆";
-                        msgEl.textContent = "LUAR BIASA! Pemahaman kombinasimu sempurna! Teman-teman pasti kagum saat kamu presentasi nanti!";
-                        fireConfetti(1); setTimeout(() => fireConfetti(1), 500);
-                    } else if (targetScore >= 70) {
-                        iconEl.textContent = "✨";
-                        msgEl.textContent = "Hebat! Konsep dasarmu sudah sangat kuat. Sedikit lagi menuju sempurna!";
-                        fireConfetti(0.5);
-                    } else {
-                        iconEl.textContent = "💪";
-                        msgEl.textContent = "Tidak apa-apa! Kombinatorika memang butuh ketelitian. Semangat belajar lagi ya!";
-                    }
+                    clearInterval(interval); scoreEl.textContent = targetScore;
+                    if(targetScore === 100) { iconEl.textContent = "🏆"; msgEl.textContent = "LUAR BIASA! Pemahaman kombinasimu sempurna!"; fireConfetti(1); setTimeout(() => fireConfetti(1), 500); } 
+                    else if (targetScore >= 70) { iconEl.textContent = "✨"; msgEl.textContent = "Hebat! Konsep dasarmu sudah sangat kuat!"; fireConfetti(0.5); } 
+                    else { iconEl.textContent = "💪"; msgEl.textContent = "Tidak apa-apa! Semangat belajar lagi ya!"; }
                 }
             }, 20);
 
             const btn = document.getElementById('btnQuizAction');
-            btn.textContent = "Tutup Kuis";
-            btn.className = "w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-lg py-4 sm:py-5 rounded-2xl transition-all duration-300";
+            btn.textContent = "Tutup Kuis"; btn.className = "w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-lg py-4 sm:py-5 rounded-2xl transition-all duration-300";
         }
 
         function fireConfetti(scale = 1) {
-            const count = 200 * scale;
-            const defaults = { origin: { y: 0.6 }, zIndex: 10000 };
-            function fire(particleRatio, opts) {
-                confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) }));
-            }
-            fire(0.25, { spread: 26, startVelocity: 55 });
-            fire(0.2, { spread: 60 });
-            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-            fire(0.1, { spread: 120, startVelocity: 45 });
+            const count = 200 * scale; const defaults = { origin: { y: 0.6 }, zIndex: 10000 };
+            function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
+            fire(0.25, { spread: 26, startVelocity: 55 }); fire(0.2, { spread: 60 }); fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 }); fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 }); fire(0.1, { spread: 120, startVelocity: 45 });
         }
 
         const style = document.createElement('style');
         style.innerHTML = `
             @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes dropIn { 0% { transform: translateY(-80px) scale(0.5); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         `;
         document.head.appendChild(style);
 
-        // Render kartunya cuma 1 kali saja saat halaman dibuka!
+        // INISIALISASI AWAL
         renderFoodsInit();
+        renderPermVisualizer();
     </script>
 </body>
 </html>
