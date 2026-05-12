@@ -233,11 +233,42 @@
                     </div>
                 </div>
 
-                <!-- Langkah 2: Susun Rumus Final -->
+                <!-- Interaksi 2: Kasus r=3 (Patahkan Miskonsepsi) -->
+                <div id="tahap-r3" class="hidden p-6 sm:p-10 border-b-2 border-slate-100 bg-sky-50 relative opacity-0 transition-opacity duration-1000">
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="text-4xl">🤯</span>
+                        <h3 class="text-2xl font-bold text-sky-800">2. Awas Jebakan Batman! (Kasus r = 3)</h3>
+                    </div>
+                    <p class="text-slate-700 mb-6 font-medium leading-relaxed text-lg">
+                        Banyak siswa berpikir Kombinasi itu <em>"Permutasi selalu dibagi 2"</em>. Mari kita buktikan itu <strong>SALAH BESAR!</strong><br>
+                        Bayangkan kita memilih <strong>3 orang (r = 3)</strong> untuk jadi satu Tim (Andi, Budi, Caca). Urutan di bawah ini sebenarnya adalah tim yang sama:
+                    </p>
+                    
+                    <div class="flex flex-wrap justify-center gap-3 mb-8">
+                        <span class="bg-white border border-sky-300 text-sky-800 font-bold px-4 py-2 rounded-lg shadow-sm">(Andi, Budi, Caca)</span>
+                        <span class="bg-white border border-sky-300 text-sky-800 font-bold px-4 py-2 rounded-lg shadow-sm">(Andi, Caca, Budi)</span>
+                        <span class="bg-white border border-sky-300 text-sky-800 font-bold px-4 py-2 rounded-lg shadow-sm">(Budi, Andi, Caca)</span>
+                        <span class="bg-white border border-sky-300 text-sky-800 font-bold px-4 py-2 rounded-lg shadow-sm">(Budi, Caca, Andi)</span>
+                        <span class="bg-white border border-sky-300 text-sky-800 font-bold px-4 py-2 rounded-lg shadow-sm">(Caca, Andi, Budi)</span>
+                        <span class="bg-white border border-sky-300 text-sky-800 font-bold px-4 py-2 rounded-lg shadow-sm">(Caca, Budi, Andi)</span>
+                    </div>
+
+                    <div class="bg-sky-100 p-6 rounded-3xl border border-sky-200 shadow-sm text-center">
+                        <h4 class="text-xl font-bold text-sky-900 mb-4">Jika kita memilih r = 3, maka P(n, 3) harus dibagi berapa agar susunan di atas melebur jadi 1 Kombinasi?</h4>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <button onclick="cekR3('2')" class="bg-white border-2 border-sky-400 text-sky-700 font-bold px-6 py-3 rounded-xl hover:bg-sky-50 transition-colors w-full sm:w-auto">Dibagi 2</button>
+                            <button onclick="cekR3('3')" class="bg-white border-2 border-sky-400 text-sky-700 font-bold px-6 py-3 rounded-xl hover:bg-sky-50 transition-colors w-full sm:w-auto">Dibagi 3</button>
+                            <button onclick="cekR3('6')" class="bg-white border-2 border-sky-400 text-sky-700 font-bold px-6 py-3 rounded-xl hover:bg-sky-50 transition-colors w-full sm:w-auto">Dibagi 6 (yaitu 3!)</button>
+                        </div>
+                        <p id="feedback-r3" class="mt-4 font-bold text-lg hidden"></p>
+                    </div>
+                </div>
+
+                <!-- Langkah 3: Susun Rumus Final -->
                 <div id="tahap-rumus" class="hidden p-6 sm:p-10 bg-indigo-50/50 relative border-b-2 border-slate-100 opacity-0 transition-opacity duration-1000">
                     <div class="flex items-center gap-4 mb-6">
                         <span class="text-4xl">🚀</span>
-                        <h3 class="text-2xl font-bold text-indigo-800">2. Saatnya Merakit Rumus!</h3>
+                        <h3 class="text-2xl font-bold text-indigo-800">3. Saatnya Merakit Rumus!</h3>
                     </div>
                     <p class="text-slate-700 mb-8 font-medium text-lg max-w-3xl">
                         Sekarang kesimpulannya jelas: Kombinasi <strong>C(n,r)</strong> adalah Permutasi <strong>P(n,r)</strong> yang dibagi dengan jumlah cara menyusun benda yang terpilih itu sendiri. Lengkapi pecahan di bawah ini!
@@ -267,53 +298,73 @@
                     <p id="formulaFeedback" class="text-center font-bold text-red-500 hidden animate-pulse">Coba ingat lagi: cara menyusun r benda adalah...</p>
                 </div>
 
-                <!-- Langkah 3: RUMUS FINAL (Penjabaran Detail) -->
+                <!-- Langkah 4: RUMUS FINAL (Visualisasi Animasi) -->
                 <div id="finalFormulaCard" class="hidden overflow-hidden">
-                    <div class="p-6 sm:p-12 bg-white text-center">
+                    <div class="p-6 sm:p-12 bg-white text-center flex flex-col items-center">
                         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 text-3xl mb-4">🥳</div>
                         <h3 class="text-3xl font-extrabold mb-4 text-slate-800">Kamu Tepat Sekali! Pembaginya selalu r!</h3>
-                        <p class="text-slate-600 font-medium mb-8 text-lg max-w-2xl mx-auto">
-                            Terakhir, karena kamu sudah hafal bahwa <strong>P(n,r) = n! / (n-r)!</strong>, mari kita masukkan ke dalam rumus kombinasi yang baru saja kamu temukan agar menjadi bentuk yang utuh!
-                        </p>
+                        
+                        <!-- Peringatan Nonton Animasi -->
+                        <div class="bg-yellow-100 border-2 border-yellow-400 text-yellow-800 px-6 py-4 rounded-2xl mb-8 max-w-2xl mx-auto shadow-md animate-pulse">
+                            <p class="font-extrabold text-xl mb-1">👀 JANGAN BERKEDIP! 👀</p>
+                            <p class="font-semibold text-lg">Perhatikan layar, rumusnya akan bergerak menyusun dirinya sendiri secara otomatis!</p>
+                        </div>
 
-                        <!-- Proses Penjabaran -->
-                        <div class="flex flex-col items-center gap-4 sm:gap-6 mb-8 text-lg sm:text-xl font-bold text-slate-700 bg-slate-50 p-4 sm:p-8 rounded-[2rem] border border-slate-200 max-w-3xl mx-auto w-full">
+                        <!-- KOTAK ANIMASI SUBSTITUSI -->
+                        <div class="relative w-full max-w-3xl mx-auto h-72 sm:h-80 bg-indigo-50 border-2 border-indigo-200 rounded-[2rem] flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden shadow-inner mb-8">
                             
-                            <div class="w-full text-left text-sm text-slate-500 mb-2 uppercase tracking-wide">Langkah Substitusi:</div>
-                            
-                            <!-- P(n,r) Recall -->
-                            <div class="flex flex-col sm:flex-row items-center justify-between sm:justify-start gap-4 w-full bg-white p-4 sm:p-6 rounded-xl shadow-sm overflow-x-auto">
-                                <span class="text-slate-400 font-semibold text-sm sm:text-base whitespace-nowrap self-start sm:self-center">Kita tahu:</span>
-                                <div class="flex items-center gap-3 sm:gap-4 mx-auto whitespace-nowrap shrink-0">
-                                    <span>P(n,r)</span>
-                                    <span>=</span>
-                                    <div class="flex flex-col items-center">
-                                        <span class="border-b-2 border-slate-400 pb-1 px-4 w-full text-center">n!</span>
-                                        <span class="pt-1 px-4">(n-r)!</span>
-                                    </div>
-                                </div>
+                            <!-- Narration Box -->
+                            <div id="animNarration" class="absolute top-6 text-center text-lg sm:text-xl font-bold text-slate-700 w-full px-4 transition-all duration-500">
+                                Mempersiapkan animasi...
                             </div>
 
-                            <div class="text-slate-400 text-2xl my-2">⬇️</div>
+                            <!-- The Formula Container -->
+                            <div class="relative mt-12 flex items-center justify-center text-4xl sm:text-5xl lg:text-6xl font-extrabold text-indigo-800 w-full px-2">
+                                <!-- Bagian Kiri -->
+                                <div class="mr-2 sm:mr-4 shrink-0">C(n,r) =</div>
 
-                            <!-- Final Formula -->
-                            <div class="flex flex-col sm:flex-row items-center justify-between sm:justify-start gap-4 w-full bg-indigo-50 p-4 sm:p-6 rounded-2xl border-2 border-indigo-200 overflow-x-auto">
-                                <span class="text-indigo-600 font-semibold text-sm sm:text-base whitespace-nowrap self-start sm:self-center">Maka:</span>
-                                <div class="flex items-center gap-3 sm:gap-4 mx-auto whitespace-nowrap shrink-0">
-                                    <span class="text-xl sm:text-2xl text-indigo-800">C(n,r)</span>
-                                    <span class="text-xl sm:text-2xl text-indigo-800">=</span>
-                                    <div class="flex flex-col items-center text-xl sm:text-2xl text-indigo-800 font-extrabold">
-                                        <span class="border-b-[3px] border-indigo-800 pb-1 sm:pb-2 px-4 sm:px-6 w-full text-center">n!</span>
-                                        <span class="pt-1 sm:pt-2 px-4 sm:px-6">(n-r)! &times; r!</span>
+                                <!-- Bagian Kanan (Pecahan Interaktif) -->
+                                <div class="relative flex flex-col items-center justify-center w-40 sm:w-64 h-32 sm:h-40 shrink-0">
+                                    
+                                    <!-- Main Division Line -->
+                                    <div class="absolute top-1/2 left-0 right-0 h-1 sm:h-[4px] bg-indigo-800 -translate-y-1/2 rounded-full z-0"></div>
+                                    
+                                    <!-- Pembilang (Atas) -->
+                                    <div class="absolute top-0 w-full h-1/2 flex flex-col items-center justify-end pb-2 sm:pb-3 z-10">
+                                        <!-- P(n,r) Original -->
+                                        <div id="anim-pnr" class="absolute bottom-2 sm:bottom-3 transition-all duration-1000 ease-in-out">P(n,r)</div>
+                                        
+                                        <!-- n! (Substitusi) -->
+                                        <div id="anim-nfact" class="absolute bottom-7 sm:bottom-10 text-2xl sm:text-4xl lg:text-5xl text-orange-600 opacity-0 scale-50 transition-all duration-1000 ease-in-out">n!</div>
+                                        
+                                        <!-- Garis Pemisah Kecil -->
+                                        <div id="anim-sub-line" class="absolute bottom-5 sm:bottom-7 h-[2px] sm:h-[3px] bg-orange-600 w-16 sm:w-24 lg:w-28 opacity-0 scale-x-0 transition-all duration-1000 ease-in-out rounded-full"></div>
+                                        
+                                        <!-- (n-r)! Atas (Substitusi) -->
+                                        <div id="anim-nrfact-top" class="absolute bottom-[-4px] sm:bottom-[-2px] text-lg sm:text-2xl lg:text-3xl text-orange-600 opacity-0 scale-50 transition-all duration-1000 ease-in-out">(n-r)!</div>
                                     </div>
+
+                                    <!-- Penyebut (Bawah) -->
+                                    <div class="absolute bottom-0 w-full h-1/2 flex items-start justify-center pt-2 sm:pt-4 z-10">
+                                        <div class="flex items-center justify-center h-full">
+                                            <!-- (n-r)! Bawah (Hasil Turun) -->
+                                            <div id="anim-nrfact-bottom" class="text-2xl sm:text-4xl lg:text-5xl text-orange-600 opacity-0 max-w-0 overflow-hidden transition-all duration-1000 ease-in-out flex items-center shrink-0 whitespace-nowrap">
+                                                <span>(n-r)!&nbsp;&times;&nbsp;</span>
+                                            </div>
+                                            <!-- r! Original -->
+                                            <div id="anim-rfact" class="transition-all duration-1000 ease-in-out shrink-0">r!</div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="bg-gradient-to-r from-indigo-600 to-purple-700 p-8 text-center text-white">
-                        <h4 class="text-2xl font-extrabold mb-2 text-yellow-300">🎉 RUMUS KOMBINASI BERHASIL DITEMUKAN! 🎉</h4>
-                        <p class="font-medium text-indigo-100">Sekarang kamu mengerti dari mana asalnya. Jangan lupa, dibagi r!, bukan dibagi 2!</p>
+                        <!-- BANNER SUKSES (Tampil di akhir animasi) -->
+                        <div id="finalSuccessBanner" class="hidden bg-gradient-to-r from-indigo-600 to-purple-700 p-8 text-center text-white rounded-[2rem] w-full max-w-3xl shadow-xl">
+                            <h4 class="text-2xl sm:text-3xl font-extrabold mb-2 text-yellow-300">🎉 RUMUS KOMBINASI BERHASIL DITEMUKAN! 🎉</h4>
+                            <p class="font-medium text-indigo-100 text-lg">Sekarang kamu mengerti dari mana asalnya. Teruslah bereksplorasi!</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -520,7 +571,7 @@
         }
 
         // ==========================================
-        // PERTANYAAN PEMANTIK (LOGIKA BARU)
+        // PERTANYAAN PEMANTIK
         // ==========================================
         function cekPemantik(jawaban) {
             const feedback = document.getElementById('feedbackPemantik');
@@ -566,14 +617,39 @@
                 fireConfetti(0.5);
                 document.getElementById('penjelasan-r2').classList.remove('hidden');
                 
-                // Tampilkan Tahap berikutnya (Rumus) dengan mulus
+                // Tampilkan Tahap berikutnya (r=3) dengan mulus
+                setTimeout(() => {
+                    const tahapR3 = document.getElementById('tahap-r3');
+                    tahapR3.classList.remove('hidden');
+                    // Paksa reflow browser sebelum mengubah opacity
+                    void tahapR3.offsetWidth;
+                    tahapR3.classList.replace('opacity-0', 'opacity-100');
+                    tahapR3.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 1500);
+            }
+        }
+
+        function cekR3(jawaban) {
+            const feedback = document.getElementById('feedback-r3');
+            feedback.classList.remove('hidden', 'text-red-600', 'text-green-600');
+            
+            if(jawaban === '6') {
+                feedback.innerHTML = "✅ <strong>BENAR SEKALI!</strong> Karena ada 6 susunan kembar, maka harus dibagi 3! = 6. Artinya, bukan selalu dibagi 2 ya!";
+                feedback.classList.add('text-green-600');
+                fireConfetti(1);
+                
+                // Lanjut ke tahap rumus
                 setTimeout(() => {
                     const tahapRumus = document.getElementById('tahap-rumus');
                     tahapRumus.classList.remove('hidden');
                     void tahapRumus.offsetWidth;
                     tahapRumus.classList.replace('opacity-0', 'opacity-100');
                     tahapRumus.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 1500);
+                }, 2000);
+
+            } else {
+                feedback.innerHTML = "❌ <strong>Kurang Tepat!</strong> Coba hitung ada berapa banyak susunan di atas kotak ini? Ya, ada 6! Jadi harus dibagi berapa?";
+                feedback.classList.add('text-red-600');
             }
         }
 
@@ -592,14 +668,14 @@
                 finalCard.classList.remove('hidden');
                 finalCard.classList.add('animate-[slideIn_0.5s_ease-out]');
                 
-                fireConfetti(1.5);
-                setTimeout(() => fireConfetti(1.5), 600);
-                
-                showToast("Genius! Kamu berhasil menemukan Rumus Kombinasi!", "success");
+                showToast("Genius! Perhatikan layar untuk melihat prosesnya!", "success");
                 dropdown.disabled = true;
                 
-                // Scroll ke hasil akhir
-                setTimeout(() => { finalCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 500);
+                // Scroll ke kotak animasi dan putar animasinya!
+                setTimeout(() => { 
+                    finalCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                    playFormulaAnimation();
+                }, 500);
 
             } else {
                 // SALAH
@@ -616,6 +692,86 @@
             }
         }
 
+        function playFormulaAnimation() {
+            const pnr = document.getElementById('anim-pnr');
+            const nfact = document.getElementById('anim-nfact');
+            const subLine = document.getElementById('anim-sub-line');
+            const nrfactTop = document.getElementById('anim-nrfact-top');
+            const nrfactBottom = document.getElementById('anim-nrfact-bottom');
+            const narr = document.getElementById('animNarration');
+            const finalBanner = document.getElementById('finalSuccessBanner');
+
+            // Reset style (Berjaga-jaga)
+            pnr.style.opacity = '1'; pnr.style.transform = 'scale(1) translateY(0)'; pnr.style.filter = 'blur(0)';
+            nfact.style.opacity = '0'; nfact.style.transform = 'scale(0.5) translateY(0)';
+            subLine.style.opacity = '0'; subLine.style.transform = 'scaleX(0)';
+            nrfactTop.style.opacity = '0'; nrfactTop.style.transform = 'scale(0.5) translateY(0)';
+            nrfactBottom.style.opacity = '0'; nrfactBottom.style.maxWidth = '0px';
+            
+            nfact.classList.remove('text-indigo-800'); nfact.classList.add('text-orange-600');
+            nrfactBottom.classList.remove('text-indigo-800'); nrfactBottom.classList.add('text-orange-600');
+            
+            narr.innerHTML = "1. Kita mulai dari temuanmu: <strong>C(n,r) = P(n,r) dibagi r!</strong>";
+
+            // Step 1: P(n,r) terurai
+            setTimeout(() => {
+                narr.innerHTML = "2. Ingat, <strong>P(n,r)</strong> penjabarannya adalah <span class='text-orange-600 font-black'>n! / (n-r)!</span>";
+                
+                pnr.style.opacity = '0';
+                pnr.style.transform = 'scale(1.5) translateY(-20px)'; // Poof up and away
+                pnr.style.filter = 'blur(4px)';
+
+                nfact.style.opacity = '1';
+                nfact.style.transform = 'scale(1) translateY(0)';
+                
+                subLine.style.opacity = '1';
+                subLine.style.transform = 'scaleX(1)';
+                
+                nrfactTop.style.opacity = '1';
+                nrfactTop.style.transform = 'scale(1) translateY(0)';
+
+            }, 3500);
+
+            // Step 2: Pecahan turun ke bawah
+            setTimeout(() => {
+                narr.innerHTML = "3. Sederhanakan! <span class='text-orange-600 font-black'>(n-r)!</span> meluncur bergabung dengan <strong>r!</strong>.";
+                
+                subLine.style.opacity = '0';
+                subLine.style.transform = 'scaleX(0)';
+                
+                // n! bergerak ke tengah atas
+                nfact.style.transform = 'translateY(15px) scale(1.1)'; 
+
+                // (n-r)! atas menghilang ke bawah
+                nrfactTop.style.opacity = '0';
+                nrfactTop.style.transform = 'translateY(30px) scale(0.5)'; 
+                nrfactTop.style.filter = 'blur(4px)';
+
+                // (n-r)! bawah membesar menggeser r!
+                nrfactBottom.style.opacity = '1';
+                nrfactBottom.style.maxWidth = '300px'; 
+
+            }, 8000);
+
+            // Step 3: Selesai!
+            setTimeout(() => {
+                narr.innerHTML = "🎉 <strong>RUMUS KOMBINASI TERBENTUK!</strong> 🎉";
+                
+                // Ubah warna kembali menjadi indigo
+                nfact.classList.remove('text-orange-600'); nfact.classList.add('text-indigo-800');
+                nrfactBottom.classList.remove('text-orange-600'); nrfactBottom.classList.add('text-indigo-800');
+                
+                fireConfetti(1.5);
+                setTimeout(() => fireConfetti(1), 500);
+                
+                finalBanner.classList.remove('hidden');
+                finalBanner.classList.add('animate-[slideIn_0.5s_ease-out]');
+                
+                setTimeout(() => {
+                    finalBanner.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 500);
+            }, 12500);
+        }
 
         
         // ==========================================
