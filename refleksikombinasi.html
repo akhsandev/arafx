@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refleksi Master Kombinasi</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] } }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f0fdf4;
+            background-image: radial-gradient(at 0% 0%, hsla(152,80%,75%,0.5) 0, transparent 50%), 
+                              radial-gradient(at 100% 0%, hsla(189,100%,56%,0.3) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .option-btn { transition: all 0.2s ease-in-out; }
+        .option-btn.selected {
+            background-color: #d1fae5; border-color: #10b981; color: #065f46; transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+        
+        /* Custom Scrollbar untuk Tabel Admin */
+        .admin-table-container::-webkit-scrollbar { height: 8px; width: 8px; }
+        .admin-table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .admin-table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .admin-table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 font-sans antialiased pb-20 pt-10 px-4 sm:px-6">
+
+    <!-- Toast Notifikasi -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-500 opacity-0 translate-y-[-20px] pointer-events-none w-11/12 max-w-md">
+        <div id="toastContent" class="bg-white px-6 py-4 rounded-full shadow-2xl font-bold flex items-center justify-center gap-3 border-2 border-transparent text-center">
+            <span id="toastIcon" class="text-2xl">💡</span>
+            <span id="toastText" class="text-sm sm:text-base leading-tight">Pesan</span>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-3xl mx-auto">
+        
+        <!-- HEADER (DENGAN TOMBOL ADMIN RAHASIA) -->
+        <div class="text-center mb-10">
+            <!-- Klik emoji bintang ini 5x untuk buka Admin -->
+            <div class="inline-block bg-emerald-100 text-emerald-700 font-bold px-4 py-1 rounded-full mb-4 cursor-pointer" onclick="handleSecretClick()" title="Hmm... apa ini?">
+                Jurnal Pembelajaran <span id="secretTrigger">🌟</span>
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-800 mb-4 drop-shadow-sm leading-tight">
+                Refleksi Master Kombinasi
+            </h1>
+            <p class="text-lg text-slate-600 font-medium">
+                Pilih jawaban yang paling sesuai dengan perasaan dan pemahamanmu hari ini. Kejujuranmu sangat berharga!
+            </p>
+        </div>
+
+        <!-- AREA REFLEKSI -->
+        <div id="surveyArea" class="space-y-8">
+            
+            <!-- Input Nama -->
+            <div class="glass-card rounded-[2rem] p-6 sm:p-8">
+                <label class="block text-xl font-bold text-slate-800 mb-3">Siapa namamu? 👋</label>
+                <input type="text" id="inputNama" placeholder="Ketik namamu di sini..." class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-lg font-semibold text-slate-700 outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+            </div>
+
+            <!-- Pertanyaan akan dirender di sini via JS -->
+            <div id="questionsContainer" class="space-y-8"></div>
+
+            <!-- Tombol Submit -->
+            <button id="btnSubmit" onclick="submitRefleksi()" class="w-full bg-slate-300 text-slate-500 font-extrabold text-xl py-5 rounded-[2rem] transition-all duration-300 cursor-not-allowed mt-8" disabled>
+                Lengkapi Jawaban Dulu
+            </button>
+        </div>
+
+        <!-- HALAMAN SUKSES (Tampil setelah submit) -->
+        <div id="successArea" class="hidden glass-card rounded-[2.5rem] p-10 text-center animate-[slideIn_0.5s_ease-out]">
+            <div class="text-7xl mb-6">💖</div>
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-4">Terima Kasih, <span id="displayNama">Siswa</span>!</h2>
+            <p class="text-lg text-slate-600 font-medium mb-8 max-w-md mx-auto">Jawaban refleksimu sudah tersimpan dengan aman. Teruslah semangat belajar dan mengeksplorasi keajaiban matematika!</p>
+            <button onclick="location.reload()" class="bg-emerald-100 text-emerald-700 font-bold px-8 py-3 rounded-full hover:bg-emerald-200 transition-colors border border-emerald-300">Kembali ke Awal</button>
+        </div>
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- MODAL PANEL ADMIN RAHASIA                                -->
+    <!-- ======================================================== -->
+    <div id="adminModal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 flex justify-center items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeAdmin()"></div>
+        
+        <div class="relative w-full max-w-6xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] transform scale-95 transition-transform duration-300" id="adminCard">
+            
+            <!-- Admin Header -->
+            <div class="bg-slate-800 text-white p-6 flex justify-between items-center shrink-0">
+                <h3 class="text-2xl font-bold flex items-center gap-3">🕵️‍♂️ Ruang Guru (Admin Panel)</h3>
+                <button onclick="closeAdmin()" class="bg-slate-700 hover:bg-slate-600 p-2 rounded-full transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Login Area -->
+            <div id="adminLoginArea" class="flex-1 flex flex-col items-center justify-center p-8">
+                <div class="text-6xl mb-4">🔒</div>
+                <h4 class="text-xl font-bold mb-6">Masukkan Kata Sandi Rahasia</h4>
+                <input type="password" id="adminPassword" placeholder="Kata Sandi..." class="border-2 border-slate-300 rounded-xl px-4 py-3 text-center mb-4 focus:border-slate-800 outline-none w-64 text-lg">
+                <button onclick="loginAdmin()" class="bg-slate-800 text-white font-bold px-8 py-3 rounded-xl hover:bg-slate-700">Akses Data</button>
+                <p id="adminError" class="text-red-500 font-bold mt-4 hidden animate-pulse">Sandi Salah!</p>
+            </div>
+
+            <!-- Dashboard Area (Tampil kalau berhasil login) -->
+            <div id="adminDashboardArea" class="hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
+                <div class="p-6 shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border-b border-slate-200 gap-4">
+                    <div>
+                        <h4 class="text-xl font-extrabold text-slate-800">Data Refleksi Siswa</h4>
+                        <p class="text-sm font-medium text-slate-500" id="statusKoneksi">Memuat data dari database...</p>
+                    </div>
+                    <button onclick="loadAdminData()" class="bg-emerald-100 text-emerald-700 font-bold px-4 py-2 rounded-lg text-sm border border-emerald-300 hover:bg-emerald-200 w-full sm:w-auto">🔄 Segarkan Data</button>
+                </div>
+                
+                <div class="flex-1 p-6 overflow-hidden flex flex-col">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 overflow-auto admin-table-container">
+                        <table class="w-full text-left border-collapse min-w-[1000px]">
+                            <thead class="sticky top-0 bg-slate-100 z-10 shadow-sm">
+                                <tr class="text-slate-600 text-xs uppercase tracking-wider">
+                                    <th class="p-4 border-b w-48">Nama Siswa</th>
+                                    <th class="p-4 border-b w-64">Q1: Pemahaman Konsep</th>
+                                    <th class="p-4 border-b w-64">Q2: Bantuan LKPD</th>
+                                    <th class="p-4 border-b w-64">Q3: Bagian Favorit</th>
+                                    <th class="p-4 border-b w-64">Q4: Hal Ditemukan</th>
+                                    <th class="p-4 border-b w-64">Q5: Perasaan Belajar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTableBody" class="text-sm font-medium text-slate-700 align-top">
+                                <!-- Data tabel masuk ke sini -->
+                            </tbody>
+                        </table>
+                        <div id="emptyAdmin" class="hidden p-10 text-center text-slate-400 font-semibold italic">Belum ada data refleksi masuk.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // ==========================================
+        // PENGATURAN DATABASE (GOOGLE APPS SCRIPT)
+        // ==========================================
+        // URL di bawah ini terhubung langsung dengan Web App Bapak/Ibu
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmcGIfH9Hc5OrZbOXJSIpAXaSPfAfDLLSLdp6CGn1h3cBeZoByTCS3wHW8kI4IuA4O4w/exec"; 
+
+        // Data array lokal (fallback)
+        let mockDatabase = [];
+
+
+        // ==========================================
+        // DATA PERTANYAAN
+        // ==========================================
+        const questions = [
+            {
+                id: 'q1',
+                text: "1. Apa yang kalian pahami setelah menggunakan media Master Kombinasi?",
+                options: [
+                    "A. Memahami perbedaan permutasi dan kombinasi",
+                    "B. Mengetahui dari mana asal usul rumus kombinasi",
+                    "C. Paham cara menerapkan rumus pada soal",
+                    "D. Masih butuh sedikit penjelasan tambahan"
+                ]
+            },
+            {
+                id: 'q2',
+                text: "2. Apakah media Master Kombinasi membantu kalian menyelesaikan LKPD?",
+                options: [
+                    "A. Sangat membantu! Soal LKPD jadi lebih mudah",
+                    "B. Cukup membantu memberikan bayangan",
+                    "C. Sedikit membantu, tapi masih agak bingung",
+                    "D. Tidak berpengaruh terhadap penyelesaian LKPD"
+                ]
+            },
+            {
+                id: 'q3',
+                text: "3. Bagian mana dari media Master Kombinasi yang paling kalian sukai?",
+                options: [
+                    "A. Bermain menyatukan makanan di mangkok",
+                    "B. Laboratorium rahasia (Meleburkan permutasi)",
+                    "C. Menonton animasi substitusi pergerakan rumus",
+                    "D. Ujian Master (Mengerjakan kuis akhir)"
+                ]
+            },
+            {
+                id: 'q4',
+                text: "4. Hal apa yang kalian temukan saat menggunakan media ini?",
+                options: [
+                    "A. Dalam Kombinasi, urutan posisi tidaklah penting",
+                    "B. Rumus Kombinasi ternyata berasal dari Permutasi",
+                    "C. Pembagi kombinasi adalah r!, bukan selalu 2",
+                    "D. Semua jawaban di atas saya temukan!"
+                ]
+            },
+            {
+                id: 'q5',
+                text: "5. Bagaimana perasaan kalian belajar menggunakan media Master Kombinasi hari ini?",
+                options: [
+                    "A. Sangat Senang & Antusias! 🤩",
+                    "B. Lumayan Menyenangkan 🙂",
+                    "C. Biasa Saja 😐",
+                    "D. Sedikit Lelah / Pusing 😵‍💫"
+                ]
+            }
+        ];
+
+        // Status Jawaban Siswa
+        let userAnswers = { q1: '', q2: '', q3: '', q4: '', q5: '' };
+
+        // Render Pertanyaan ke Layar
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            
+            questions.forEach(q => {
+                const card = document.createElement('div');
+                card.className = "glass-card rounded-[2rem] p-6 sm:p-8";
+                
+                const title = document.createElement('h3');
+                title.className = "text-xl sm:text-2xl font-extrabold text-slate-800 mb-6 leading-snug";
+                title.textContent = q.text;
+                card.appendChild(title);
+
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = "flex flex-col gap-3";
+
+                q.options.forEach((optText, index) => {
+                    const btn = document.createElement('button');
+                    const optLetter = optText.charAt(0); 
+                    
+                    btn.className = `option-btn text-left p-4 rounded-xl border-2 border-slate-200 bg-white font-semibold text-slate-600 hover:border-emerald-300 hover:bg-emerald-50 outline-none w-full leading-snug`;
+                    btn.id = `btn-${q.id}-${optLetter}`;
+                    // Tetap tampilkan lengkap di tombol
+                    btn.innerHTML = `<strong>${optLetter}.</strong> ${optText.substring(3)}`;
+                    
+                    // KUNCI PERUBAHAN: Sekarang kita mengirim optText utuh untuk disimpan!
+                    btn.onclick = () => selectOption(q.id, optText, btn, optionsDiv);
+                    optionsDiv.appendChild(btn);
+                });
+
+                card.appendChild(optionsDiv);
+                container.appendChild(card);
+            });
+        }
+
+        // Handle Pilih Opsi (Menyimpan text lengkap)
+        function selectOption(qId, answerText, btnElement, parentDiv) {
+            userAnswers[qId] = answerText;
+            
+            // Reset style semua tombol di grup pertanyaan ini
+            const buttons = parentDiv.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+            
+            // Set style tombol yang dipilih
+            btnElement.classList.add('selected');
+
+            checkFormCompletion();
+        }
+
+        // Cek apakah form sudah lengkap
+        function checkFormCompletion() {
+            const nama = document.getElementById('inputNama').value.trim();
+            const isAllAnswered = Object.values(userAnswers).every(val => val !== '');
+            const btnSubmit = document.getElementById('btnSubmit');
+
+            if (nama !== '' && isAllAnswered) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "🚀 Kirim Refleksi Saya 🚀";
+                btnSubmit.className = "w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xl py-5 rounded-[2rem] shadow-[0_10px_20px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all duration-300 cursor-pointer mt-8";
+            } else {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = "Lengkapi Jawaban Dulu";
+                btnSubmit.className = "w-full bg-slate-300 text-slate-500 font-extrabold text-xl py-5 rounded-[2rem] transition-all duration-300 cursor-not-allowed mt-8";
+            }
+        }
+
+        // Pengecekan input nama *real-time*
+        document.getElementById('inputNama').addEventListener('input', checkFormCompletion);
+
+
+        // Kirim Data
+        function submitRefleksi() {
+            const nama = document.getElementById('inputNama').value.trim();
+            const btnSubmit = document.getElementById('btnSubmit');
+            
+            // Ubah tombol jadi loading
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = "Sedang Mengirim... ⏳";
+            btnSubmit.classList.replace('from-emerald-500', 'from-slate-400');
+            btnSubmit.classList.replace('to-teal-500', 'to-slate-500');
+
+            const payload = {
+                nama: nama,
+                q1: userAnswers.q1,
+                q2: userAnswers.q2,
+                q3: userAnswers.q3,
+                q4: userAnswers.q4,
+                q5: userAnswers.q5
+            };
+
+            if(SCRIPT_URL === "") {
+                // MODE SIMULASI (Jika App Script belum di-set)
+                setTimeout(() => {
+                    mockDatabase.push({...payload, timestamp: new Date().toLocaleString()});
+                    tampilkanSukses(nama);
+                }, 1000);
+            } else {
+                // MODE LIVE (Kirim ke Google Apps Script)
+                const formData = new URLSearchParams();
+                for (const key in payload) {
+                    formData.append(key, payload[key]);
+                }
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    tampilkanSukses(nama);
+                })
+                .catch(error => {
+                    // Terkadang GAS merespon CORS error di browser walau data masuk, 
+                    // Kita asumsikan sukses masuk
+                    console.log("Catatan: Terjadi respon CORS, namun data biasanya telah masuk ke Spreadsheet.");
+                    tampilkanSukses(nama);
+                });
+            }
+        }
+
+        function tampilkanSukses(nama) {
+            document.getElementById('surveyArea').classList.add('hidden');
+            document.getElementById('successArea').classList.remove('hidden');
+            document.getElementById('displayNama').textContent = nama;
+            
+            // Confetti Perayaan
+            const count = 200; const defaults = { origin: { y: 0.6 }, zIndex: 10000 };
+            function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
+            fire(0.25, { spread: 26, startVelocity: 55 }); fire(0.2, { spread: 60 }); fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+        }
+
+
+        // ==========================================
+        // FITUR PANEL ADMIN RAHASIA 🕵️‍♂️
+        // ==========================================
+        let clickCount = 0;
+        let clickTimer;
+
+        function handleSecretClick() {
+            clickCount++;
+            if (clickCount === 1) {
+                // Reset hitungan jika dalam 3 detik tidak mencapai 5 klik
+                clickTimer = setTimeout(() => { clickCount = 0; }, 3000);
+            }
+            if (clickCount === 5) {
+                clearTimeout(clickTimer);
+                clickCount = 0;
+                bukaModalAdmin();
+            }
+        }
+
+        function bukaModalAdmin() {
+            const modal = document.getElementById('adminModal');
+            const card = document.getElementById('adminCard');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminError').classList.add('hidden');
+            document.getElementById('adminLoginArea').classList.remove('hidden');
+            document.getElementById('adminDashboardArea').classList.add('hidden');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                modal.classList.remove('opacity-0'); modal.classList.add('opacity-100'); 
+                card.classList.remove('scale-95'); card.classList.add('scale-100'); 
+            }, 10);
+        }
+
+        function closeAdmin() {
+            const modal = document.getElementById('adminModal');
+            const card = document.getElementById('adminCard');
+            modal.classList.remove('opacity-100'); modal.classList.add('opacity-0'); 
+            card.classList.remove('scale-100'); card.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function loginAdmin() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === 'admin123') {
+                document.getElementById('adminLoginArea').classList.add('hidden');
+                document.getElementById('adminDashboardArea').classList.remove('hidden');
+                document.getElementById('adminDashboardArea').classList.add('flex'); // kembalikan display flex
+                loadAdminData();
+            } else {
+                const err = document.getElementById('adminError');
+                err.classList.remove('hidden');
+                setTimeout(()=> err.classList.add('hidden'), 2000);
+            }
+        }
+
+        function loadAdminData() {
+            const tbody = document.getElementById('adminTableBody');
+            const emptyMsg = document.getElementById('emptyAdmin');
+            const statusTxt = document.getElementById('statusKoneksi');
+
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-slate-500">Memuat data dari Google Sheet... ⏳</td></tr>';
+            emptyMsg.classList.add('hidden');
+
+            if(SCRIPT_URL === "") {
+                statusTxt.textContent = "Status: Menggunakan Memori Simulasi (SCRIPT_URL kosong)";
+                renderTableData(mockDatabase);
+            } else {
+                statusTxt.textContent = "Status: Terhubung ke Google Spreadsheet 🟢";
+                fetch(SCRIPT_URL)
+                    .then(res => res.json())
+                    .then(json => {
+                        renderTableData(json.data || []);
+                    })
+                    .catch(err => {
+                        statusTxt.textContent = "Status: Gagal mengambil data. Cek CORS / koneksi.";
+                        tbody.innerHTML = '';
+                    });
+            }
+        }
+
+        function renderTableData(dataArray) {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+
+            if(!dataArray || dataArray.length === 0) {
+                document.getElementById('emptyAdmin').classList.remove('hidden');
+                return;
+            }
+
+            dataArray.forEach((row, i) => {
+                const tr = document.createElement('tr');
+                tr.className = i % 2 === 0 ? "bg-white hover:bg-slate-100" : "bg-slate-50 hover:bg-slate-100";
+                
+                // Menangani kemungkinan perbedaan key
+                const nama = row.nama || row['Nama Siswa'] || row.Nama || "-";
+                const q1 = row.q1 || row['Q1: Pemahaman Konsep'] || "-";
+                const q2 = row.q2 || row['Q2: Bantuan LKPD'] || "-";
+                const q3 = row.q3 || row['Q3: Bagian Favorit'] || "-";
+                const q4 = row.q4 || row['Q4: Penemuan'] || "-";
+                const q5 = row.q5 || row['Q5: Perasaan Belajar'] || "-";
+
+                // Menampilkan teks lengkap ke dalam sel tabel
+                tr.innerHTML = `
+                    <td class="p-4 border-b font-bold whitespace-nowrap">${nama}</td>
+                    <td class="p-4 border-b text-sm text-slate-700 leading-snug">${q1}</td>
+                    <td class="p-4 border-b text-sm text-slate-700 leading-snug">${q2}</td>
+                    <td class="p-4 border-b text-sm text-slate-700 leading-snug">${q3}</td>
+                    <td class="p-4 border-b text-sm text-slate-700 leading-snug">${q4}</td>
+                    <td class="p-4 border-b text-sm text-slate-700 leading-snug">${q5}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+
+        // ==========================================
+        // INIT APLIKASI
+        // ==========================================
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        `;
+        document.head.appendChild(style);
+
+        // Render pertanyaan saat pertama buka
+        renderQuestions();
+
+    </script>
+</body>
+</html>
