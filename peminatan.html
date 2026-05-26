@@ -521,7 +521,12 @@
         selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
         if (kls && databaseSiswa[kls]) {
             databaseSiswa[kls].sort((a,b) => a.nama.localeCompare(b.nama)).forEach(s => {
-                selectNama.innerHTML += `<option value="${s.nisn}">${s.nama} (${s.nisn})</option>`;
+                // MODIFIKASI: Siswa yang sudah mengisi akan dikunci 🔒 (disabled)
+                if (s.status === "Sudah Mengisi") {
+                    selectNama.innerHTML += `<option value="${s.nisn}" disabled style="color: #94a3b8;">✅ ${s.nama} (Sudah Mengisi)</option>`;
+                } else {
+                    selectNama.innerHTML += `<option value="${s.nisn}">${s.nama} (${s.nisn})</option>`;
+                }
             });
             selectNama.disabled = false;
             selectNama.focus();
