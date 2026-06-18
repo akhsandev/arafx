@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Library SheetJS untuk Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body { 
@@ -104,29 +106,6 @@
                     <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">
                         Login
                     </button>
-                    <!-- Tautan pendaftaran dihilangkan sesuai permintaan -->
-                    <!-- <p class="text-sm text-center text-slate-400">
-                        Belum punya akun? <a href="#" id="showRegisterLink" class="font-medium text-blue-400 hover:text-blue-300">Daftar di sini</a>
-                    </p> -->
-                </form>
-
-                <!-- Formulir registrasi disembunyikan sepenuhnya jika tidak digunakan -->
-                <form id="registerForm" class="space-y-6 hidden">
-                    <div>
-                        <label for="registerEmail" class="block text-sm font-medium text-slate-300">Email</label>
-                        <input type="email" id="registerEmail" name="registerEmail" required class="mt-1 block w-full px-4 py-3 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="anda@email.com">
-                    </div>
-                    <div>
-                        <label for="registerPassword" class="block text-sm font-medium text-slate-300">Password</label>
-                        <input type="password" id="registerPassword" name="registerPassword" required class="mt-1 block w-full px-4 py-3 border border-slate-600 bg-slate-700 text-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Minimal 6 karakter">
-                    </div>
-                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
-                        Daftar
-                    </button>
-                    <!-- Tautan login kembali disembunyikan -->
-                    <!-- <p class="text-sm text-center text-slate-400">
-                        Sudah punya akun? <a href="#" id="showLoginLink" class="font-medium text-blue-400 hover:text-blue-300">Login di sini</a>
-                    </p> -->
                 </form>
             </div>
             <p id="authError" class="mt-4 text-center text-red-400 text-sm"></p>
@@ -148,7 +127,7 @@
                 <span id="userEmailDisplay" class="mr-3 text-sm text-slate-300 hidden md:inline"></span>
                 <button id="viewToggleButton" class="mr-3 p-2 rounded-full text-slate-300 hover:bg-white/20 transition-colors duration-200" title="Ganti Tampilan">
                     <svg id="cardViewIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zm0 7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     <svg id="listViewIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -263,7 +242,17 @@
                 <button class="back-to-menu-button mb-6 text-sm text-blue-400 hover:underline hidden">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
-                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Rekap Pelanggaran</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-semibold text-slate-100">Rekap Pelanggaran</h2>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="exportExcelButton" class="flex items-center gap-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition duration-150 shadow-md">
+                            <i class="fas fa-file-excel"></i> Download Rekap Filter
+                        </button>
+                        <button id="exportExcelYearlyButton" class="flex items-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition duration-150 shadow-md">
+                            <i class="fas fa-database"></i> Download Rekap 1 Tahun
+                        </button>
+                    </div>
+                </div>
                 <div class="flex flex-wrap items-center gap-4 mb-4">
                     <div>
                         <label for="rekapFilterBulan" class="block text-sm font-medium text-slate-300">Bulan</label>
@@ -323,7 +312,6 @@
                 </button>
                 <h2 class="text-2xl font-semibold mb-6 text-slate-100">Input Pelanggaran Siswa</h2>
                 <form id="inputSiswaForm" class="space-y-6">
-                    <!-- NEW TEACHER INPUT FIELD -->
                     <div id="teacherSearchWrapper">
                         <label for="searchTeacherNameInput" class="block text-sm font-medium text-slate-300">Nama Guru</label>
                         <div class="relative mt-1">
@@ -412,10 +400,18 @@
                  <button class="back-to-menu-button mb-6 text-sm text-blue-400 hover:underline hidden">
                      <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
-                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Grafik Penanganan Pelanggaran</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-slate-100">Grafik Penanganan Pelanggaran</h2>
+                    <!-- New Filters for Chart -->
+                    <div class="flex space-x-2 mt-2 md:mt-0">
+                        <select id="grafikFilterBulan" class="py-1 px-3 border border-slate-600 bg-slate-700 text-slate-200 rounded-md text-sm shadow-sm focus:outline-none focus:ring-blue-500"></select>
+                        <select id="grafikFilterTahun" class="py-1 px-3 border border-slate-600 bg-slate-700 text-slate-200 rounded-md text-sm shadow-sm focus:outline-none focus:ring-blue-500"></select>
+                    </div>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="p-4 border border-slate-700 rounded-lg shadow-sm bg-slate-800/50">
-                        <h3 class="text-lg font-medium text-slate-300 mb-1">Total Pelanggaran Bulan Ini</h3>
+                        <h3 class="text-lg font-medium text-slate-300 mb-1">Total Pelanggaran</h3>
                         <p id="totalKeterlambatanText" class="text-3xl font-bold text-blue-400">0</p>
                     </div>
                      <div class="p-4 border border-slate-700 rounded-lg shadow-sm bg-slate-800/50">
@@ -433,7 +429,19 @@
                  <button class="back-to-menu-button mb-6 text-sm text-blue-400 hover:underline hidden">
                      <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
                 </button>
-                <h2 class="text-2xl font-semibold mb-6 text-slate-100">Kelola Data Siswa & Kelas</h2>
+                <!-- UPDATE: Header dengan Dua Tombol Download -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-semibold text-slate-100">Kelola Data Siswa & Kelas</h2>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="exportTeacherDbButton" class="flex items-center gap-2 py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition duration-150 shadow-md">
+                            <i class="fas fa-chalkboard-teacher"></i> Download Data Guru
+                        </button>
+                        <button id="exportStudentDbButton" class="flex items-center gap-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition duration-150 shadow-md">
+                            <i class="fas fa-file-excel"></i> Download Database Siswa
+                        </button>
+                    </div>
+                </div>
+
                 <div class="mb-8">
                     <h3 class="text-xl font-semibold mb-2 text-slate-100">Import Data Siswa</h3>
                     <p class="text-sm text-slate-400 mb-4">Tempel data siswa dengan format: <strong>Nama Siswa, Kelas</strong> (satu siswa per baris).</p>
@@ -478,7 +486,7 @@
     </div>
 
     <script type="module">
-        // Konfigurasi Firebase (BARU)
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAYyegImdtLuI_7TeALDgsdG4quuFyeqrs",
             authDomain: "tugas-4971f.firebaseapp.com",
@@ -519,7 +527,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // PERBAIKAN: Menggunakan projectId yang disediakan sebagai basePath
         const currentAppId = firebaseConfig.projectId;
         const basePath = `artifacts/${currentAppId}/public/data`;
         const classesPath = `${basePath}/classes`;
@@ -531,10 +538,7 @@
         const authScreen = document.getElementById('authScreen');
         const appScreen = document.getElementById('appScreen');
         const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        // Tautan pendaftaran dihilangkan, elemen ini tidak digunakan lagi
-        // const showRegisterLink = document.getElementById('showRegisterLink');
-        // const showLoginLink = document.getElementById('showLoginLink');
+        // Register form elements removed as per user instruction but kept in code structure
         const authError = document.getElementById('authError');
         const userEmailDisplay = document.getElementById('userEmailDisplay');
         const logoutButton = document.getElementById('logoutButton');
@@ -570,7 +574,7 @@
         const editStudentClass = document.getElementById('editStudentClass');
         const editStudentModalCancel = document.getElementById('editStudentModalCancel');
         const editStudentModalSave = document.getElementById('editStudentModalSave');
-        let currentStudentToEdit = {}; // { studentId, originalClassId, originalName }
+        let currentStudentToEdit = {}; 
 
 
         const tabButtons = document.querySelectorAll('.tab-button');
@@ -578,6 +582,8 @@
 
         const rekapTableBody = document.getElementById('rekapTableBody');
         const rekapFilterKelas = document.getElementById('rekapFilterKelas');
+        const exportExcelButton = document.getElementById('exportExcelButton');
+        const exportExcelYearlyButton = document.getElementById('exportExcelYearlyButton'); // Tombol Baru
 
         const inputSiswaForm = document.getElementById('inputSiswaForm');
         const inputKelas = document.getElementById('inputKelas');
@@ -587,15 +593,15 @@
         const studentSuggestionsDropdown = document.getElementById('studentSuggestionsDropdown');
         const inputNamaSiswa = document.getElementById('inputNamaSiswa'); 
         
-        const teacherSearchWrapper = document.getElementById('teacherSearchWrapper'); // NEW
-        const searchTeacherNameInput = document.getElementById('searchTeacherNameInput'); // NEW
-        const teacherSuggestionsDropdown = document.getElementById('teacherSuggestionsDropdown'); // NEW
-        const selectedTeacherId = document.getElementById('selectedTeacherId'); // NEW
-        const selectedTeacherName = document.getElementById('selectedTeacherName'); // NEW
-        let allTeachers = []; // NEW: Array untuk menyimpan data guru
+        const teacherSearchWrapper = document.getElementById('teacherSearchWrapper'); 
+        const searchTeacherNameInput = document.getElementById('searchTeacherNameInput'); 
+        const teacherSuggestionsDropdown = document.getElementById('teacherSuggestionsDropdown'); 
+        const selectedTeacherId = document.getElementById('selectedTeacherId'); 
+        const selectedTeacherName = document.getElementById('selectedTeacherName'); 
+        let allTeachers = []; 
 
-        const inputKategori = document.getElementById('inputKategori'); // New category dropdown
-        const inputKeterangan = document.getElementById('inputKeterangan'); // Formerly inputAlasan
+        const inputKategori = document.getElementById('inputKategori'); 
+        const inputKeterangan = document.getElementById('inputKeterangan'); 
 
         const inputTanggal = document.getElementById('inputTanggal');
         const inputJam = document.getElementById('inputJam');
@@ -606,12 +612,17 @@
         const persentasePenangananText = document.getElementById('persentasePenangananText');
         const statusChartCanvas = document.getElementById('statusChart').getContext('2d');
         let statusChartInstance = null;
+        // Elemen Filter Grafik
+        const grafikFilterBulan = document.getElementById('grafikFilterBulan');
+        const grafikFilterTahun = document.getElementById('grafikFilterTahun');
 
         const pasteDataSiswa = document.getElementById('pasteDataSiswa');
         const importDataSiswaButton = document.getElementById('importDataSiswaButton');
         const importResult = document.getElementById('importResult');
         const classManagementContainer = document.getElementById('classManagementContainer'); 
         const resetTahunAjaranButton = document.getElementById('resetTahunAjaranButton');
+        const exportStudentDbButton = document.getElementById('exportStudentDbButton'); 
+        const exportTeacherDbButton = document.getElementById('exportTeacherDbButton'); 
         const perhatianListContainer = document.getElementById('perhatianListContainer');
 
         // Pagination & Rekap state
@@ -626,7 +637,6 @@
         const rekapPrevButton = document.getElementById('rekapPrevButton');
         const rekapNextButton = document.getElementById('rekapNextButton');
         
-        // NEW: Daftar nama guru yang akan diimport
         const teacherNames = [
             'A.Pattiroi', 'Ade Irmayanti H. S.Pd.', 'Ahlidin', 'Akhsan Rian Anugrah, S.Pd.', 'Amir, S.Pd.',
             'Andi Muliyadi, S.Pd. M.M', 'Andi Sri Rahayu Purnamasari, S.Pd., M.Pd', 'Anida A. S.Pd.',
@@ -691,10 +701,9 @@
         // START MODIFIKASI WAKTU (GMT+8)
         const GMT8_TIMEZONE = 'Asia/Makassar';
 
-        // Fungsi baru untuk mendapatkan tanggal (YYYY-MM-DD) yang disesuaikan ke GMT+8
         function getCurrentDate() {
             const now = new Date();
-            const dateParts = new Intl.DateTimeFormat('fr-CA', { // fr-CA gives YYYY-MM-DD format
+            const dateParts = new Intl.DateTimeFormat('fr-CA', { 
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -704,7 +713,6 @@
             return `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
         }
 
-        // Fungsi baru untuk mendapatkan jam (HH:MM) yang disesuaikan ke GMT+8
         function getCurrentTime() {
             const now = new Date();
             const timeString = new Intl.DateTimeFormat('en-US', {
@@ -714,7 +722,6 @@
                 timeZone: GMT8_TIMEZONE
             }).format(now);
             
-            // Format timeString mungkin "23:00" atau "08:00". Kita pastikan hanya HH:MM
             return timeString.match(/\d{2}:\d{2}/)[0];
         }
 
@@ -722,8 +729,6 @@
 
         function showLoading(show) { loadingIndicator.classList.toggle('hidden', !show); loadingIndicator.classList.toggle('flex', show); }
         function showMessage(message, type = 'info', duration = 3000) { messagePopupText.textContent = message; const existingColorClasses = ['bg-blue-500', 'bg-red-600', 'bg-green-600']; existingColorClasses.forEach(cls => messagePopup.classList.remove(cls)); messagePopup.classList.remove('opacity-0', 'translate-y-10'); let bgColorClassesToAdd = 'bg-blue-600'; if (type === 'error') bgColorClassesToAdd = 'bg-red-600'; else if (type === 'success') bgColorClassesToAdd = 'bg-green-600'; messagePopup.classList.add(bgColorClassesToAdd); messagePopup.classList.remove('hidden'); setTimeout(() => { messagePopup.classList.add('opacity-100'); messagePopup.classList.remove('translate-y-10'); }, 50); setTimeout(() => { messagePopup.classList.remove('opacity-100'); messagePopup.classList.add('translate-y-10'); setTimeout(() => messagePopup.classList.add('hidden'), 300); }, duration); }
-        // function getCurrentDate() { return new Date().toISOString().split('T')[0]; } // Fungsi lama
-        // function getCurrentTime() { return new Date().toTimeString().split(' ')[0].substring(0,5); } // Fungsi lama
 
         // --- Custom Modals ---
         function showConfirmationModal(title, message, onConfirm) { confirmationModalTitle.textContent = title; confirmationModalMessage.textContent = message; currentConfirmAction = onConfirm; confirmationModal.classList.remove('hidden'); confirmationModal.classList.add('flex'); }
@@ -815,10 +820,8 @@
             try { 
                 await signInWithEmailAndPassword(auth, email, password); 
                 showMessage('Login berhasil!', 'success'); 
-                // Karena onAuthStateChanged akan menangani transisi UI, kita hanya perlu menunggu
             } catch (error) { 
                 console.error("Login error:", error); 
-                // Menganalisis error code untuk pesan yang lebih informatif
                 let errorMessage = `Login gagal: ${error.code}`;
                 if (error.code === 'auth/invalid-email') {
                     errorMessage = 'Email yang dimasukkan tidak valid.';
@@ -827,17 +830,13 @@
                 } else if (error.code === 'auth/network-request-failed') {
                     errorMessage = 'Jaringan bermasalah. Periksa koneksi internet Anda.';
                 }
-                
                 authError.textContent = errorMessage; 
                 showMessage(errorMessage, 'error'); 
             } finally { 
                 showLoading(false); 
             } 
         });
-        // registerForm tidak diperlukan lagi, tautan pendaftaran/login sudah dihapus
-        // registerForm.addEventListener('submit', async (e) => { e.preventDefault(); showLoading(true); authError.textContent = ''; const email = registerForm.registerEmail.value; const password = registerForm.registerPassword.value; if (password.length < 6) { authError.textContent = 'Password minimal 6 karakter.'; showLoading(false); return; } try { await createUserWithEmailAndPassword(auth, email, password); showMessage('Registrasi berhasil! Silakan login.', 'success'); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); loginForm.loginEmail.value = email; } catch (error) { console.error("Register error:", error); authError.textContent = `Error: ${error.message.replace('Firebase: ', '')}`; showMessage(`Registrasi gagal: ${error.code}`, 'error'); } finally { showLoading(false); } });
-        // showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authError.textContent = ''; });
-        // showLoginLink.addEventListener('click', (e) => { e.preventDefault(); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); authError.textContent = ''; });
+        
         logoutButton.addEventListener('click', async () => { showLoading(true); try { await firebaseSignOut(auth); showMessage('Logout berhasil.', 'info'); } catch (error) { console.error("Logout error:", error); showMessage('Logout gagal.', 'error'); } finally { showLoading(false); } });
 
         // --- Navigation Logic ---
@@ -891,24 +890,19 @@
             });
         });
 
-        // NEW: Fungsi untuk mengimpor data guru HANYA SEKALI
         async function importTeachersOnce() {
             showLoading(true);
             try {
                 const teachersRef = ref(db, teachersPath);
                 const snapshot = await get(teachersRef);
-                // Jika database guru sudah ada, jangan impor lagi
                 if (snapshot.exists() && snapshot.hasChildren()) {
-                    console.log("Teacher data already exists. Skipping import.");
                     return;
                 }
-
                 const updates = {};
                 teacherNames.forEach(name => {
                     const newTeacherRef = push(teachersRef);
                     updates[newTeacherRef.key] = { name: name };
                 });
-                
                 await update(teachersRef, updates);
                 showMessage("Daftar guru berhasil diimport.", "success");
             } catch (error) {
@@ -919,17 +913,14 @@
             }
         }
 
-        // NEW: Fungsi untuk memuat semua guru ke memori dan menyiapkan pencarian
         function loadTeachers() {
             const teachersRef = ref(db, teachersPath);
             onValue(teachersRef, (snapshot) => {
                 const teachersData = snapshot.val() || {};
                 allTeachers = Object.entries(teachersData).map(([id, data]) => ({ id, name: data.name }));
-                console.log("Teachers loaded:", allTeachers);
             });
         }
         
-        // NEW: Event listener untuk pencarian guru
         searchTeacherNameInput.addEventListener('input', () => {
             const searchTerm = searchTeacherNameInput.value.toLowerCase().trim();
             teacherSuggestionsDropdown.innerHTML = '';
@@ -970,7 +961,6 @@
             }
         });
 
-        // NEW: Menyembunyikan dropdown saat klik di luar
         document.addEventListener('click', function(event) {
             if (!teacherSearchWrapper.contains(event.target)) {
                 teacherSuggestionsDropdown.classList.add('hidden');
@@ -982,10 +972,10 @@
             const preferredView = localStorage.getItem('viewMode') || 'card';
             setAppView(preferredView); 
             setupRekapFilters();
+            setupGrafikFilters(); // Inisialisasi filter grafik
             loadClassesForDropdowns();
             listenToViolationRecords(); 
             listenToClasses(); 
-            // NEW: Panggil fungsi untuk mengimpor dan memuat guru
             importTeachersOnce();
             loadTeachers();
         }
@@ -1080,12 +1070,110 @@
             }
         });
         
-        resetTahunAjaranButton.addEventListener('click', () => { showConfirmationModal( 'Reset Total Tahun Ajaran', 'Anda yakin ingin menghapus SEMUA data, termasuk daftar siswa, kelas, dan riwayat pelanggaran? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await Promise.all([ remove(ref(db, violationRecordsPath)), remove(ref(db, studentsPath)), remove(ref(db, classesPath)), remove(ref(db, teachersPath)) ]); showMessage('Semua data aplikasi berhasil direset.', 'success'); } catch (error) { console.error("Error resetting all data:", error); showMessage('Gagal mereset data aplikasi.', 'error'); } finally { showLoading(false); } } ); });
+        resetTahunAjaranButton.addEventListener('click', () => { showConfirmationModal( 'Reset Total Tahun Ajaran', 'Anda yakin ingin menghapus SEMUA data? Pastikan Anda sudah MENGUNDUH DATABASE SISWA (EXPORT EXCEL) terlebih dahulu sebagai arsip. Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await Promise.all([ remove(ref(db, violationRecordsPath)), remove(ref(db, studentsPath)), remove(ref(db, classesPath)), remove(ref(db, teachersPath)) ]); showMessage('Semua data aplikasi berhasil direset.', 'success'); } catch (error) { console.error("Error resetting all data:", error); showMessage('Gagal mereset data aplikasi.', 'error'); } finally { showLoading(false); } } ); });
+
+        // --- LOGIC UNTUK DOWNLOAD DATABASE SISWA (EXCEL) ---
+        async function exportStudentDatabaseToExcel() {
+            showLoading(true);
+            try {
+                // 1. Ambil data kelas dan siswa secara bersamaan
+                const classesSnapshot = await get(ref(db, classesPath));
+                const studentsSnapshot = await get(ref(db, studentsPath));
+                
+                const classesData = classesSnapshot.val() || {};
+                const studentsData = studentsSnapshot.val() || {};
+                
+                const exportData = [];
+                
+                // Helper function untuk mendapatkan nama kelas berdasarkan ID
+                const getClassName = (id) => classesData[id] ? classesData[id].name : "Kelas Tidak Diketahui";
+                
+                // 2. Iterasi data siswa (Students Node dikelompokkan berdasarkan Class ID)
+                Object.entries(studentsData).forEach(([classId, classStudents]) => {
+                    const className = getClassName(classId);
+                    
+                    // Iterasi setiap siswa dalam kelas tersebut
+                    Object.values(classStudents).forEach(student => {
+                         exportData.push({
+                             "Nama Siswa": student.name,
+                             "Kelas": className
+                         });
+                    });
+                });
+                
+                if (exportData.length === 0) {
+                    showMessage("Database siswa kosong, tidak ada yang bisa diunduh.", "info");
+                    return;
+                }
+                
+                // 3. Urutkan data: Pertama berdasarkan Kelas, lalu berdasarkan Nama Siswa
+                exportData.sort((a, b) => {
+                    if (a.Kelas === b.Kelas) {
+                        return a["Nama Siswa"].localeCompare(b["Nama Siswa"]);
+                    }
+                    return a.Kelas.localeCompare(b.Kelas);
+                });
+
+                // 4. Buat Worksheet Excel
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Database Siswa");
+                
+                // 5. Download File
+                const date = getCurrentDate();
+                XLSX.writeFile(workbook, `Database_Siswa_IDONGIRI_${date}.xlsx`);
+                showMessage("Database siswa berhasil diunduh.", "success");
+
+            } catch (error) {
+                console.error("Export error:", error);
+                showMessage("Gagal mengunduh database siswa.", "error");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- NEW: LOGIC UNTUK DOWNLOAD DATA GURU (EXCEL) ---
+        async function exportTeacherDatabaseToExcel() {
+            showLoading(true);
+            try {
+                const teachersSnapshot = await get(ref(db, teachersPath));
+                const teachersData = teachersSnapshot.val() || {};
+                
+                const exportData = [];
+                Object.values(teachersData).forEach(teacher => {
+                    exportData.push({ "Nama Guru": teacher.name });
+                });
+
+                if (exportData.length === 0) {
+                    showMessage("Database guru kosong.", "info");
+                    return;
+                }
+                
+                // Urutkan berdasarkan nama
+                exportData.sort((a, b) => a["Nama Guru"].localeCompare(b["Nama Guru"]));
+
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Data Guru");
+                
+                const date = getCurrentDate();
+                XLSX.writeFile(workbook, `Database_Guru_IDONGIRI_${date}.xlsx`);
+                showMessage("Database guru berhasil diunduh.", "success");
+            } catch (error) {
+                console.error("Export teacher error:", error);
+                showMessage("Gagal mengunduh database guru.", "error");
+            } finally {
+                showLoading(false);
+            }
+        }
         
-        // NEW: Fungsi untuk mereset inputSiswaForm
+        // Pasang event listener ke tombol baru
+        exportStudentDbButton.addEventListener('click', exportStudentDatabaseToExcel);
+        exportTeacherDbButton.addEventListener('click', exportTeacherDatabaseToExcel); // Event Listener Baru
+
+        
         function resetInputSiswaPanel() { 
             inputSiswaForm.reset(); 
-            // Memanggil fungsi getCurrentDate() dan getCurrentTime() yang sudah disesuaikan
             inputTanggal.value = getCurrentDate(); 
             inputJam.value = getCurrentTime(); 
             studentSearchWrapper.classList.add('hidden'); 
@@ -1095,7 +1183,6 @@
             originalStudentOptions = []; 
             inputNamaSiswa.innerHTML = '<option value=""></option>'; 
             inputNamaSiswa.value = ''; 
-            // NEW: Reset input guru
             searchTeacherNameInput.value = '';
             selectedTeacherId.value = '';
             selectedTeacherName.value = '';
@@ -1111,11 +1198,9 @@
             e.preventDefault(); 
             showLoading(true); 
             
-            // NEW: Dapatkan data guru yang dipilih
             const teacherId = selectedTeacherId.value;
             const teacherName = selectedTeacherName.value;
 
-            // Pastikan guru sudah dipilih
             if (!teacherId || !teacherName) {
                 showMessage('Harap pilih nama guru dari daftar.', 'error');
                 showLoading(false);
@@ -1137,8 +1222,8 @@
                 category: inputKategori.value, 
                 status: document.querySelector('input[name="statusPenanganan"]:checked').value, 
                 recordedAt: serverTimestamp(),
-                recordedByUserId: teacherId, // NEW: Simpan ID guru
-                recordedByUserName: teacherName // NEW: Simpan nama guru
+                recordedByUserId: teacherId, 
+                recordedByUserName: teacherName 
             }; 
             
             if (!record.classId || !record.studentId || !record.description || !record.category) { 
@@ -1186,6 +1271,8 @@
         });
 
         cancelInputSiswa.addEventListener('click', () => { resetInputSiswaPanel(); });
+        
+        // --- LOGIC REKAP TABLE ---
         function renderRekapTable(recordsToRender) { 
             rekapTableBody.innerHTML = ''; 
             if (recordsToRender.length === 0) { 
@@ -1196,8 +1283,6 @@
                 const row = rekapTableBody.insertRow(); 
                 row.className = "hover:bg-slate-700/50 transition-colors duration-150"; 
                 const escapedDescription = (record.description || '').replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
-                
-                // NEW: Ambil nama guru dari record
                 const recordedBy = record.recordedByUserName || 'Tidak diketahui';
 
                 row.innerHTML = ` 
@@ -1224,11 +1309,84 @@
         async function markAsHandled(recordId) { showLoading(true); try { const recordRef = ref(db, `${violationRecordsPath}/${recordId}`); await update(recordRef, { status: "Sudah Ditangani" }); showMessage('Status berhasil diperbarui.', 'success'); } catch (error) { console.error("Error updating status:", error); showMessage('Gagal memperbarui status.', 'error'); } finally { showLoading(false); } }
         async function deleteViolationRecord(recordId) { showConfirmationModal( 'Hapus Data Pelanggaran', 'Anda yakin ingin menghapus data pelanggaran ini? Tindakan ini tidak dapat diurungkan.', async () => { showLoading(true); try { await remove(ref(db, `${violationRecordsPath}/${recordId}`)); showMessage('Data pelanggaran berhasil dihapus.', 'success'); } catch (error) { console.error("Error deleting record:", error); showMessage('Gagal menghapus data.', 'error'); } finally { showLoading(false); } } ); }
         
+        // --- NEW: FITUR EXPORT EXCEL (ARSIP) ---
+        function exportRekapToExcel() {
+            if (filteredRekapRecords.length === 0) {
+                showMessage("Tidak ada data untuk diekspor pada filter ini.", "error");
+                return;
+            }
+
+            const dataToExport = filteredRekapRecords.map(record => ({
+                "Tanggal": record.date,
+                "Jam": record.time,
+                "Nama Siswa": record.studentName,
+                "Kelas": record.className,
+                "Kategori": record.category,
+                "Keterangan": record.description,
+                "Status": record.status,
+                "Guru Pelapor": record.recordedByUserName || 'Tidak diketahui'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Pelanggaran");
+
+            // Buat nama file: Rekap_Bulan_Tahun_Kelas.xlsx
+            const bulan = rekapFilterBulan.options[rekapFilterBulan.selectedIndex].text;
+            const tahun = rekapFilterTahun.value;
+            const kelas = rekapFilterKelas.value ? rekapFilterKelas.options[rekapFilterKelas.selectedIndex].text : "SemuaKelas";
+            const fileName = `Rekap_IDONGIRI_${bulan}_${tahun}_${kelas}.xlsx`;
+
+            XLSX.writeFile(workbook, fileName);
+            showMessage("File rekap berhasil diunduh.", "success");
+        }
+
+        exportExcelButton.addEventListener('click', exportRekapToExcel);
+
+        // --- NEW: FITUR EXPORT EXCEL 1 TAHUN FULL ---
+        function exportYearlyRekapToExcel() {
+            const selectedYear = rekapFilterTahun.value;
+            if (!selectedYear) {
+                showMessage("Pilih tahun terlebih dahulu pada filter.", "error");
+                return;
+            }
+
+            // Memfilter semua record hanya berdasarkan TAHUN yang dipilih di dropdown filter tahun
+            const yearlyRecords = allTimeViolationRecords.filter(record => 
+                record.date && record.date.startsWith(selectedYear)
+            );
+
+            if (yearlyRecords.length === 0) {
+                showMessage(`Tidak ada data pelanggaran di tahun ${selectedYear}.`, "error");
+                return;
+            }
+
+            const dataToExport = yearlyRecords.map(record => ({
+                "Tanggal": record.date,
+                "Jam": record.time,
+                "Nama Siswa": record.studentName,
+                "Kelas": record.className,
+                "Kategori": record.category,
+                "Keterangan": record.description,
+                "Status": record.status,
+                "Guru Pelapor": record.recordedByUserName || 'Tidak diketahui'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, `Rekap Tahun ${selectedYear}`);
+
+            const fileName = `Rekap_Tahunan_IDONGIRI_${selectedYear}.xlsx`;
+
+            XLSX.writeFile(workbook, fileName);
+            showMessage(`File rekap 1 Tahun (${selectedYear}) berhasil diunduh.`, "success");
+        }
+
+        exportExcelYearlyButton.addEventListener('click', exportYearlyRekapToExcel);
+
         // --- REKAP & PAGINATION LOGIC ---
         function setupRekapFilters() {
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            
-            // Dapatkan waktu saat ini dalam zona waktu GMT+8
             const nowInGMT8 = new Date(new Date().toLocaleString("en-US", {timeZone: GMT8_TIMEZONE}));
             const currentMonth = nowInGMT8.getMonth();
             const currentYear = nowInGMT8.getFullYear();
@@ -1241,7 +1399,8 @@
                     years.add(new Date(rec.date).getFullYear());
                 }
             });
-            rekapFilterTahun.innerHTML = Array.from(years).sort((a,b) => b-a).map(year => `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`).join('');
+            const yearOptions = Array.from(years).sort((a,b) => b-a).map(year => `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`).join('');
+            rekapFilterTahun.innerHTML = yearOptions;
             
             [rekapFilterBulan, rekapFilterTahun, rekapFilterKelas, rekapItemsPerPageSelect].forEach(el => {
                 el.addEventListener('change', filterAndDisplayRekap);
@@ -1249,6 +1408,45 @@
             rekapPrevButton.addEventListener('click', () => { if (rekapCurrentPage > 1) { rekapCurrentPage--; renderRekapPage(); } });
             rekapNextButton.addEventListener('click', () => { const totalPages = Math.ceil(filteredRekapRecords.length / rekapItemsPerPage); if (rekapCurrentPage < totalPages) { rekapCurrentPage++; renderRekapPage(); } });
         }
+
+        // --- NEW: SETUP FILTER GRAFIK ---
+        function setupGrafikFilters() {
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const nowInGMT8 = new Date(new Date().toLocaleString("en-US", {timeZone: GMT8_TIMEZONE}));
+            const currentMonth = nowInGMT8.getMonth();
+            const currentYear = nowInGMT8.getFullYear();
+
+            // Isi Dropdown Bulan Grafik
+            grafikFilterBulan.innerHTML = months.map((month, index) => `<option value="${index}" ${index === currentMonth ? 'selected' : ''}>${month}</option>`).join('');
+            
+            // Isi Dropdown Tahun Grafik (Berdasarkan data yang ada atau tahun sekarang)
+            let years = new Set([currentYear]);
+            // Kita bisa menggunakan allTimeViolationRecords jika sudah dimuat, atau default tahun ini dulu
+            grafikFilterTahun.innerHTML = `<option value="${currentYear}">${currentYear}</option>`;
+
+            // Event listener change untuk update grafik
+            grafikFilterBulan.addEventListener('change', loadGrafikData);
+            grafikFilterTahun.addEventListener('change', loadGrafikData);
+        }
+
+        // --- UPDATE TAHUN GRAFIK SAAT DATA DIMUAT ---
+        function updateGrafikYearOptions() {
+             const nowInGMT8 = new Date(new Date().toLocaleString("en-US", {timeZone: GMT8_TIMEZONE}));
+             const currentYear = nowInGMT8.getFullYear();
+             let years = new Set([currentYear]);
+             
+             allTimeViolationRecords.forEach(rec => {
+                if (rec.date) {
+                    years.add(new Date(rec.date).getFullYear());
+                }
+             });
+             
+             // Simpan seleksi saat ini sebelum update HTML
+             const currentSelection = grafikFilterTahun.value;
+             
+             grafikFilterTahun.innerHTML = Array.from(years).sort((a,b) => b-a).map(year => `<option value="${year}" ${year == currentSelection ? 'selected' : ''}>${year}</option>`).join('');
+        }
+
 
         function filterAndDisplayRekap() {
             rekapCurrentPage = 1; 
@@ -1285,18 +1483,59 @@
         }
 
 
-        function loadGrafikData() { const recordsRef = ref(db, violationRecordsPath); onValue(recordsRef, (snapshot) => { 
-            const allRecords = snapshot.val() || {}; 
+        function loadGrafikData() { 
+            const recordsRef = ref(db, violationRecordsPath); 
+            // Kita pakai onValue disini agar grafik reaktif, 
+            // tapi filter logicnya kita ubah untuk mengambil dari dropdown
+            onValue(recordsRef, (snapshot) => { 
+                const allRecords = snapshot.val() || {}; 
+                const allRecordsArray = Object.values(allRecords);
+
+                // Ambil nilai dari filter grafik
+                const selectedMonthJS = parseInt(grafikFilterBulan.value);
+                const selectedYear = grafikFilterTahun.value;
+                const filterString = `${selectedYear}-${String(selectedMonthJS + 1).padStart(2, '0')}`;
+
+                const monthlyRecords = allRecordsArray.filter(record => record.date && record.date.startsWith(filterString)); 
             
-            // Mengambil bulan dan tahun saat ini berdasarkan GMT+8
-            const nowInGMT8 = new Date(new Date().toLocaleString("en-US", {timeZone: GMT8_TIMEZONE}));
-            // NOTE: Kami tidak menggunakan toISOString().slice(0, 7) karena ini masih rentan terhadap UTC.
-            // Kita akan menggunakan komponen tanggal yang sudah diformat GMT+8.
-            const currentYearMonth = getCurrentDate().slice(0, 7); // YYYY-MM
-            
-            const monthlyRecords = Object.values(allRecords) .filter(record => record.date && record.date.startsWith(currentYearMonth)); 
-            
-            let totalLate = monthlyRecords.length; let handledCount = monthlyRecords.filter(r => r.status === "Sudah Ditangani").length; let unhandledCount = totalLate - handledCount; let percentageHandled = totalLate > 0 ? ((handledCount / totalLate) * 100).toFixed(1) : 0; totalKeterlambatanText.textContent = totalLate; persentasePenangananText.textContent = `${percentageHandled}%`; if (statusChartInstance) statusChartInstance.destroy(); const chartTextColor = '#E2E8F0'; statusChartInstance = new Chart(statusChartCanvas, { type: 'pie', data: { labels: ['Sudah Ditangani', 'Belum Ditangani'], datasets: [{ label: 'Status Penanganan', data: [handledCount, unhandledCount], backgroundColor: [ 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)' ], borderColor: [ 'rgba(5, 150, 105, 1)', 'rgba(217, 119, 6, 1)' ], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: chartTextColor } }, title: { display: true, text: 'Status Penanganan Pelanggaran Bulan Ini', color: chartTextColor, font: { size: 16 } } } } }); }, (error) => { console.error("Error loading grafik data:", error); totalKeterlambatanText.textContent = 'Error'; persentasePenangananText.textContent = 'Error'; showMessage('Gagal memuat data grafik.', 'error'); }); }
+                let totalLate = monthlyRecords.length; 
+                let handledCount = monthlyRecords.filter(r => r.status === "Sudah Ditangani").length; 
+                let unhandledCount = totalLate - handledCount; 
+                let percentageHandled = totalLate > 0 ? ((handledCount / totalLate) * 100).toFixed(1) : 0; 
+                
+                totalKeterlambatanText.textContent = totalLate; 
+                persentasePenangananText.textContent = `${percentageHandled}%`; 
+                
+                if (statusChartInstance) statusChartInstance.destroy(); 
+                const chartTextColor = '#E2E8F0'; 
+                statusChartInstance = new Chart(statusChartCanvas, { 
+                    type: 'pie', 
+                    data: { 
+                        labels: ['Sudah Ditangani', 'Belum Ditangani'], 
+                        datasets: [{ 
+                            label: 'Status Penanganan', 
+                            data: [handledCount, unhandledCount], 
+                            backgroundColor: [ 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)' ], 
+                            borderColor: [ 'rgba(5, 150, 105, 1)', 'rgba(217, 119, 6, 1)' ], 
+                            borderWidth: 1 
+                        }] 
+                    }, 
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { position: 'top', labels: { color: chartTextColor } }, 
+                            title: { display: true, text: `Status Penanganan (${grafikFilterBulan.options[grafikFilterBulan.selectedIndex]?.text} ${selectedYear})`, color: chartTextColor, font: { size: 16 } } 
+                        } 
+                    } 
+                }); 
+            }, (error) => { 
+                console.error("Error loading grafik data:", error); 
+                totalKeterlambatanText.textContent = 'Error'; 
+                persentasePenangananText.textContent = 'Error'; 
+                showMessage('Gagal memuat data grafik.', 'error'); 
+            }); 
+        }
         
         function loadPerhatianData() {
             const container = document.getElementById('perhatianListContainer');
@@ -1321,7 +1560,7 @@
 
             const frequentViolators = Object.values(studentCounts).filter(student => student.totalCount >= 3).sort((a, b) => b.totalCount - a.count);
             
-            container.innerHTML = ''; // Clear container
+            container.innerHTML = ''; 
             if (frequentViolators.length === 0) {
                 container.innerHTML = '<p class="text-slate-400 italic">Tidak ada siswa yang tercatat melakukan pelanggaran 3 kali atau lebih.</p>';
                 return;
@@ -1357,13 +1596,14 @@
             onValue(recordsRef, (snapshot) => { 
                 const recordsData = snapshot.val() || {};
                 allTimeViolationRecords = Object.entries(recordsData).map(([id, record]) => ({ id, ...record })).sort((a, b) => (b.recordedAt || 0) - (a.recordedAt || 0));
-                setupRekapFilters();
                 
-                const currentView = localStorage.getItem('viewMode') || 'card';
+                setupRekapFilters();
+                updateGrafikYearOptions(); // Update tahun grafik saat data baru masuk
+                
                 const activePanel = document.querySelector('.tab-content:not(.hidden)');
                 if (activePanel) {
                    if (activePanel.id === 'rekapPanel') filterAndDisplayRekap();
-                   if (activePanel.id === 'grafikPanel') loadGrafikData();
+                   // if (activePanel.id === 'grafikPanel') loadGrafikData(); // Grafik akan auto-update lewat listener sendiri
                    if (activePanel.id === 'perhatianPanel') loadPerhatianData();
                 }
             }); 
