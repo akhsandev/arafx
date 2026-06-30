@@ -165,6 +165,7 @@
                         <div><label class="block text-sm mb-2 text-slate-300">Alamat</label><input type="text" name="alamat" required class="glass-input w-full rounded-xl p-3"></div>
                         <div><label class="block text-sm mb-2 text-slate-300">Nomor HP</label><input type="text" name="noHp" required class="glass-input w-full rounded-xl p-3"></div>
                         <div><label class="block text-sm mb-2 text-slate-300">Nama Pewawancara</label><input type="text" name="pewawancara" required class="glass-input w-full rounded-xl p-3"></div>
+                        <div><label class="block text-sm mb-2 text-slate-300">Tanggal Wawancara</label><input type="date" name="tanggalWawancara" required class="glass-input w-full rounded-xl p-3"></div>
                     </div>
                 </div>
                 <div id="dynamic-siswa-questions" class="space-y-6"></div>
@@ -359,7 +360,17 @@
             siswa: [],
             ortu: []
         };
-        let siswaCounter = parseInt(localStorage.getItem('wawancaraCounter')) || 1;
+
+        // Fungsi helper sanitasi teks untuk mencegah XSS
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -709,24 +720,30 @@
 
             try {
                 if(URL_GAS && URL_GAS.includes("script.google.com")) {
-                    await fetch(URL_GAS, {
+                    const response = await fetch(URL_GAS, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ tipeForm: 'siswa', payload: dataObj })
                     });
+                    // FIX: Cek response dari GAS, baru simpan ke db lokal jika sukses
+                    const result = await response.json();
+                    if (result.status !== 'success') {
+                        throw new Error(result.message || 'Server mengembalikan status error.');
+                    }
                 }
 
+                // Hanya simpan ke db lokal jika request ke server berhasil (atau offline mode)
                 const newSiswa = { id: uniqueId, timestamp: new Date().toLocaleString(), data: dataObj };
                 db.siswa.push(newSiswa);
 
-                showToast(`Data Siswa ${dataObj.namaLengkap} berhasil disimpan ke Database!`);
+                showToast(`Data Siswa ${escapeHtml(dataObj.namaLengkap)} berhasil disimpan!`);
                 e.target.reset();
                 updateSiswaDropdown(); 
                 switchTab('ortu'); 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch (error) {
-                showToast("Gagal terhubung ke server Google Sheet!", "error");
+                showToast("Gagal menyimpan: " + error.message, "error");
                 console.error(error);
             } finally {
                 btn.innerHTML = originalBtnHTML;
@@ -761,13 +778,19 @@
 
             try {
                 if(URL_GAS && URL_GAS.includes("script.google.com")) {
-                    await fetch(URL_GAS, {
+                    const response = await fetch(URL_GAS, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ tipeForm: 'ortu', payload: dataObj })
                     });
+                    // FIX: Cek response dari GAS, baru simpan ke db lokal jika sukses
+                    const result = await response.json();
+                    if (result.status !== 'success') {
+                        throw new Error(result.message || 'Server mengembalikan status error.');
+                    }
                 }
 
+                // Hanya simpan ke db lokal jika request ke server berhasil (atau offline mode)
                 const newOrtu = { linkedSiswaId: linkedId, timestamp: new Date().toLocaleString(), data: dataObj };
                 db.ortu.push(newOrtu);
 
@@ -778,7 +801,7 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch (error) {
-                showToast("Gagal terhubung ke server Google Sheet!", "error");
+                showToast("Gagal menyimpan: " + error.message, "error");
                 console.error(error);
             } finally {
                 btn.innerHTML = originalBtnHTML;
@@ -799,41 +822,49 @@
         }
 
         async function processLogin() {
-            const u = document.getElementById('login-user').value;
+            const u = document.getElementById('login-user').value.trim();
             const p = document.getElementById('login-pass').value;
             
-            if(u === 'admin' && p === 'admin') {
-                const btn = document.getElementById('btn-login-submit');
-                const originalBtnHTML = btn.innerHTML;
-                btn.innerHTML = `<i class="ph ph-spinner animate-spin text-xl"></i> Menarik Data Server...`;
-                btn.disabled = true;
-                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            if (!u || !p) {
+                showToast("Username dan Password tidak boleh kosong!", "error");
+                return;
+            }
 
-                try {
-                    const response = await fetch(URL_GAS + "?action=read");
-                    const result = await response.json();
+            const btn = document.getElementById('btn-login-submit');
+            const originalBtnHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="ph ph-spinner animate-spin text-xl"></i> Memverifikasi...`;
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
 
-                    if(result.status === 'success') {
-                        db.siswa = result.siswa.map(row => ({ id: row['ID Unik Sistem'], data: row }));
-                        db.ortu = result.ortu.map(row => ({ linkedSiswaId: row['ID Siswa Terkait'], data: row }));
-                        
-                        closeLoginModal();
-                        showToast("Data tersinkronisasi. Login Admin Berhasil!");
-                        switchView('view-admin');
-                    } else {
-                        showToast("Gagal menarik data dari server!", "error");
-                        console.error(result.message);
-                    }
-                } catch (error) {
-                    showToast("Gagal terhubung ke API Google Sheet!", "error");
-                    console.error(error);
-                } finally {
-                    btn.innerHTML = originalBtnHTML;
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            try {
+                // FIX: Validasi login dilakukan di server (GAS), bukan di client-side
+                const response = await fetch(URL_GAS + "?action=read&user=" + encodeURIComponent(u) + "&pass=" + encodeURIComponent(p));
+                const result = await response.json();
+
+                if(result.status === 'success') {
+                    // FIX: Mapping data dari server
+                    db.siswa = result.siswa.map(row => ({ id: row['ID Unik Sistem'], data: row }));
+                    db.ortu = result.ortu.map(row => ({ linkedSiswaId: row['ID Siswa Terkait'], data: row }));
+                    
+                    // FIX: Panggil updateSiswaDropdown agar dropdown orang tua langsung terisi
+                    updateSiswaDropdown();
+
+                    closeLoginModal();
+                    showToast("Data tersinkronisasi. Login Admin Berhasil!");
+                    switchView('view-admin');
+                } else if (result.status === 'unauthorized') {
+                    showToast("Username atau Password salah!", "error");
+                } else {
+                    showToast("Gagal menarik data dari server: " + (result.message || ''), "error");
+                    console.error(result.message);
                 }
-            } else {
-                showToast("Username atau Password salah!", "error");
+            } catch (error) {
+                showToast("Gagal terhubung ke API Google Sheet!", "error");
+                console.error(error);
+            } finally {
+                btn.innerHTML = originalBtnHTML;
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
             }
         }
 
@@ -866,12 +897,12 @@
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors";
                     tr.innerHTML = `
-                        <td class="py-3 pl-2 text-slate-300 font-mono text-xs">${s.id}</td>
-                        <td class="py-3 text-white font-medium">${s.data.namaLengkap || s.data['Nama Lengkap'] || 'N/A'}</td>
-                        <td class="py-3 text-slate-300">${ortuMatch ? (ortuMatch.data.namaOrtu || ortuMatch.data['Nama Orang Tua/Wali']) : '-'}</td>
+                        <td class="py-3 pl-2 text-slate-300 font-mono text-xs">${escapeHtml(s.id)}</td>
+                        <td class="py-3 text-white font-medium">${escapeHtml(s.data.namaLengkap || s.data['Nama Lengkap'] || 'N/A')}</td>
+                        <td class="py-3 text-slate-300">${ortuMatch ? escapeHtml(ortuMatch.data.namaOrtu || ortuMatch.data['Nama Orang Tua/Wali']) : '-'}</td>
                         <td class="py-3">${statusHtml}</td>
                         <td class="py-3 text-right pr-2">
-                            <button onclick="openPreviewModal('${s.id}')" class="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Lihat Detail Form"><i class="ph ph-eye"></i></button>
+                            <button onclick="openPreviewModal('${escapeHtml(s.id)}')" class="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Lihat Detail Form"><i class="ph ph-eye"></i></button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -937,15 +968,15 @@
                 if (emosi && emosi.includes('Pendampingan')) { isPendampingan = true; reasonsPendampingan.push("Regulasi Emosi Kurang"); }
 
                 if (isPendampingan) {
-                    listPendampingan.innerHTML += `<div class="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-red-500/20 transition group" onclick="openPreviewModal('${s.id}')">
-                        <div><p class="text-sm font-bold text-white">${nama}</p><p class="text-xs text-red-300 mt-1"><i class="ph ph-warning"></i> ${reasonsPendampingan.join(', ')}</p></div>
+                    listPendampingan.innerHTML += `<div class="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-red-500/20 transition group" onclick="openPreviewModal('${escapeHtml(s.id)}')">
+                        <div><p class="text-sm font-bold text-white">${escapeHtml(nama)}</p><p class="text-xs text-red-300 mt-1"><i class="ph ph-warning"></i> ${escapeHtml(reasonsPendampingan.join(', '))}</p></div>
                         <i class="ph ph-eye text-red-400 group-hover:text-white transition"></i>
                     </div>`;
                 }
 
                 if (mot && mot.includes('Tinggi') && ris && ris.includes('Rendah') && emosi && emosi.includes('Baik') && !isPendampingan) {
-                    listPotensi.innerHTML += `<div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-emerald-500/20 transition group" onclick="openPreviewModal('${s.id}')">
-                        <div><p class="text-sm font-bold text-white">${nama}</p><p class="text-xs text-emerald-300 mt-1"><i class="ph ph-check-circle"></i> Mandiri, Adaptasi Baik</p></div>
+                    listPotensi.innerHTML += `<div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-emerald-500/20 transition group" onclick="openPreviewModal('${escapeHtml(s.id)}')">
+                        <div><p class="text-sm font-bold text-white">${escapeHtml(nama)}</p><p class="text-xs text-emerald-300 mt-1"><i class="ph ph-check-circle"></i> Mandiri, Adaptasi Baik</p></div>
                         <i class="ph ph-eye text-emerald-400 group-hover:text-white transition"></i>
                     </div>`;
                 }
