@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Wawancara PPDB - Spatial UI</title>
+    <title>Aplikasi Wawancara SPMB - Spatial UI</title>
     
     <!-- Fonts & Libraries -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -111,7 +111,7 @@
             <div class="flex items-center gap-4">
                 <img src="https://arafx.vercel.app/logo.png" alt="Logo SMAN 1 Soppeng" class="w-12 h-12 object-contain filter drop-shadow-lg" onerror="this.src='https://placehold.co/100x100/020617/ffffff?text=Logo'">
                 <div>
-                    <h1 class="font-bold text-lg leading-tight tracking-wide text-white">PPDB SMAN 1 SOPPENG</h1>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide text-white">SPMB SMAN 1 SOPPENG</h1>
                     <p class="text-xs text-blue-300">Sistem Wawancara Terpadu</p>
                 </div>
             </div>
@@ -217,7 +217,7 @@
             <div class="flex justify-between items-end mb-8 border-b border-white/10 pb-4">
                 <div>
                     <h2 class="text-3xl font-bold text-white">Dashboard Analisis</h2>
-                    <p class="text-slate-400 mt-1">Rekapitulasi dan Statistik Wawancara PPDB</p>
+                    <p class="text-slate-400 mt-1">Rekapitulasi dan Statistik Wawancara SPMB</p>
                 </div>
                 <div class="flex gap-3">
                     <!-- Tombol Export Excel -->
@@ -1100,7 +1100,7 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Rekap Analisis BK");
             
-            XLSX.writeFile(wb, "Rekap_Analisis_PPDB_SMAN1_Soppeng.xlsx");
+            XLSX.writeFile(wb, "Rekap_Analisis_SPMB_SMAN1_Soppeng.xlsx");
             showToast("Berhasil mendownload file Excel!");
         }
 
