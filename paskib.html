@@ -152,9 +152,15 @@
     <!-- === STREAMING_CHUNK:Rendering Floating Navbar === -->
     <!-- Floating Island Navbar -->
     <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-5xl z-50 glass-nav rounded-full px-4 py-3 flex items-center justify-between transition-all">
-        <a href="#" onclick="navTo('home')" class="flex items-center space-x-3 group ml-2">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-paskibra-700 to-paskibra-900 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform duration-300">
-                <i class="ph-fill ph-flag-banner text-xl"></i>
+        <a href="#" onclick="navTo('home')" class="flex items-center space-x-2 group ml-2">
+            <!-- Triple Logo -->
+            <div class="flex items-center gap-1.5">
+                <img src="https://i.ibb.co.com/Zp5vRc9V/Untitled-design.png" alt="Logo Paskibra"
+                     class="h-10 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                     onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                <div id="logo-fallback" class="hidden w-10 h-10 rounded-full bg-gradient-to-br from-paskibra-700 to-paskibra-900 items-center justify-center text-white shadow-lg">
+                    <i class="ph-fill ph-flag-banner text-xl"></i>
+                </div>
             </div>
             <span class="text-lg font-bold text-slate-800 tracking-tight hidden sm:block">Paskibra 101</span>
         </a>
@@ -226,22 +232,24 @@
                 </div>
                 
                 <!-- Hero Image/Graphic Spatial Style -->
-                <div class="hidden lg:flex justify-center relative">
+                <div class="hidden lg:flex flex-col justify-center items-center gap-6 relative">
                     <div class="absolute inset-0 bg-gradient-to-tr from-paskibra-200 to-transparent rounded-full blur-3xl opacity-50"></div>
                     <div class="glass-panel p-4 rounded-3xl transform rotate-3 hover:rotate-0 transition-transform duration-500 w-4/5 max-w-md shadow-2xl relative z-10 border-white/60">
-                        <div class="bg-slate-900 rounded-2xl overflow-hidden aspect-[4/5] relative flex items-center justify-center group">
-                            <!-- Placeholder for actual Paskibra image, using abstract design for now -->
-                            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                            <div class="relative z-10 text-center">
-                                <i class="ph-duotone ph-flag-banner text-6xl text-white mb-4 opacity-80"></i>
-                                <h3 class="text-white font-bold text-2xl tracking-widest">UNIT 101</h3>
+                        <div class="bg-gradient-to-br from-slate-900 via-paskibra-900 to-slate-800 rounded-2xl overflow-hidden aspect-[4/5] relative flex items-center justify-center">
+                            <div class="text-center px-4 py-6 flex flex-col items-center gap-4">
+                                <!-- Triple Logo Hero -->
+                                <img src="https://i.ibb.co.com/Zp5vRc9V/Untitled-design.png"
+                                     alt="Logo Paskibra SMAN 1 Soppeng"
+                                     class="w-full max-w-[260px] h-auto object-contain drop-shadow-2xl"
+                                     onerror="this.style.display='none'">
+                                <h3 class="text-white font-bold text-xl tracking-widest drop-shadow-lg">UNIT 101</h3>
                             </div>
                         </div>
                     </div>
-                    <!-- Floating decorative element -->
-                    <div class="absolute -bottom-6 -left-6 glass-panel p-4 rounded-2xl shadow-xl animate-float" style="animation-delay: -2s;">
+                    <!-- Status badge — di bawah kartu, tidak tertutup -->
+                    <div class="relative z-10 glass-panel px-5 py-3 rounded-2xl shadow-xl animate-float" style="animation-delay: -2s;">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
                                 <i class="ph-bold ph-check"></i>
                             </div>
                             <div>
@@ -943,12 +951,26 @@
 
 
         /* === ADMIN LOGIC === */
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        // Password hash (SHA-256). Jangan ubah nilai hash ini kecuali ganti password.
+        // Hash dari: paskibsmansa26
+        const ADMIN_PASS_HASH = '4e385589913d73e55bcffe612dea67199a08934cde7afe8f5d9c70bb2bebb854';
+        const ADMIN_USERNAME  = 'admin';
+
+        async function sha256(message) {
+            const msgBuffer  = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray  = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const user = document.getElementById('login-user').value;
+            const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value;
 
-            if(user === 'admin' && pass === 'admin') {
+            const inputHash = await sha256(pass);
+
+            if (user === ADMIN_USERNAME && inputHash === ADMIN_PASS_HASH) {
                 state.isAdmin = true;
                 localStorage.setItem('paskibra_admin', 'true');
                 document.getElementById('loginForm').reset();
