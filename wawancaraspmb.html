@@ -414,7 +414,7 @@
             {
                 id: "sw_tema3", title: "TEMA 3. KEBIASAAN BELAJAR DAN MANAJEMEN DIRI",
                 main: "Bagaimana biasanya kegiatanmu setelah pulang sekolah sampai tidur?",
-                sub: ["Kapan biasanya belajar dan berapa lama kamu belajar di rumah?", "Berapa lama menggunakan HP?", "Apa yang dilakukan ketika mengalami kesulitan belajar?", "Menurutmu apa arti disiplin bagi seorang pelajar ?", "Tidur dan bangun jam berapa ?", "Aktivitas apa yang dilakukan sebelum berangkat  ke sekolah?", "Apakah kamu punya kegiatan/pekerjaan rutin di rumah sebagai tanggung jawabmu ?"],
+                sub: ["Kapan biasanya belajar dan berapa lama kamu belajar di rumah?", "Berapa lama menggunakan HP?", "Tidur dan bangun jam berapa ?", "Aktivitas apa yang dilakukan sebelum berangkat  ke sekolah?", "Apakah kamu punya kegiatan/pekerjaan rutin di rumah sebagai tanggung jawabmu ?"],
                 indicators: {
                     "Potensi/Kekuatan": ["Memiliki jadwal belajar", "Bertanggung jawab terhadap tugas", "Mampu mengatur waktu", "Memiliki strategi belajar"],
                     "Perlu Perhatian": ["Tidak memiliki kebiasaan belajar/belajar tidak teratur", "Sering menunda pekerjaan", "Kesulitan mengatur waktu", "Ketergantungan pada orang lain"],
@@ -483,6 +483,21 @@
                     "Indikator Positif": ["Memahami aturan sekolah", "Bersedia mematuhi aturan", "Memiliki tanggung jawab pribadi", "Siap berpartisipasi dalam kegiatan sekolah"],
                     "Indikator Perlu Perhatian": ["Pemahaman aturan masih rendah", "Komitmen terhadap aturan belum kuat", "Cenderung permisif terhadap pelanggaran"]
                 },
+                pernyataanKomitmen: [
+                    "Bersedia menjalankan budaya sekolah (menaati aturan/tata tertib sekolah)",
+                    "Bersedia menerima konsekuensi jika melakukan perilaku menyimpang terhadap budaya sekolah (aturan/tata tertib sekolah)"
+                ],
+                konsekuensi: [
+                    "Mendapat teguran/peringatan lisan dari guru/wali kelas",
+                    "Mendapat surat peringatan tertulis yang diketahui orang tua/wali",
+                    "Dipanggil orang tua/wali ke sekolah",
+                    "Mendapat tugas/sanksi pembinaan dari guru BK",
+                    "Poin pelanggaran dicatat dalam buku tata tertib sekolah",
+                    "Tidak diperkenankan mengikuti kegiatan/perlombaan tertentu",
+                    "Dikenakan sanksi sesuai tingkat pelanggaran dalam buku tata tertib sekolah",
+                    "Diskors sementara dari kegiatan belajar mengajar",
+                    "Dikembalikan kepada orang tua/wali (dikeluarkan dari sekolah)"
+                ],
                 kesimpulan: [
                     "Memahami dan berkomitmen penuh terhadap budaya sekolah serta siap berpartisipasi aktif.",
                     "Memahami aturan dan bersedia mematuhinya, namun masih memerlukan penguatan.",
@@ -563,7 +578,7 @@
             {
                 id: "ot_harapan", title: "HARAPAN DAN KERJA SAMA DENGAN SEKOLAH",
                 main: "Apa harapan Bapak/Ibu terhadap sekolah dan perkembangan anak selama bersekolah di SMA Negeri 1 Soppeng?",
-                sub: ["Dukungan apa yang diharapkan dari sekolah?", "Sejauh mana Bapak/Ibu bersedia terlibat dalam kegiatan sekolah?", "Bagaimana cara komunikasi yang paling efektif antara sekolah dan keluarga?", "Apakah Bapak/Ibu bersedia bekerja sama dengan sekolah apabila anak memerlukan pendampingan khusus?"],
+                sub: ["Dukungan apa yang diharapkan dari sekolah?", "Sejauh mana Bapak/Ibu bersedia terlibat dalam kegiatan sekolah?", "Apakah Bapak/Ibu bersedia bekerja sama dengan sekolah apabila anak memerlukan pendampingan khusus?"],
                 indicators: {
                     "Indikator": ["Orang tua mendukung program sekolah", "Bersedia bekerja sama dengan sekolah", "Bersedia mengikuti kegiatan orang tua", "Membutuhkan pendampingan khusus dari sekolah"]
                 }
@@ -596,6 +611,7 @@
                 }
 
                 let rekomendasiHtml = '';
+                let pernyataanKomitmenHtml = '';
                 if(item.hasRekomendasi) {
                     rekomendasiHtml = `
                     <div class="mb-4 mt-6">
@@ -618,6 +634,45 @@
                     kesimpulanHtml += `</div></div>`;
                 }
 
+                if(item.pernyataanKomitmen) {
+                    pernyataanKomitmenHtml += `
+                    <div class="mt-6 pt-4 border-t border-amber-500/20">
+                        <p class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <i class="ph ph-seal-check text-base"></i> Pernyataan Komitmen
+                        </p>
+                        <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 space-y-3 mb-4">`;
+                    item.pernyataanKomitmen.forEach((p, idx) => {
+                        pernyataanKomitmenHtml += `
+                            <label class="flex items-start gap-3 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors checkbox-container">
+                                <input type="checkbox" name="${item.id}_pernyataan" value="${p}" class="glass-checkbox mt-0.5 min-w-[1.1rem]">
+                                <span class="text-sm text-amber-100 leading-snug">${idx + 1}. ${p}</span>
+                            </label>`;
+                    });
+                    pernyataanKomitmenHtml += `</div>`;
+
+                    if(item.konsekuensi) {
+                        pernyataanKomitmenHtml += `
+                        <p class="text-xs font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2 mt-4">
+                            <i class="ph ph-warning text-base"></i> Konsekuensi yang Siap Diterima
+                        </p>
+                        <p class="text-xs text-slate-400 mb-3 italic">Pilih konsekuensi yang disepakati peserta didik jika melakukan pelanggaran terhadap budaya/tata tertib sekolah:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">`;
+                        item.konsekuensi.forEach(k => {
+                            pernyataanKomitmenHtml += `
+                            <label class="flex items-start gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-500/20 checkbox-container">
+                                <input type="checkbox" name="${item.id}_konsekuensi" value="${k}" class="glass-checkbox mt-1 min-w-[1.1rem]">
+                                <span class="text-sm text-slate-300 leading-tight">${k}</span>
+                            </label>`;
+                        });
+                        pernyataanKomitmenHtml += `</div>
+                        <div class="mt-3">
+                            <label class="block text-xs mb-1 text-slate-400">Konsekuensi lainnya (jika ada):</label>
+                            <input type="text" name="${item.id}_konsekuensi_lainnya" class="glass-input w-full rounded-xl p-3 text-sm" placeholder="Tuliskan konsekuensi lain yang disepakati...">
+                        </div>`;
+                    }
+                    pernyataanKomitmenHtml += `</div>`;
+                }
+
                 let mainQHtml = '';
                 if(item.main || subHtml) {
                     mainQHtml = `
@@ -638,6 +693,7 @@
                     ${indHtml}
                     ${rekomendasiHtml}
                     ${kesimpulanHtml}
+                    ${pernyataanKomitmenHtml}
                 </div>`;
             });
             return html;
