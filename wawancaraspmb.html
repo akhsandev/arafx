@@ -242,7 +242,7 @@
                     </div>
                 </div>
                 <div id="dynamic-ortu-questions" class="space-y-6"></div>
-                <button type="submit" class="glass-button w-full py-4 rounded-xl text-white font-bold tracking-wide uppercase mt-8 flex justify-center items-center gap-2">
+                <button id="btn-submit-ortu" type="submit" class="glass-button w-full py-4 rounded-xl text-white font-bold tracking-wide uppercase mt-8 flex justify-center items-center gap-2">
                     <i class="ph ph-floppy-disk text-xl"></i> Simpan Data Orang Tua
                 </button>
             </form>
@@ -982,15 +982,11 @@
 
             dataObj["ID Siswa Terkait"] = linkedId;
 
-            const btn = document.querySelector('#form-ortu button[type="submit"]');
-            if (!btn) {
-                showToast("Terjadi kesalahan internal. Coba refresh halaman.", "error");
-                return;
-            }
-            const originalBtnHTML = btn.innerHTML;
-            btn.innerHTML = `<i class="ph ph-spinner animate-spin text-xl"></i> Sedang Menyimpan...`;
-            btn.disabled = true;
-            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            const submitBtn = document.getElementById('btn-submit-ortu');
+            const originalBtnHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = `<i class="ph ph-spinner animate-spin text-xl"></i> Sedang Menyimpan...`;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
             try {
                 if(URL_GAS && URL_GAS.includes("script.google.com")) {
@@ -1026,9 +1022,9 @@
                 showToast("Gagal menyimpan: " + error.message, "error");
                 console.error(error);
             } finally {
-                btn.innerHTML = originalBtnHTML;
-                btn.disabled = false;
-                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                submitBtn.innerHTML = originalBtnHTML;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
             }
         }
 
