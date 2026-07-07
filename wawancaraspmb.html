@@ -974,7 +974,11 @@
 
             dataObj["ID Siswa Terkait"] = linkedId;
 
-            const btn = e.target.querySelector('button[type="submit"]');
+            const btn = document.querySelector('#form-ortu button[type="submit"]');
+            if (!btn) {
+                showToast("Terjadi kesalahan internal. Coba refresh halaman.", "error");
+                return;
+            }
             const originalBtnHTML = btn.innerHTML;
             btn.innerHTML = `<i class="ph ph-spinner animate-spin text-xl"></i> Sedang Menyimpan...`;
             btn.disabled = true;
