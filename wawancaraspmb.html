@@ -735,10 +735,15 @@
             if(viewId === 'view-admin') {
                 document.getElementById('btn-nav-home').classList.remove('hidden');
                 document.getElementById('btn-nav-admin').classList.add('hidden');
+                // Pastikan kedua form tersembunyi saat ke admin
+                document.getElementById('form-siswa').classList.add('hidden-view');
+                document.getElementById('form-ortu').classList.add('hidden-view');
                 renderAdminDashboard(); 
             } else {
                 document.getElementById('btn-nav-home').classList.add('hidden');
                 document.getElementById('btn-nav-admin').classList.remove('hidden');
+                // Kembalikan ke tab siswa saat kembali ke form
+                switchTab('siswa');
             }
         }
 
