@@ -224,7 +224,6 @@
                             </div>
                         </div>
                     </div>
-                    </div>
                 </div>
 
                 <div class="glass-panel p-6 sm:p-8">
@@ -919,12 +918,18 @@
 
         async function handleSiswaSubmit(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
             const dataObj = {};
+            const formSiswa = document.getElementById('form-siswa');
+            const wasHidden = formSiswa.classList.contains('hidden-view');
+            if (wasHidden) formSiswa.classList.remove('hidden-view');
+
+            const formData = new FormData(formSiswa);
             for (let [key, value] of formData.entries()) {
                 if (dataObj[key]) dataObj[key] += ", " + value;
                 else dataObj[key] = value;
             }
+
+            if (wasHidden) formSiswa.classList.add('hidden-view');
             
             const uniqueId = `ID-${Date.now()}`;
             dataObj["ID Unik Sistem"] = uniqueId; 
@@ -971,12 +976,19 @@
 
         async function handleOrtuSubmit(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
             const dataObj = {};
+            // Pastikan form visible saat collect data
+            const formOrtu = document.getElementById('form-ortu');
+            const wasHidden = formOrtu.classList.contains('hidden-view');
+            if (wasHidden) formOrtu.classList.remove('hidden-view');
+
+            const formData = new FormData(formOrtu);
             for (let [key, value] of formData.entries()) {
                 if (dataObj[key]) dataObj[key] += ", " + value;
                 else dataObj[key] = value;
             }
+
+            if (wasHidden) formOrtu.classList.add('hidden-view');
             
             const linkedId = document.getElementById('select-linked-siswa').value;
 
