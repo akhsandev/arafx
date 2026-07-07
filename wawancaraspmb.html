@@ -767,6 +767,7 @@
         
         // Data siswa untuk picker (hanya id + nama, dari endpoint publik)
         let siswaPickerData = [];
+        let siswaPickerFiltered = []; // data yang sedang dirender (hasil filter/search)
         let siswaPickerSelected = null;
 
         async function fetchSiswaPublic() {
@@ -801,6 +802,7 @@
         }
 
         function renderSiswaPickerList(data) {
+            siswaPickerFiltered = data; // simpan referensi data yang dirender
             const list = document.getElementById('siswa-picker-list');
             const status = document.getElementById('siswa-picker-status');
 
@@ -812,9 +814,9 @@
             }
 
             status.classList.add('hidden');
-            list.innerHTML = data.map(s => `
+            list.innerHTML = data.map((s, idx) => `
                 <button type="button"
-                    onclick="selectSiswaPicker('${escapeHtml(s.id)}', '${escapeHtml(s.nama)}')"
+                    onclick="selectSiswaPickerByIndex(${idx})"
                     class="w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-3 transition-all hover:bg-blue-500/20 group
                         ${siswaPickerSelected === s.id ? 'bg-blue-500/20 border border-blue-400/40' : 'border border-transparent'}">
                     <div class="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
@@ -844,6 +846,12 @@
             document.getElementById('siswa-picker-label').classList.remove('text-slate-400');
             document.getElementById('siswa-picker-label').classList.add('text-white');
             closeSiswaPicker();
+        }
+
+        function selectSiswaPickerByIndex(idx) {
+            const s = siswaPickerFiltered[idx];
+            if (!s) return;
+            selectSiswaPicker(s.id, s.nama);
         }
 
         function toggleSiswaPicker() {
