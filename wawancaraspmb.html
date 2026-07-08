@@ -198,7 +198,7 @@
                                 <i id="siswa-picker-chevron" class="ph ph-caret-down text-slate-400 transition-transform duration-200 shrink-0"></i>
                             </button>
 
-                            <!-- Panel inline — expand ke bawah dalam flow -->
+                            <!-- Panel inline â€” expand ke bawah dalam flow -->
                             <div id="siswa-picker-panel" class="hidden mt-2 rounded-xl overflow-hidden"
                                 style="background: rgba(15,20,40,0.95); border: 1px solid rgba(59,130,246,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
                                 
@@ -249,17 +249,18 @@
 
         <!-- VIEW: ADMIN DASHBOARD -->
         <div id="view-admin" class="view-section hidden-view max-w-6xl mx-auto">
-            <div class="flex justify-between items-end mb-8 border-b border-white/10 pb-4">
+            <div class="flex justify-between items-end mb-8 border-b border-white/10 pb-4 flex-wrap gap-4">
                 <div>
                     <h2 class="text-3xl font-bold text-white">Dashboard Analisis</h2>
                     <p class="text-slate-400 mt-1">Rekapitulasi dan Statistik Wawancara SPMB</p>
                 </div>
-                <div class="flex gap-3">
-                    <!-- Tombol Export Excel -->
+                <div class="flex gap-3 flex-wrap">
                     <button onclick="exportToExcel()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 transition-all flex items-center gap-2">
-                        <i class="ph ph-microsoft-excel-logo text-lg"></i> Export Excel
+                        <i class="ph ph-microsoft-excel-logo text-lg"></i> Export Rekap
                     </button>
-                    <!-- Tombol Logout -->
+                    <button onclick="exportToExcelLengkap()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/30 transition-all flex items-center gap-2">
+                        <i class="ph ph-table text-lg"></i> Export Lengkap
+                    </button>
                     <button onclick="logoutAdmin()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-red-500/20 text-red-300 hover:bg-red-500/40 border border-red-500/30 transition-all flex items-center gap-2">
                         <i class="ph ph-sign-out"></i> Logout
                     </button>
@@ -267,87 +268,90 @@
             </div>
 
             <!-- Stats Row -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="glass-panel p-6 flex items-center gap-4">
-                    <div class="p-4 bg-blue-500/20 rounded-2xl text-blue-400"><i class="ph ph-student text-3xl"></i></div>
-                    <div><p class="text-sm text-slate-400">Total Siswa</p><h3 id="stat-siswa" class="text-3xl font-bold text-white">0</h3></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="glass-panel p-5 flex items-center gap-3">
+                    <div class="p-3 bg-blue-500/20 rounded-xl text-blue-400 shrink-0"><i class="ph ph-student text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Total Siswa</p><h3 id="stat-siswa" class="text-2xl font-bold text-white">0</h3></div>
                 </div>
-                <div class="glass-panel p-6 flex items-center gap-4">
-                    <div class="p-4 bg-purple-500/20 rounded-2xl text-purple-400"><i class="ph ph-users-three text-3xl"></i></div>
-                    <div><p class="text-sm text-slate-400">Total Orang Tua</p><h3 id="stat-ortu" class="text-3xl font-bold text-white">0</h3></div>
+                <div class="glass-panel p-5 flex items-center gap-3">
+                    <div class="p-3 bg-purple-500/20 rounded-xl text-purple-400 shrink-0"><i class="ph ph-users-three text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Total Orang Tua</p><h3 id="stat-ortu" class="text-2xl font-bold text-white">0</h3></div>
                 </div>
-                <div class="glass-panel p-6 flex items-center gap-4">
-                    <div class="p-4 bg-emerald-500/20 rounded-2xl text-emerald-400"><i class="ph ph-check-circle text-3xl"></i></div>
-                    <div><p class="text-sm text-slate-400">Data Sinkron (Lengkap)</p><h3 id="stat-lengkap" class="text-3xl font-bold text-white">0</h3></div>
+                <div class="glass-panel p-5 flex items-center gap-3">
+                    <div class="p-3 bg-emerald-500/20 rounded-xl text-emerald-400 shrink-0"><i class="ph ph-check-circle text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Data Lengkap</p><h3 id="stat-lengkap" class="text-2xl font-bold text-white">0</h3></div>
                 </div>
-            </div>
-
-            <!-- List Klasifikasi Siswa -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <!-- Merah -->
-                <div class="glass-panel p-6 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-2 h-full bg-red-500"></div>
-                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="ph-fill ph-warning-circle text-red-400 text-2xl"></i> Butuh Pendampingan Khusus</h3>
-                    <p class="text-xs text-slate-400 mb-4">Siswa dengan Risiko Tinggi, Motivasi Rendah, atau Masalah Sosial/Emosi.</p>
-                    <div id="list-pendampingan" class="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        <!-- Rendered by JS -->
-                    </div>
-                </div>
-                <!-- Hijau -->
-                <div class="glass-panel p-6 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
-                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="ph-fill ph-star text-emerald-400 text-2xl"></i> Potensi Mandiri & Unggul</h3>
-                    <p class="text-xs text-slate-400 mb-4">Siswa dengan Motivasi Tinggi, Regulasi Emosi Baik & Risiko Rendah.</p>
-                    <div id="list-potensi" class="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        <!-- Rendered by JS -->
-                    </div>
+                <div class="glass-panel p-5 flex items-center gap-3">
+                    <div class="p-3 bg-red-500/20 rounded-xl text-red-400 shrink-0"><i class="ph ph-warning-circle text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Butuh Perhatian</p><h3 id="stat-perhatian" class="text-2xl font-bold text-white">0</h3></div>
                 </div>
             </div>
 
-            <!-- Charts Section -->
+            <!-- Klasifikasi Siswa -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                <div class="glass-panel p-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 rounded-l-xl"></div>
+                    <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2 ml-3"><i class="ph-fill ph-warning-circle text-red-400"></i> Butuh Pendampingan</h3>
+                    <p class="text-xs text-slate-500 mb-3 ml-3">Risiko Tinggi / Motivasi Rendah</p>
+                    <div id="list-pendampingan" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+                <div class="glass-panel p-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-yellow-500 rounded-l-xl"></div>
+                    <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2 ml-3"><i class="ph-fill ph-eye text-yellow-400"></i> Perlu Pemantauan</h3>
+                    <p class="text-xs text-slate-500 mb-3 ml-3">Risiko Sedang / Sosial Terbatas</p>
+                    <div id="list-pemantauan" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+                <div class="glass-panel p-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 rounded-l-xl"></div>
+                    <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2 ml-3"><i class="ph-fill ph-star text-emerald-400"></i> Potensi Unggul</h3>
+                    <p class="text-xs text-slate-500 mb-3 ml-3">Motivasi Tinggi / Risiko Rendah</p>
+                    <div id="list-potensi" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Charts -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="glass-panel p-6 relative">
-                    <h3 class="text-lg font-semibold text-white mb-4 text-center">Analisis Motivasi Siswa</h3>
-                    <div class="relative h-64 w-full flex justify-center">
-                        <canvas id="chart-motivasi"></canvas>
-                    </div>
+                <div class="glass-panel p-6">
+                    <h3 class="text-sm font-semibold text-white mb-4 text-center uppercase tracking-wider text-slate-400">Analisis Motivasi</h3>
+                    <div class="relative h-56 flex justify-center"><canvas id="chart-motivasi"></canvas></div>
                 </div>
-                <div class="glass-panel p-6 relative">
-                    <h3 class="text-lg font-semibold text-white mb-4 text-center">Tingkat Risiko Digital / Pergaulan</h3>
-                    <div class="relative h-64 w-full flex justify-center">
-                        <canvas id="chart-risiko"></canvas>
-                    </div>
+                <div class="glass-panel p-6">
+                    <h3 class="text-sm font-semibold text-white mb-4 text-center uppercase tracking-wider text-slate-400">Tingkat Risiko Digital</h3>
+                    <div class="relative h-56 flex justify-center"><canvas id="chart-risiko"></canvas></div>
                 </div>
             </div>
-
-            <!-- Bar Chart Distribusi -->
-            <div class="glass-panel p-6 mb-8 relative">
-                <h3 class="text-lg font-semibold text-white mb-4 text-center">Distribusi Kondisi Siswa per Aspek</h3>
-                <div class="relative h-72 w-full flex justify-center">
-                    <canvas id="chart-distribusi"></canvas>
-                </div>
+            <div class="glass-panel p-6 mb-8">
+                <h3 class="text-sm font-semibold text-white mb-4 text-center uppercase tracking-wider text-slate-400">Distribusi Kondisi Siswa per Aspek</h3>
+                <div class="relative h-64"><canvas id="chart-distribusi"></canvas></div>
             </div>
 
-            <!-- Data Table -->
+            <!-- Tabel dengan Search -->
             <div class="glass-panel p-6 overflow-x-auto">
-                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2"><i class="ph ph-table"></i> Rekap Data Pasangan Wawancara</h3>
+                <div class="flex items-center justify-between mb-5 gap-4 flex-wrap">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2"><i class="ph ph-table text-blue-400"></i> Rekap Data Wawancara</h3>
+                    <div class="flex items-center gap-2 glass-input rounded-xl px-3 py-2 min-w-[220px]" style="background:rgba(255,255,255,0.04)">
+                        <i class="ph ph-magnifying-glass text-slate-400 text-sm shrink-0"></i>
+                        <input type="text" id="admin-search" placeholder="Cari nama siswa..." 
+                            oninput="filterAdminTable(this.value)"
+                            class="bg-transparent border-none outline-none text-sm text-white placeholder-slate-500 w-full">
+                    </div>
+                </div>
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="text-slate-400 border-b border-white/10 text-sm">
-                            <th class="pb-3 pl-2">ID Sistem</th>
-                            <th class="pb-3">Nama Siswa</th>
-                            <th class="pb-3">Nama Orang Tua</th>
-                            <th class="pb-3">Status</th>
+                        <tr class="text-slate-500 border-b border-white/10 text-xs uppercase tracking-wider">
+                            <th class="pb-3 pl-2">Nama Siswa</th>
+                            <th class="pb-3">Asal Sekolah</th>
+                            <th class="pb-3">Orang Tua</th>
+                            <th class="pb-3">Status Data</th>
+                            <th class="pb-3">Klasifikasi</th>
                             <th class="pb-3 text-right pr-2">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="text-sm">
-                        <!-- Rows dynamically rendered here -->
-                        <tr><td colspan="5" class="text-center py-6 text-slate-500">Belum ada data</td></tr>
+                        <tr><td colspan="6" class="text-center py-8 text-slate-500">Belum ada data</td></tr>
                     </tbody>
                 </table>
             </div>
-        </div>
     </main>
 
     <!-- Admin Login Modal -->
@@ -362,7 +366,7 @@
             </div>
             <div class="space-y-4">
                 <div><label class="block text-sm mb-1 text-slate-300">Username</label><input type="text" id="login-user" class="glass-input w-full rounded-xl p-3 text-center" placeholder="admin"></div>
-                <div><label class="block text-sm mb-1 text-slate-300">Password</label><input type="password" id="login-pass" class="glass-input w-full rounded-xl p-3 text-center" placeholder="•••••"></div>
+                <div><label class="block text-sm mb-1 text-slate-300">Password</label><input type="password" id="login-pass" class="glass-input w-full rounded-xl p-3 text-center" placeholder="Password"></div>
                 <button id="btn-login-submit" onclick="processLogin()" class="glass-button w-full py-3 rounded-xl text-white font-bold mt-2">Masuk Panel Admin</button>
                 <button onclick="closeLoginModal()" class="w-full py-3 rounded-xl text-slate-400 font-semibold hover:text-white transition-colors mt-2">Batal</button>
             </div>
@@ -1116,175 +1120,113 @@
             showToast("Berhasil Logout dari Admin");
         }
 
+        // ==========================================
+        // HELPER: Analisis Klasifikasi Siswa
+        // ==========================================
+        function analyzeStudent(data) {
+            const mot     = data["sw_tema2_kesimpulan"] || "";
+            const ris     = data["sw_digital_kesimpulan"] || "";
+            const belajar = data["sw_tema3_kesimpulan"] || "";
+            const sosial  = data["sw_tema4_kesimpulan"] || "";
+            const keluarga= data["sw_tema5_kesimpulan"] || "";
+            const emosi   = data["sw_tema6_kesimpulan"] || "";
+            const komitmen= data["sw_komitmen_kesimpulan"] || "";
+            let flags = [], isPendampingan=false, isPemantauan=false, isUnggul=false;
+            if (mot.includes('Rendah'))          { flags.push({label:'Motivasi Rendah',color:'red'});      isPendampingan=true; }
+            if (ris.includes('Tinggi'))           { flags.push({label:'Risiko Digital Tinggi',color:'red'});isPendampingan=true; }
+            if (sosial.includes('Berisiko'))      { flags.push({label:'Sosial Berisiko',color:'red'});      isPendampingan=true; }
+            if (belajar.includes('Pendampingan')) { flags.push({label:'Kesulitan Belajar',color:'red'});    isPendampingan=true; }
+            if (emosi.includes('Pendampingan'))   { flags.push({label:'Emosi Kurang Stabil',color:'red'});  isPendampingan=true; }
+            if (keluarga.includes('Perhatian'))   { flags.push({label:'Dukungan Keluarga Lemah',color:'red'});isPendampingan=true; }
+            if (!isPendampingan) {
+                if (mot.includes('Sedang'))       flags.push({label:'Motivasi Sedang',color:'yellow'});
+                if (ris.includes('Sedang'))        flags.push({label:'Risiko Digital Sedang',color:'yellow'});
+                if (sosial.includes('Pemantauan'))flags.push({label:'Pemantauan Sosial',color:'yellow'});
+                if (belajar.includes('Cukup'))    flags.push({label:'Belajar Cukup',color:'yellow'});
+                if (keluarga.includes('Cukup'))   flags.push({label:'Keluarga Cukup',color:'yellow'});
+                if (emosi.includes('Cukup'))      flags.push({label:'Emosi Cukup',color:'yellow'});
+                if (flags.length > 0) isPemantauan=true;
+            }
+            if (!isPendampingan && !isPemantauan && mot.includes('Tinggi') && ris.includes('Rendah') && emosi.includes('Baik')) {
+                flags.push({label:'Potensi Unggul',color:'green'}); isUnggul=true;
+            }
+            if (komitmen.includes('berkomitmen penuh')) flags.push({label:'Komitmen Penuh',color:'green'});
+            else if (komitmen.includes('memerlukan pendampingan')) flags.push({label:'Komitmen Lemah',color:'yellow'});
+            let klasifikasi = isPendampingan?'pendampingan':isPemantauan?'pemantauan':isUnggul?'unggul':'normal';
+            return { mot,ris,belajar,sosial,keluarga,emosi,komitmen,flags,klasifikasi,isPendampingan,isPemantauan,isUnggul };
+        }
+
+        function flagBadge(flag) {
+            const c={red:'bg-red-500/20 text-red-300 border-red-500/30',yellow:'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',green:'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'};
+            return `<span class="text-xs px-2 py-0.5 rounded-full border font-medium ${c[flag.color]||c.yellow}">${escapeHtml(flag.label)}</span>`;
+        }
+
+        let allTableRows = [];
+
+        function filterAdminTable(query) {
+            const q = query.toLowerCase();
+            const filtered = q ? allTableRows.filter(r=>r.nama.toLowerCase().includes(q)||r.asalSekolah.toLowerCase().includes(q)) : allTableRows;
+            renderTableRows(filtered);
+        }
+
+        function renderTableRows(rows) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            if (rows.length === 0) { tbody.innerHTML=`<tr><td colspan="6" class="text-center py-8 text-slate-500">Tidak ada data yang sesuai.</td></tr>`; return; }
+            rows.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors";
+                const kb = {pendampingan:`<span class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-medium">Pendampingan</span>`,pemantauan:`<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-medium">Pemantauan</span>`,unggul:`<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">Potensi Unggul</span>`,normal:`<span class="text-xs px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-400 border border-slate-500/30 font-medium">Normal</span>`}[r.klasifikasi]||'';
+                const sb = r.hasOrtu ? `<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Lengkap</span>` : `<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">Menunggu Ortu</span>`;
+                tr.innerHTML=`<td class="py-3 pl-2"><p class="text-white font-medium text-sm">${escapeHtml(r.nama)}</p><p class="text-slate-500 text-xs font-mono">${escapeHtml(r.id)}</p></td><td class="py-3 text-slate-400 text-sm">${escapeHtml(r.asalSekolah)}</td><td class="py-3 text-slate-400 text-sm">${escapeHtml(r.namaOrtu)}</td><td class="py-3">${sb}</td><td class="py-3">${kb}</td><td class="py-3 text-right pr-2"><button onclick="openPreviewModal('${escapeHtml(r.id)}')" class="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Lihat Profil"><i class="ph ph-eye"></i></button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
         function renderAdminDashboard() {
             document.getElementById('stat-siswa').innerText = db.siswa.length;
             document.getElementById('stat-ortu').innerText = db.ortu.length;
-            
-            let sinkronCount = 0;
-            db.siswa.forEach(s => {
-                if(db.ortu.some(o => o.linkedSiswaId === s.id)) sinkronCount++;
-            });
-            document.getElementById('stat-lengkap').innerText = sinkronCount; 
+            let sinkronCount=0, perhatianCount=0;
+            db.siswa.forEach(s => { if(db.ortu.some(o=>o.linkedSiswaId===s.id)) sinkronCount++; });
+            document.getElementById('stat-lengkap').innerText = sinkronCount;
 
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            if(db.siswa.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-500">Belum ada data rekaman wawancara.</td></tr>`;
-            } else {
-                db.siswa.forEach(s => {
-                    const ortuMatch = db.ortu.find(o => o.linkedSiswaId === s.id);
-                    const statusHtml = ortuMatch 
-                        ? `<span class="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-md text-xs font-bold">Lengkap</span>`
-                        : `<span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-md text-xs font-bold">Menunggu Ortu</span>`;
-                    
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors";
-                    tr.innerHTML = `
-                        <td class="py-3 pl-2 text-slate-300 font-mono text-xs">${escapeHtml(s.id)}</td>
-                        <td class="py-3 text-white font-medium">${escapeHtml(s.data.namaLengkap || s.data['Nama Lengkap'] || 'N/A')}</td>
-                        <td class="py-3 text-slate-300">${ortuMatch ? escapeHtml(ortuMatch.data.namaOrtu || ortuMatch.data['Nama Orang Tua/Wali']) : '-'}</td>
-                        <td class="py-3">${statusHtml}</td>
-                        <td class="py-3 text-right pr-2">
-                            <button onclick="openPreviewModal('${escapeHtml(s.id)}')" class="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Lihat Detail Form"><i class="ph ph-eye"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            // Variabel Chart & Klasifikasi
-            let cTinggi = 0, cSedang = 0, cRendah = 0;
-            let rRendah = 0, rSedang = 0, rTinggi = 0;
-            let distBaik = [0, 0, 0, 0]; // Index: 0=Belajar, 1=Sosial, 2=Keluarga, 3=Emosi
-            let distCukup = [0, 0, 0, 0];
-            let distKurang = [0, 0, 0, 0];
-            
-            const listPendampingan = document.getElementById('list-pendampingan');
-            const listPotensi = document.getElementById('list-potensi');
-            listPendampingan.innerHTML = '';
-            listPotensi.innerHTML = '';
+            let cTinggi=0,cSedang=0,cRendah=0,rRendah=0,rSedang=0,rTinggi=0;
+            let distBaik=[0,0,0,0],distCukup=[0,0,0,0],distKurang=[0,0,0,0];
+            const lP=document.getElementById('list-pendampingan'),lPm=document.getElementById('list-pemantauan'),lU=document.getElementById('list-potensi');
+            lP.innerHTML=''; lPm.innerHTML=''; lU.innerHTML=''; allTableRows=[];
 
             db.siswa.forEach(s => {
-                const data = s.data;
-                const nama = data.namaLengkap || data['Nama Lengkap'] || 'N/A';
-                
-                // Tema 2 & 8 (Doughnut & Pie Charts)
-                const mot = data["sw_tema2_kesimpulan"] || data["TEMA 2 - Kesimpulan"];
-                if(mot && mot.includes('Tinggi')) cTinggi++;
-                else if(mot && mot.includes('Sedang')) cSedang++;
-                else if(mot && mot.includes('Rendah')) cRendah++;
-
-                const ris = data["sw_digital_kesimpulan"] || data["KEBIASAAN DIGITAL - Kesimpulan"];
-                if(ris && ris.includes('Rendah')) rRendah++;
-                else if(ris && ris.includes('Sedang')) rSedang++;
-                else if(ris && ris.includes('Tinggi')) rTinggi++;
-
-                // Tema Bar Chart (Distribusi Aspek)
-                const belajar = data["sw_tema3_kesimpulan"];
-                if(belajar && belajar.includes('Baik')) distBaik[0]++;
-                else if(belajar && belajar.includes('Cukup')) distCukup[0]++;
-                else if(belajar && belajar.includes('Pendampingan')) distKurang[0]++;
-                
-                const sosial = data["sw_tema4_kesimpulan"];
-                if(sosial && sosial.includes('Positif')) distBaik[1]++;
-                else if(sosial && sosial.includes('Pemantauan')) distCukup[1]++;
-                else if(sosial && sosial.includes('Berisiko')) distKurang[1]++;
-                
-                const keluarga = data["sw_tema5_kesimpulan"];
-                if(keluarga && keluarga.includes('Baik')) distBaik[2]++;
-                else if(keluarga && keluarga.includes('Cukup')) distCukup[2]++;
-                else if(keluarga && keluarga.includes('Perhatian')) distKurang[2]++;
-                
-                const emosi = data["sw_tema6_kesimpulan"];
-                if(emosi && emosi.includes('Baik')) distBaik[3]++;
-                else if(emosi && emosi.includes('Cukup')) distCukup[3]++;
-                else if(emosi && emosi.includes('Pendampingan')) distKurang[3]++;
-
-                // Logika Algoritma Klasifikasi List Siswa Merah/Hijau
-                let isPendampingan = false;
-                let reasonsPendampingan = [];
-                
-                if (mot && mot.includes('Rendah')) { isPendampingan = true; reasonsPendampingan.push("Motivasi Rendah"); }
-                if (ris && ris.includes('Tinggi')) { isPendampingan = true; reasonsPendampingan.push("Risiko Digital Tinggi"); }
-                if (sosial && sosial.includes('Berisiko')) { isPendampingan = true; reasonsPendampingan.push("Sosial Berisiko"); }
-                if (belajar && belajar.includes('Pendampingan')) { isPendampingan = true; reasonsPendampingan.push("Kesulitan Belajar"); }
-                if (emosi && emosi.includes('Pendampingan')) { isPendampingan = true; reasonsPendampingan.push("Regulasi Emosi Kurang"); }
-
-                if (isPendampingan) {
-                    listPendampingan.innerHTML += `<div class="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-red-500/20 transition group" onclick="openPreviewModal('${escapeHtml(s.id)}')">
-                        <div><p class="text-sm font-bold text-white">${escapeHtml(nama)}</p><p class="text-xs text-red-300 mt-1"><i class="ph ph-warning"></i> ${escapeHtml(reasonsPendampingan.join(', '))}</p></div>
-                        <i class="ph ph-eye text-red-400 group-hover:text-white transition"></i>
-                    </div>`;
-                }
-
-                if (mot && mot.includes('Tinggi') && ris && ris.includes('Rendah') && emosi && emosi.includes('Baik') && !isPendampingan) {
-                    listPotensi.innerHTML += `<div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:bg-emerald-500/20 transition group" onclick="openPreviewModal('${escapeHtml(s.id)}')">
-                        <div><p class="text-sm font-bold text-white">${escapeHtml(nama)}</p><p class="text-xs text-emerald-300 mt-1"><i class="ph ph-check-circle"></i> Mandiri, Adaptasi Baik</p></div>
-                        <i class="ph ph-eye text-emerald-400 group-hover:text-white transition"></i>
-                    </div>`;
-                }
+                const data=s.data, nama=data.namaLengkap||data['Nama Lengkap']||'N/A';
+                const ortuMatch=db.ortu.find(o=>o.linkedSiswaId===s.id);
+                const a=analyzeStudent(data);
+                if(a.mot.includes('Tinggi')) cTinggi++; else if(a.mot.includes('Sedang')) cSedang++; else if(a.mot.includes('Rendah')) cRendah++;
+                if(a.ris.includes('Rendah')) rRendah++; else if(a.ris.includes('Sedang')) rSedang++; else if(a.ris.includes('Tinggi')) rTinggi++;
+                if(a.belajar.includes('Baik')) distBaik[0]++; else if(a.belajar.includes('Cukup')) distCukup[0]++; else if(a.belajar.includes('Pendampingan')) distKurang[0]++;
+                if(a.sosial.includes('Positif')) distBaik[1]++; else if(a.sosial.includes('Pemantauan')) distCukup[1]++; else if(a.sosial.includes('Berisiko')) distKurang[1]++;
+                if(a.keluarga.includes('Baik')) distBaik[2]++; else if(a.keluarga.includes('Cukup')) distCukup[2]++; else if(a.keluarga.includes('Perhatian')) distKurang[2]++;
+                if(a.emosi.includes('Baik')) distBaik[3]++; else if(a.emosi.includes('Cukup')) distCukup[3]++; else if(a.emosi.includes('Pendampingan')) distKurang[3]++;
+                if(a.isPendampingan) perhatianCount++;
+                const fH=a.flags.slice(0,2).map(f=>flagBadge(f)).join(' ');
+                const cb=`onclick="openPreviewModal('${escapeHtml(s.id)}')" class="p-2.5 rounded-xl flex justify-between items-start cursor-pointer transition group border"`;
+                if(a.isPendampingan) lP.innerHTML+=`<div ${cb} style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'"><div><p class="text-sm font-semibold text-white">${escapeHtml(nama)}</p><div class="flex flex-wrap gap-1 mt-1">${fH}</div></div><i class="ph ph-eye text-red-400 shrink-0 mt-0.5"></i></div>`;
+                else if(a.isPemantauan) lPm.innerHTML+=`<div ${cb} style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2)" onmouseover="this.style.background='rgba(245,158,11,0.15)'" onmouseout="this.style.background='rgba(245,158,11,0.08)'"><div><p class="text-sm font-semibold text-white">${escapeHtml(nama)}</p><div class="flex flex-wrap gap-1 mt-1">${fH}</div></div><i class="ph ph-eye text-yellow-400 shrink-0 mt-0.5"></i></div>`;
+                else if(a.isUnggul) lU.innerHTML+=`<div ${cb} style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2)" onmouseover="this.style.background='rgba(16,185,129,0.15)'" onmouseout="this.style.background='rgba(16,185,129,0.08)'"><div><p class="text-sm font-semibold text-white">${escapeHtml(nama)}</p><div class="flex flex-wrap gap-1 mt-1">${fH}</div></div><i class="ph ph-eye text-emerald-400 shrink-0 mt-0.5"></i></div>`;
+                allTableRows.push({id:s.id,nama,asalSekolah:data.asalSekolah||data['Asal Sekolah']||'-',namaOrtu:ortuMatch?(ortuMatch.data.namaOrtu||ortuMatch.data['Nama Orang Tua/Wali']||'-'):'-',hasOrtu:!!ortuMatch,klasifikasi:a.klasifikasi,flags:a.flags});
             });
 
-            if (listPendampingan.innerHTML === '') listPendampingan.innerHTML = `<p class="text-sm text-slate-500 p-2 italic">Tidak ada siswa berisiko tinggi saat ini.</p>`;
-            if (listPotensi.innerHTML === '') listPotensi.innerHTML = `<p class="text-sm text-slate-500 p-2 italic">Belum ada data unggulan bersih.</p>`;
+            document.getElementById('stat-perhatian').innerText = perhatianCount;
+            if(!lP.innerHTML)  lP.innerHTML=`<p class="text-xs text-slate-500 p-2 italic">Tidak ada.</p>`;
+            if(!lPm.innerHTML) lPm.innerHTML=`<p class="text-xs text-slate-500 p-2 italic">Tidak ada.</p>`;
+            if(!lU.innerHTML)  lU.innerHTML=`<p class="text-xs text-slate-500 p-2 italic">Tidak ada.</p>`;
+            renderTableRows(allTableRows);
 
-            Chart.defaults.color = '#94a3b8';
-            Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
-
-            // Render Doughnut Motivasi
+            Chart.defaults.color='#94a3b8'; Chart.defaults.borderColor='rgba(255,255,255,0.05)';
             if(chartMotivasiInstance) chartMotivasiInstance.destroy();
-            const ctxMotivasi = document.getElementById('chart-motivasi').getContext('2d');
-            chartMotivasiInstance = new Chart(ctxMotivasi, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Tinggi', 'Sedang', 'Rendah'],
-                    datasets: [{
-                        data: [cTinggi, cSedang, cRendah],
-                        backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(239, 68, 68, 0.8)'],
-                        borderColor: ['#020617', '#020617', '#020617'],
-                        borderWidth: 2,
-                        hoverOffset: 4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
-            });
-
-            // Render Pie Risiko
+            chartMotivasiInstance=new Chart(document.getElementById('chart-motivasi').getContext('2d'),{type:'doughnut',data:{labels:['Tinggi','Sedang','Rendah'],datasets:[{data:[cTinggi,cSedang,cRendah],backgroundColor:['rgba(16,185,129,0.8)','rgba(245,158,11,0.8)','rgba(239,68,68,0.8)'],borderColor:'#020617',borderWidth:2,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},cutout:'70%'}});
             if(chartRisikoInstance) chartRisikoInstance.destroy();
-            const ctxRisiko = document.getElementById('chart-risiko').getContext('2d');
-            chartRisikoInstance = new Chart(ctxRisiko, {
-                type: 'pie',
-                data: {
-                    labels: ['Risiko Rendah', 'Risiko Sedang', 'Risiko Tinggi'],
-                    datasets: [{
-                        data: [rRendah, rSedang, rTinggi],
-                        backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(168, 85, 247, 0.8)', 'rgba(244, 63, 94, 0.8)'],
-                        borderColor: ['#020617', '#020617', '#020617'],
-                        borderWidth: 2
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-
-            // Render Bar Chart Distribusi
+            chartRisikoInstance=new Chart(document.getElementById('chart-risiko').getContext('2d'),{type:'pie',data:{labels:['Risiko Rendah','Risiko Sedang','Risiko Tinggi'],datasets:[{data:[rRendah,rSedang,rTinggi],backgroundColor:['rgba(59,130,246,0.8)','rgba(168,85,247,0.8)','rgba(244,63,94,0.8)'],borderColor:'#020617',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
             if(chartDistribusiInstance) chartDistribusiInstance.destroy();
-            const ctxDistribusi = document.getElementById('chart-distribusi').getContext('2d');
-            chartDistribusiInstance = new Chart(ctxDistribusi, {
-                type: 'bar',
-                data: {
-                    labels: ['Belajar', 'Relasi Sosial', 'Dukungan Keluarga', 'Regulasi Emosi'],
-                    datasets: [
-                        { label: 'Positif / Baik', data: distBaik, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 4 },
-                        { label: 'Cukup / Pemantauan', data: distCukup, backgroundColor: 'rgba(245, 158, 11, 0.8)', borderRadius: 4 },
-                        { label: 'Pendampingan Khusus', data: distKurang, backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 4 }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1, precision: 0 } }, x: { grid: { display: false } } },
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
+            chartDistribusiInstance=new Chart(document.getElementById('chart-distribusi').getContext('2d'),{type:'bar',data:{labels:['Kebiasaan Belajar','Relasi Sosial','Dukungan Keluarga','Regulasi Emosi'],datasets:[{label:'Positif/Baik',data:distBaik,backgroundColor:'rgba(16,185,129,0.8)',borderRadius:4},{label:'Cukup',data:distCukup,backgroundColor:'rgba(245,158,11,0.8)',borderRadius:4},{label:'Perlu Pendampingan',data:distKurang,backgroundColor:'rgba(239,68,68,0.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{stepSize:1,precision:0}},x:{grid:{display:false}}},plugins:{legend:{position:'bottom'}}}});
         }
 
         function exportToExcel() {
@@ -1347,6 +1289,90 @@
             showToast("Berhasil mendownload file Excel!");
         }
 
+        function exportToExcelLengkap() {
+            if(db.siswa.length === 0) {
+                showToast("Belum ada data untuk diekspor!", "error");
+                return;
+            }
+
+            // === SHEET 1: DATA SISWA LENGKAP ===
+            // Kumpulkan semua key unik dari seluruh data siswa
+            const allSiswaKeys = new Set();
+            db.siswa.forEach(s => Object.keys(s.data).forEach(k => allSiswaKeys.add(k)));
+            const siswaHeaders = Array.from(allSiswaKeys);
+
+            const siswaRows = db.siswa.map(s => {
+                const row = {};
+                siswaHeaders.forEach(k => {
+                    let val = s.data[k];
+                    // Format tanggal dari Google Sheets (Date object)
+                    if (val instanceof Date) val = val.toLocaleDateString('id-ID');
+                    row[k] = val !== undefined && val !== null && val !== '' ? val : '-';
+                });
+                return row;
+            });
+
+            // === SHEET 2: DATA ORANG TUA LENGKAP ===
+            const allOrtuKeys = new Set();
+            db.ortu.forEach(o => Object.keys(o.data).forEach(k => allOrtuKeys.add(k)));
+            const ortuHeaders = Array.from(allOrtuKeys);
+
+            const ortuRows = db.ortu.map(o => {
+                const row = {};
+                ortuHeaders.forEach(k => {
+                    let val = o.data[k];
+                    if (val instanceof Date) val = val.toLocaleDateString('id-ID');
+                    row[k] = val !== undefined && val !== null && val !== '' ? val : '-';
+                });
+                return row;
+            });
+
+            // === SHEET 3: REKAP PASANGAN (siswa + ortu digabung per baris) ===
+            const allPairKeys = new Set(['ID Sistem', 'Nama Siswa', 'Status']);
+            db.siswa.forEach(s => Object.keys(s.data).forEach(k => allPairKeys.add('SISWA_' + k)));
+            db.ortu.forEach(o => Object.keys(o.data).forEach(k => allPairKeys.add('ORTU_' + k)));
+            const pairHeaders = Array.from(allPairKeys);
+
+            const pairRows = db.siswa.map(s => {
+                const ortuMatch = db.ortu.find(o => o.linkedSiswaId === s.id);
+                const row = {
+                    'ID Sistem': s.id,
+                    'Nama Siswa': s.data.namaLengkap || s.data['Nama Lengkap'] || '-',
+                    'Status': ortuMatch ? 'Lengkap' : 'Menunggu Ortu'
+                };
+                Object.keys(s.data).forEach(k => {
+                    let val = s.data[k];
+                    if (val instanceof Date) val = val.toLocaleDateString('id-ID');
+                    row['SISWA_' + k] = val !== undefined && val !== null && val !== '' ? val : '-';
+                });
+                if (ortuMatch) {
+                    Object.keys(ortuMatch.data).forEach(k => {
+                        let val = ortuMatch.data[k];
+                        if (val instanceof Date) val = val.toLocaleDateString('id-ID');
+                        row['ORTU_' + k] = val !== undefined && val !== null && val !== '' ? val : '-';
+                    });
+                }
+                return row;
+            });
+
+            // Build workbook dengan 3 sheet
+            const wb = XLSX.utils.book_new();
+
+            const wsSiswa = XLSX.utils.json_to_sheet(siswaRows, { header: siswaHeaders });
+            XLSX.utils.book_append_sheet(wb, wsSiswa, "Data Siswa Lengkap");
+
+            if (ortuRows.length > 0) {
+                const wsOrtu = XLSX.utils.json_to_sheet(ortuRows, { header: ortuHeaders });
+                XLSX.utils.book_append_sheet(wb, wsOrtu, "Data Orang Tua Lengkap");
+            }
+
+            const wsPair = XLSX.utils.json_to_sheet(pairRows);
+            XLSX.utils.book_append_sheet(wb, wsPair, "Rekap Pasangan");
+
+            XLSX.writeFile(wb, "DataLengkap_Wawancara_SPMB_SMAN1Soppeng.xlsx");
+            showToast(`Berhasil export ${db.siswa.length} data siswa lengkap!`);
+        }
+
         function closePreviewModal() {
             document.getElementById('modal-preview').classList.add('hidden-view');
         }
@@ -1369,39 +1395,83 @@
             const oData = db.ortu.find(o => o.linkedSiswaId === siswaId);
             if(!sData) return;
 
+            const analyzed = analyzeStudent(sData.data);
+            const nama = sData.data.namaLengkap || sData.data['Nama Lengkap'] || 'N/A';
+            const asalSekolah = sData.data.asalSekolah || sData.data['Asal Sekolah'] || '-';
+            const jenisKelamin = sData.data.jenisKelamin || '-';
+            const noHp = sData.data.noHp || '-';
+
+            // Warna header berdasarkan klasifikasi
+            const headerColors = {
+                pendampingan: 'rgba(239,68,68,0.15)', pemantauan: 'rgba(245,158,11,0.15)',
+                unggul: 'rgba(16,185,129,0.15)', normal: 'rgba(59,130,246,0.1)'
+            };
+            const headerBorder = {
+                pendampingan:'rgba(239,68,68,0.4)', pemantauan:'rgba(245,158,11,0.4)',
+                unggul:'rgba(16,185,129,0.4)', normal:'rgba(59,130,246,0.3)'
+            };
+            const klasLabel = {pendampingan:'Butuh Pendampingan Khusus', pemantauan:'Perlu Pemantauan', unggul:'Potensi Unggul', normal:'Normal'};
+            const klasIcon  = {pendampingan:'ph-fill ph-warning-circle text-red-400', pemantauan:'ph-fill ph-eye text-yellow-400', unggul:'ph-fill ph-star text-emerald-400', normal:'ph ph-check-circle text-blue-400'};
+
             const formSiswaClone = document.getElementById('form-siswa').cloneNode(true);
-            const formOrtuClone = document.getElementById('form-ortu').cloneNode(true);
-            
-            const submitBtn1 = formSiswaClone.querySelector('button[type="submit"]');
-            if(submitBtn1) submitBtn1.remove();
-            
-            const submitBtn2 = formOrtuClone.querySelector('button[type="submit"]');
-            if(submitBtn2) submitBtn2.remove();
-            
-            const linkageSection = formOrtuClone.querySelector('#select-linked-siswa');
-            if(linkageSection) linkageSection.parentElement.parentElement.remove();
+            const formOrtuClone  = document.getElementById('form-ortu').cloneNode(true);
+            formSiswaClone.classList.remove('hidden-view');
+            formOrtuClone.classList.remove('hidden-view');
+            const s1 = formSiswaClone.querySelector('button[type="submit"]'); if(s1) s1.remove();
+            const s2 = formOrtuClone.querySelector('#btn-submit-ortu'); if(s2) s2.remove();
+            const lp = formOrtuClone.querySelector('.glass-panel'); if(lp) lp.remove();
+
+            const allFlagsHtml = analyzed.flags.map(f=>flagBadge(f)).join(' ');
+
+            // Radar aspek
+            const aspects = [
+                { label:'Motivasi',   val: analyzed.mot.includes('Tinggi')?3:analyzed.mot.includes('Sedang')?2:analyzed.mot.includes('Rendah')?1:0 },
+                { label:'Belajar',    val: analyzed.belajar.includes('Baik')?3:analyzed.belajar.includes('Cukup')?2:analyzed.belajar.includes('Pendampingan')?1:0 },
+                { label:'Sosial',     val: analyzed.sosial.includes('Positif')?3:analyzed.sosial.includes('Pemantauan')?2:analyzed.sosial.includes('Berisiko')?1:0 },
+                { label:'Keluarga',   val: analyzed.keluarga.includes('Baik')?3:analyzed.keluarga.includes('Cukup')?2:analyzed.keluarga.includes('Perhatian')?1:0 },
+                { label:'Emosi',      val: analyzed.emosi.includes('Baik')?3:analyzed.emosi.includes('Cukup')?2:analyzed.emosi.includes('Pendampingan')?1:0 },
+                { label:'Risiko Digital', val: analyzed.ris.includes('Rendah')?3:analyzed.ris.includes('Sedang')?2:analyzed.ris.includes('Tinggi')?1:0 },
+            ];
+            const aspHtml = aspects.map(a=>{
+                const pct = (a.val/3)*100;
+                const c = a.val===3?'bg-emerald-500':a.val===2?'bg-yellow-500':a.val===1?'bg-red-500':'bg-slate-600';
+                const t = a.val===3?'Baik':a.val===2?'Cukup':a.val===1?'Rendah/Berisiko':'Belum diisi';
+                return `<div class="flex items-center gap-2 text-xs"><span class="text-slate-400 w-28 shrink-0">${a.label}</span><div class="flex-1 bg-white/5 rounded-full h-2"><div class="${c} h-2 rounded-full transition-all" style="width:${pct}%"></div></div><span class="text-slate-400 w-20 text-right shrink-0">${t}</span></div>`;
+            }).join('');
 
             const previewContainer = document.getElementById('preview-content');
             previewContainer.innerHTML = `
-                <div class="flex gap-4 mb-6">
-                    <button onclick="switchPreviewTab('siswa')" id="ptab-siswa" class="px-6 py-2 rounded-xl bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">Data Siswa</button>
-                    <button onclick="switchPreviewTab('ortu')" id="ptab-ortu" class="px-6 py-2 rounded-xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-colors border border-transparent">Data Orang Tua</button>
+                <!-- Profil Header -->
+                <div class="rounded-2xl p-5 mb-6 border" style="background:${headerColors[analyzed.klasifikasi]};border-color:${headerBorder[analyzed.klasifikasi]}">
+                    <div class="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">${escapeHtml(nama)}</h3>
+                            <p class="text-slate-400 text-sm mt-0.5">${escapeHtml(asalSekolah)} &bull; ${escapeHtml(jenisKelamin)} &bull; <span class="font-mono">${escapeHtml(noHp)}</span></p>
+                            <p class="text-xs font-mono text-slate-600 mt-1">${escapeHtml(siswaId)}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-sm flex items-center justify-end gap-1.5"><i class="${klasIcon[analyzed.klasifikasi]||''}"></i>${klasLabel[analyzed.klasifikasi]||''}</p>
+                            <p class="text-xs text-slate-500 mt-1">${oData?'Data Orang Tua: Lengkap':'Data Orang Tua: Belum Ada'}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 mt-3">${allFlagsHtml||'<span class="text-xs text-slate-500 italic">Belum ada analisis</span>'}</div>
+                    <div class="mt-4 space-y-2">${aspHtml}</div>
+                </div>
+
+                <!-- Tab -->
+                <div class="flex gap-3 mb-5">
+                    <button onclick="switchPreviewTab('siswa')" id="ptab-siswa" class="px-5 py-2 rounded-xl bg-blue-500/20 text-blue-300 font-semibold text-sm border border-blue-500/30">Data Siswa</button>
+                    <button onclick="switchPreviewTab('ortu')" id="ptab-ortu" class="px-5 py-2 rounded-xl bg-white/5 text-slate-400 font-semibold text-sm hover:bg-white/10 transition-colors border border-transparent">Data Orang Tua</button>
                 </div>
                 <div id="pview-siswa" class="space-y-6 pointer-events-none"></div>
                 <div id="pview-ortu" class="space-y-6 pointer-events-none hidden-view"></div>
             `;
-            
+
             document.getElementById('pview-siswa').appendChild(formSiswaClone);
             document.getElementById('pview-ortu').appendChild(formOrtuClone);
-
             populateFormReadonly('pview-siswa', sData.data);
-            
-            if(oData) {
-                populateFormReadonly('pview-ortu', oData.data);
-            } else {
-                document.getElementById('pview-ortu').innerHTML = '<div class="glass-panel p-10 text-center text-slate-400 border border-dashed border-white/20"><i class="ph ph-warning-circle text-4xl mb-3 text-yellow-400"></i><br>Belum ada data Orang Tua yang terhubung dengan siswa ini.</div>';
-            }
-            
+            if(oData) { populateFormReadonly('pview-ortu', oData.data); }
+            else { document.getElementById('pview-ortu').innerHTML='<div class="glass-panel p-10 text-center text-slate-400 border border-dashed border-white/20"><i class="ph ph-warning-circle text-4xl mb-3 text-yellow-400 block"></i>Belum ada data Orang Tua yang terhubung.</div>'; }
             document.getElementById('modal-preview').classList.remove('hidden-view');
         }
 
