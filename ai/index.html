@@ -561,6 +561,12 @@
                             Regenerate
                         </button>
 
+                        <!-- NEW: SALIN PROMPT BUTTON -->
+                        <button id="btn-copy-prompt" onclick="copyPromptToClipboard()" class="flex-1 md:flex-none px-3 py-2 text-xs md:text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                            Salin Prompt
+                        </button>
+
                         <!-- PDF Button (NATIVE) -->
                         <button onclick="exportToPDF()" class="flex-1 md:flex-none px-3 py-2 text-xs md:text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -619,6 +625,7 @@
         let progressInterval; // Global Interval Variable
         let appMode = 'modul'; // 'modul' or 'admin'
         let contextData = null; // Store previous module data for context awareness
+        let lastGeneratedPrompt = ""; // NEW: Simpan prompt terakhir
 
         // --- INIT ---
         window.onload = function() {
@@ -1400,6 +1407,9 @@
                 `;
             }
 
+            // SIMPAN PROMPT UNTUK FITUR SALIN PROMPT
+            lastGeneratedPrompt = prompt;
+
             try {
                 const response = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
@@ -1543,6 +1553,44 @@
             }
             
             document.body.removeChild(downloadLink);
+        }
+
+        // --- NEW: COPY PROMPT FUNCTION ---
+        function copyPromptToClipboard() {
+            if (!lastGeneratedPrompt) return;
+            
+            // Membuat elemen textarea sementara untuk menyalin teks (Paling aman untuk semua browser)
+            const textArea = document.createElement("textarea");
+            textArea.value = lastGeneratedPrompt;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if(successful) {
+                    // Animasi Tombol
+                    const btn = document.getElementById('btn-copy-prompt');
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Tersalin!`;
+                    btn.classList.replace('bg-purple-600', 'bg-green-600');
+                    btn.classList.replace('hover:bg-purple-700', 'hover:bg-green-700');
+                    
+                    // Kembalikan ke semula setelah 2 detik
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.classList.replace('bg-green-600', 'bg-purple-600');
+                        btn.classList.replace('hover:bg-green-700', 'hover:bg-purple-700');
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error('Gagal menyalin prompt', err);
+            }
+
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
