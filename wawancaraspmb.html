@@ -1131,7 +1131,17 @@
             const keluarga= data["sw_tema5_kesimpulan"] || "";
             const emosi   = data["sw_tema6_kesimpulan"] || "";
             const komitmen= data["sw_komitmen_kesimpulan"] || "";
+            const sosialKerawanan = data["sw_tema4_Potensi Kerawanan"] || "";
+            const ortuPergaulan   = data["ot_pergaulan_Potensi Kerawanan"] || "";
+
             let flags = [], isPendampingan=false, isPemantauan=false, isUnggul=false;
+
+            // Deteksi riwayat bullying — badge khusus merah terang
+            const hasBullying = sosialKerawanan.toLowerCase().includes('bullying') || ortuPergaulan.toLowerCase().includes('bullying');
+            if (hasBullying) {
+                flags.push({label:'Riwayat Perundungan', color:'bullying'});
+                isPendampingan = true;
+            }
             if (mot.includes('Rendah'))          { flags.push({label:'Motivasi Rendah',color:'red'});      isPendampingan=true; }
             if (ris.includes('Tinggi'))           { flags.push({label:'Risiko Digital Tinggi',color:'red'});isPendampingan=true; }
             if (sosial.includes('Berisiko'))      { flags.push({label:'Sosial Berisiko',color:'red'});      isPendampingan=true; }
@@ -1157,8 +1167,14 @@
         }
 
         function flagBadge(flag) {
-            const c={red:'bg-red-500/20 text-red-300 border-red-500/30',yellow:'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',green:'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'};
-            return `<span class="text-xs px-2 py-0.5 rounded-full border font-medium ${c[flag.color]||c.yellow}">${escapeHtml(flag.label)}</span>`;
+            const c={
+                red:     'bg-red-500/20 text-red-300 border-red-500/30',
+                yellow:  'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+                green:   'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                bullying:'bg-pink-600/30 text-pink-200 border-pink-500/50 font-bold'
+            };
+            const icon = flag.color === 'bullying' ? '<i class="ph-fill ph-hand-fist text-pink-300 mr-1"></i>' : '';
+            return `<span class="text-xs px-2 py-0.5 rounded-full border ${c[flag.color]||c.yellow} flex items-center gap-0.5 inline-flex">${icon}${escapeHtml(flag.label)}</span>`;
         }
 
         let allTableRows = [];
@@ -1178,7 +1194,14 @@
                 tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors";
                 const kb = {pendampingan:`<span class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-medium">Pendampingan</span>`,pemantauan:`<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-medium">Pemantauan</span>`,unggul:`<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">Potensi Unggul</span>`,normal:`<span class="text-xs px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-400 border border-slate-500/30 font-medium">Normal</span>`}[r.klasifikasi]||'';
                 const sb = r.hasOrtu ? `<span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Lengkap</span>` : `<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">Menunggu Ortu</span>`;
-                tr.innerHTML=`<td class="py-3 pl-2"><p class="text-white font-medium text-sm">${escapeHtml(r.nama)}</p><p class="text-slate-500 text-xs font-mono">${escapeHtml(r.id)}</p></td><td class="py-3 text-slate-400 text-sm">${escapeHtml(r.asalSekolah)}</td><td class="py-3 text-slate-400 text-sm">${escapeHtml(r.namaOrtu)}</td><td class="py-3">${sb}</td><td class="py-3">${kb}</td><td class="py-3 text-right pr-2"><button onclick="openPreviewModal('${escapeHtml(r.id)}')" class="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Lihat Profil"><i class="ph ph-eye"></i></button></td>`;
+
+                // Badge bullying langsung di baris tabel
+                const bullyFlag = r.flags && r.flags.find(f => f.color === 'bullying');
+                const bullyBadge = bullyFlag
+                    ? `<span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-pink-600/30 text-pink-200 border border-pink-500/50 font-bold ml-1"><i class="ph-fill ph-hand-fist"></i>Perundungan</span>`
+                    : '';
+
+                tr.innerHTML=`<td class="py-3 pl-2"><p class="text-white font-medium text-sm">${escapeHtml(r.nama)}${bullyBadge}</p><p class="text-slate-500 text-xs font-mono">${escapeHtml(r.id)}</p></td><td class="py-3 text-slate-400 text-sm">${escapeHtml(r.asalSekolah)}</td><td class="py-3 text-slate-400 text-sm">${escapeHtml(r.namaOrtu)}</td><td class="py-3">${sb}</td><td class="py-3">${kb}</td><td class="py-3 text-right pr-2"><button onclick="openPreviewModal('${escapeHtml(r.id)}')" class="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Lihat Profil"><i class="ph ph-eye"></i></button></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -1463,8 +1486,8 @@
                     <button onclick="switchPreviewTab('siswa')" id="ptab-siswa" class="px-5 py-2 rounded-xl bg-blue-500/20 text-blue-300 font-semibold text-sm border border-blue-500/30">Data Siswa</button>
                     <button onclick="switchPreviewTab('ortu')" id="ptab-ortu" class="px-5 py-2 rounded-xl bg-white/5 text-slate-400 font-semibold text-sm hover:bg-white/10 transition-colors border border-transparent">Data Orang Tua</button>
                 </div>
-                <div id="pview-siswa" class="space-y-6 pointer-events-none"></div>
-                <div id="pview-ortu" class="space-y-6 pointer-events-none hidden-view"></div>
+                <div id="pview-siswa" class="space-y-6"></div>
+                <div id="pview-ortu" class="space-y-6 hidden-view"></div>
             `;
 
             document.getElementById('pview-siswa').appendChild(formSiswaClone);
@@ -1481,8 +1504,18 @@
             const inputs = container.querySelectorAll('input, select, textarea');
             
             inputs.forEach(input => {
-                input.disabled = true; 
-                input.classList.add('opacity-80', 'cursor-not-allowed', 'bg-slate-800/50');
+                if (input.tagName === 'TEXTAREA') {
+                    // Textarea: pakai readonly bukan disabled agar bisa di-resize
+                    input.readOnly = true;
+                    input.classList.add('opacity-90', 'bg-slate-800/50');
+                    input.style.resize = 'vertical';
+                    input.style.overflow = 'auto';
+                    input.style.minHeight = '80px';
+                    input.style.cursor = 'default';
+                } else {
+                    input.disabled = true;
+                    input.classList.add('opacity-80', 'cursor-not-allowed', 'bg-slate-800/50');
+                }
                 
                 const val = dataObj[input.name];
                 
@@ -1500,6 +1533,11 @@
                         }
                     } else {
                         input.value = val;
+                        // Auto-expand textarea sesuai konten
+                        if (input.tagName === 'TEXTAREA') {
+                            input.style.height = 'auto';
+                            input.style.height = Math.min(input.scrollHeight, 300) + 'px';
+                        }
                     }
                 }
             });
