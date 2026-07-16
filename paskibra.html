@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PABAR Paskibra Unit 101</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- html2pdf for Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        paskibra: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'float': 'float 20s infinite ease-in-out alternate',
+                        'float-delayed': 'float 22s infinite ease-in-out alternate-reverse',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px) scale(0.98)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        },
+                        float: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '50%': { transform: 'translate(30px, -50px) scale(1.05)' },
+                            '100%': { transform: 'translate(-20px, 40px) scale(0.95)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* === STREAMING_CHUNK:Styling CSS Spatial & Glassmorphism === */
+        body {
+            background-color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom Scrollbar Spatial Style */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(153, 27, 27, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(153, 27, 27, 0.6); }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1);
+        }
+        
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03), inset 0 1px 2px rgba(0,0,0,0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-input:focus {
+            background: #ffffff;
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15), inset 0 1px 2px rgba(0,0,0,0.01);
+            outline: none;
+        }
+
+        /* Background Mesh Gradient (Spatial Depth) */
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(to bottom right, #f1f5f9, #ffffff);
+        }
+        .mesh-blob {
+            position: absolute;
+            filter: blur(90px);
+            opacity: 0.6;
+            border-radius: 50%;
+        }
+
+        /* Spatial Buttons */
+        .btn-spatial-primary {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            box-shadow: 0 10px 20px -5px rgba(185, 28, 28, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-spatial-primary:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 15px 25px -5px rgba(185, 28, 28, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        .btn-spatial-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .btn-spatial-secondary:hover {
+            background: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col selection:bg-paskibra-200 selection:text-paskibra-900">
+
+    <!-- === STREAMING_CHUNK:Rendering Spatial Mesh Background === -->
+    <div class="mesh-bg pointer-events-none">
+        <div class="mesh-blob bg-paskibra-300 w-[30rem] h-[30rem] -top-20 -left-20 animate-float"></div>
+        <div class="mesh-blob bg-red-100 w-[40rem] h-[40rem] -bottom-40 -right-20 animate-float-delayed"></div>
+        <div class="mesh-blob bg-blue-100 w-[20rem] h-[20rem] top-[40%] left-[30%] animate-float" style="animation-delay: -5s;"></div>
+    </div>
+
+    <!-- === STREAMING_CHUNK:Rendering Floating Navbar === -->
+    <!-- Floating Island Navbar -->
+    <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-5xl z-50 glass-nav rounded-full px-4 py-3 flex items-center justify-between transition-all">
+        <a href="#" onclick="navTo('home')" class="flex items-center space-x-2 group ml-2">
+            <!-- Triple Logo -->
+            <div class="flex items-center gap-1.5">
+                <img src="https://i.ibb.co.com/Zp5vRc9V/Untitled-design.png" alt="Logo Paskibra"
+                     class="h-10 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                     onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                <div id="logo-fallback" class="hidden w-10 h-10 rounded-full bg-gradient-to-br from-paskibra-700 to-paskibra-900 items-center justify-center text-white shadow-lg">
+                    <i class="ph-fill ph-flag-banner text-xl"></i>
+                </div>
+            </div>
+            <span class="text-lg font-bold text-slate-800 tracking-tight hidden sm:block">Paskibra 101</span>
+        </a>
+        
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" type="button" class="inline-flex items-center p-2 text-slate-500 rounded-full md:hidden hover:bg-slate-100/50 focus:outline-none">
+            <i class="ph ph-list text-2xl"></i>
+        </button>
+        
+        <!-- Nav Links -->
+        <div class="hidden absolute top-16 left-0 w-full glass-nav rounded-3xl p-4 md:static md:block md:w-auto md:bg-transparent md:border-0 md:backdrop-blur-none md:shadow-none md:p-0" id="navbar-main">
+            <ul class="flex flex-col gap-2 md:flex-row md:items-center md:gap-1">
+                <li>
+                    <a href="#" onclick="navTo('home')" id="nav-home" class="block py-2.5 px-5 text-slate-600 rounded-full hover:bg-white/50 transition-all font-medium">Beranda</a>
+                </li>
+                <li>
+                    <a href="#" onclick="navTo('register')" id="nav-register" class="block py-2.5 px-5 text-slate-600 rounded-full hover:bg-white/50 transition-all font-medium">Daftar</a>
+                </li>
+                <li class="mt-2 md:mt-0 md:ml-4">
+                    <a href="#" onclick="navTo('admin-login')" id="nav-admin" class="flex items-center justify-center gap-2 py-2.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-full shadow-md transition-all hover:scale-105">
+                        <i class="ph-fill ph-lock-key text-sm"></i> Admin
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- === STREAMING_CHUNK:Rendering View Containers (SPA Routing Logic) === -->
+    <main class="flex-grow pt-32 pb-16 px-4 flex flex-col relative z-10">
+        
+        <!-- BERANDA (LANDING PAGE) -->
+        <section id="view-home" class="view-section w-full max-w-6xl mx-auto flex-grow flex items-center hidden">
+            <div class="w-full grid lg:grid-cols-2 gap-12 items-center">
+                <div class="text-left space-y-6">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-red-100 text-paskibra-800 text-sm font-semibold shadow-sm">
+                        <span class="w-2.5 h-2.5 rounded-full bg-paskibra-600 animate-ping absolute"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-paskibra-600 relative"></span>
+                        Pendaftaran Angkatan 2026/2027 Dibuka
+                    </div>
+                    
+                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+                        Langkah Awal Menuju <br />
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-paskibra-600 to-paskibra-900 drop-shadow-sm">Kedisiplinan.</span>
+                    </h1>
+                    
+                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed max-w-xl glass-panel p-4 rounded-2xl border-white/40">
+                        Penerimaan Anggota Baru (PABAR) Paskibra UPT SMA Negeri 1 Soppeng Unit 101 resmi dibuka. Bergabunglah bersama kami membentuk karakter, kepemimpinan, dan persaudaraan.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <button onclick="navTo('register')" class="btn-spatial-primary px-8 py-4 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 text-lg">
+                            Daftar Sekarang <i class="ph-bold ph-arrow-right"></i>
+                        </button>
+                        <button onclick="document.getElementById('info-syarat').classList.toggle('hidden')" class="btn-spatial-secondary px-8 py-4 text-slate-700 font-semibold rounded-2xl flex items-center justify-center gap-2 text-lg">
+                            Pelajari Syarat
+                        </button>
+                    </div>
+
+                    <div id="info-syarat" class="hidden glass-panel p-6 rounded-2xl mt-4 animate-fade-in-up border-l-4 border-l-paskibra-600">
+                        <h4 class="font-bold text-slate-800 mb-2">Persyaratan Pendaftaran:</h4>
+                        <ul class="list-disc list-inside text-slate-600 space-y-1 text-sm">
+                            <li>Siswa/i aktif UPT SMAN 1 Soppeng.</li>
+                            <li>Sehat jasmani dan rohani.</li>
+                            <li>Mengisi formulir biodata lengkap.</li>
+                            <li>Mengunggah Pas Foto (Latar Merah, 3x4).</li>
+                            <li>Mengunggah Surat Pernyataan (Bermaterai & TTD).</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Hero Image/Graphic Spatial Style -->
+                <div class="hidden lg:flex flex-col justify-center items-center gap-6 relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-paskibra-200 to-transparent rounded-full blur-3xl opacity-50"></div>
+                    <div class="glass-panel p-4 rounded-3xl transform rotate-3 hover:rotate-0 transition-transform duration-500 w-4/5 max-w-md shadow-2xl relative z-10 border-white/60">
+                        <div class="bg-gradient-to-br from-slate-900 via-paskibra-900 to-slate-800 rounded-2xl overflow-hidden aspect-[4/5] relative flex items-center justify-center">
+                            <div class="text-center px-4 py-6 flex flex-col items-center gap-4">
+                                <!-- Triple Logo Hero -->
+                                <img src="https://i.ibb.co.com/Zp5vRc9V/Untitled-design.png"
+                                     alt="Logo Paskibra SMAN 1 Soppeng"
+                                     class="w-full max-w-[260px] h-auto object-contain drop-shadow-2xl"
+                                     onerror="this.style.display='none'">
+                                <h3 class="text-white font-bold text-xl tracking-widest drop-shadow-lg">UNIT 101</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Status badge — di bawah kartu, tidak tertutup -->
+                    <div class="relative z-10 glass-panel px-5 py-3 rounded-2xl shadow-xl animate-float" style="animation-delay: -2s;">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                                <i class="ph-bold ph-check"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 font-medium">Status</p>
+                                <p class="text-sm font-bold text-slate-800">Pendaftaran Buka</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- === STREAMING_CHUNK:Rendering Registration Form === -->
+        <!-- DAFTAR -->
+        <section id="view-register" class="view-section w-full max-w-4xl mx-auto hidden">
+            <div class="text-center mb-10">
+                <span class="inline-block py-1 px-3 rounded-full bg-paskibra-100 text-paskibra-800 text-sm font-bold tracking-wider mb-3">FORMULIR PENDAFTARAN</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Data Calon Anggota</h2>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Lengkapi biodata diri Anda dengan benar sesuai dokumen resmi untuk proses seleksi PABAR Paskibra 2026.</p>
+            </div>
+            
+            <form id="regForm" class="glass-panel p-6 sm:p-10 rounded-[2rem]">
+                
+                <!-- Info Banner Glass -->
+                <div class="mb-10 p-5 bg-blue-50/50 border border-blue-200 rounded-2xl flex items-start gap-4 backdrop-blur-md shadow-sm">
+                    <div class="mt-1 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i class="ph-fill ph-info text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-900 text-lg">Penting Sebelum Mengisi!</h4>
+                        <p class="text-sm text-blue-800 mt-1 leading-relaxed">Silakan unduh <b>Surat Pernyataan</b> berikut. Cetak, isi, dan tandatangani (dengan materai bila perlu), lalu foto/scan untuk diunggah pada bagian paling bawah formulir ini.</p>
+                        
+                        <a id="btn-download-template" href="#" target="_blank" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-white rounded-xl text-sm font-bold text-blue-700 shadow-sm hover:shadow-md transition-all border border-blue-100">
+                            <i class="ph-bold ph-download-simple"></i> Download Template Surat Pernyataan
+                        </a>
+                        <p id="msg-no-template" class="text-sm text-red-500 mt-3 hidden font-medium flex items-center gap-1">
+                            <i class="ph-fill ph-warning-circle"></i> Template belum diunggah oleh Admin.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                    
+                    <!-- Section Title -->
+                    <div class="md:col-span-2 flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 rounded-full bg-paskibra-100 flex items-center justify-center text-paskibra-700 font-bold">1</div>
+                        <h3 class="text-xl font-bold text-slate-800">Biodata Diri</h3>
+                        <div class="flex-grow h-px bg-gradient-to-r from-slate-200 to-transparent"></div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Lengkap Sesuai Akte *</label>
+                        <input type="text" id="reg-nama" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">NISN *</label>
+                        <input type="number" id="reg-nisn" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">NIS *</label>
+                        <input type="number" id="reg-nis" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Kelas *</label>
+                        <select id="reg-kelas" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1.2rem_top_1.2rem] bg-[length:0.8rem_auto]">
+                            <option value="">-- Pilih Kelas --</option>
+                            <optgroup label="Kelas X">
+                                <option value="X-1">X-1</option><option value="X-2">X-2</option><option value="X-3">X-3</option>
+                                <option value="X-4">X-4</option><option value="X-5">X-5</option><option value="X-6">X-6</option>
+                                <option value="X-7">X-7</option><option value="X-8">X-8</option><option value="X-9">X-9</option>
+                                <option value="X-10">X-10</option><option value="X-11">X-11</option>
+                            </optgroup>
+                            <optgroup label="Kelas XI">
+                                <option value="XI-1">XI-1</option><option value="XI-2">XI-2</option><option value="XI-3">XI-3</option>
+                                <option value="XI-4">XI-4</option><option value="XI-5">XI-5</option><option value="XI-6">XI-6</option>
+                                <option value="XI-7">XI-7</option><option value="XI-8">XI-8</option><option value="XI-9">XI-9</option>
+                                <option value="XI-10">XI-10</option><option value="XI-11">XI-11</option>
+                            </optgroup>
+                            <optgroup label="Kelas XII">
+                                <option value="XII-1">XII-1</option><option value="XII-2">XII-2</option><option value="XII-3">XII-3</option>
+                                <option value="XII-4">XII-4</option><option value="XII-5">XII-5</option><option value="XII-6">XII-6</option>
+                                <option value="XII-7">XII-7</option><option value="XII-8">XII-8</option><option value="XII-9">XII-9</option>
+                                <option value="XII-10">XII-10</option><option value="XII-11">XII-11</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Nomor WhatsApp *</label>
+                        <input type="tel" id="reg-hp" required placeholder="08..." class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tempat Lahir *</label>
+                        <input type="text" id="reg-tempatlahir" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tanggal Lahir *</label>
+                        <input type="date" id="reg-tanggallahir" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800 text-slate-500 uppercase text-sm">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Jenis Kelamin *</label>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center justify-center gap-2 flex-1 p-3 rounded-xl glass-input cursor-pointer hover:bg-white transition-colors has-[:checked]:bg-white has-[:checked]:border-paskibra-500 has-[:checked]:shadow-md">
+                                <input type="radio" name="jk" value="Laki-laki" required class="w-4 h-4 text-paskibra-600 focus:ring-paskibra-500 border-gray-300">
+                                <span class="font-medium text-slate-700">Laki-laki</span>
+                            </label>
+                            <label class="flex items-center justify-center gap-2 flex-1 p-3 rounded-xl glass-input cursor-pointer hover:bg-white transition-colors has-[:checked]:bg-white has-[:checked]:border-paskibra-500 has-[:checked]:shadow-md">
+                                <input type="radio" name="jk" value="Perempuan" required class="w-4 h-4 text-paskibra-600 focus:ring-paskibra-500 border-gray-300">
+                                <span class="font-medium text-slate-700">Perempuan</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Alamat Lengkap *</label>
+                        <textarea id="reg-alamat" rows="2" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800 resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tinggi Badan (cm) *</label>
+                        <input type="number" id="reg-tinggi" required min="100" max="250" step="0.1" placeholder="Contoh: 165" class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Berat Badan (kg) *</label>
+                        <input type="number" id="reg-berat" required min="30" max="200" step="0.1" placeholder="Contoh: 55" class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Alasan Mendaftar Paskibra SMANSA Unit 101 *</label>
+                        <textarea id="reg-alasan" rows="4" required placeholder="Tuliskan motivasi dan alasan Anda ingin bergabung dengan Paskibra Unit 101..." class="w-full px-5 py-3 rounded-xl glass-input text-slate-800 resize-none"></textarea>
+                        <p class="text-xs text-slate-500 mt-1.5">Minimal 50 karakter</p>
+                    </div>
+
+                    <!-- Section Title 2 -->
+                    <div class="md:col-span-2 flex items-center gap-3 mt-6 mb-2">
+                        <div class="w-8 h-8 rounded-full bg-paskibra-100 flex items-center justify-center text-paskibra-700 font-bold">2</div>
+                        <h3 class="text-xl font-bold text-slate-800">Data Orang Tua / Wali</h3>
+                        <div class="flex-grow h-px bg-gradient-to-r from-slate-200 to-transparent"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Orang Tua/Wali *</label>
+                        <input type="text" id="reg-namaortu" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Nomor HP Orang Tua *</label>
+                        <input type="tel" id="reg-hportu" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <!-- Section Title 3 -->
+                    <div class="md:col-span-2 flex items-center gap-3 mt-6 mb-2">
+                        <div class="w-8 h-8 rounded-full bg-paskibra-100 flex items-center justify-center text-paskibra-700 font-bold">3</div>
+                        <h3 class="text-xl font-bold text-slate-800">Unggah Berkas</h3>
+                        <div class="flex-grow h-px bg-gradient-to-r from-slate-200 to-transparent"></div>
+                    </div>
+
+                    <div class="md:col-span-2 glass-panel p-5 rounded-2xl border border-dashed border-slate-300">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Pas Foto 3x4 (Latar Merah) *</label>
+                        <p class="text-xs text-slate-500 mb-4">Format: JPG/PNG, Maksimal 2MB. Pastikan wajah terlihat jelas.</p>
+                        
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                            <div class="w-28 h-36 bg-white border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center relative shadow-inner">
+                                <i class="ph-duotone ph-user text-slate-300 text-5xl" id="foto-placeholder"></i>
+                                <img id="preview-foto" class="absolute inset-0 w-full h-full object-cover hidden">
+                            </div>
+                            <div class="flex-1 w-full">
+                                <input type="file" id="reg-foto" accept="image/*" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-white file:text-paskibra-700 file:shadow-sm hover:file:bg-slate-50 hover:file:shadow transition-all cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 glass-panel p-5 rounded-2xl border border-dashed border-slate-300">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Surat Pernyataan (Telah Ditandatangani) *</label>
+                        <p class="text-xs text-slate-500 mb-4">Format: PDF/JPG/PNG, Maksimal 2MB.</p>
+                        <input type="file" id="reg-surat" accept=".pdf,image/*" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-white file:text-paskibra-700 file:shadow-sm hover:file:bg-slate-50 hover:file:shadow transition-all cursor-pointer">
+                    </div>
+
+                </div>
+
+                <div class="mt-12 flex justify-center">
+                    <button type="submit" id="btn-submit-reg" class="btn-spatial-primary w-full md:w-auto px-12 py-4 text-white font-bold rounded-2xl text-lg flex items-center justify-center gap-2 group">
+                        <span>Kirim Pendaftaran</span>
+                        <i class="ph-bold ph-paper-plane-right group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- === STREAMING_CHUNK:Rendering Admin Views === -->
+        <!-- LOGIN ADMIN -->
+        <section id="view-admin-login" class="view-section w-full flex-grow flex items-center justify-center hidden">
+            <div class="max-w-md w-full mx-auto glass-panel p-10 rounded-[2rem] text-center relative overflow-hidden">
+                <!-- Decorative element -->
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-paskibra-100 rounded-full blur-2xl opacity-60 pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="w-20 h-20 bg-white shadow-lg text-paskibra-800 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                        <i class="ph-fill ph-lock-key text-4xl"></i>
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Portal Admin</h2>
+                    <p class="text-slate-500 text-sm mb-8 font-medium">Autentikasi diperlukan untuk mengakses dashboard.</p>
+                    
+                    <form id="loginForm" class="space-y-5 text-left">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Username</label>
+                            <input type="text" id="login-user" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Password</label>
+                            <input type="password" id="login-pass" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit" class="w-full py-4 btn-spatial-primary text-white font-bold rounded-xl text-lg transition-all">
+                                Masuk Sistem
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN DASHBOARD -->
+        <section id="view-admin-dashboard" class="view-section w-full max-w-7xl mx-auto hidden">
+            
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 glass-panel p-6 rounded-3xl">
+                <div>
+                    <span class="inline-block py-1 px-3 rounded-full bg-slate-900 text-white text-xs font-bold tracking-wider mb-3">MODE ADMINISTRATOR</span>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Central</h2>
+                    <p class="text-slate-500 text-sm mt-1">Kelola data pendaftar PABAR Paskibra Unit 101</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="logoutAdmin()" class="btn-spatial-secondary px-5 py-2.5 text-slate-700 rounded-xl flex items-center gap-2 text-sm font-bold">
+                        <i class="ph-bold ph-sign-out"></i> Keluar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats & Template Action -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Stat Card -->
+                <div class="glass-panel p-6 rounded-3xl flex items-center gap-5">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-3xl shadow-lg shadow-blue-500/30">
+                        <i class="ph-fill ph-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-bold uppercase tracking-wider">Total Pendaftar</p>
+                        <p class="text-4xl font-black text-slate-900 mt-1 tracking-tighter" id="stat-total">0</p>
+                    </div>
+                </div>
+
+                <!-- Template Upload Card -->
+                <div class="md:col-span-2 glass-panel p-6 rounded-3xl flex flex-col justify-center">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">Dokumen Surat Pernyataan</h3>
+                            <p class="text-sm text-slate-500 mt-1">Upload template kosong format PDF/Word agar pendaftar bisa mengunduhnya di form pendaftaran.</p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0 bg-white/50 p-1.5 rounded-2xl border border-white">
+                            <input type="file" id="admin-template-upload" accept=".pdf,.doc,.docx" class="hidden">
+                            <label for="admin-template-upload" id="label-template-upload" class="cursor-pointer px-5 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl text-sm font-bold shadow-sm hover:shadow transition-all whitespace-nowrap">
+                                <i class="ph-bold ph-folder-open mr-2"></i>Pilih File
+                            </label>
+                            <button onclick="saveTemplate()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold shadow hover:bg-slate-800 transition-all whitespace-nowrap">
+                                Simpan
+                            </button>
+                        </div>
+                    </div>
+                    <p id="admin-template-status" class="text-xs font-bold mt-3 text-blue-600"></p>
+                </div>
+            </div>
+
+            <!-- Data Table Card -->
+            <div class="glass-panel rounded-3xl overflow-hidden shadow-xl border-white/60">
+                <div class="p-5 border-b border-white/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/30 backdrop-blur-sm">
+                    <h3 class="font-extrabold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="ph-duotone ph-table"></i> Database Pendaftar
+                    </h3>
+                    <div class="relative max-w-xs w-full">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
+                            <i class="ph-bold ph-magnifying-glass text-slate-400"></i>
+                        </div>
+                        <input type="text" id="search-input" oninput="state.currentPage = 1; filterTable()" class="w-full pl-11 pr-4 py-2.5 bg-white/70 border border-white/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-paskibra-500 outline-none shadow-sm placeholder-slate-400" placeholder="Cari nama atau NISN...">
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600 whitespace-nowrap">
+                        <thead class="text-xs text-slate-500 uppercase font-bold bg-white/40 border-b border-white/50 tracking-wider">
+                            <tr>
+                                <th scope="col" class="px-6 py-4">No</th>
+                                <th scope="col" class="px-6 py-4">Nama Lengkap</th>
+                                <th scope="col" class="px-6 py-4">Info Akademik</th>
+                                <th scope="col" class="px-6 py-4">Tanggal Daftar</th>
+                                <th scope="col" class="px-6 py-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-white/40">
+                            <!-- Data populated here -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <div class="inline-flex flex-col items-center justify-center text-slate-400">
+                                        <i class="ph-duotone ph-spinner-gap animate-spin text-3xl mb-2"></i>
+                                        <span class="font-medium">Memuat data...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION WRAPPER -->
+                <div class="p-4 border-t border-white/40 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/30" id="pagination-container">
+                    <!-- Pagination Generated via JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- === STREAMING_CHUNK:Modals & UI Components === -->
+    
+    <!-- FAKE LOADING OVERLAY -->
+    <div id="loading-overlay" class="hidden fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="glass-panel p-8 rounded-3xl w-full max-w-sm flex flex-col items-center text-center shadow-2xl border-white/40">
+            <div class="w-16 h-16 relative mb-5">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-200"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-paskibra-600 border-t-transparent animate-spin"></div>
+            </div>
+            <h4 class="text-xl font-extrabold text-slate-800 mb-1">Mengirim Data...</h4>
+            <p class="text-sm text-slate-500 mb-6 font-medium">Mohon tunggu, dokumen sedang diunggah ke server.</p>
+            
+            <div class="w-full bg-slate-200 rounded-full h-3 mb-2 overflow-hidden shadow-inner">
+                <div id="loading-progress-bar" class="bg-paskibra-600 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            </div>
+            <span id="loading-progress-text" class="text-sm font-bold text-slate-700">0%</span>
+        </div>
+    </div>
+
+    <!-- Detail Modal (Spatial Design) -->
+    <div id="modal-detail" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-detail')"></div>
+        <div class="relative w-full max-w-4xl max-h-[90vh] glass-panel bg-white/90 rounded-3xl shadow-2xl flex flex-col transform transition-all scale-95 opacity-0 duration-300" id="modal-content-box">
+            
+            <div class="flex items-center justify-between p-6 border-b border-slate-200/60 bg-white/50 rounded-t-3xl">
+                <h3 class="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+                    <i class="ph-duotone ph-identification-card text-2xl text-paskibra-700"></i> Detail Biodata
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="printDetail()" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors font-bold shadow-sm border border-blue-100" title="Cetak PDF">
+                        <i class="ph-bold ph-printer text-lg"></i>
+                    </button>
+                    <button onclick="closeModal('modal-detail')" class="p-2.5 bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-colors font-bold border border-slate-200">
+                        <i class="ph-bold ph-x text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content area for PDF rendering -->
+            <div class="p-0 overflow-y-auto flex-grow custom-scrollbar" id="print-area">
+                <!-- Injected via JS -->
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Custom Spatial Toast -->
+    <div id="toast" class="hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[70] flex items-center p-1 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white transition-all duration-300 transform translate-y-10 opacity-0" role="alert">
+        <div class="flex items-center px-4 py-3">
+            <div id="toast-icon-bg" class="inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl mr-3 shadow-sm">
+                <i id="toast-icon" class="text-2xl"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-700 pr-2" id="toast-message">Pesan</div>
+        </div>
+        <button type="button" onclick="hideToast()" class="ml-2 mr-2 p-2 bg-slate-100 text-slate-400 hover:text-slate-700 rounded-xl transition-colors">
+            <i class="ph-bold ph-x"></i>
+        </button>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="modal-confirm" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-confirm')"></div>
+        <div class="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center border border-white transform transition-all scale-95 opacity-0 duration-300" id="modal-confirm-box">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-red-50 border border-red-100 mb-5 shadow-sm text-red-500">
+                <i class="ph-duotone ph-warning-circle text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Hapus Data?</h3>
+            <p class="text-sm text-slate-500 mb-8 font-medium">Tindakan ini tidak dapat dibatalkan dan akan menghapus data pendaftar dari sistem secara permanen.</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeModal('modal-confirm')" class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-bold transition-colors">Batal</button>
+                <button id="btn-confirm-delete" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold shadow-md transition-colors">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- === STREAMING_CHUNK:Javascript Logic & API Integration === -->
+    <script>
+        /* === CONFIGURATION === */
+        // Masukkan URL Google Apps Script Web App di sini
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwffpN4OfrVkg2vue10aszzyYCwUPPSWMuDJBUwNajF6TVIwWFPTSLJqcU8ADO10PqL/exec'; 
+        
+        /* === STATE === */
+        let state = {
+            view: 'home',
+            isAdmin: false,
+            participants: [],
+            templateLink: '',
+            currentDeleteId: null,
+            tempBase64Template: null,
+            tempTemplateName: null,
+            // Pagination state
+            currentPage: 1,
+            itemsPerPage: 20
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            initMobileMenu();
+            checkAdminSession();
+            
+            // Handle hash routing directly on load
+            const hash = window.location.hash.replace('#', '') || 'home';
+            navTo(hash, false);
+
+            fetchData();
+        });
+
+        // The New SPA Router (Fixes the overlapping bug)
+        function navTo(viewId, updateHash = true) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('animate-fade-in-up');
+            });
+            
+            if (viewId === 'admin-dashboard' && !state.isAdmin) {
+                viewId = 'admin-login';
+            }
+
+            const target = document.getElementById(`view-${viewId}`);
+            if(target) {
+                target.classList.remove('hidden');
+                
+                void target.offsetWidth;
+                target.classList.add('animate-fade-in-up');
+                
+                state.view = viewId;
+                if(updateHash) window.location.hash = viewId;
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                document.querySelectorAll('#navbar-main a').forEach(a => {
+                    if(a.id === 'nav-admin') return; 
+                    a.classList.remove('bg-white/50', 'text-slate-900', 'shadow-sm');
+                    a.classList.add('text-slate-600');
+                });
+                
+                const activeNav = document.getElementById(`nav-${viewId}`);
+                if(activeNav && viewId !== 'admin-dashboard' && viewId !== 'admin-login') {
+                    activeNav.classList.remove('text-slate-600');
+                    activeNav.classList.add('bg-white/50', 'text-slate-900', 'shadow-sm');
+                }
+                
+                if(viewId === 'admin-dashboard') {
+                    renderTable();
+                }
+            }
+
+            const navbar = document.getElementById('navbar-main');
+            if(!navbar.classList.contains('hidden') && window.innerWidth < 768) {
+                navbar.classList.add('hidden');
+            }
+        }
+
+        function initMobileMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('navbar-main');
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+        }
+
+        /* === UI HELPERS (TOAST & MODALS) === */
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            const bgEl = document.getElementById('toast-icon-bg');
+
+            msgEl.textContent = message;
+            
+            if(type === 'success') {
+                bgEl.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl mr-3 shadow-sm bg-gradient-to-br from-green-400 to-green-500 text-white';
+                iconEl.className = 'ph-bold ph-check';
+            } else if (type === 'error') {
+                bgEl.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl mr-3 shadow-sm bg-gradient-to-br from-red-400 to-red-500 text-white';
+                iconEl.className = 'ph-bold ph-warning';
+            } else {
+                bgEl.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl mr-3 shadow-sm bg-gradient-to-br from-blue-400 to-blue-500 text-white';
+                iconEl.className = 'ph-bold ph-info';
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => { hideToast(); }, 4000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => { toast.classList.add('hidden'); }, 300);
+        }
+
+        function showModal(id) {
+            const modal = document.getElementById(id);
+            const box = modal.querySelector('div[id^="modal-"]');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            box.classList.remove('scale-95', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            const box = modal.querySelector('div[id^="modal-"]');
+            box.classList.remove('scale-100', 'opacity-100');
+            box.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        /* === FILE UPLOAD & PREVIEW LOGIC === */
+        document.getElementById('reg-foto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('preview-foto');
+            const placeholder = document.getElementById('foto-placeholder');
+            
+            if (file) {
+                // Batas kita naikkan ke 10MB karena foto akan di-compress secara otomatis!
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast('Ukuran foto terlalu besar. Maksimal 10MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) { resolve(null); return; }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // FUNGSI AUTO-COMPRESS GAMBAR (Fitur Baru)
+        function compressImage(file, maxWidth = 800, maxHeight = 1000, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                if (!file) { resolve(null); return; }
+                
+                // Jika file yang diunggah bukan gambar (misal PDF surat), lewati kompresi
+                if (!file.type.startsWith('image/')) {
+                    getBase64(file).then(resolve).catch(reject);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Pangkas dimensi gambar secara proporsional jika terlalu besar
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        // Gambar ulang di atas canvas
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Konversi paksa ke JPEG untuk ukuran yang lebih ringan
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(dataUrl.split(',')[1]); // Ambil teks Base64-nya saja
+                    };
+                    img.onerror = () => reject(new Error('Gagal memuat gambar untuk dikompresi.'));
+                };
+                reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
+            });
+        }
+
+        /* === REGISTRATION SUBMIT LOGIC DENGAN FAKE LOADING === */
+        let loadingInterval;
+
+        document.getElementById('regForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validasi alasan (minimal 50 karakter)
+            const alasan = document.getElementById('reg-alasan').value.trim();
+            if (alasan.length < 50) {
+                showToast('Alasan mendaftar minimal 50 karakter', 'error');
+                return;
+            }
+            
+            const fileFoto = document.getElementById('reg-foto').files[0];
+            const fileSurat = document.getElementById('reg-surat').files[0];
+
+            // Batas ukuran surat kita ubah menjadi 5MB
+            if(fileSurat && fileSurat.size > 5 * 1024 * 1024) {
+                showToast('Ukuran surat maksimal 5MB', 'error');
+                return;
+            }
+
+            // Tampilkan Overlay Loading
+            const overlay = document.getElementById('loading-overlay');
+            const bar = document.getElementById('loading-progress-bar');
+            const text = document.getElementById('loading-progress-text');
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            
+            let progress = 0;
+            bar.style.width = '0%';
+            text.textContent = '0%';
+            
+            // Animasi fake progress berjalan pelan hingga maks 90%
+            loadingInterval = setInterval(() => {
+                if(progress < 90) {
+                    progress += Math.random() * 15;
+                    if(progress > 90) progress = 90;
+                    bar.style.width = progress + '%';
+                    text.textContent = Math.floor(progress) + '%';
+                }
+            }, 600);
+            
+            try {
+                // Lakukan auto-compress pada foto dan surat (jika surat berupa JPG/PNG)
+                const base64Foto = await compressImage(fileFoto, 800, 1000, 0.7);
+                const base64Surat = await compressImage(fileSurat, 1200, 1600, 0.7);
+
+                const data = {
+                    nama: document.getElementById('reg-nama').value,
+                    nisn: document.getElementById('reg-nisn').value,
+                    nis: document.getElementById('reg-nis').value,
+                    kelas: document.getElementById('reg-kelas').value,
+                    hp: document.getElementById('reg-hp').value,
+                    tempat_lahir: document.getElementById('reg-tempatlahir').value,
+                    tanggal_lahir: document.getElementById('reg-tanggallahir').value,
+                    jk: document.querySelector('input[name="jk"]:checked').value,
+                    alamat: document.getElementById('reg-alamat').value,
+                    tinggi_badan: document.getElementById('reg-tinggi').value,
+                    berat_badan: document.getElementById('reg-berat').value,
+                    alasan: document.getElementById('reg-alasan').value.trim(),
+                    nama_ortu: document.getElementById('reg-namaortu').value,
+                    hp_ortu: document.getElementById('reg-hportu').value,
+                    waktu: new Date().toISOString(),
+                    
+                    // Modifikasi metadata karena kita telah mengompresnya secara otomatis ke JPG
+                    foto_base64: base64Foto, 
+                    foto_mimeType: fileFoto.type.startsWith('image/') ? 'image/jpeg' : fileFoto.type, 
+                    foto_name: fileFoto.type.startsWith('image/') ? fileFoto.name.replace(/\.[^/.]+$/, "") + ".jpg" : fileFoto.name,
+                    
+                    surat_base64: base64Surat, 
+                    surat_mimeType: fileSurat.type.startsWith('image/') ? 'image/jpeg' : fileSurat.type, 
+                    surat_name: fileSurat.type.startsWith('image/') ? fileSurat.name.replace(/\.[^/.]+$/, "") + ".jpg" : fileSurat.name
+                };
+
+                await apiCall('register', data);
+                
+                // Jika sukses, tembak ke 100%
+                clearInterval(loadingInterval);
+                bar.style.width = '100%';
+                text.textContent = '100%';
+                
+                // Tunggu sebentar untuk menampilkan 100% sebelum ditutup
+                setTimeout(() => {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => overlay.classList.add('hidden'), 300);
+                    
+                    showToast('Pendaftaran Berhasil! Terima kasih.', 'success');
+                    document.getElementById('regForm').reset();
+                    document.getElementById('preview-foto').classList.add('hidden');
+                    document.getElementById('foto-placeholder').classList.remove('hidden');
+                    fetchData(); // refresh in background
+                }, 800);
+
+            } catch (err) {
+                clearInterval(loadingInterval);
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                showToast(err.message || 'Terjadi kesalahan sistem.', 'error');
+            }
+        });
+
+
+        /* === ADMIN LOGIC === */
+        // Password hash (SHA-256). Jangan ubah nilai hash ini kecuali ganti password.
+        // Hash dari: paskibsmansa26
+        const ADMIN_PASS_HASH = '4e385589913d73e55bcffe612dea67199a08934cde7afe8f5d9c70bb2bebb854';
+        const ADMIN_USERNAME  = 'admin';
+
+        async function sha256(message) {
+            const msgBuffer  = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray  = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            const inputHash = await sha256(pass);
+
+            if (user === ADMIN_USERNAME && inputHash === ADMIN_PASS_HASH) {
+                state.isAdmin = true;
+                localStorage.setItem('paskibra_admin', 'true');
+                document.getElementById('loginForm').reset();
+                navTo('admin-dashboard');
+                showToast('Login berhasil', 'success');
+            } else {
+                showToast('Username atau password salah!', 'error');
+            }
+        });
+
+        function checkAdminSession() {
+            if(localStorage.getItem('paskibra_admin') === 'true') {
+                state.isAdmin = true;
+            }
+        }
+
+        function logoutAdmin() {
+            state.isAdmin = false;
+            localStorage.removeItem('paskibra_admin');
+            navTo('home');
+            showToast('Anda telah keluar dari sistem', 'info');
+        }
+
+        // Upload Template Admin
+        document.getElementById('admin-template-upload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            const btnLabel = document.getElementById('label-template-upload');
+            const shortName = file.name.length > 15 ? file.name.substring(0,15) + '...' : file.name;
+            btnLabel.innerHTML = `<i class="ph-bold ph-file-text mr-2"></i>${shortName}`;
+            
+            try {
+                state.tempBase64Template = await getBase64(file);
+                state.tempTemplateName = file.name;
+                state.tempTemplateMime = file.type;
+            } catch(e) {
+                showToast('Gagal membaca file', 'error');
+            }
+        });
+
+        async function saveTemplate() {
+            if(!state.tempBase64Template) {
+                showToast('Pilih file terlebih dahulu', 'error');
+                return;
+            }
+
+            const status = document.getElementById('admin-template-status');
+            status.textContent = "Menyimpan ke server...";
+
+            try {
+                const payload = {
+                    file_base64: state.tempBase64Template,
+                    file_name: state.tempTemplateName,
+                    mime_type: state.tempTemplateMime
+                };
+
+                const res = await apiCall('uploadTemplate', payload);
+                if(res.url) {
+                    state.templateLink = res.url;
+                    updateTemplateUI();
+                    showToast('Template berhasil disimpan', 'success');
+                    status.textContent = "✓ Template tersimpan dan aktif.";
+                    status.className = "text-xs font-bold mt-3 text-green-600";
+                }
+            } catch (err) {
+                showToast('Gagal menyimpan template', 'error');
+                status.textContent = "✕ Gagal menyimpan.";
+                status.className = "text-xs font-bold mt-3 text-red-600";
+            }
+        }
+
+        function updateTemplateUI() {
+            const btnDownload = document.getElementById('btn-download-template');
+            const msgNo = document.getElementById('msg-no-template');
+            
+            if(state.templateLink) {
+                btnDownload.href = state.templateLink;
+                btnDownload.classList.remove('hidden');
+                btnDownload.classList.add('inline-flex');
+                msgNo.classList.add('hidden');
+            } else {
+                btnDownload.classList.add('hidden');
+                btnDownload.classList.remove('inline-flex');
+                msgNo.classList.remove('hidden');
+            }
+        }
+
+        /* === TABLE RENDERING DENGAN PAGINASI === */
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const query = document.getElementById('search-input').value.toLowerCase();
+            
+            let filtered = state.participants.filter(p => {
+                return (p.nama || '').toLowerCase().includes(query) || 
+                       (p.nisn || '').toLowerCase().includes(query);
+            });
+
+            // Urutkan berdasarkan waktu pendaftaran (terbaru di atas)
+            filtered.sort((a,b) => new Date(b.waktu) - new Date(a.waktu));
+            document.getElementById('stat-total').textContent = filtered.length;
+
+            // Logika Paginasi
+            const totalItems = filtered.length;
+            const totalPages = Math.ceil(totalItems / state.itemsPerPage) || 1;
+            
+            if (state.currentPage > totalPages) state.currentPage = totalPages;
+            if (state.currentPage < 1) state.currentPage = 1;
+            
+            const startIdx = (state.currentPage - 1) * state.itemsPerPage;
+            const endIdx = startIdx + state.itemsPerPage;
+            const currentData = filtered.slice(startIdx, endIdx);
+
+            if(currentData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">Tidak ada data ditemukan.</td></tr>`;
+                renderPagination(0, 1);
+                return;
+            }
+
+            tbody.innerHTML = currentData.map((p, index) => {
+                const dateObj = new Date(p.waktu);
+                const dateStr = !isNaN(dateObj) ? dateObj.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : '-';
+                
+                // Index sesungguhnya di database
+                const actualIndex = startIdx + index + 1;
+
+                return `
+                <tr class="hover:bg-white/50 transition-colors group">
+                    <td class="px-6 py-4 font-bold text-slate-500">${actualIndex}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-800">${p.nama || '-'}</div>
+                        <div class="text-xs text-slate-500">${p.jk || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-700">${p.nisn || '-'}</div>
+                        <div class="text-xs text-slate-500 bg-white inline-block px-2 py-0.5 rounded border border-slate-200 mt-1">Kelas: ${p.kelas || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 font-medium text-slate-600">${dateStr}</td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="viewDetail('${p.id}')" class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all shadow-sm" title="Lihat Detail">
+                                <i class="ph-bold ph-eye text-lg"></i>
+                            </button>
+                            <button onclick="confirmDelete('${p.id}')" class="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all shadow-sm" title="Hapus">
+                                <i class="ph-bold ph-trash text-lg"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+            renderPagination(totalItems, totalPages);
+        }
+
+        // Tampilan Angka Halaman
+        function renderPagination(totalItems, totalPages) {
+            const container = document.getElementById('pagination-container');
+            if(!container) return;
+            
+            if(totalItems === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const startItem = ((state.currentPage - 1) * state.itemsPerPage) + 1;
+            const endItem = Math.min(state.currentPage * state.itemsPerPage, totalItems);
+
+            let html = `
+                <span class="text-sm text-slate-500 font-medium">
+                    Menampilkan <span class="font-bold text-slate-800">${startItem}</span> - <span class="font-bold text-slate-800">${endItem}</span> dari <span class="font-bold text-slate-800">${totalItems}</span>
+                </span>
+                <div class="inline-flex rounded-lg shadow-sm">
+                    <button onclick="changePage(${state.currentPage - 1})" ${state.currentPage === 1 ? 'disabled' : ''} class="px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-200 rounded-l-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="ph-bold ph-caret-left"></i>
+                    </button>
+            `;
+            
+            // Loop nomor halaman
+            for(let i = 1; i <= totalPages; i++) {
+                if(i === 1 || i === totalPages || Math.abs(i - state.currentPage) <= 1) {
+                   const activeCls = i === state.currentPage ? 'text-paskibra-600 bg-red-50 font-bold border-paskibra-200' : 'text-slate-600 bg-white hover:bg-slate-50';
+                   html += `<button onclick="changePage(${i})" class="px-3 py-2 text-sm border-t border-b border-r border-slate-200 ${activeCls}">${i}</button>`;
+                } else if (i === 2 && state.currentPage > 3) {
+                   html += `<span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-50/50 border-t border-b border-r border-slate-200">...</span>`;
+                } else if (i === totalPages - 1 && state.currentPage < totalPages - 2) {
+                   html += `<span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-50/50 border-t border-b border-r border-slate-200">...</span>`;
+                }
+            }
+            
+            html += `
+                    <button onclick="changePage(${state.currentPage + 1})" ${state.currentPage === totalPages ? 'disabled' : ''} class="px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-200 rounded-r-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed border-l-0">
+                        <i class="ph-bold ph-caret-right"></i>
+                    </button>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            state.currentPage = page;
+            renderTable();
+        }
+
+        function filterTable() { 
+            // Setiap kali mencari nama, otomatis kembali ke halaman 1
+            renderTable(); 
+        }
+
+        // FUNGSI PENGONVERSI LINK GOOGLE DRIVE UNTUK THUMBNAIL FOTO
+        function getDirectDriveLink(url) {
+            if(!url) return '';
+            // Mengambil ID dari URL Google Drive dengan Regex yang lebih universal
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+            if(match && match[1]) {
+                // Menggunakan endpoint /thumbnail API milik Google Drive agar tidak diblokir
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w600`;
+            }
+            return url;
+        }
+
+        function viewDetail(id) {
+            const p = state.participants.find(x => x.id === id);
+            if(!p) return;
+
+            const printArea = document.getElementById('print-area');
+            const dateStr = p.waktu ? new Date(p.waktu).toLocaleString('id-ID') : '-';
+
+            // Ubah link foto agar bisa ditampilkan sebagai image HTML
+            const fotoDirectLink = getDirectDriveLink(p.foto_url);
+
+            printArea.innerHTML = `
+                <div class="p-8 bg-white" id="pdf-content-wrapper">
+                    <!-- Header -->
+                    <div class="text-center border-b-2 border-slate-800 pb-5 mb-8 relative">
+                        <h2 class="text-2xl font-black text-slate-900 uppercase tracking-widest">Biodata Calon Anggota</h2>
+                        <p class="text-slate-600 font-medium tracking-wider mt-1">Paskibra UPT SMAN 1 Soppeng Unit 101</p>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-10">
+                        <!-- Photo Column -->
+                        <div class="w-full md:w-1/3 flex flex-col items-center">
+                            <div class="w-36 h-48 bg-red-50 border-[3px] border-double border-red-200 p-1 rounded-xl shadow-md mb-5 overflow-hidden">
+                                ${fotoDirectLink ? `<img src="${fotoDirectLink}" onerror="this.onerror=null; this.src='https://placehold.co/400x600/fecaca/dc2626?text=Foto+Gagal+Dimuat';" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-sm font-bold text-center text-slate-400">PAS FOTO<br>3x4</div>`}
+                            </div>
+                            
+                            <div class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dokumen Surat Pernyataan</p>
+                                ${p.surat_url ? 
+                                    `<a href="${p.surat_url}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-lg hover:bg-slate-700 transition-colors">
+                                        <i class="ph-bold ph-file-pdf"></i> Lihat File
+                                    </a>` : 
+                                    `<span class="text-sm font-medium text-red-500">Belum diunggah</span>`
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Data Column -->
+                        <div class="w-full md:w-2/3">
+                            <table class="w-full text-sm text-left border-collapse">
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr><td class="py-3 w-2/5 font-semibold text-slate-500">Nama Lengkap</td><td class="py-3 font-bold text-slate-900 text-base">${p.nama || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">NISN / NIS</td><td class="py-3 font-medium text-slate-800">${p.nisn || '-'} / ${p.nis || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Kelas</td><td class="py-3 font-medium text-slate-800"><span class="bg-slate-100 px-2 py-1 rounded border border-slate-200">${p.kelas || '-'}</span></td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Tempat, Tgl Lahir</td><td class="py-3 font-medium text-slate-800">${p.tempat_lahir || '-'}, ${p.tanggal_lahir || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Jenis Kelamin</td><td class="py-3 font-medium text-slate-800">${p.jk || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Tinggi Badan</td><td class="py-3 font-medium text-slate-800">${p.tinggi_badan ? p.tinggi_badan + ' cm' : '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Berat Badan</td><td class="py-3 font-medium text-slate-800">${p.berat_badan ? p.berat_badan + ' kg' : '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Alamat</td><td class="py-3 font-medium text-slate-800">${p.alamat || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">No. WhatsApp</td><td class="py-3 font-medium text-slate-800">${p.hp || '-'}</td></tr>
+                                    
+                                    <tr><td colspan="2" class="py-4"><div class="h-px bg-slate-200"></div></td></tr>
+                                    
+                                    <tr><td class="py-3 font-semibold text-slate-500 align-top">Alasan Mendaftar</td><td class="py-3 font-medium text-slate-800 leading-relaxed">${p.alasan || '-'}</td></tr>
+                                    
+                                    <tr><td colspan="2" class="py-4"><div class="h-px bg-slate-200"></div></td></tr>
+                                    
+                                    <tr><td class="py-3 font-semibold text-slate-500">Nama Orang Tua/Wali</td><td class="py-3 font-medium text-slate-800">${p.nama_ortu || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">No. HP Orang Tua</td><td class="py-3 font-medium text-slate-800">${p.hp_ortu || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Waktu Mendaftar</td><td class="py-3 font-medium text-slate-400 text-xs">${dateStr}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            showModal('modal-detail');
+        }
+
+        function confirmDelete(id) {
+            state.currentDeleteId = id;
+            showModal('modal-confirm');
+        }
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            if(!state.currentDeleteId) return;
+            
+            const btn = document.getElementById('btn-confirm-delete');
+            const ori = btn.innerHTML;
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i>';
+            
+            try {
+                await apiCall('delete', { id: state.currentDeleteId });
+                showToast('Data berhasil dihapus', 'success');
+                closeModal('modal-confirm');
+                fetchData();
+            } catch(e) {
+                showToast('Gagal menghapus data', 'error');
+            } finally {
+                btn.innerHTML = ori;
+                state.currentDeleteId = null;
+            }
+        });
+
+        function printDetail() {
+            const element = document.getElementById('pdf-content-wrapper');
+            const opt = {
+                margin:       [0.5, 0.5],
+                filename:     `Biodata_Paskibra.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        /* === CORE API FUNCTION === */
+        
+        // Mock Database for Preview
+        const mockDB = {
+            getData: () => JSON.parse(localStorage.getItem('paskibra_db') || '[]'),
+            saveData: (d) => localStorage.setItem('paskibra_db', JSON.stringify(d)),
+            getSettings: () => JSON.parse(localStorage.getItem('paskibra_settings') || '{"templateLink": ""}'),
+            saveSettings: (s) => localStorage.setItem('paskibra_settings', JSON.stringify(s))
+        };
+
+        async function apiCall(action, payload = {}) {
+            if (SCRIPT_URL && SCRIPT_URL.startsWith('http')) {
+                const bodyStr = JSON.stringify({ action, data: payload });
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: bodyStr,
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await response.json();
+                    if(result.status === 'error') throw new Error(result.message);
+                    return result;
+                } catch (error) {
+                    console.error("API Error:", error);
+                    throw new Error("Gagal terhubung ke Server Database.");
+                }
+            } else {
+                // LOCAL FALLBACK
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        let data = mockDB.getData();
+                        let settings = mockDB.getSettings();
+
+                        switch(action) {
+                            case 'register':
+                                const newId = 'ID-' + Date.now();
+                                payload.id = newId;
+                                payload.foto_url = payload.foto_base64 ? `data:${payload.foto_mimeType};base64,${payload.foto_base64}` : '';
+                                payload.surat_url = payload.surat_base64 ? `data:${payload.surat_mimeType};base64,${payload.surat_base64}` : '';
+                                data.push(payload);
+                                mockDB.saveData(data);
+                                resolve({ status: 'success', id: newId });
+                                break;
+                            case 'getData':
+                                resolve({ status: 'success', data: data, templateLink: settings.templateLink });
+                                break;
+                            case 'uploadTemplate':
+                                settings.templateLink = "#template_mocked_local";
+                                mockDB.saveSettings(settings);
+                                resolve({ status: 'success', url: settings.templateLink });
+                                break;
+                            case 'delete':
+                                data = data.filter(d => d.id !== payload.id);
+                                mockDB.saveData(data);
+                                resolve({ status: 'success' });
+                                break;
+                            default:
+                                reject(new Error('Unknown action'));
+                        }
+                    }, 600); 
+                });
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const res = await apiCall('getData');
+                if(res.status === 'success') {
+                    state.participants = res.data || [];
+                    state.templateLink = res.templateLink || '';
+                    
+                    updateTemplateUI();
+                    if(state.view === 'admin-dashboard') renderTable();
+                }
+            } catch(e) {
+                console.error("Error fetching data", e);
+            }
+        }
+
+    </script>
+</body>
+</html>
