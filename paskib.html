@@ -374,6 +374,22 @@
                         <textarea id="reg-alamat" rows="2" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800 resize-none"></textarea>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Tinggi Badan (cm) *</label>
+                        <input type="number" id="reg-tinggi" required min="100" max="250" step="0.1" placeholder="Contoh: 165" class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Berat Badan (kg) *</label>
+                        <input type="number" id="reg-berat" required min="30" max="200" step="0.1" placeholder="Contoh: 55" class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Alasan Mendaftar Paskibra SMANSA Unit 101 *</label>
+                        <textarea id="reg-alasan" rows="4" required placeholder="Tuliskan motivasi dan alasan Anda ingin bergabung dengan Paskibra Unit 101..." class="w-full px-5 py-3 rounded-xl glass-input text-slate-800 resize-none"></textarea>
+                        <p class="text-xs text-slate-500 mt-1.5">Minimal 50 karakter</p>
+                    </div>
+
                     <!-- Section Title 2 -->
                     <div class="md:col-span-2 flex items-center gap-3 mt-6 mb-2">
                         <div class="w-8 h-8 rounded-full bg-paskibra-100 flex items-center justify-center text-paskibra-700 font-bold">2</div>
@@ -862,6 +878,13 @@
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // Validasi alasan (minimal 50 karakter)
+            const alasan = document.getElementById('reg-alasan').value.trim();
+            if (alasan.length < 50) {
+                showToast('Alasan mendaftar minimal 50 karakter', 'error');
+                return;
+            }
+            
             const fileFoto = document.getElementById('reg-foto').files[0];
             const fileSurat = document.getElementById('reg-surat').files[0];
 
@@ -908,6 +931,9 @@
                     tanggal_lahir: document.getElementById('reg-tanggallahir').value,
                     jk: document.querySelector('input[name="jk"]:checked').value,
                     alamat: document.getElementById('reg-alamat').value,
+                    tinggi_badan: document.getElementById('reg-tinggi').value,
+                    berat_badan: document.getElementById('reg-berat').value,
+                    alasan: document.getElementById('reg-alasan').value.trim(),
                     nama_ortu: document.getElementById('reg-namaortu').value,
                     hp_ortu: document.getElementById('reg-hportu').value,
                     waktu: new Date().toISOString(),
@@ -1237,8 +1263,14 @@
                                     <tr><td class="py-3 font-semibold text-slate-500">Kelas</td><td class="py-3 font-medium text-slate-800"><span class="bg-slate-100 px-2 py-1 rounded border border-slate-200">${p.kelas || '-'}</span></td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">Tempat, Tgl Lahir</td><td class="py-3 font-medium text-slate-800">${p.tempat_lahir || '-'}, ${p.tanggal_lahir || '-'}</td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">Jenis Kelamin</td><td class="py-3 font-medium text-slate-800">${p.jk || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Tinggi Badan</td><td class="py-3 font-medium text-slate-800">${p.tinggi_badan ? p.tinggi_badan + ' cm' : '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">Berat Badan</td><td class="py-3 font-medium text-slate-800">${p.berat_badan ? p.berat_badan + ' kg' : '-'}</td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">Alamat</td><td class="py-3 font-medium text-slate-800">${p.alamat || '-'}</td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">No. WhatsApp</td><td class="py-3 font-medium text-slate-800">${p.hp || '-'}</td></tr>
+                                    
+                                    <tr><td colspan="2" class="py-4"><div class="h-px bg-slate-200"></div></td></tr>
+                                    
+                                    <tr><td class="py-3 font-semibold text-slate-500 align-top">Alasan Mendaftar</td><td class="py-3 font-medium text-slate-800 leading-relaxed">${p.alasan || '-'}</td></tr>
                                     
                                     <tr><td colspan="2" class="py-4"><div class="h-px bg-slate-200"></div></td></tr>
                                     
