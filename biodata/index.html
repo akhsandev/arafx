@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Insight Form — Fisika Kelas 11</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Background blobs -->
+  <div class="bg-blob blob-1" aria-hidden="true"></div>
+  <div class="bg-blob blob-2" aria-hidden="true"></div>
+  <div class="bg-blob blob-3" aria-hidden="true"></div>
+
+  <main id="app">
+
+    <!-- ===== SCREEN: INTRO ===== -->
+    <section class="screen active" id="screen-intro" aria-label="Halaman Sambutan">
+      <div class="intro-card glass-card">
+        <div class="school-logo-wrap">
+          <img src="https://arafx.vercel.app/logo.png" alt="Logo Sekolah" class="school-logo" width="72" height="72" />
+        </div>
+        <div class="intro-badge">✦ Fisika · Kelas 11 · Kurikulum Merdeka</div>
+        <h1 class="intro-title">Halo, Selamat Datang! 👋</h1>
+        <p class="intro-sub">
+          Sebelum kita mulai belajar bersama, Bapak/Ibu guru ingin kenalan dulu sama kamu.<br />
+          Isi form ini jujur ya — nggak ada jawaban yang salah!
+        </p>
+        <div class="intro-stats bento-row">
+          <div class="bento-stat glass-card-sm">
+            <span class="stat-icon">📋</span>
+            <span class="stat-label">4 Bagian</span>
+          </div>
+          <div class="bento-stat glass-card-sm">
+            <span class="stat-icon">⏱️</span>
+            <span class="stat-label">~5–7 Menit</span>
+          </div>
+          <div class="bento-stat glass-card-sm">
+            <span class="stat-icon">🔒</span>
+            <span class="stat-label">Data Aman</span>
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-start" onclick="goToStep(1)">
+          Mulai Isi Sekarang
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN: FORM MULTI-STEP ===== -->
+    <section class="screen" id="screen-form" aria-label="Form Profiling">
+      <!-- Progress Bar -->
+      <div class="progress-wrapper" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="Langkah pengisian">
+        <div class="progress-steps">
+          <div class="progress-step active" data-step="1">
+            <span class="step-dot"></span>
+            <span class="step-label">Biodata</span>
+          </div>
+          <div class="progress-line"></div>
+          <div class="progress-step" data-step="2">
+            <span class="step-dot"></span>
+            <span class="step-label">Gaya Belajar</span>
+          </div>
+          <div class="progress-line"></div>
+          <div class="progress-step" data-step="3">
+            <span class="step-dot"></span>
+            <span class="step-label">Minat Materi</span>
+          </div>
+          <div class="progress-line"></div>
+          <div class="progress-step" data-step="4">
+            <span class="step-dot"></span>
+            <span class="step-label">Penutup</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <!-- STEP 1: BIODATA -->
+        <div class="form-step active" id="step-1">
+          <div class="step-header">
+            <div class="step-badge">Bagian A</div>
+            <h2 class="step-title">Biodata Diri</h2>
+            <p class="step-desc">Info dasar tentang kamu — digunakan untuk administrasi kelas.</p>
+          </div>
+          <div class="fields-grid">
+            <div class="field-group full">
+              <label for="nama_lengkap">Nama Lengkap <span class="required" aria-label="wajib diisi">*</span></label>
+              <input type="text" id="nama_lengkap" name="nama_lengkap" placeholder="Tulis nama lengkap sesuai raport" autocomplete="name" required />
+              <span class="field-error" id="err-nama_lengkap"></span>
+            </div>
+            <div class="field-group">
+              <label for="nama_panggilan">Nama Panggilan</label>
+              <input type="text" id="nama_panggilan" name="nama_panggilan" placeholder="Nama yang biasa dipanggil" autocomplete="nickname" />
+            </div>
+            <div class="field-group">
+              <label for="kelas">Kelas / Rombel <span class="required" aria-label="wajib diisi">*</span></label>
+              <div class="select-wrapper">
+                <select id="kelas" name="kelas" required>
+                  <option value="" disabled selected>Pilih kelas...</option>
+                  <option>XI-1</option><option>XI-2</option><option>XI-3</option>
+                  <option>XI-4</option><option>XI-5</option><option>XI-6</option>
+                  <option>XI-7</option><option>XI-8</option><option>XI-9</option><option>XI-10</option>
+                </select>
+              </div>
+              <span class="field-error" id="err-kelas"></span>
+            </div>
+            <div class="field-group">
+              <label for="no_absen">Nomor Absen</label>
+              <input type="number" id="no_absen" name="no_absen" placeholder="Contoh: 15" min="1" max="40" inputmode="numeric" />
+            </div>
+            <div class="field-group full">
+              <label>Jenis Kelamin <span class="required" aria-label="wajib diisi">*</span></label>
+              <div class="radio-group" role="radiogroup" aria-label="Jenis Kelamin">
+                <label class="radio-card">
+                  <input type="radio" name="jenis_kelamin" value="Laki-laki" required />
+                  <span class="radio-label">👦 Laki-laki</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="jenis_kelamin" value="Perempuan" />
+                  <span class="radio-label">👧 Perempuan</span>
+                </label>
+              </div>
+              <span class="field-error" id="err-jenis_kelamin"></span>
+            </div>
+            <div class="field-group">
+              <label for="tempat_lahir">Tempat Lahir <span class="required" aria-label="wajib diisi">*</span></label>
+              <input type="text" id="tempat_lahir" name="tempat_lahir" placeholder="Kota tempat lahir" autocomplete="address-level2" required />
+              <span class="field-error" id="err-tempat_lahir"></span>
+            </div>
+            <div class="field-group">
+              <label for="tanggal_lahir">Tanggal Lahir <span class="required" aria-label="wajib diisi">*</span></label>
+              <input type="date" id="tanggal_lahir" name="tanggal_lahir" required />
+              <span class="field-error" id="err-tanggal_lahir"></span>
+            </div>
+            <div class="field-group full">
+              <label for="alamat">Alamat Domisili <span class="required" aria-label="wajib diisi">*</span></label>
+              <textarea id="alamat" name="alamat" rows="2" placeholder="Jalan, RT/RW, Kelurahan, Kecamatan, Kota" required></textarea>
+              <span class="field-error" id="err-alamat"></span>
+            </div>
+            <div class="field-group">
+              <label for="no_hp">Nomor HP / WhatsApp <span class="required" aria-label="wajib diisi">*</span></label>
+              <input type="tel" id="no_hp" name="no_hp" placeholder="Contoh: 08123456789" inputmode="tel" autocomplete="tel" required />
+              <span class="helper-text">Nomor HP siswa atau orang tua</span>
+              <span class="field-error" id="err-no_hp"></span>
+            </div>
+            <div class="field-group">
+              <label for="email">Email Aktif <span class="required" aria-label="wajib diisi">*</span></label>
+              <input type="email" id="email" name="email" placeholder="nama@email.com" autocomplete="email" inputmode="email" required />
+              <span class="field-error" id="err-email"></span>
+            </div>
+            <div class="field-group">
+              <label for="nama_ortu">Nama Orang Tua / Wali</label>
+              <input type="text" id="nama_ortu" name="nama_ortu" placeholder="Nama ayah / ibu / wali" autocomplete="off" />
+            </div>
+            <div class="field-group">
+              <label for="hobi">Hobi / Minat di Luar Sekolah</label>
+              <textarea id="hobi" name="hobi" rows="2" placeholder="Apa yang kamu suka lakukan di waktu luang?"></textarea>
+            </div>
+          </div>
+          <div class="step-nav">
+            <span></span>
+            <button class="btn-primary" onclick="nextStep(1)">
+              Lanjut
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: GAYA BELAJAR -->
+        <div class="form-step" id="step-2">
+          <div class="step-header">
+            <div class="step-badge">Bagian B</div>
+            <h2 class="step-title">Gaya Belajar & Mengajar</h2>
+            <p class="step-desc">Bantu guru memahami cara belajar yang paling cocok buat kamu.</p>
+          </div>
+          <div class="fields-grid">
+            <div class="field-group full">
+              <label>Gaya belajar yang paling cocok <span class="required" aria-label="wajib diisi">*</span></label>
+              <div class="bento-options" role="radiogroup" aria-label="Gaya belajar" id="gaya_belajar_group">
+                <label class="bento-option-card">
+                  <input type="radio" name="gaya_belajar" value="Visual" required />
+                  <span class="bento-icon">👁️</span>
+                  <span class="bento-title">Visual</span>
+                  <span class="bento-desc">Belajar lewat gambar, diagram, dan warna</span>
+                </label>
+                <label class="bento-option-card">
+                  <input type="radio" name="gaya_belajar" value="Auditori" />
+                  <span class="bento-icon">🎧</span>
+                  <span class="bento-title">Auditori</span>
+                  <span class="bento-desc">Lebih mudah paham lewat mendengarkan</span>
+                </label>
+                <label class="bento-option-card">
+                  <input type="radio" name="gaya_belajar" value="Kinestetik" />
+                  <span class="bento-icon">🤸</span>
+                  <span class="bento-title">Kinestetik</span>
+                  <span class="bento-desc">Belajar sambil praktik & bergerak</span>
+                </label>
+                <label class="bento-option-card">
+                  <input type="radio" name="gaya_belajar" value="Membaca-Menulis" />
+                  <span class="bento-icon">📖</span>
+                  <span class="bento-title">Membaca & Menulis</span>
+                  <span class="bento-desc">Lebih nyaman baca teks & catat</span>
+                </label>
+              </div>
+              <span class="field-error" id="err-gaya_belajar"></span>
+            </div>
+
+            <div class="field-group full">
+              <label>Gaya mengajar guru yang disukai <span class="required" aria-label="wajib diisi">*</span> <span class="helper-text">(boleh pilih lebih dari satu)</span></label>
+              <div class="checkbox-grid" role="group" aria-label="Gaya mengajar">
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Ceramah interaktif" /><span>🎙️ Ceramah interaktif</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Diskusi kelompok" /><span>💬 Diskusi kelompok</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Eksperimen / Praktikum" /><span>🧪 Eksperimen / Praktikum</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Video & simulasi" /><span>🎬 Video & Simulasi</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Studi kasus kontekstual" /><span>📚 Studi kasus</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Gamifikasi / kuis" /><span>🎮 Gamifikasi / Kuis</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Santai & humor" /><span>😄 Santai & humor</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="gaya_mengajar" value="Tegas & terstruktur" /><span>📐 Tegas & terstruktur</span></label>
+              </div>
+              <span class="field-error" id="err-gaya_mengajar"></span>
+            </div>
+
+            <div class="field-group full">
+              <label for="kecepatan_belajar">Kecepatan belajar yang kamu inginkan</label>
+              <div class="range-wrapper">
+                <span class="range-label-left">🐢 Lambat & mendalam</span>
+                <input type="range" id="kecepatan_belajar" name="kecepatan_belajar" min="1" max="5" value="3" class="range-input" aria-valuemin="1" aria-valuemax="5" aria-valuenow="3" />
+                <span class="range-label-right">🚀 Cepat & ringkas</span>
+              </div>
+              <div class="range-value-display" id="kecepatan-display" aria-live="polite">Seimbang (3)</div>
+            </div>
+
+            <div class="field-group full">
+              <label for="kendala_belajar">Kendala belajar Fisika selama ini</label>
+              <textarea id="kendala_belajar" name="kendala_belajar" rows="3" placeholder="Ceritakan kesulitan yang biasa kamu hadapi saat belajar Fisika..."></textarea>
+            </div>
+
+            <div class="field-group full">
+              <label>Media pembelajaran favorit <span class="helper-text">(boleh pilih lebih dari satu)</span></label>
+              <div class="checkbox-grid" role="group" aria-label="Media pembelajaran">
+                <label class="checkbox-card"><input type="checkbox" name="media_pembelajaran" value="Video YouTube / streaming" /><span>📺 Video YouTube</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="media_pembelajaran" value="Presentasi PPT / Slide" /><span>📊 Slide PPT</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="media_pembelajaran" value="Modul / buku cetak" /><span>📕 Modul / Buku</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="media_pembelajaran" value="Aplikasi simulasi" /><span>💻 Aplikasi simulasi</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="media_pembelajaran" value="Infografis / mind map" /><span>🗺️ Infografis</span></label>
+                <label class="checkbox-card"><input type="checkbox" name="media_pembelajaran" value="Podcast / audio" /><span>🎙️ Podcast</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="step-nav">
+            <button class="btn-secondary" onclick="prevStep(2)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Kembali
+            </button>
+            <button class="btn-primary" onclick="nextStep(2)">
+              Lanjut
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: MINAT MATERI -->
+        <div class="form-step" id="step-3">
+          <div class="step-header">
+            <div class="step-badge">Bagian C</div>
+            <h2 class="step-title">Minat Materi Fisika</h2>
+            <p class="step-desc">Pilih topik yang paling menarik bagimu — bisa lebih dari satu!</p>
+          </div>
+          <div class="field-group full">
+            <div class="topic-grid" role="group" aria-label="Topik Fisika Kelas 11">
+              <label class="topic-card" data-topic="1">
+                <input type="checkbox" name="minat_materi" value="Hakikat Fisika & Metode Ilmiah" />
+                <span class="topic-icon">🔬</span>
+                <span class="topic-title">Hakikat Fisika & Metode Ilmiah</span>
+              </label>
+              <label class="topic-card" data-topic="2">
+                <input type="checkbox" name="minat_materi" value="Pengukuran & Ketidakpastian" />
+                <span class="topic-icon">📏</span>
+                <span class="topic-title">Pengukuran & Ketidakpastian</span>
+              </label>
+              <label class="topic-card" data-topic="3">
+                <input type="checkbox" name="minat_materi" value="Gerak Lurus & Melingkar" />
+                <span class="topic-icon">🔄</span>
+                <span class="topic-title">Gerak Lurus & Melingkar</span>
+              </label>
+              <label class="topic-card" data-topic="4">
+                <input type="checkbox" name="minat_materi" value="Hukum Newton & Penerapannya" />
+                <span class="topic-icon">🍎</span>
+                <span class="topic-title">Hukum Newton & Penerapannya</span>
+              </label>
+              <label class="topic-card" data-topic="5">
+                <input type="checkbox" name="minat_materi" value="Usaha, Energi, dan Daya" />
+                <span class="topic-icon">⚡</span>
+                <span class="topic-title">Usaha, Energi & Daya</span>
+              </label>
+              <label class="topic-card" data-topic="6">
+                <input type="checkbox" name="minat_materi" value="Momentum, Impuls & Tumbukan" />
+                <span class="topic-icon">💥</span>
+                <span class="topic-title">Momentum, Impuls & Tumbukan</span>
+              </label>
+              <label class="topic-card" data-topic="7">
+                <input type="checkbox" name="minat_materi" value="Getaran, Gelombang & Bunyi" />
+                <span class="topic-icon">🌊</span>
+                <span class="topic-title">Getaran, Gelombang & Bunyi</span>
+              </label>
+              <label class="topic-card" data-topic="8">
+                <input type="checkbox" name="minat_materi" value="Elastisitas & Hukum Hooke" />
+                <span class="topic-icon">🪡</span>
+                <span class="topic-title">Elastisitas & Hukum Hooke</span>
+              </label>
+              <label class="topic-card" data-topic="9">
+                <input type="checkbox" name="minat_materi" value="Fluida Statis & Dinamis" />
+                <span class="topic-icon">💧</span>
+                <span class="topic-title">Fluida Statis & Dinamis</span>
+              </label>
+              <label class="topic-card" data-topic="10">
+                <input type="checkbox" name="minat_materi" value="Suhu, Kalor & Perpindahan Kalor" />
+                <span class="topic-icon">🌡️</span>
+                <span class="topic-title">Suhu, Kalor & Perpindahan</span>
+              </label>
+              <label class="topic-card" data-topic="11">
+                <input type="checkbox" name="minat_materi" value="Termodinamika" />
+                <span class="topic-icon">🔥</span>
+                <span class="topic-title">Termodinamika</span>
+              </label>
+            </div>
+          </div>
+          <div class="field-group full" style="margin-top: 1.5rem;">
+            <label for="topik_lain">Ada topik lain yang ingin dipelajari lebih dalam?</label>
+            <input type="text" id="topik_lain" name="topik_lain" placeholder="Tulis di sini (opsional)" />
+          </div>
+          <div class="step-nav">
+            <button class="btn-secondary" onclick="prevStep(3)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Kembali
+            </button>
+            <button class="btn-primary" onclick="nextStep(3)">
+              Lanjut
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: PENUTUP -->
+        <div class="form-step" id="step-4">
+          <div class="step-header">
+            <div class="step-badge">Bagian D</div>
+            <h2 class="step-title">Penutup</h2>
+            <p class="step-desc">Hampir selesai! Tulis harapanmu dan setujui penggunaan data.</p>
+          </div>
+          <div class="fields-grid">
+            <div class="field-group full">
+              <label for="harapan">Harapanmu untuk kelas Fisika tahun ini</label>
+              <textarea id="harapan" name="harapan" rows="4" placeholder="Tulis harapan atau pesanmu untuk guru dan kelas Fisika tahun ini..."></textarea>
+            </div>
+            <div class="field-group full">
+              <label class="consent-label">
+                <input type="checkbox" id="consent" name="consent" required />
+                <span class="consent-text">
+                  Saya menyetujui bahwa data yang saya isi akan digunakan oleh guru untuk keperluan administrasi dan peningkatan kualitas pembelajaran. Data tidak akan dibagikan kepada pihak luar tanpa izin.
+                  <span class="required" aria-label="wajib diisi">*</span>
+                </span>
+              </label>
+              <span class="field-error" id="err-consent"></span>
+            </div>
+          </div>
+          <div class="step-nav">
+            <button class="btn-secondary" onclick="prevStep(4)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Kembali
+            </button>
+            <button class="btn-primary" id="btn-submit" onclick="submitForm()">
+              Kirim Data
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN: LOADING ===== -->
+    <section class="screen" id="screen-loading" aria-label="Mengirim data" aria-live="polite">
+      <div class="loading-card glass-card">
+        <div class="loading-spinner" aria-hidden="true">
+          <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke-width="4"/></svg>
+        </div>
+        <p class="loading-text">Sedang mengirim data kamu...</p>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN: THANK YOU ===== -->
+    <section class="screen" id="screen-thankyou" aria-label="Pengiriman berhasil">
+      <div class="thankyou-card glass-card">
+        <div class="ty-icon" aria-hidden="true">🎉</div>
+        <h2 class="ty-title">Terima Kasih!</h2>
+        <p class="ty-sub">Data kamu berhasil dikirim dan sudah disimpan.<br />Guru akan mempelajari profilmu untuk membuat pengalaman belajar yang lebih seru.</p>
+        <div class="ty-insight glass-card-sm" id="ty-insight" aria-live="polite"></div>
+        <p class="ty-footer">Sampai ketemu di kelas! 🚀</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
