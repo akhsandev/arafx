@@ -540,7 +540,7 @@
                         <div class="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none">
                             <i class="ph-bold ph-magnifying-glass text-slate-400"></i>
                         </div>
-                        <input type="text" id="search-input" oninput="state.currentPage = 1; filterTable()" class="w-full pl-11 pr-4 py-2.5 bg-white/70 border border-white/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-paskibra-500 outline-none shadow-sm placeholder-slate-400" placeholder="Cari nama atau NISN...">
+                        <input type="text" id="search-input" class="w-full pl-11 pr-4 py-2.5 bg-white/70 border border-white/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-paskibra-500 outline-none shadow-sm placeholder-slate-400" placeholder="Cari nama atau NISN...">
                     </div>
                 </div>
                 
@@ -683,6 +683,15 @@
             navTo(hash, false);
 
             fetchData();
+            
+            // Attach search input event listener
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    state.currentPage = 1;
+                    filterTable();
+                });
+            }
         });
 
         // The New SPA Router (Fixes the overlapping bug)
@@ -1100,11 +1109,12 @@
         /* === TABLE RENDERING DENGAN PAGINASI === */
         function renderTable() {
             const tbody = document.getElementById('table-body');
-            const query = document.getElementById('search-input').value.toLowerCase();
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
             
             let filtered = state.participants.filter(p => {
-                return (p.nama || '').toLowerCase().includes(query) || 
-                       (p.nisn || '').toLowerCase().includes(query);
+                const nama = (p.nama || '').toString().toLowerCase();
+                const nisn = (p.nisn || '').toString().toLowerCase();
+                return nama.includes(query) || nisn.includes(query);
             });
 
             // Urutkan berdasarkan waktu pendaftaran (terbaru di atas)
