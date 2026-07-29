@@ -342,7 +342,8 @@
                     
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Nomor WhatsApp *</label>
-                        <input type="tel" id="reg-hp" required placeholder="08..." class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                        <input type="text" id="reg-hp" required placeholder="08..." pattern="[0-9+]+" inputmode="numeric" class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                        <p class="text-xs text-slate-500 mt-1.5">Contoh: 08123456789</p>
                     </div>
 
                     <div>
@@ -404,7 +405,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Nomor HP Orang Tua *</label>
-                        <input type="tel" id="reg-hportu" required class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
+                        <input type="text" id="reg-hportu" required placeholder="08..." pattern="[0-9+]+" inputmode="numeric" class="w-full px-5 py-3 rounded-xl glass-input text-slate-800">
                     </div>
 
                     <!-- Section Title 3 -->
@@ -921,12 +922,23 @@
                 const base64Foto = await compressImage(fileFoto, 800, 1000, 0.7);
                 const base64Surat = await compressImage(fileSurat, 1200, 1600, 0.7);
 
+                // Auto-fix nomor HP: tambahkan 0 di depan jika belum ada 0 atau +
+                let hp = document.getElementById('reg-hp').value.trim();
+                let hpOrtu = document.getElementById('reg-hportu').value.trim();
+                
+                if (hp && !hp.startsWith('0') && !hp.startsWith('+')) {
+                    hp = '0' + hp;
+                }
+                if (hpOrtu && !hpOrtu.startsWith('0') && !hpOrtu.startsWith('+')) {
+                    hpOrtu = '0' + hpOrtu;
+                }
+
                 const data = {
                     nama: document.getElementById('reg-nama').value,
                     nisn: document.getElementById('reg-nisn').value,
                     nis: document.getElementById('reg-nis').value,
                     kelas: document.getElementById('reg-kelas').value,
-                    hp: document.getElementById('reg-hp').value,
+                    hp: hp,
                     tempat_lahir: document.getElementById('reg-tempatlahir').value,
                     tanggal_lahir: document.getElementById('reg-tanggallahir').value,
                     jk: document.querySelector('input[name="jk"]:checked').value,
@@ -935,7 +947,7 @@
                     berat_badan: document.getElementById('reg-berat').value,
                     alasan: document.getElementById('reg-alasan').value.trim(),
                     nama_ortu: document.getElementById('reg-namaortu').value,
-                    hp_ortu: document.getElementById('reg-hportu').value,
+                    hp_ortu: hpOrtu,
                     waktu: new Date().toISOString(),
                     
                     // Modifikasi metadata karena kita telah mengompresnya secara otomatis ke JPG
@@ -1227,6 +1239,19 @@
 
             // Ubah link foto agar bisa ditampilkan sebagai image HTML
             const fotoDirectLink = getDirectDriveLink(p.foto_url);
+            
+            // Auto-fix nomor WA yang kehilangan 0 di depan
+            const fixPhone = (phone) => {
+                if (!phone || phone === '-') return '-';
+                phone = phone.toString().trim();
+                if (phone.length > 0 && !phone.startsWith('0') && !phone.startsWith('+')) {
+                    return '0' + phone;
+                }
+                return phone;
+            };
+            
+            const hp = fixPhone(p.hp);
+            const hpOrtu = fixPhone(p.hp_ortu);
 
             printArea.innerHTML = `
                 <div class="p-8 bg-white" id="pdf-content-wrapper">
@@ -1266,16 +1291,16 @@
                                     <tr><td class="py-3 font-semibold text-slate-500">Tinggi Badan</td><td class="py-3 font-medium text-slate-800">${p.tinggi_badan ? p.tinggi_badan + ' cm' : '-'}</td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">Berat Badan</td><td class="py-3 font-medium text-slate-800">${p.berat_badan ? p.berat_badan + ' kg' : '-'}</td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">Alamat</td><td class="py-3 font-medium text-slate-800">${p.alamat || '-'}</td></tr>
-                                    <tr><td class="py-3 font-semibold text-slate-500">No. WhatsApp</td><td class="py-3 font-medium text-slate-800">${p.hp || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">No. WhatsApp</td><td class="py-3 font-medium text-slate-800">${hp}</td></tr>
                                     
                                     <tr><td colspan="2" class="py-4"><div class="h-px bg-slate-200"></div></td></tr>
                                     
-                                    <tr><td class="py-3 font-semibold text-slate-500 align-top">Alasan Mendaftar</td><td class="py-3 font-medium text-slate-800 leading-relaxed">${p.alasan || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500 align-top">Alasan Mendaftar</td><td class="py-3 font-medium text-slate-800 leading-relaxed">${p.alasan || '<span class="text-slate-400 italic">Data lama (belum ada field ini)</span>'}</td></tr>
                                     
                                     <tr><td colspan="2" class="py-4"><div class="h-px bg-slate-200"></div></td></tr>
                                     
                                     <tr><td class="py-3 font-semibold text-slate-500">Nama Orang Tua/Wali</td><td class="py-3 font-medium text-slate-800">${p.nama_ortu || '-'}</td></tr>
-                                    <tr><td class="py-3 font-semibold text-slate-500">No. HP Orang Tua</td><td class="py-3 font-medium text-slate-800">${p.hp_ortu || '-'}</td></tr>
+                                    <tr><td class="py-3 font-semibold text-slate-500">No. HP Orang Tua</td><td class="py-3 font-medium text-slate-800">${hpOrtu}</td></tr>
                                     <tr><td class="py-3 font-semibold text-slate-500">Waktu Mendaftar</td><td class="py-3 font-medium text-slate-400 text-xs">${dateStr}</td></tr>
                                 </tbody>
                             </table>
