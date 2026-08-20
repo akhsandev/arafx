@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Laporan Kegiatan Adiwiyata PDF</title>
+    <title>Generator Laporan Kegiatan Adiwiyata PDF dengan Gemini AI</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,8 +31,8 @@
             color: #0f172a !important;
             box-sizing: border-box !important;
             font-size: 10pt;
-            line-height: 1.5;
-            margin: 0 !important; /* CRITICAL: No auto margins to prevent html2canvas offset */
+            line-height: 1.55;
+            margin: 0 !important;
             overflow: hidden;
         }
 
@@ -94,18 +94,22 @@
                 </div>
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-                        EcoReport <span class="text-xs bg-emerald-400/30 text-emerald-100 border border-emerald-300/30 font-semibold px-2 py-0.5 rounded-full">Adiwiyata</span>
+                        EcoReport <span class="text-xs bg-emerald-400/30 text-emerald-100 border border-emerald-300/30 font-semibold px-2 py-0.5 rounded-full">Adiwiyata + AI</span>
                     </h1>
                     <p class="text-xs text-emerald-100/80">Generator Laporan PDF Lomba & Kegiatan Lingkungan Sekolah</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button type="button" onclick="fillDemoData()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-emerald-900 bg-emerald-100 hover:bg-white rounded-xl transition duration-200 flex items-center gap-2 shadow-sm cursor-pointer active:scale-95">
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" onclick="openApiKeyModal()" class="px-3.5 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 rounded-xl transition duration-200 flex items-center gap-2 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-key"></i>
+                    <span id="apiKeyBtnText">🔑 API Key Gemini</span>
+                </button>
+                <button type="button" onclick="fillDemoData()" class="px-3.5 py-2 text-xs font-semibold text-emerald-900 bg-emerald-100 hover:bg-white rounded-xl transition duration-200 flex items-center gap-2 shadow-sm cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles text-emerald-700"></i>
                     Isi Contoh Data
                 </button>
-                <button type="button" onclick="resetForm()" class="px-3 py-2 text-xs sm:text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition cursor-pointer" title="Reset Form">
+                <button type="button" onclick="resetForm()" class="px-3 py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition cursor-pointer" title="Reset Form">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
@@ -122,9 +126,10 @@
                         <i class="fa-solid fa-clipboard-check"></i>
                     </div>
                     <div>
-                        <h2 class="text-base font-bold text-slate-800">Syarat Ketentuan Laporan Adiwiyata</h2>
+                        <h2 class="text-base font-bold text-slate-800">Syarat Ketentuan Laporan Adiwiyata & Fitur AI</h2>
                         <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
                             Deskripsi program minimal <span class="font-bold text-emerald-700">50 kata</span>, minimal <span class="font-bold text-emerald-700">4 foto unggahan</span>, dan deskripsi tiap foto minimal <span class="font-bold text-emerald-700">20 kata</span>.
+                            <br>⚡ <span class="font-bold text-teal-700">Setiap foto di-kompres otomatis ke WebP max 80KB</span> agar analisis Gemini AI berjalan super cepat.
                         </p>
                     </div>
                 </div>
@@ -148,7 +153,7 @@
                     <span class="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm">1</span>
                     <div>
                         <h3 class="text-base font-bold text-slate-800">Identitas Kegiatan Adiwiyata</h3>
-                        <p class="text-xs text-slate-500">Judul laporan, penanggung jawab, nama sekolah, dan jadwal pelaksanaan</p>
+                        <p class="text-xs text-slate-500">Judul laporan, nama sekolah, jadwal pelaksanaan, dan lokasi pokja</p>
                     </div>
                 </div>
 
@@ -178,16 +183,15 @@
 
                     <div>
                         <label for="tanggalKegiatan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                            Tanggal Kegiatan <span class="text-rose-500">*</span>
+                            Tanggal / Waktu Kegiatan <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                                <i class="fa-solid fa-calendar-day"></i>
+                                <i class="fa-solid fa-calendar-days"></i>
                             </span>
-                            <!-- Diubah menjadi Text Input -->
                             <input type="text" id="tanggalKegiatan" required
                                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition outline-none"
-                                placeholder="Contoh: 15 Januari 2026 atau 15 - 17 Januari 2026">
+                                placeholder="Contoh: 15 - 20 Agustus 2026 / Setiap Hari Sabtu">
                         </div>
                     </div>
 
@@ -207,8 +211,9 @@
                 </div>
             </section>
 
+            <!-- SECTION 2: Latar Belakang & Deskripsi Program -->
             <section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div class="bg-slate-50/80 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                <div class="bg-slate-50/80 border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm">2</span>
                         <div>
@@ -216,8 +221,13 @@
                             <p class="text-xs text-slate-500">Penjelasan komprehensif mengenai program Adiwiyata yang dilaksanakan</p>
                         </div>
                     </div>
-                    <div id="intro-word-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 transition-all duration-200">
-                        0 / 50 Kata
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="generateAiProgramDescription()" id="btnAiProgram" class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Generate AI (Narasi Program)
+                        </button>
+                        <div id="intro-word-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 transition-all duration-200">
+                            0 / 50 Kata
+                        </div>
                     </div>
                 </div>
 
@@ -228,29 +238,33 @@
                     <textarea id="deskripsiProgram" rows="5" required
                         oninput="validateWordCounts()"
                         class="w-full p-4 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition outline-none resize-y"
-                        placeholder="Tuliskan latar belakang, tujuan, serta dampak dari kegiatan Adiwiyata ini secara rinci di sini..."></textarea>
+                        placeholder="Tuliskan draf/latar belakang di sini, atau tekan '✨ Generate AI (Narasi Program)' untuk membuat atau melengkapi tulisan hingga minimal 50 kata secara otomatis..."></textarea>
                     
                     <div class="mt-2 flex justify-between items-center text-xs">
                         <span id="intro-word-hint" class="text-slate-500 flex items-center gap-1">
                             <i class="fa-solid fa-circle-info text-slate-400"></i>
-                            Sertakan latar belakang ekologis, pelibatan siswa, dan tujuan program.
+                            Jika sudah ada tulisan singkat, AI akan mengembangkan draf tersebut agar memenuhi syarat 50 kata.
                         </span>
                         <span id="intro-status-msg" class="font-medium text-rose-500">Minimal 50 kata dibutuhkan</span>
                     </div>
                 </div>
             </section>
 
+            <!-- SECTION 3: Dokumentasi Foto Kegiatan (Min 4 Foto) -->
             <section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div class="bg-slate-50/80 border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="bg-slate-50/80 border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm">3</span>
                         <div>
                             <h3 class="text-base font-bold text-slate-800">Dokumentasi Foto Kegiatan</h3>
-                            <p class="text-xs text-slate-500">Unggah minimal 4 foto kegiatan lengkap dengan keterangan deskripsinya</p>
+                            <p class="text-xs text-slate-500">Minimal 4 foto (Otomatis dikompres ke WebP &lt;80KB untuk deteksi AI super cepat)</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="addPhotoCard()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="generateAllPhotoDescriptions()" id="btnAiAllPhotos" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+                            <i class="fa-solid fa-robot"></i> ✨ AI Deskripsi Semua Foto
+                        </button>
+                        <button type="button" onclick="addPhotoCard()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95">
                             <i class="fa-solid fa-plus"></i> Tambah Foto
                         </button>
                         <span class="text-xs bg-emerald-100 text-emerald-800 px-3 py-2 rounded-xl font-bold">
@@ -294,7 +308,7 @@
     <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs">
         <div class="max-w-7xl mx-auto px-4 text-center flex flex-col sm:flex-row items-center justify-between gap-2">
             <div>
-                © 2026 Modul Laporan Adiwiyata Sekolah — Aplikasi Mandiri Guru
+                © 2026 Modul Laporan Adiwiyata Sekolah — Aplikasi Mandiri Guru + Gemini AI
             </div>
             <div class="flex items-center gap-4">
                 <span class="hover:text-slate-200"><i class="fa-solid fa-leaf text-emerald-500 mr-1"></i> Ramah Lingkungan</span>
@@ -302,6 +316,43 @@
             </div>
         </div>
     </footer>
+
+    <!-- GEMINI API KEY BULK MODAL -->
+    <div id="apiKeyModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-key text-amber-400 text-lg"></i>
+                    <h3 class="font-bold text-base">Kelola API Key Gemini (Bulk & Fallback)</h3>
+                </div>
+                <button type="button" onclick="closeApiKeyModal()" class="text-slate-400 hover:text-white transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Masukkan satu atau beberapa <strong>Gemini API Key</strong> (dipisahkan baris baru).
+                    Sistem akan menggunakan key pertama secara otomatis. Jika terjadi kuota habis / rate-limit (error 429), sistem akan <strong>otomatis fallback</strong> menggunakan key berikutnya.
+                </p>
+                <div>
+                    <label for="bulkApiKeys" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Daftar API Key Gemini (1 Key Per Baris)
+                    </label>
+                    <textarea id="bulkApiKeys" rows="6" placeholder="AIzaSyA...
+AIzaSyB...
+AIzaSyC..." class="w-full p-3 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-amber-500 outline-none resize-y"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeApiKeyModal()" class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button" onclick="saveApiKeys()" class="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-md cursor-pointer">
+                        Simpan Key
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- PREVIEW MODAL -->
     <div id="previewModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -348,15 +399,15 @@
     <!-- Processing Overlay -->
     <div id="processingOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] hidden flex flex-col items-center justify-center text-white">
         <div class="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h3 class="text-lg font-bold">Sedang Menyusun & Mengunduh File PDF...</h3>
-        <p class="text-xs text-slate-300 mt-1">Mohon tunggu beberapa detik, jangan tutup halaman ini.</p>
+        <h3 id="processingTitle" class="text-lg font-bold">Sedang Menyusun & Mengunduh File PDF...</h3>
+        <p id="processingSubtitle" class="text-xs text-slate-300 mt-1">Mohon tunggu beberapa detik, jangan tutup halaman ini.</p>
     </div>
 
     <!-- PDF TEMPLATE (Hidden off-screen container used for pdf generation) -->
     <div style="position: absolute; left: -9999px; top: 0; width: 210mm;" aria-hidden="true">
         <div id="pdf-template" class="pdf-document">
             
-            <!-- Title Header Banner (Clean Header without Kop) -->
+            <!-- Title Header Banner (Clean Header without Kop & Signatures) -->
             <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 mb-4 text-center">
                 <h1 id="pdf-out-judul" class="text-sm font-bold text-emerald-950 uppercase tracking-wide">
                     JUDUL LAPORAN KEGIATAN ADIWIYATA
@@ -372,7 +423,7 @@
                         <span id="pdf-out-sekolah" class="font-bold text-slate-800 uppercase min-w-0 break-words">-</span>
                     </div>
                     <div class="flex items-start min-w-0">
-                        <span class="w-28 shrink-0 text-slate-500 font-medium">Tanggal Kegiatan</span>
+                        <span class="w-28 shrink-0 text-slate-500 font-medium">Waktu / Tanggal</span>
                         <span class="mr-2 text-slate-400">:</span>
                         <span id="pdf-out-tanggal" class="font-bold text-slate-800 min-w-0 break-words">-</span>
                     </div>
@@ -394,14 +445,14 @@
                 </p>
             </div>
 
-            <!-- Documentation Photos Grid Section -->
+            <!-- Documentation Photos Grid Section (Single Column Layout) -->
             <div class="mb-5">
                 <h3 class="text-[9.5pt] font-bold text-emerald-900 uppercase tracking-wider border-b border-emerald-200 pb-1 mb-3 flex items-center gap-1.5">
                     <span>📷</span> B. DOKUMENTASI KEGIATAN
                 </h3>
 
                 <div id="pdf-out-photogrid" class="grid grid-cols-1 gap-6">
-                    <!-- Dynamic PDF photo items inserted here -->
+                    <!-- Dynamic PDF photo items inserted here in single column -->
                 </div>
             </div>
 
@@ -412,7 +463,7 @@
     <div id="print-area" class="hidden"></div>
 
     <script>
-        // Data Store for Uploaded Photos
+        // Store for Uploaded Photos
         let photoData = [
             { id: 1, fileData: null, description: '' },
             { id: 2, fileData: null, description: '' },
@@ -420,11 +471,375 @@
             { id: 4, fileData: null, description: '' }
         ];
 
+        // Store for Gemini API Keys
+        let geminiApiKeys = [];
+
         // Initialize App State on DOM Load
         window.addEventListener('DOMContentLoaded', function() {
+            const tglElem = document.getElementById('tanggalKegiatan');
+            if (tglElem && !tglElem.value) {
+                tglElem.value = "15 - 20 Agustus 2026";
+            }
+
+            // Load saved API Keys from LocalStorage
+            loadSavedApiKeys();
+
             renderPhotoInputs();
             validateWordCounts();
         });
+
+        function loadSavedApiKeys() {
+            const saved = localStorage.getItem('adiwiyata_gemini_keys');
+            if (saved) {
+                try {
+                    geminiApiKeys = JSON.parse(saved);
+                } catch (e) {
+                    geminiApiKeys = [];
+                }
+            }
+            updateApiKeyButtonStatus();
+        }
+
+        function updateApiKeyButtonStatus() {
+            const btnText = document.getElementById('apiKeyBtnText');
+            if (btnText) {
+                if (geminiApiKeys.length > 0) {
+                    btnText.innerText = `🔑 ${geminiApiKeys.length} Key Tersimpan`;
+                } else {
+                    btnText.innerText = `🔑 API Key Gemini`;
+                }
+            }
+        }
+
+        function openApiKeyModal() {
+            const textarea = document.getElementById('bulkApiKeys');
+            if (textarea) {
+                textarea.value = geminiApiKeys.join('\n');
+            }
+            document.getElementById('apiKeyModal').classList.remove('hidden');
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.add('hidden');
+        }
+
+        function saveApiKeys() {
+            const textarea = document.getElementById('bulkApiKeys');
+            const rawText = textarea ? textarea.value : '';
+            
+            const keys = rawText
+                .split('\n')
+                .map(k => k.trim())
+                .filter(k => k.length > 0);
+
+            geminiApiKeys = keys;
+            localStorage.setItem('adiwiyata_gemini_keys', JSON.stringify(geminiApiKeys));
+            updateApiKeyButtonStatus();
+            closeApiKeyModal();
+
+            if (keys.length > 0) {
+                showToast(`${keys.length} API Key Gemini berhasil disimpan!`, 'success');
+            } else {
+                showToast('Daftar API Key dibersihkan.', 'info');
+            }
+        }
+
+        async function callGeminiApiWithFallback(requestBodyBuilder) {
+            if (geminiApiKeys.length === 0) {
+                openApiKeyModal();
+                throw new Error('Silakan masukkan minimal 1 API Key Gemini terlebih dahulu!');
+            }
+
+            let lastError = null;
+
+            for (let i = 0; i < geminiApiKeys.length; i++) {
+                const currentKey = geminiApiKeys[i];
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${currentKey}`;
+
+                try {
+                    const body = requestBodyBuilder();
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        const errJson = await response.json().catch(() => ({}));
+                        const errMsg = errJson.error?.message || response.statusText;
+                        console.warn(`Key #${i + 1} Error (${response.status}): ${errMsg}`);
+
+                        if (response.status === 429 || response.status === 400 || response.status === 403) {
+                            lastError = new Error(`Key #${i + 1} gagal (${response.status}): ${errMsg}`);
+                            showToast(`Key #${i + 1} bermasalah, berpindah ke Key berikutnya...`, 'error');
+                            continue;
+                        } else {
+                            throw new Error(errMsg);
+                        }
+                    }
+
+                    const data = await response.json();
+                    const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!textResult) {
+                        throw new Error('Respon dari Gemini AI kosong.');
+                    }
+                    return textResult.trim();
+
+                } catch (err) {
+                    lastError = err;
+                    if (i < geminiApiKeys.length - 1) {
+                        console.log(`Fallback to key index ${i + 1}`);
+                    }
+                }
+            }
+
+            throw lastError || new Error('Seluruh API Key Gemini gagal digunakan.');
+        }
+
+        async function generateAiProgramDescription() {
+            const judul = document.getElementById('judulKegiatan').value || 'Kegiatan Lingkungan Adiwiyata';
+            const sekolah = document.getElementById('namaSekolah').value || 'Sekolah Adiwiyata';
+            const tanggal = document.getElementById('tanggalKegiatan').value || 'Periode Kegiatan';
+            const lokasi = document.getElementById('lokasiKegiatan').value || 'Area Sekolah';
+            const existingText = document.getElementById('deskripsiProgram').value.trim();
+
+            if (geminiApiKeys.length === 0) {
+                showToast('Masukkan API Key Gemini terlebih dahulu!', 'error');
+                openApiKeyModal();
+                return;
+            }
+
+            showProcessingOverlay('Membuat Narasi Program dengan Gemini AI...', 'Menyusun & melengkapi latar belakang kegiatan Adiwiyata');
+
+            try {
+                let promptText = "";
+                if (existingText) {
+                    promptText = `Anda adalah ahli penyusun laporan Adiwiyata sekolah di Indonesia.
+Pengguna telah menuliskan draf/teks awal deskripsi program berikut:
+"${existingText}"
+
+Detail Kegiatan:
+- Judul Kegiatan: "${judul}"
+- Nama Sekolah: "${sekolah}"
+- Waktu / Tanggal Pelaksanaan: "${tanggal}"
+- Lokasi / Pokja: "${lokasi}"
+
+Tugas Anda:
+Lanjutkan, kembangkan, dan lengkapi draf tulisan pengguna di atas agar menjadi satu paragraf narasi deskripsi/latar belakang program kerja Adiwiyata yang utuh, formal, inspiratif, dan ekologis.
+
+Persyaratan Ketat:
+1. Pertahankan ide dan kalimat awal pengguna, lalu sambung dan tambahkan kalimat pendukung secara natural.
+2. Wajib memiliki panjang total MINIMAL 50 KATA dan MAKSIMAL 120 KATA.
+3. Hubungkan secara eksplisit dengan judul kegiatan, nama sekolah, waktu pelaksanaan (${tanggal}), dan lokasi pokja (${lokasi}).
+4. Jelaskan latar belakang ekologis, pelibatan aktif siswa/komunitas sekolah, serta tujuan/dampak positifnya bagi lingkungan.
+5. Gunakan bahasa Indonesia baku dan resmi laporan sekolah.
+6. Langsung berikan 1 paragraf utuh tanpa kata pengantar, bullet points, atau judul.`;
+                } else {
+                    promptText = `Anda adalah ahli penyusun laporan Adiwiyata sekolah di Indonesia. 
+Buatkan satu paragraf narasi deskripsi/latar belakang program kerja kegiatan Adiwiyata berikut secara formal, inspiratif, dan ekologis.
+Detail Kegiatan:
+- Judul Kegiatan: "${judul}"
+- Nama Sekolah: "${sekolah}"
+- Waktu / Tanggal Pelaksanaan: "${tanggal}"
+- Lokasi / Pokja: "${lokasi}"
+
+Persyaratan Ketat:
+1. Wajib memiliki panjang MINIMAL 50 KATA dan MAKSIMAL 120 KATA.
+2. Hubungkan secara eksplisit dengan judul kegiatan, nama sekolah, waktu pelaksanaan (${tanggal}), dan lokasi pokja (${lokasi}).
+3. Jelaskan latar belakang ekologis, pelibatan aktif siswa/komunitas sekolah, serta tujuan/dampak positifnya bagi lingkungan.
+4. Gunakan bahasa Indonesia baku dan resmi laporan sekolah.
+5. Jangan gunakan bullet points, langsung 1 paragraf utuh tanpa judul atau salam pembuka.`;
+                }
+
+                const resultText = await callGeminiApiWithFallback(() => ({
+                    contents: [{
+                        parts: [{ text: promptText }]
+                    }]
+                }));
+
+                document.getElementById('deskripsiProgram').value = resultText;
+                validateWordCounts();
+                hideProcessingOverlay();
+                showToast('Narasi Program Adiwiyata berhasil dilengkapi oleh AI!', 'success');
+
+            } catch (err) {
+                hideProcessingOverlay();
+                console.error(err);
+                showToast(err.message || 'Gagal membuat deskripsi dengan AI', 'error');
+            }
+        }
+
+        async function generateGeminiPhotoDescription(index) {
+            const photo = photoData[index];
+            if (!photo || !photo.fileData) {
+                showToast(`Foto #${index + 1} belum diunggah!`, 'error');
+                return;
+            }
+
+            if (geminiApiKeys.length === 0) {
+                showToast('Masukkan API Key Gemini terlebih dahulu!', 'error');
+                openApiKeyModal();
+                return;
+            }
+
+            showProcessingOverlay(`Menganalisis Foto #${index + 1} dengan Gemini Vision...`, 'AI sedang membaca aktivitas pada foto...');
+
+            try {
+                const judul = document.getElementById('judulKegiatan')?.value || 'Kegiatan Lingkungan Adiwiyata';
+                const sekolah = document.getElementById('namaSekolah')?.value || 'Sekolah Adiwiyata';
+                const tanggal = document.getElementById('tanggalKegiatan')?.value || 'Periode Kegiatan';
+                const lokasi = document.getElementById('lokasiKegiatan')?.value || 'Area Sekolah';
+                const narasiProgram = document.getElementById('deskripsiProgram')?.value || '';
+
+                const base64Data = photo.fileData.split(',')[1];
+                const mimeType = photo.fileData.substring(photo.fileData.indexOf(":") + 1, photo.fileData.indexOf(";"));
+
+                const promptText = `Anda adalah penilai dan penyusun laporan kegiatan Adiwiyata Sekolah.
+Analisis gambar kegiatan Adiwiyata yang diunggah ini secara cermat.
+Buatkan deskripsi penjelasan foto secara lengkap dan spesifik yang BERKAITAN ERAT & BERSAMBUNGAN DENGAN konteks program kerja berikut:
+
+Konteks Program Laporan:
+- Judul Kegiatan: "${judul}"
+- Nama Sekolah: "${sekolah}"
+- Waktu / Tanggal Pelaksanaan: "${tanggal}"
+- Lokasi / Pokja: "${lokasi}"
+${narasiProgram ? `- Latar Belakang & Narasi Program: "${narasiProgram}"` : ''}
+
+Persyaratan Ketat:
+1. Deskripsi WAJIB memiliki panjang MINIMAL 20 KATA dan MAKSIMAL 45 KATA.
+2. Hubungkan aktivitas konkret yang terlihat pada gambar secara langsung dengan Judul Kegiatan, Waktu (${tanggal}), Lokasi (${lokasi}), dan Narasi Program Adiwiyata di atas.
+3. Jelaskan siapa pelakunya (misal: para siswa, tim Pokja Adiwiyata, guru), tindakan konkret apa yang dilakukan pada gambar, serta kontribusinya terhadap keberhasilan tujuan program kerja tersebut.
+4. Gunakan bahasa Indonesia formal, baku, dan deskriptif.
+5. Langsung berikan kalimat deskripsi tanpa kata pengantar, tanda petik, atau judul.`;
+
+                const resultText = await callGeminiApiWithFallback(() => ({
+                    contents: [{
+                        parts: [
+                            { text: promptText },
+                            {
+                                inline_data: {
+                                    mime_type: mimeType,
+                                    data: base64Data
+                                }
+                            }
+                        ]
+                    }]
+                }));
+
+                photoData[index].description = resultText;
+                
+                const descTextarea = document.getElementById(`photo-desc-${index}`);
+                if (descTextarea) {
+                    descTextarea.value = resultText;
+                }
+
+                updatePhotoDescription(index, resultText);
+                hideProcessingOverlay();
+                showToast(`Deskripsi Foto #${index + 1} berhasil dihasilkan AI!`, 'success');
+
+            } catch (err) {
+                hideProcessingOverlay();
+                console.error(err);
+                showToast(err.message || `Gagal menganalisis Foto #${index + 1}`, 'error');
+            }
+        }
+
+        async function generateAllPhotoDescriptions() {
+            const uploadedIndices = photoData
+                .map((p, idx) => (p.fileData ? idx : null))
+                .filter(idx => idx !== null);
+
+            if (uploadedIndices.length === 0) {
+                showToast('Belum ada foto yang diunggah untuk dianalisis!', 'error');
+                return;
+            }
+
+            if (geminiApiKeys.length === 0) {
+                showToast('Masukkan API Key Gemini terlebih dahulu!', 'error');
+                openApiKeyModal();
+                return;
+            }
+
+            for (const idx of uploadedIndices) {
+                await generateGeminiPhotoDescription(idx);
+            }
+
+            showToast('Seluruh foto berhasil dideskripsikan oleh AI!', 'success');
+        }
+
+        async function compressImageToWebP(file, maxKB = 80) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        const maxDim = 1024;
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        let quality = 0.85;
+                        let dataUrl = canvas.toDataURL('image/webp', quality);
+
+                        const getByteSize = (url) => Math.round((url.length - url.indexOf(',') - 1) * 0.75);
+
+                        while (getByteSize(dataUrl) > maxKB * 1024 && quality > 0.15) {
+                            quality -= 0.1;
+                            dataUrl = canvas.toDataURL('image/webp', quality);
+                        }
+
+                        if (getByteSize(dataUrl) > maxKB * 1024) {
+                            const scale = 0.8;
+                            canvas.width = Math.round(width * scale);
+                            canvas.height = Math.round(height * scale);
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            dataUrl = canvas.toDataURL('image/webp', 0.6);
+                        }
+
+                        resolve(dataUrl);
+                    };
+                    img.onerror = (err) => reject(err);
+                    img.src = e.target.result;
+                };
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleImageUpload(event, index) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast(`Mengompres Foto #${index + 1} ke WebP...`, 'info');
+
+            try {
+                const compressedWebP = await compressImageToWebP(file, 80);
+                photoData[index].fileData = compressedWebP;
+                renderPhotoInputs();
+                validateWordCounts();
+
+                const byteSize = Math.round((compressedWebP.length - compressedWebP.indexOf(',') - 1) * 0.75 / 1024);
+                showToast(`Foto #${index + 1} dikompres ke WebP (${byteSize} KB)!`, 'success');
+            } catch (error) {
+                console.error('Error compressing image:', error);
+                showToast('Gagal memproses gambar. Coba file gambar lain.', 'error');
+            }
+        }
 
         function addPhotoCard() {
             photoData.push({
@@ -467,6 +882,11 @@
                             Foto Dokumentasi #${index + 1} <span class="text-rose-500">*</span>
                         </span>
                         <div class="flex items-center gap-2">
+                            ${item.fileData ? `
+                                <button type="button" onclick="generateGeminiPhotoDescription(${index})" class="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-800 text-[11px] font-bold rounded-lg transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i> ✨ AI Deskripsi
+                                </button>
+                            ` : ''}
                             <span id="photo-badge-${index}" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${isWordValid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                                 ${wordCount} / 20 Kata
                             </span>
@@ -478,7 +898,7 @@
                         </div>
                     </div>
 
-                    <!-- Image Upload Dropzone (object-contain ensures portrait & landscape are uncropped) -->
+                    <!-- Image Upload Dropzone -->
                     <div class="relative group cursor-pointer">
                         <div id="preview-box-${index}" class="w-full h-48 rounded-xl border-2 border-dashed border-slate-300 bg-slate-100/60 flex flex-col items-center justify-center p-2 text-center overflow-hidden transition group-hover:border-emerald-500">
                             ${item.fileData ? 
@@ -486,7 +906,7 @@
                                 `<div class="space-y-1 text-slate-400">
                                     <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300"></i>
                                     <p class="text-xs font-medium text-slate-600">Klik untuk Unggah Foto</p>
-                                    <p class="text-[10px] text-slate-400">PNG, JPG atau JPEG (Portrait / Landscape)</p>
+                                    <p class="text-[10px] text-emerald-700 font-semibold">Otomatis dikompres ke WebP (Maks 80KB) untuk AI cepat</p>
                                 </div>`
                             }
                         </div>
@@ -497,7 +917,7 @@
                     <!-- Photo Description Textarea -->
                     <div>
                         <textarea id="photo-desc-${index}" rows="3" oninput="updatePhotoDescription(${index}, this.value)"
-                            placeholder="Tuliskan keterangan foto minimal 20 kata (Siapa, kegiatan apa, dan dampaknya)..."
+                            placeholder="Tuliskan keterangan foto minimal 20 kata atau gunakan tombol '✨ AI Deskripsi' di atas..."
                             class="w-full p-3 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none">${item.description}</textarea>
                         
                         <div class="mt-1 flex justify-between items-center text-[11px]">
@@ -511,25 +931,6 @@
 
                 container.appendChild(card);
             });
-        }
-
-        function handleImageUpload(event, index) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 8 * 1024 * 1024) {
-                showToast('Ukuran file foto maksimal 8MB', 'error');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                photoData[index].fileData = e.target.result;
-                renderPhotoInputs();
-                validateWordCounts();
-                showToast(`Foto #${index + 1} berhasil diunggah!`, 'success');
-            };
-            reader.readAsDataURL(file);
         }
 
         function updatePhotoDescription(index, text) {
@@ -638,13 +1039,13 @@
             ctx.font = '14px "Plus Jakarta Sans", sans-serif';
             ctx.fillText('Dokumentasi Program Adiwiyata', 300, 285);
 
-            return canvas.toDataURL('image/png');
+            return canvas.toDataURL('image/webp', 0.8);
         }
 
         function fillDemoData() {
             document.getElementById('judulKegiatan').value = "Laporan Kegiatan Gerakan Pengolahan Sampah Organik & Pembibitan Pohon Pelindung Sekolah";
             document.getElementById('namaSekolah').value = "SMAN 2 Nusantara Eco School";
-            document.getElementById('tanggalKegiatan').value = "15 Januari 2026";
+            document.getElementById('tanggalKegiatan').value = "15 - 20 Agustus 2026";
             document.getElementById('lokasiKegiatan').value = "Kebun Percontohan & Area Komposter Sekolah";
 
             document.getElementById('deskripsiProgram').value = 
@@ -654,17 +1055,17 @@
                 {
                     color: '#15803d',
                     title: 'Pemisahan Sampah',
-                    desc: 'Para siswa bersama tim Pokja Adiwiyata memilah sampah organik dan anorganik secara teliti di komposter sekolah untuk bahan baku pupuk cair.'
+                    desc: 'Para siswa bersama tim Pokja Adiwiyata memilah sampah organik dan anorganik secara teliti di area komposter sekolah pada 15-20 Agustus 2026 untuk bahan baku pupuk cair.'
                 },
                 {
                     color: '#047857',
                     title: 'Penanaman Bibit',
-                    desc: 'Guru pendamping membimbing secara langsung tata cara penanaman bibit pohon pelindung di area kebun percontohan sekolah agar tumbuh dengan subur.'
+                    desc: 'Guru pendamping membimbing secara langsung tata cara penanaman bibit pohon pelindung di kebun percontohan sekolah agar tumbuh subur dan merimbunkan lingkungan.'
                 },
                 {
                     color: '#0f766e',
                     title: 'Penyiraman Rutin',
-                    desc: 'Kegiatan penyiraman dan perawatan rutin tanaman hias menggunakan air daur ulang guna menghemat konsumsi air bersih di lingkungan taman sekolah.'
+                    desc: 'Kegiatan penyiraman dan perawatan rutin tanaman hias menggunakan air daur ulang guna menghemat konsumsi air bersih di lingkungan taman SMAN 2 Nusantara Eco School.'
                 },
                 {
                     color: '#166534',
@@ -700,13 +1101,13 @@
         function syncDataToPdfTemplate() {
             const judul = document.getElementById('judulKegiatan').value || 'LAPORAN KEGIATAN ADIWIYATA';
             const sekolah = document.getElementById('namaSekolah').value || 'NAMA SEKOLAH';
-            const tanggalRaw = document.getElementById('tanggalKegiatan').value || '-';
+            const tanggalText = document.getElementById('tanggalKegiatan').value || '-';
             const lokasi = document.getElementById('lokasiKegiatan').value || '-';
             const deskripsi = document.getElementById('deskripsiProgram').value || '-';
 
             document.getElementById('pdf-out-judul').innerText = judul;
             document.getElementById('pdf-out-sekolah').innerText = sekolah;
-            document.getElementById('pdf-out-tanggal').innerText = tanggalRaw;
+            document.getElementById('pdf-out-tanggal').innerText = tanggalText;
             document.getElementById('pdf-out-lokasi').innerText = lokasi;
             document.getElementById('pdf-out-deskripsi').innerText = deskripsi;
 
@@ -789,11 +1190,9 @@
 
             syncDataToPdfTemplate();
 
-            // Show Spinner Overlay
-            const overlay = document.getElementById('processingOverlay');
-            overlay.classList.remove('hidden');
+            showProcessingOverlay('Sedang Menyusun & Mengunduh File PDF...', 'Mohon tunggu beberapa detik, jangan tutup halaman ini.');
 
-            // Force scroll to top (0,0) to prevent html2canvas offset artifacts
+            // Force scroll to top (0,0) to prevent html2canvas coordinate offset
             window.scrollTo(0, 0);
 
             // Create temporary top-left anchored capture wrapper
@@ -809,7 +1208,7 @@
             captureWrapper.style.backgroundColor = '#ffffff';
 
             const templateClone = document.getElementById('pdf-template').cloneNode(true);
-            templateClone.style.margin = '0'; // Strict zero margin override
+            templateClone.style.margin = '0';
             captureWrapper.appendChild(templateClone);
             document.body.appendChild(captureWrapper);
 
@@ -839,17 +1238,33 @@
                     if (document.getElementById('pdf-capture-wrapper')) {
                         document.body.removeChild(captureWrapper);
                     }
-                    overlay.classList.add('hidden');
+                    hideProcessingOverlay();
                     showToast('Laporan PDF Berhasil Diunduh!', 'success');
                 }).catch(err => {
                     if (document.getElementById('pdf-capture-wrapper')) {
                         document.body.removeChild(captureWrapper);
                     }
-                    overlay.classList.add('hidden');
+                    hideProcessingOverlay();
                     console.error('PDF error:', err);
                     showToast('Gagal mengunduh PDF, gunakan opsi "Cetak / Simpan PDF (Browser)"', 'error');
                 });
             }, 300);
+        }
+
+        function showProcessingOverlay(title, subtitle) {
+            const overlay = document.getElementById('processingOverlay');
+            const titleEl = document.getElementById('processingTitle');
+            const subEl = document.getElementById('processingSubtitle');
+
+            if (titleEl) titleEl.innerText = title || 'Sedang memproses...';
+            if (subEl) subEl.innerText = subtitle || 'Mohon tunggu beberapa detik.';
+
+            if (overlay) overlay.classList.remove('hidden');
+        }
+
+        function hideProcessingOverlay() {
+            const overlay = document.getElementById('processingOverlay');
+            if (overlay) overlay.classList.add('hidden');
         }
 
         function showToast(message, type = 'info') {
