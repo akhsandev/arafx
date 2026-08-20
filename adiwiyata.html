@@ -184,8 +184,10 @@
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                                 <i class="fa-solid fa-calendar-day"></i>
                             </span>
-                            <input type="date" id="tanggalKegiatan" required
-                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition outline-none">
+                            <!-- Diubah menjadi Text Input -->
+                            <input type="text" id="tanggalKegiatan" required
+                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition outline-none"
+                                placeholder="Contoh: 15 Januari 2026 atau 15 - 17 Januari 2026">
                         </div>
                     </div>
 
@@ -420,11 +422,6 @@
 
         // Initialize App State on DOM Load
         window.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            const tglElem = document.getElementById('tanggalKegiatan');
-            if (tglElem) {
-                tglElem.value = today;
-            }
             renderPhotoInputs();
             validateWordCounts();
         });
@@ -647,7 +644,7 @@
         function fillDemoData() {
             document.getElementById('judulKegiatan').value = "Laporan Kegiatan Gerakan Pengolahan Sampah Organik & Pembibitan Pohon Pelindung Sekolah";
             document.getElementById('namaSekolah').value = "SMAN 2 Nusantara Eco School";
-            document.getElementById('tanggalKegiatan').value = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggalKegiatan').value = "15 Januari 2026";
             document.getElementById('lokasiKegiatan').value = "Kebun Percontohan & Area Komposter Sekolah";
 
             document.getElementById('deskripsiProgram').value = 
@@ -703,26 +700,13 @@
         function syncDataToPdfTemplate() {
             const judul = document.getElementById('judulKegiatan').value || 'LAPORAN KEGIATAN ADIWIYATA';
             const sekolah = document.getElementById('namaSekolah').value || 'NAMA SEKOLAH';
-            const tanggalRaw = document.getElementById('tanggalKegiatan').value;
+            const tanggalRaw = document.getElementById('tanggalKegiatan').value || '-';
             const lokasi = document.getElementById('lokasiKegiatan').value || '-';
             const deskripsi = document.getElementById('deskripsiProgram').value || '-';
 
-            let tanggalFormatted = '-';
-            if (tanggalRaw) {
-                const parts = tanggalRaw.split('-');
-                if (parts.length === 3) {
-                    const dateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                    tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                }
-            }
-
             document.getElementById('pdf-out-judul').innerText = judul;
             document.getElementById('pdf-out-sekolah').innerText = sekolah;
-            document.getElementById('pdf-out-tanggal').innerText = tanggalFormatted;
+            document.getElementById('pdf-out-tanggal').innerText = tanggalRaw;
             document.getElementById('pdf-out-lokasi').innerText = lokasi;
             document.getElementById('pdf-out-deskripsi').innerText = deskripsi;
 
